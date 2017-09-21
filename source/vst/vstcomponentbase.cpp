@@ -108,7 +108,7 @@ tresult PLUGIN_API ComponentBase::disconnect (IConnectionPoint* other)
 {
 	if (peerConnection && other == peerConnection)
 	{
-		peerConnection->release (),
+		peerConnection->release ();
 		peerConnection = 0;
 		return kResultOk;
 	}
