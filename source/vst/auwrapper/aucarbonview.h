@@ -56,14 +56,14 @@ public:
 	AUCarbonView (AudioUnitCarbonView auv);
 	~AUCarbonView ();
 
-	OSStatus CreateUI (Float32 xoffset, Float32 yoffset);
+	OSStatus CreateUI (Float32 xoffset, Float32 yoffset) override;
 
 	OBJ_METHODS(AUCarbonView, FObject)
 	DEF_INTERFACES_1(IPlugFrame, FObject)
 	REFCOUNT_METHODS(FObject)
 
 protected:
-	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* vr);
+	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* vr) SMTG_OVERRIDE;
 
 	static OSStatus HIViewAdded (EventHandlerCallRef inHandlerCallRef, EventRef inEvent, void* inUserData);
 

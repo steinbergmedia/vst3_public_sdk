@@ -51,8 +51,6 @@
 namespace Steinberg {
 namespace Vst {
 
-DEF_CLASS_IID(IStreamAttributes);
-
 //------------------------------------------------------------------------
 NSDataIBStream::NSDataIBStream (NSData* data, bool hideAttributes)
 : data (data)

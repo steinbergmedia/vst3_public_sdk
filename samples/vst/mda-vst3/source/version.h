@@ -61,5 +61,5 @@
 #define stringFileDescription	"VST3 version of MDA Plug-ins"
 #endif
 #define stringCompanyName		"mda"
-#define stringLegalCopyright	"© 2016 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2017 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

@@ -39,10 +39,12 @@
 #include "againparamids.h"
 #include "againcids.h"	// for class ids
 
-#include "pluginterfaces/base/ustring.h"	// for UString128
+#include "public.sdk/source/vst/vstaudioprocessoralgo.h"
+
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/base/ustring.h"	// for UString128
 #include "pluginterfaces/vst/ivstevents.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 
 #include <stdio.h>
@@ -208,9 +210,9 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 	int32 numChannels = data.inputs[0].numChannels;
 
 	//---get audio buffers----------------
-	uint32 sampleFramesSize = getSampleFramesSizeInBytes (data.numSamples);
-	void** in = getChannelBuffersPointer (data.inputs[0]);
-	void** out = getChannelBuffersPointer (data.outputs[0]);
+	uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
+	void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
+	void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
 
 	//---check if silence---------------
 	// normally we have to check each channel (simplification)
@@ -222,7 +224,7 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// dont need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
+			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
 			if (in[i] != out[i])
 			{				
 				memset (out[i], 0, sampleFramesSize);
@@ -241,7 +243,7 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 	{
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// dont need to be copied if the buffers are the same
+			// do not need to be copied if the buffers are the same
 			if (in[i] != out[i])
 			{
 				memcpy (out[i], in[i], sampleFramesSize);
@@ -412,12 +414,14 @@ tresult PLUGIN_API AGain::setupProcessing (ProcessSetup& newSetup)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGain::setBusArrangements (SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts)
+tresult PLUGIN_API AGain::setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
+                                              SpeakerArrangement* outputs, int32 numOuts)
 {
 	if (numIns == 1 && numOuts == 1)
 	{
 		// the host wants Mono => Mono (or 1 channel -> 1 channel)
-		if (SpeakerArr::getChannelCount (inputs[0]) == 1 && SpeakerArr::getChannelCount (outputs[0]) == 1)
+		if (SpeakerArr::getChannelCount (inputs[0]) == 1 &&
+		    SpeakerArr::getChannelCount (outputs[0]) == 1)
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)

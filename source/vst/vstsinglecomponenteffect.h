@@ -65,7 +65,7 @@ defining two separate components would cause too many implementation difficultie
 - <b> Use this class only after giving the standard way of defining two components
 serious considerations! </b>*/
 //------------------------------------------------------------------------
-class SingleComponentEffect : public EditController, public IComponent, public IAudioProcessor
+class SingleComponentEffect : public EditControllerEx1, public IComponent, public IAudioProcessor
 {
 public:
 //------------------------------------------------------------------------
@@ -77,24 +77,21 @@ public:
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
 	//---from IComponent-----------------------
-	virtual tresult PLUGIN_API getControllerClassId (TUID classId) SMTG_OVERRIDE
+	tresult PLUGIN_API getControllerClassId (TUID classId) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API setIoMode (IoMode mode) SMTG_OVERRIDE { return kNotImplemented; }
+	int32 PLUGIN_API getBusCount (MediaType type, BusDirection dir) SMTG_OVERRIDE;
+	tresult PLUGIN_API getBusInfo (MediaType type, BusDirection dir, int32 index,
+	                               BusInfo& bus /*out*/) SMTG_OVERRIDE;
+	tresult PLUGIN_API getRoutingInfo (RoutingInfo& inInfo,
+	                                   RoutingInfo& outInfo /*out*/) SMTG_OVERRIDE
 	{
 		return kNotImplemented;
 	}
-	virtual tresult PLUGIN_API setIoMode (IoMode mode) SMTG_OVERRIDE { return kNotImplemented; }
-	virtual int32 PLUGIN_API getBusCount (MediaType type, BusDirection dir) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API getBusInfo (MediaType type, BusDirection dir, int32 index,
-	                                       BusInfo& bus /*out*/) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API getRoutingInfo (RoutingInfo& inInfo,
-	                                           RoutingInfo& outInfo /*out*/) SMTG_OVERRIDE
-	{
-		return kNotImplemented;
-	}
-	virtual tresult PLUGIN_API activateBus (MediaType type, BusDirection dir, int32 index,
-	                                        TBool state) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE { return kResultOk; }
-	virtual tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
-	virtual tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API activateBus (MediaType type, BusDirection dir, int32 index,
+	                                TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE { return kResultOk; }
+	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
 
 	// bus setup methods
 	AudioBus* addAudioInput (const TChar* name, SpeakerArrangement arr, BusType busType = kMain,
@@ -114,22 +111,22 @@ public:
 	tresult removeAllBusses ();
 
 	//---from IAudioProcessor -------------------
-	virtual tresult PLUGIN_API setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
-	                                               SpeakerArrangement* outputs,
-	                                               int32 numOuts) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API getBusArrangement (BusDirection dir, int32 index,
-	                                              SpeakerArrangement& arr) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
-	virtual uint32 PLUGIN_API getLatencySamples () SMTG_OVERRIDE { return 0; }
-	virtual tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE { return kNotImplemented; }
-	virtual tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE { return kNotImplemented; }
-	virtual uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return kNoTail; }
+	tresult PLUGIN_API setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
+	                                       SpeakerArrangement* outputs,
+	                                       int32 numOuts) SMTG_OVERRIDE;
+	tresult PLUGIN_API getBusArrangement (BusDirection dir, int32 index,
+	                                      SpeakerArrangement& arr) SMTG_OVERRIDE;
+	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
+	uint32 PLUGIN_API getLatencySamples () SMTG_OVERRIDE { return 0; }
+	tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE { return kNotImplemented; }
+	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return kNoTail; }
 
 	//---Interface---------
-	OBJ_METHODS (SingleComponentEffect, EditController)
+	OBJ_METHODS (SingleComponentEffect, EditControllerEx1)
 	tresult PLUGIN_API queryInterface (const TUID iid, void** obj) SMTG_OVERRIDE;
-	REFCOUNT_METHODS (EditController)
+	REFCOUNT_METHODS (EditControllerEx1)
 
 //------------------------------------------------------------------------
 protected:

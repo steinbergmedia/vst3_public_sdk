@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2015, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -60,6 +60,7 @@ public:
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
 	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return mLatency; }
+	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
@@ -71,12 +72,12 @@ public:
 	void sendLogEventMessage (const LogEvent& logEvent);
 
 	//---IAudioPresentationLatency------------
-	virtual tresult PLUGIN_API setAudioPresentationLatencySamples (
-	    BusDirection dir, int32 busIndex, uint32 latencyInSamples) SMTG_OVERRIDE;
+	tresult PLUGIN_API setAudioPresentationLatencySamples (BusDirection dir, int32 busIndex,
+	                                                       uint32 latencyInSamples) SMTG_OVERRIDE;
 
 	//---IPrefetchableSupport------------------------------
-	virtual tresult PLUGIN_API getPrefetchableSupport (
-	    PrefetchableSupport& prefetchable /*out*/) SMTG_OVERRIDE;
+	tresult PLUGIN_API getPrefetchableSupport (PrefetchableSupport& prefetchable /*out*/)
+	    SMTG_OVERRIDE;
 
 	DEFINE_INTERFACES
 		DEF_INTERFACE (IAudioPresentationLatency)
@@ -93,12 +94,12 @@ protected:
 	HostCheck mHostCheck;
 
 	BypassProcessor mBypassProcessor;
-	float mLastBlockMarkerValue = 0.5;
+	float mLastBlockMarkerValue = 1.f;
 
 	int32 mNumNoteOns = 0;
 	uint32 mLatency = 0;
 	uint32 mWantedLatency = 0;
-	bool mGeneratePeaks = false;
+	float mGeneratePeaks = 0;
 	bool mBypass = false;
 };
 

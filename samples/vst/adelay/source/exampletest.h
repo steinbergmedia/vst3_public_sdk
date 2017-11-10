@@ -51,10 +51,10 @@ public:
 	ADelayTest (IPlugProvider* plugProvider);
 
 	//--ITest
-	virtual bool PLUGIN_API setup () SMTG_OVERRIDE;
-	virtual bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
-	virtual bool PLUGIN_API teardown () SMTG_OVERRIDE;
-	virtual const tchar* PLUGIN_API getDescription () SMTG_OVERRIDE;
+	bool PLUGIN_API setup () SMTG_OVERRIDE;
+	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
+	bool PLUGIN_API teardown () SMTG_OVERRIDE;
+	const tchar* PLUGIN_API getDescription () SMTG_OVERRIDE;
 
 	OBJ_METHODS(ADelayTest, FObject)
 	DEF_INTERFACES_1(ITest, FObject)

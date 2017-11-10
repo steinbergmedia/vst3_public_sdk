@@ -39,7 +39,6 @@
 namespace Steinberg {
 namespace Vst {
 
-
 //------------------------------------------------------------------------
 // AudioEffect
 //------------------------------------------------------------------------
@@ -52,8 +51,8 @@ AudioEffect::AudioEffect ()
 }
 
 //------------------------------------------------------------------------
-AudioBus* AudioEffect::addAudioInput (const TChar* name, SpeakerArrangement arr,
-									  BusType busType, int32 flags)
+AudioBus* AudioEffect::addAudioInput (const TChar* name, SpeakerArrangement arr, BusType busType,
+                                      int32 flags)
 {
 	AudioBus* newBus = new AudioBus (name, busType, flags, arr);
 	audioInputs.push_back (IPtr<Vst::Bus> (newBus, false));
@@ -61,8 +60,8 @@ AudioBus* AudioEffect::addAudioInput (const TChar* name, SpeakerArrangement arr,
 }
 
 //------------------------------------------------------------------------
-AudioBus* AudioEffect::addAudioOutput (const TChar* name, SpeakerArrangement arr,
-									   BusType busType, int32 flags)
+AudioBus* AudioEffect::addAudioOutput (const TChar* name, SpeakerArrangement arr, BusType busType,
+                                       int32 flags)
 {
 	AudioBus* newBus = new AudioBus (name, busType, flags, arr);
 	audioOutputs.push_back (IPtr<Vst::Bus> (newBus, false));
@@ -72,20 +71,24 @@ AudioBus* AudioEffect::addAudioOutput (const TChar* name, SpeakerArrangement arr
 //------------------------------------------------------------------------
 AudioBus* AudioEffect::getAudioInput (int32 index)
 {
-	AudioBus* bus = FCast<Vst::AudioBus> (audioInputs.at (index));
+	AudioBus* bus = nullptr;
+	if (index < static_cast<int32> (audioInputs.size ()))
+		bus = FCast<Vst::AudioBus> (audioInputs.at (index));
 	return bus;
 }
 
 //------------------------------------------------------------------------
 AudioBus* AudioEffect::getAudioOutput (int32 index)
 {
-	AudioBus* bus = FCast<Vst::AudioBus> (audioOutputs.at (index));
+	AudioBus* bus = nullptr;
+	if (index < static_cast<int32> (audioOutputs.size ()))
+		bus = FCast<Vst::AudioBus> (audioOutputs.at (index));
 	return bus;
 }
 
 //------------------------------------------------------------------------
-EventBus* AudioEffect::addEventInput (const TChar* name, int32 channels,
-									  BusType busType, int32 flags)
+EventBus* AudioEffect::addEventInput (const TChar* name, int32 channels, BusType busType,
+                                      int32 flags)
 {
 	EventBus* newBus = new EventBus (name, busType, flags, channels);
 	eventInputs.push_back (IPtr<Vst::Bus> (newBus, false));
@@ -93,8 +96,8 @@ EventBus* AudioEffect::addEventInput (const TChar* name, int32 channels,
 }
 
 //------------------------------------------------------------------------
-EventBus* AudioEffect::addEventOutput (const TChar* name, int32 channels,
-									   BusType busType, int32 flags)
+EventBus* AudioEffect::addEventOutput (const TChar* name, int32 channels, BusType busType,
+                                       int32 flags)
 {
 	EventBus* newBus = new EventBus (name, busType, flags, channels);
 	eventOutputs.push_back (IPtr<Vst::Bus> (newBus, false));
@@ -104,20 +107,24 @@ EventBus* AudioEffect::addEventOutput (const TChar* name, int32 channels,
 //------------------------------------------------------------------------
 EventBus* AudioEffect::getEventInput (int32 index)
 {
-	EventBus* bus = FCast<Vst::EventBus> (eventInputs.at (index));
+	EventBus* bus = nullptr;
+	if (index < static_cast<int32> (eventInputs.size ()))
+		bus = FCast<Vst::EventBus> (eventInputs.at (index));
 	return bus;
 }
 
 //------------------------------------------------------------------------
 EventBus* AudioEffect::getEventOutput (int32 index)
 {
-	EventBus* bus = FCast<Vst::EventBus> (eventOutputs.at (index));
+	EventBus* bus = nullptr;
+	if (index < static_cast<int32> (eventOutputs.size ()))
+		bus = FCast<Vst::EventBus> (eventOutputs.at (index));
 	return bus;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API AudioEffect::setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
-													SpeakerArrangement* outputs, int32 numOuts)
+                                                    SpeakerArrangement* outputs, int32 numOuts)
 {
 	if (numIns < 0 || numOuts < 0)
 		return kInvalidArgument;
@@ -126,14 +133,14 @@ tresult PLUGIN_API AudioEffect::setBusArrangements (SpeakerArrangement* inputs, 
 	    numOuts > static_cast<int32> (audioOutputs.size ()))
 		return kResultFalse;
 
-	for (int32 index = 0; index < audioInputs.size (); ++index)
+	for (int32 index = 0; index < static_cast<int32> (audioInputs.size ()); ++index)
 	{
 		if (index >= numIns)
 			break;
 		FCast<Vst::AudioBus> (audioInputs[index].get ())->setArrangement (inputs[index]);
 	}
 
-	for (int32 index = 0; index < audioOutputs.size (); ++index)
+	for (int32 index = 0; index < static_cast<int32> (audioOutputs.size ()); ++index)
 	{
 		if (index >= numOuts)
 			break;
@@ -144,10 +151,11 @@ tresult PLUGIN_API AudioEffect::setBusArrangements (SpeakerArrangement* inputs, 
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AudioEffect::getBusArrangement (BusDirection dir, int32 busIndex, SpeakerArrangement& arr)
+tresult PLUGIN_API AudioEffect::getBusArrangement (BusDirection dir, int32 busIndex,
+                                                   SpeakerArrangement& arr)
 {
 	BusList* busList = getBusList (kAudio, dir);
-	if (!busList || busIndex < 0 || busList->size () <= busIndex)
+	if (!busList || busIndex < 0 || static_cast<int32> (busList->size ()) <= busIndex)
 		return kInvalidArgument;
 	AudioBus* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex));
 	if (audioBus)

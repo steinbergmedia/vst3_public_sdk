@@ -4,7 +4,7 @@
 //
 // Category    : Common Base Classes
 // Filename    : public.sdk/source/main/linuxmain.cpp
-// Created by  : Steinberg, 01/2004
+// Created by  : Steinberg, 03/2017
 // Description : Linux Component Entry
 //
 //-----------------------------------------------------------------------------

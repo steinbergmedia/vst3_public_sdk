@@ -16,11 +16,15 @@ set(sdk_sources
 )
 
 set(pluginterfaces_sources
+	${SDK_ROOT}/pluginterfaces/base/conststringtable.cpp
+	${SDK_ROOT}/pluginterfaces/base/conststringtable.h
+	${SDK_ROOT}/pluginterfaces/base/coreiids.cpp
 	${SDK_ROOT}/pluginterfaces/base/falignpop.h
 	${SDK_ROOT}/pluginterfaces/base/falignpush.h
 	${SDK_ROOT}/pluginterfaces/base/fplatform.h
 	${SDK_ROOT}/pluginterfaces/base/fstrdefs.h
 	${SDK_ROOT}/pluginterfaces/base/ftypes.h
+	${SDK_ROOT}/pluginterfaces/base/funknown.cpp
 	${SDK_ROOT}/pluginterfaces/base/funknown.h
 	${SDK_ROOT}/pluginterfaces/base/futils.h
 	${SDK_ROOT}/pluginterfaces/base/fvariant.h
@@ -36,9 +40,6 @@ set(pluginterfaces_sources
 	${SDK_ROOT}/pluginterfaces/base/pluginbasefwd.h
 	${SDK_ROOT}/pluginterfaces/base/smartpointer.h
 	${SDK_ROOT}/pluginterfaces/base/ucolorspec.h
-	${SDK_ROOT}/pluginterfaces/base/conststringtable.cpp
-	${SDK_ROOT}/pluginterfaces/base/conststringtable.h
-	${SDK_ROOT}/pluginterfaces/base/funknown.cpp
 	${SDK_ROOT}/pluginterfaces/base/ustring.cpp
 	${SDK_ROOT}/pluginterfaces/base/ustring.h
 )
@@ -77,6 +78,7 @@ target_link_libraries(sdk PRIVATE base)
 if(MAC AND XCODE AND IOS_DEVELOPMENT_TEAM)
 	add_library(sdk_ios STATIC ${sdk_sources} ${pluginterfaces_sources} ${vst_includes})
 	smtg_set_platform_ios(sdk_ios)
+	set_target_properties(sdk_ios PROPERTIES ${SDK_IDE_LIBS_FOLDER})
 	target_link_libraries(sdk_ios PRIVATE base_ios)
 endif()
 

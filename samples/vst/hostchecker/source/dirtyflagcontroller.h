@@ -55,10 +55,10 @@ public:
 	DirtyFlagController (HostCheckerController* controller);
 	virtual ~DirtyFlagController ();
 
-	virtual VSTGUI::CView* verifyView (VSTGUI::CView* view, const VSTGUI::UIAttributes& attributes,
-									   const VSTGUI::IUIDescription* description) VSTGUI_OVERRIDE_VMETHOD;
-	virtual void valueChanged (VSTGUI::CControl* pControl) VSTGUI_OVERRIDE_VMETHOD {}
-	virtual void controlBeginEdit (VSTGUI::CControl* pControl) VSTGUI_OVERRIDE_VMETHOD;
+	VSTGUI::CView* verifyView (VSTGUI::CView* view, const VSTGUI::UIAttributes& attributes,
+	                           const VSTGUI::IUIDescription* description) override;
+	void valueChanged (VSTGUI::CControl* pControl) override {}
+	void controlBeginEdit (VSTGUI::CControl* pControl) override;
 //-----------------------------------------------------------------------------
 private:
 	HostCheckerController* mController;

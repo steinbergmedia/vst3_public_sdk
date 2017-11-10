@@ -44,7 +44,7 @@ using namespace Steinberg::Vst;
 namespace VSTGUI {
 
 //-----------------------------------------------------------------------------
-EventLogDataBrowserSource::EventLogDataBrowserSource (EditControllerEx1* editController)
+EventLogDataBrowserSource::EventLogDataBrowserSource (EditControllerEx1* /*editController*/)
 {
 	mLogEvents.resize (kNumLogEvents);
 	for (Steinberg::uint32 i = 0; i < mLogEvents.size (); ++i)
@@ -55,15 +55,20 @@ EventLogDataBrowserSource::EventLogDataBrowserSource (EditControllerEx1* editCon
 EventLogDataBrowserSource::~EventLogDataBrowserSource () {}
 
 //-----------------------------------------------------------------------------
-int32_t EventLogDataBrowserSource::dbGetNumRows (CDataBrowser* browser) { return kNumLogEvents; }
+int32_t EventLogDataBrowserSource::dbGetNumRows (CDataBrowser* browser) { (void)browser; return kNumLogEvents; }
 
 //-----------------------------------------------------------------------------
-int32_t EventLogDataBrowserSource::dbGetNumColumns (CDataBrowser* browser) { return kNumColumns; }
+int32_t EventLogDataBrowserSource::dbGetNumColumns (CDataBrowser* browser) { (void)browser; return kNumColumns; }
 
 //-----------------------------------------------------------------------------
 bool EventLogDataBrowserSource::dbGetColumnDescription (int32_t index, CCoord& minWidth,
                                                         CCoord& maxWidth, CDataBrowser* browser)
 {
+	(void)index;
+	(void)minWidth;
+	(void)maxWidth;
+	(void)browser;
+
 	return false;
 }
 
@@ -84,15 +89,19 @@ CCoord EventLogDataBrowserSource::dbGetCurrentColumnWidth (int32_t index, CDataB
 void EventLogDataBrowserSource::dbSetCurrentColumnWidth (int32_t index, const CCoord& width,
                                                          CDataBrowser* browser)
 {
+	(void)index;
+	(void)width;
+	(void)browser;
 }
 
 //-----------------------------------------------------------------------------
-CCoord EventLogDataBrowserSource::dbGetRowHeight (CDataBrowser* browser) { return 18; }
+CCoord EventLogDataBrowserSource::dbGetRowHeight (CDataBrowser* browser) { (void)browser;return 18; }
 
 //-----------------------------------------------------------------------------
 bool EventLogDataBrowserSource::dbGetLineWidthAndColor (CCoord& width, CColor& color,
                                                         CDataBrowser* browser)
 {
+	(void)browser;
 	width = 1.;
 	color = kGreyCColor;
 	return true;
@@ -102,6 +111,9 @@ bool EventLogDataBrowserSource::dbGetLineWidthAndColor (CCoord& width, CColor& c
 void EventLogDataBrowserSource::dbDrawHeader (CDrawContext* context, const CRect& size,
                                               int32_t column, int32_t flags, CDataBrowser* browser)
 {
+	(void)flags;
+	(void)browser;
+
 	context->setDrawMode (kAliasing);
 	context->setFillColor (kGreyCColor);
 	context->drawRect (size, kDrawFilled);
@@ -122,6 +134,9 @@ void EventLogDataBrowserSource::dbDrawHeader (CDrawContext* context, const CRect
 void EventLogDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect& size, int32_t row,
                                             int32_t column, int32_t flags, CDataBrowser* browser)
 {
+	(void)flags;
+	(void)browser;
+
 	CColor cellColor (kWhiteCColor);
 	bool oddRow = row % 2 != 0;
 	if (oddRow)
@@ -185,6 +200,11 @@ CMouseEventResult EventLogDataBrowserSource::dbOnMouseDown (const CPoint& where,
                                                             int32_t row, int32_t column,
                                                             CDataBrowser* browser)
 {
+	(void)browser;
+	(void)column;
+	(void)row;
+	(void)buttons;
+	(void)where;
 	return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
 
@@ -194,6 +214,11 @@ CMouseEventResult EventLogDataBrowserSource::dbOnMouseMoved (const CPoint& where
                                                              int32_t row, int32_t column,
                                                              CDataBrowser* browser)
 {
+	(void)browser;
+	(void)column;
+	(void)row;
+	(void)buttons;
+	(void)where;
 	return kMouseEventNotHandled;
 }
 
@@ -202,16 +227,25 @@ CMouseEventResult EventLogDataBrowserSource::dbOnMouseUp (const CPoint& where,
                                                           const CButtonState& buttons, int32_t row,
                                                           int32_t column, CDataBrowser* browser)
 {
+	(void)browser;
+	(void)column;
+	(void)row;
+	(void)buttons;
+	(void)where;
 	return kMouseEventNotHandled;
 }
 
 //-----------------------------------------------------------------------------
-void EventLogDataBrowserSource::dbSelectionChanged (CDataBrowser* browser) {}
+void EventLogDataBrowserSource::dbSelectionChanged (CDataBrowser* browser) { (void)browser; }
 
 //-----------------------------------------------------------------------------
 void EventLogDataBrowserSource::dbCellTextChanged (int32_t row, int32_t column,
                                                    UTF8StringPtr newText, CDataBrowser* browser)
 {
+	(void)browser;
+	(void)column;
+	(void)row;
+	(void)newText;
 }
 
 //-----------------------------------------------------------------------------
@@ -219,6 +253,10 @@ void EventLogDataBrowserSource::dbCellSetupTextEdit (int32_t row, int32_t column
                                                      CTextEdit* textEditControl,
                                                      CDataBrowser* browser)
 {
+	(void)browser;
+	(void)column;
+	(void)row;
+
 	textEditControl->setBackColor (kWhiteCColor);
 	textEditControl->setFont (kNormalFontSmall);
 	textEditControl->setFontColor (kRedCColor);
@@ -229,6 +267,9 @@ void EventLogDataBrowserSource::dbCellSetupTextEdit (int32_t row, int32_t column
 //-----------------------------------------------------------------------------
 int32_t EventLogDataBrowserSource::dbOnKeyDown (const VstKeyCode& key, CDataBrowser* browser)
 {
+	(void)key;
+	(void)browser;
+
 	return -1;
 }
 

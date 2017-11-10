@@ -45,22 +45,21 @@ namespace Vst {
 //------------------------------------------------------------------------
 // Parameter Implementation
 //------------------------------------------------------------------------
-Parameter::Parameter ()
-: valueNormalized (0.)
-, precision (4)
+Parameter::Parameter () : valueNormalized (0.), precision (4)
 {
 	memset (&info, 0, sizeof (ParameterInfo));
 }
 
 //------------------------------------------------------------------------
 Parameter::Parameter (const ParameterInfo& info)
-: info (info)
-, valueNormalized (info.defaultNormalizedValue)
-, precision (4)
-{}
+: info (info), valueNormalized (info.defaultNormalizedValue), precision (4)
+{
+}
 
 //------------------------------------------------------------------------
-Parameter::Parameter (const TChar* title, ParamID tag, const TChar* units, ParamValue defaultValueNormalized, int32 stepCount, int32 flags, UnitID unitID)
+Parameter::Parameter (const TChar* title, ParamID tag, const TChar* units,
+                      ParamValue defaultValueNormalized, int32 stepCount, int32 flags,
+                      UnitID unitID)
 : precision (4)
 {
 	memset (&info, 0, sizeof (ParameterInfo));
@@ -78,7 +77,8 @@ Parameter::Parameter (const TChar* title, ParamID tag, const TChar* units, Param
 
 //------------------------------------------------------------------------
 Parameter::~Parameter ()
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool Parameter::setNormalized (ParamValue normValue)
@@ -142,30 +142,25 @@ ParamValue Parameter::toNormalized (ParamValue plainValue) const
 	return plainValue;
 }
 
-
 //------------------------------------------------------------------------
 // RangeParameter Implementation
 //------------------------------------------------------------------------
-RangeParameter::RangeParameter ()
-: minPlain (0)
-, maxPlain (1)
+RangeParameter::RangeParameter () : minPlain (0), maxPlain (1)
 {
 }
 
 //------------------------------------------------------------------------
 RangeParameter::RangeParameter (const ParameterInfo& paramInfo, ParamValue min, ParamValue max)
-: Parameter (paramInfo)
-, minPlain (min)
-, maxPlain (max)
+: Parameter (paramInfo), minPlain (min), maxPlain (max)
 {
 }
 
 //------------------------------------------------------------------------
 RangeParameter::RangeParameter (const TChar* title, ParamID tag, const TChar* units,
-								ParamValue minPlain, ParamValue maxPlain, ParamValue defaultValuePlain,
-								int32 stepCount, int32 flags, UnitID unitID)
-: minPlain (minPlain)
-, maxPlain (maxPlain)
+                                ParamValue minPlain, ParamValue maxPlain,
+                                ParamValue defaultValuePlain, int32 stepCount, int32 flags,
+                                UnitID unitID)
+: minPlain (minPlain), maxPlain (maxPlain)
 {
 	UString (info.title, str16BufferSize (String128)).assign (title);
 
@@ -228,7 +223,8 @@ bool RangeParameter::fromString (const TChar* string, ParamValue& _valueNormaliz
 ParamValue RangeParameter::toPlain (ParamValue _valueNormalized) const
 {
 	if (info.stepCount > 1)
-		return Min<int32> (info.stepCount, (int32)(_valueNormalized * (info.stepCount + 1))) + getMin ();
+		return Min<int32> (info.stepCount, (int32) (_valueNormalized * (info.stepCount + 1))) +
+		       getMin ();
 	return _valueNormalized * (getMax () - getMin ()) + getMin ();
 }
 
@@ -240,18 +236,16 @@ ParamValue RangeParameter::toNormalized (ParamValue plainValue) const
 	return (plainValue - getMin ()) / (getMax () - getMin ());
 }
 
-
 //------------------------------------------------------------------------
 // StringListParameter Implementation
 //------------------------------------------------------------------------
-StringListParameter::StringListParameter (const ParameterInfo& paramInfo)
-: Parameter (paramInfo)
+StringListParameter::StringListParameter (const ParameterInfo& paramInfo) : Parameter (paramInfo)
 {
 }
 
 //------------------------------------------------------------------------
 StringListParameter::StringListParameter (const TChar* title, ParamID tag, const TChar* units,
-										  int32 flags, UnitID unitID)
+                                          int32 flags, UnitID unitID)
 {
 	UString (info.title, str16BufferSize (String128)).assign (title);
 
@@ -294,7 +288,7 @@ bool StringListParameter::replaceString (int32 index, const String128 string)
 	TChar* str = strings.at (index);
 	if (!str)
 		return false;
-	
+
 	int32 length = strlen16 (string);
 	TChar* buffer = (TChar*)malloc ((length + 1) * sizeof (TChar));
 	if (!buffer)
@@ -324,7 +318,8 @@ void StringListParameter::toString (ParamValue _valueNormalized, String128 strin
 bool StringListParameter::fromString (const TChar* string, ParamValue& _valueNormalized) const
 {
 	int32 index = 0;
-	for (StringVector::const_iterator it = strings.begin (), end = strings.end (); it != end; ++it, ++index)
+	for (StringVector::const_iterator it = strings.begin (), end = strings.end (); it != end;
+	     ++it, ++index)
 	{
 		if (strcmp16 (*it, string) == 0)
 		{
@@ -340,7 +335,7 @@ ParamValue StringListParameter::toPlain (ParamValue _valueNormalized) const
 {
 	if (info.stepCount <= 0)
 		return 0;
-	return Min<int32> (info.stepCount, (int32)(_valueNormalized * (info.stepCount + 1)));
+	return Min<int32> (info.stepCount, (int32) (_valueNormalized * (info.stepCount + 1)));
 }
 
 //------------------------------------------------------------------------
@@ -354,8 +349,7 @@ ParamValue StringListParameter::toNormalized (ParamValue plainValue) const
 //------------------------------------------------------------------------
 // ParameterContainer Implementation
 //------------------------------------------------------------------------
-ParameterContainer::ParameterContainer ()
-: params (0)
+ParameterContainer::ParameterContainer () : params (0)
 {
 }
 
@@ -396,7 +390,7 @@ Parameter* ParameterContainer::addParameter (const ParameterInfo& info)
 	if (addParameter (p))
 		return p;
 	p->release ();
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -408,17 +402,17 @@ Parameter* ParameterContainer::getParameter (ParamID tag)
 		if (it != id2index.end ())
 			return params->at (it->second);
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
 Parameter* ParameterContainer::addParameter (const TChar* title, const TChar* units,
-											 int32 stepCount, ParamValue defaultNormalizedValue,
-											 int32 flags, int32 tag, UnitID unitID)
+                                             int32 stepCount, ParamValue defaultNormalizedValue,
+                                             int32 flags, int32 tag, UnitID unitID)
 {
 	if (!title)
 	{
-		return 0;
+		return nullptr;
 	}
 
 	ParameterInfo info = {0};

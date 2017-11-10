@@ -36,8 +36,8 @@
 
 #pragma once
 
-#include "pluginterfaces/vst/ivstnoteexpression.h"
 #include "base/source/fobject.h"
+#include "pluginterfaces/vst/ivstnoteexpression.h"
 
 #include <map>
 #include <vector>
@@ -55,26 +55,31 @@ class NoteExpressionType : public FObject
 public:
 	NoteExpressionType ();
 	NoteExpressionType (const NoteExpressionTypeInfo& info);
-	NoteExpressionType (NoteExpressionTypeID typeId, const TChar* title, const TChar* shortTitle, const TChar* units,
-						int32 unitId, NoteExpressionValue defaultValue, NoteExpressionValue minimum, NoteExpressionValue maximum,
-						int32 stepCount, int32 flags = 0, int32 precision = 4);
-	NoteExpressionType (NoteExpressionTypeID typeId, const TChar* title, const TChar* shortTitle, const TChar* units,
-						int32 unitId, Parameter* associatedParameter, int32 flags = 0);
+	NoteExpressionType (NoteExpressionTypeID typeId, const TChar* title, const TChar* shortTitle,
+	                    const TChar* units, int32 unitId, NoteExpressionValue defaultValue,
+	                    NoteExpressionValue minimum, NoteExpressionValue maximum, int32 stepCount,
+	                    int32 flags = 0, int32 precision = 4);
+	NoteExpressionType (NoteExpressionTypeID typeId, const TChar* title, const TChar* shortTitle,
+	                    const TChar* units, int32 unitId, Parameter* associatedParameter,
+	                    int32 flags = 0);
 
 	/** get the underlying NoteExpressionTypeInfo struct */
 	NoteExpressionTypeInfo& getInfo () { return info; }
 
 	/** convert a note expression value to a readable string */
-	virtual tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/);
+	virtual tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/,
+	                                  String128 string /*out*/);
 	/** convert a readable string to a note expression value */
-	virtual tresult getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/);
+	virtual tresult getValueByString (const TChar* string /*in*/,
+	                                  NoteExpressionValue& valueNormalized /*out*/);
 
 	/** gets the current precision (used for string representation of float) */
-	int32 getPrecision () const { return precision;}
-	/** Sets the precision for string representation of float value (for example 4.34 with 2 as precision) */
-	void setPrecision (int32 val) { precision = val;}
+	int32 getPrecision () const { return precision; }
+	/** Sets the precision for string representation of float value (for example 4.34 with 2 as
+	 * precision) */
+	void setPrecision (int32 val) { precision = val; }
 //-----------------------------------------------------------------------------
-	OBJ_METHODS(NoteExpressionType, FObject)
+	OBJ_METHODS (NoteExpressionType, FObject)
 protected:
 	NoteExpressionTypeInfo info;
 	IPtr<Parameter> associatedParameter;
@@ -88,23 +93,26 @@ protected:
 class RangeNoteExpressionType : public NoteExpressionType
 {
 public:
-	RangeNoteExpressionType (NoteExpressionTypeID typeId, const TChar* title, const TChar* shortTitle, const TChar* units,
-							 int32 unitId, NoteExpressionValue defaultPlainValue, NoteExpressionValue plainMin, NoteExpressionValue plainMax,
-							 int32 flags = 0, int32 precision = 4);
+	RangeNoteExpressionType (NoteExpressionTypeID typeId, const TChar* title,
+	                         const TChar* shortTitle, const TChar* units, int32 unitId,
+	                         NoteExpressionValue defaultPlainValue, NoteExpressionValue plainMin,
+	                         NoteExpressionValue plainMax, int32 flags = 0, int32 precision = 4);
 
 	/** Gets the minimum plain value */
-	virtual ParamValue getMin () const {return plainMin;}
+	virtual ParamValue getMin () const { return plainMin; }
 	/** Sets the minimum plain value */
-	virtual void setMin (ParamValue value) {plainMin = value;}
+	virtual void setMin (ParamValue value) { plainMin = value; }
 	/** Gets the maximum plain value */
-	virtual ParamValue getMax () const {return plainMax;}
+	virtual ParamValue getMax () const { return plainMax; }
 	/** Sets the maximum plain value */
-	virtual void setMax (ParamValue value) {plainMax = value;}
+	virtual void setMax (ParamValue value) { plainMax = value; }
 
-	virtual tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE;
-	virtual tresult getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
+	tresult getStringByValue (NoteExpressionValue valueNormalized /*in*/,
+	                                  String128 string /*out*/) SMTG_OVERRIDE;
+	tresult getValueByString (const TChar* string /*in*/,
+	                                  NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
 //-----------------------------------------------------------------------------
-	OBJ_METHODS(RangeNoteExpressionType, NoteExpressionType)
+	OBJ_METHODS (RangeNoteExpressionType, NoteExpressionType)
 protected:
 	NoteExpressionValue plainMin;
 	NoteExpressionValue plainMax;
@@ -120,7 +128,8 @@ public:
 	/** default constructor */
 	NoteExpressionTypeContainer ();
 
-	/** add a note expression type. The container owns the type. No need to release it afterwards. */
+	/** add a note expression type. The container owns the type. No need to release it afterwards.
+	 */
 	bool addNoteExpressionType (NoteExpressionType* noteExpType);
 	/** remove a note expression type */
 	bool removeNoteExpressionType (NoteExpressionTypeID typeId);
@@ -136,13 +145,16 @@ public:
 	/** get note expression info */
 	tresult getNoteExpressionInfo (int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/);
 	/** convert a note expression value to a readable string */
-	tresult getNoteExpressionStringByValue (NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/);
+	tresult getNoteExpressionStringByValue (NoteExpressionTypeID id,
+	                                        NoteExpressionValue valueNormalized /*in*/,
+	                                        String128 string /*out*/);
 	/** convert a string to a note expression value */
-	tresult getNoteExpressionValueByString (NoteExpressionTypeID id, const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/);
+	tresult getNoteExpressionValueByString (NoteExpressionTypeID id, const TChar* string /*in*/,
+	                                        NoteExpressionValue& valueNormalized /*out*/);
 //-----------------------------------------------------------------------------
-	OBJ_METHODS(NoteExpressionTypeContainer, FObject)
+	OBJ_METHODS (NoteExpressionTypeContainer, FObject)
 protected:
-	typedef std::vector<IPtr<NoteExpressionType> > NoteExprTypeVector;
+	typedef std::vector<IPtr<NoteExpressionType>> NoteExprTypeVector;
 	NoteExprTypeVector::const_iterator find (NoteExpressionTypeID typeId) const;
 
 	NoteExprTypeVector noteExps;

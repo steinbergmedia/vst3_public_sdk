@@ -34,35 +34,11 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-/**
-**************************************
-\page vst2xwrapper VST 2.x Wrapper
-***************************
-\section VST2Introduction Introduction
-***************************
-The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
-a VST 2.x Plug-in.
-\n\n
-***************************
-\section VST2howdoesitwork How does it work ?
-***************************
-You just need to add public.sdk/source/vst/vst2wrapper/vst2wrapper.sdk.cpp to your project and add
-the following code somewhere in your sources:
-\code
-
-#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
-
-//------------------------------------------------------------------------
-::AudioEffect* createEffectInstance (audioMasterCallback audioMaster)
-{
-	return Steinberg::Vst::Vst2Wrapper::create (GetPluginFactory (), kAudioProcessorCID, kVst2UniqueID, audioMaster);
-}
-
-\endcode
- */
-/// \cond ignore
-
 #pragma once
+
+#include "docvst2.h"
+
+/// \cond ignore
 
 #include "pluginterfaces/base/ftypes.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
@@ -111,93 +87,90 @@ public:
 	bool init ();
 
 	// AudioEffectX overrides -----------------------------------------------
-	virtual void suspend () SMTG_OVERRIDE; // Called when Plug-in is switched to off
-	virtual void resume () SMTG_OVERRIDE; // Called when Plug-in is switched to on
-	virtual VstInt32 startProcess () SMTG_OVERRIDE;
-	virtual VstInt32 stopProcess () SMTG_OVERRIDE;
+	void suspend () SMTG_OVERRIDE; // Called when Plug-in is switched to off
+	void resume () SMTG_OVERRIDE; // Called when Plug-in is switched to on
+	VstInt32 startProcess () SMTG_OVERRIDE;
+	VstInt32 stopProcess () SMTG_OVERRIDE;
 
-	virtual void setSampleRate (float newSamplerate)
-	    SMTG_OVERRIDE; // Called when the sample rate changes (always in a suspend state)
-	virtual void setBlockSize (VstInt32 newBlockSize)
-	    SMTG_OVERRIDE; // Called when the maximum block size changes
+	 // Called when the sample rate changes (always in a suspend state)
+	void setSampleRate (float newSamplerate) SMTG_OVERRIDE;
+
+	// Called when the maximum block size changes
 	// (always in a suspend state). Note that the
 	// sampleFrames in Process Calls could be
 	// smaller than this block size, but NOT bigger.
+	void setBlockSize (VstInt32 newBlockSize) SMTG_OVERRIDE;
 
-	virtual float getParameter (VstInt32 index) SMTG_OVERRIDE;
-	virtual void setParameter (VstInt32 index, float value) SMTG_OVERRIDE;
+	float getParameter (VstInt32 index) SMTG_OVERRIDE;
+	void setParameter (VstInt32 index, float value) SMTG_OVERRIDE;
 
-	virtual void setProgram (VstInt32 program) SMTG_OVERRIDE;
-	virtual void setProgramName (char* name) SMTG_OVERRIDE;
-	virtual void getProgramName (char* name) SMTG_OVERRIDE;
-	virtual bool getProgramNameIndexed (VstInt32 category, VstInt32 index,
-	                                    char* text) SMTG_OVERRIDE;
+	void setProgram (VstInt32 program) SMTG_OVERRIDE;
+	void setProgramName (char* name) SMTG_OVERRIDE;
+	void getProgramName (char* name) SMTG_OVERRIDE;
+	bool getProgramNameIndexed (VstInt32 category, VstInt32 index, char* text) SMTG_OVERRIDE;
 
-	virtual void getParameterLabel (VstInt32 index, char* label) SMTG_OVERRIDE;
-	virtual void getParameterDisplay (VstInt32 index, char* text) SMTG_OVERRIDE;
-	virtual void getParameterName (VstInt32 index, char* text) SMTG_OVERRIDE;
-	virtual bool canParameterBeAutomated (VstInt32 index) SMTG_OVERRIDE;
-	virtual bool string2parameter (VstInt32 index, char* text) SMTG_OVERRIDE;
-	virtual bool getParameterProperties (VstInt32 index, VstParameterProperties* p) SMTG_OVERRIDE;
+	void getParameterLabel (VstInt32 index, char* label) SMTG_OVERRIDE;
+	void getParameterDisplay (VstInt32 index, char* text) SMTG_OVERRIDE;
+	void getParameterName (VstInt32 index, char* text) SMTG_OVERRIDE;
+	bool canParameterBeAutomated (VstInt32 index) SMTG_OVERRIDE;
+	bool string2parameter (VstInt32 index, char* text) SMTG_OVERRIDE;
+	bool getParameterProperties (VstInt32 index, VstParameterProperties* p) SMTG_OVERRIDE;
 
-	virtual VstInt32 getChunk (void** data, bool isPreset = false) SMTG_OVERRIDE;
-	virtual VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset = false) SMTG_OVERRIDE;
+	VstInt32 getChunk (void** data, bool isPreset = false) SMTG_OVERRIDE;
+	VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset = false) SMTG_OVERRIDE;
 
-	virtual bool getInputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
-	virtual bool getOutputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
-	virtual bool setSpeakerArrangement (VstSpeakerArrangement* pluginInput,
-	                                    VstSpeakerArrangement* pluginOutput) SMTG_OVERRIDE;
-	virtual bool getSpeakerArrangement (VstSpeakerArrangement** pluginInput,
-	                                    VstSpeakerArrangement** pluginOutput) SMTG_OVERRIDE;
-	virtual bool setBypass (bool onOff) SMTG_OVERRIDE;
+	bool getInputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
+	bool getOutputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
+	bool setSpeakerArrangement (VstSpeakerArrangement* pluginInput,
+	                            VstSpeakerArrangement* pluginOutput) SMTG_OVERRIDE;
+	bool getSpeakerArrangement (VstSpeakerArrangement** pluginInput,
+	                            VstSpeakerArrangement** pluginOutput) SMTG_OVERRIDE;
+	bool setBypass (bool onOff) SMTG_OVERRIDE;
 
-	virtual bool setProcessPrecision (VstInt32 precision) SMTG_OVERRIDE;
-	virtual VstInt32 getNumMidiInputChannels () SMTG_OVERRIDE;
-	virtual VstInt32 getNumMidiOutputChannels () SMTG_OVERRIDE;
-	virtual VstInt32 getGetTailSize () SMTG_OVERRIDE;
-	virtual bool getEffectName (char* name) SMTG_OVERRIDE;
-	virtual bool getVendorString (char* text) SMTG_OVERRIDE;
-	virtual VstInt32 getVendorVersion () SMTG_OVERRIDE;
-	virtual VstIntPtr vendorSpecific (VstInt32 lArg, VstIntPtr lArg2, void* ptrArg,
+	bool setProcessPrecision (VstInt32 precision) SMTG_OVERRIDE;
+	VstInt32 getNumMidiInputChannels () SMTG_OVERRIDE;
+	VstInt32 getNumMidiOutputChannels () SMTG_OVERRIDE;
+	VstInt32 getGetTailSize () SMTG_OVERRIDE;
+	bool getEffectName (char* name) SMTG_OVERRIDE;
+	bool getVendorString (char* text) SMTG_OVERRIDE;
+	VstInt32 getVendorVersion () SMTG_OVERRIDE;
+	VstIntPtr vendorSpecific (VstInt32 lArg, VstIntPtr lArg2, void* ptrArg,
 	                                  float floatArg) SMTG_OVERRIDE;
-	virtual VstPlugCategory getPlugCategory () SMTG_OVERRIDE;
-	virtual VstInt32 canDo (char* text) SMTG_OVERRIDE;
+	VstPlugCategory getPlugCategory () SMTG_OVERRIDE;
+	VstInt32 canDo (char* text) SMTG_OVERRIDE;
 
-	virtual VstInt32 getMidiProgramName (VstInt32 channel,
-	                                     MidiProgramName* midiProgramName) SMTG_OVERRIDE;
-	virtual VstInt32 getCurrentMidiProgram (VstInt32 channel,
-	                                        MidiProgramName* currentProgram) SMTG_OVERRIDE;
-	virtual VstInt32 getMidiProgramCategory (VstInt32 channel,
-	                                         MidiProgramCategory* category) SMTG_OVERRIDE;
-	virtual bool hasMidiProgramsChanged (VstInt32 channel) SMTG_OVERRIDE;
-	virtual bool getMidiKeyName (VstInt32 channel, MidiKeyName* keyName) SMTG_OVERRIDE;
+	VstInt32 getMidiProgramName (VstInt32 channel, MidiProgramName* midiProgramName) SMTG_OVERRIDE;
+	VstInt32 getCurrentMidiProgram (VstInt32 channel,
+	                                MidiProgramName* currentProgram) SMTG_OVERRIDE;
+	VstInt32 getMidiProgramCategory (VstInt32 channel, MidiProgramCategory* category) SMTG_OVERRIDE;
+	bool hasMidiProgramsChanged (VstInt32 channel) SMTG_OVERRIDE;
+	bool getMidiKeyName (VstInt32 channel, MidiKeyName* keyName) SMTG_OVERRIDE;
 
 	// finally process...
-	virtual void processReplacing (float** inputs, float** outputs,
-	                               VstInt32 sampleFrames) SMTG_OVERRIDE;
-	virtual void processDoubleReplacing (double** inputs, double** outputs,
-	                                     VstInt32 sampleFrames) SMTG_OVERRIDE;
-	virtual VstInt32 processEvents (VstEvents* events) SMTG_OVERRIDE;
+	void processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames) SMTG_OVERRIDE;
+	void processDoubleReplacing (double** inputs, double** outputs,
+	                             VstInt32 sampleFrames) SMTG_OVERRIDE;
+	VstInt32 processEvents (VstEvents* events) SMTG_OVERRIDE;
 
 	// VST 3 Interfaces  ------------------------------------------------------
 	// FUnknown
-	virtual tresult PLUGIN_API queryInterface (const char* iid, void** obj) SMTG_OVERRIDE;
-	virtual uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
-	virtual uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
+	tresult PLUGIN_API queryInterface (const char* iid, void** obj) SMTG_OVERRIDE;
+	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
+	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
 
 	// IHostApplication
-	virtual tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API createInstance (TUID cid, TUID iid, void** obj) SMTG_OVERRIDE;
+	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE;
+	tresult PLUGIN_API createInstance (TUID cid, TUID iid, void** obj) SMTG_OVERRIDE;
 
 	// IComponentHandler
-	virtual tresult PLUGIN_API beginEdit (ParamID tag) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API endEdit (ParamID tag) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API restartComponent (int32 flags) SMTG_OVERRIDE;
+	tresult PLUGIN_API beginEdit (ParamID tag) SMTG_OVERRIDE;
+	tresult PLUGIN_API performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
+	tresult PLUGIN_API endEdit (ParamID tag) SMTG_OVERRIDE;
+	tresult PLUGIN_API restartComponent (int32 flags) SMTG_OVERRIDE;
 
 	// IUnitHandler
-	virtual tresult PLUGIN_API notifyUnitSelection (UnitID unitId) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API notifyProgramListChange (ProgramListID listId,
+	tresult PLUGIN_API notifyUnitSelection (UnitID unitId) SMTG_OVERRIDE;
+	tresult PLUGIN_API notifyProgramListChange (ProgramListID listId,
 	                                                    int32 programIndex) SMTG_OVERRIDE;
 
 	void setVendorName (char* name);
@@ -206,7 +179,7 @@ public:
 	void setSubCategories (char* string);
 
 	// ITimer
-	virtual void onTimer (Timer* timer) SMTG_OVERRIDE;
+	void onTimer (Timer* timer) SMTG_OVERRIDE;
 
 //-------------------------------------------------------------------------------------------------------
 protected:

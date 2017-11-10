@@ -63,7 +63,7 @@ SingleComponentEffect::~SingleComponentEffect ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API SingleComponentEffect::initialize (FUnknown* context)
 {
-	return EditController::initialize (context);
+	return EditControllerEx1::initialize (context);
 }
 
 //-----------------------------------------------------------------------------
@@ -72,14 +72,14 @@ tresult PLUGIN_API SingleComponentEffect::terminate ()
 	parameters.removeAll ();
 	removeAllBusses ();
 
-	return EditController::terminate ();
+	return EditControllerEx1::terminate ();
 }
 
 //-----------------------------------------------------------------------------
 int32 PLUGIN_API SingleComponentEffect::getBusCount (MediaType type, BusDirection dir)
 {
 	BusList* busList = getBusList (type, dir);
-	return busList ? static_cast<int32>(busList->size ()) : 0;
+	return busList ? static_cast<int32> (busList->size ()) : 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -87,7 +87,7 @@ tresult PLUGIN_API SingleComponentEffect::getBusInfo (MediaType type, BusDirecti
                                                       BusInfo& info)
 {
 	BusList* busList = getBusList (type, dir);
-	if (busList == 0)
+	if (busList == nullptr)
 		return kInvalidArgument;
 	if (index >= static_cast<int32> (busList->size ()))
 		return kInvalidArgument;
@@ -105,7 +105,7 @@ tresult PLUGIN_API SingleComponentEffect::activateBus (MediaType type, BusDirect
                                                        int32 index, TBool state)
 {
 	BusList* busList = getBusList (type, dir);
-	Bus* bus = busList ? (Bus*)busList->at (index) : 0;
+	Bus* bus = busList ? (Bus*)busList->at (index) : nullptr;
 	if (bus)
 	{
 		bus->setActive (state);
@@ -192,14 +192,14 @@ tresult PLUGIN_API SingleComponentEffect::setBusArrangements (SpeakerArrangement
 	    numOuts > static_cast<int32> (audioOutputs.size ()))
 		return kResultFalse;
 
-	for (int32 index = 0; index < static_cast<int32>(audioInputs.size ()); ++index)
+	for (int32 index = 0; index < static_cast<int32> (audioInputs.size ()); ++index)
 	{
 		if (index >= numIns)
 			break;
 		FCast<Vst::AudioBus> (audioInputs[index].get ())->setArrangement (inputs[index]);
 	}
 
-	for (int32 index = 0; index < static_cast<int32>(audioOutputs.size ()); ++index)
+	for (int32 index = 0; index < static_cast<int32> (audioOutputs.size ()); ++index)
 	{
 		if (index >= numOuts)
 			break;
@@ -246,7 +246,7 @@ BusList* SingleComponentEffect::getBusList (MediaType type, BusDirection dir)
 		return dir == kInput ? &audioInputs : &audioOutputs;
 	else if (type == kEvent)
 		return dir == kInput ? &eventInputs : &eventOutputs;
-	return 0;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -259,7 +259,7 @@ tresult PLUGIN_API SingleComponentEffect::queryInterface (const TUID iid, void**
 	}
 	DEF_INTERFACE (IComponent)
 	DEF_INTERFACE (IAudioProcessor)
-	return EditController::queryInterface (iid, obj);
+	return EditControllerEx1::queryInterface (iid, obj);
 }
 
 //------------------------------------------------------------------------

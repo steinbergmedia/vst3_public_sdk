@@ -98,7 +98,7 @@ public:
 
 	//---from Bus-------
 	/** Gets the BusInfo associated to this Event bus. */
-	virtual bool getInfo (BusInfo& info) SMTG_OVERRIDE;
+	bool getInfo (BusInfo& info) SMTG_OVERRIDE;
 
 	OBJ_METHODS (Vst::EventBus, Vst::Bus);
 
@@ -125,7 +125,7 @@ public:
 
 	//---from Bus---------------------
 	/** Gets the BusInfo associated to this Audio bus. */
-	virtual bool getInfo (BusInfo& info) SMTG_OVERRIDE;
+	bool getInfo (BusInfo& info) SMTG_OVERRIDE;
 
 	OBJ_METHODS (Vst::AudioBus, Vst::Bus)
 

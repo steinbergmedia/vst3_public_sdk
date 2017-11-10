@@ -53,10 +53,10 @@ public:
 	void setVerticalNoteExpType (int32_t type) { yNEType = type; }
 
 protected:
-	void controlBeginEdit (CControl* pControl) VSTGUI_OVERRIDE_VMETHOD;
-	void controlEndEdit (CControl* pControl) VSTGUI_OVERRIDE_VMETHOD;
-	void valueChanged (CControl* pControl) VSTGUI_OVERRIDE_VMETHOD;
-	CView* verifyView (CView* view, const UIAttributes& attributes, const IUIDescription* description) VSTGUI_OVERRIDE_VMETHOD;
+	void controlBeginEdit (CControl* pControl) override;
+	void controlEndEdit (CControl* pControl) override;
+	void valueChanged (CControl* pControl) override;
+	CView* verifyView (CView* view, const UIAttributes& attributes, const IUIDescription* description) override;
 
 	void startNote (float velocity);
 	void stopNote (float velocity);

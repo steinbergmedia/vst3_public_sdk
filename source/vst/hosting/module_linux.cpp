@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    :
+// Category    : Helpers
 // Filename    : public.sdk/source/vst/hosting/module_linux.cpp
 // Created by  : Steinberg, 08/2016
 // Description : hosting module classes (linux implementation)

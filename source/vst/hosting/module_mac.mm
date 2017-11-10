@@ -194,11 +194,41 @@ public:
                 CFBundleUnloadExecutable ((CFBundleRef)bundle);
             }
 		}
-        
 	}
 
 	CFPtr<CFBundleRef> bundle;
 };
+
+//------------------------------------------------------------------------
+void findModulesInDirectory (NSURL* dirUrl, Module::PathList& result)
+{
+	NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager]
+	               enumeratorAtURL:[dirUrl URLByResolvingSymlinksInPath]
+	    includingPropertiesForKeys:nil
+	                       options:NSDirectoryEnumerationSkipsPackageDescendants
+	                  errorHandler:nil];
+	for (NSURL* url in enumerator)
+	{
+		if ([[[url lastPathComponent] pathExtension] isEqualToString:@"vst3"])
+		{
+			result.emplace_back ([url.path UTF8String]);
+		}
+		else
+		{
+			id resValue;
+			if (![url getResourceValue:&resValue forKey:NSURLIsSymbolicLinkKey error:nil])
+				continue;
+			if (!static_cast<NSNumber*> (resValue).boolValue)
+				continue;
+			url = [url URLByResolvingSymlinksInPath];
+			if (![url getResourceValue:&resValue forKey:NSURLIsDirectoryKey error:nil])
+				continue;
+			if (!static_cast<NSNumber*> (resValue).boolValue)
+				continue;
+			findModulesInDirectory (url, result);
+		}
+	}
+}
 
 //------------------------------------------------------------------------
 void getModules (NSSearchPathDomainMask domain, Module::PathList& result)
@@ -220,19 +250,7 @@ void getModules (NSSearchPathDomainMask domain, Module::PathList& result)
 	    [[plugInsUrl URLByAppendingPathComponent:@"VST3"] URLByResolvingSymlinksInPath];
 	if (vst3Url == nil)
 		return;
-	NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager]
-	               enumeratorAtURL:[vst3Url URLByResolvingSymlinksInPath]
-	    includingPropertiesForKeys:nil
-	                       options:NSDirectoryEnumerationSkipsPackageDescendants
-	                  errorHandler:nil];
-	for (NSURL* url in enumerator)
-	{
-		if ([[[url lastPathComponent] pathExtension] isEqualToString:@"vst3"])
-		{
-			
-			result.emplace_back ([url.path UTF8String]);
-		}
-	}
+	findModulesInDirectory (vst3Url, result);
 }
 
 //------------------------------------------------------------------------
@@ -250,18 +268,7 @@ void getApplicationModules (Module::PathList& result)
 	auto vst3Url = [resUrl URLByAppendingPathComponent:@"VST3"];
 	if (!vst3Url)
 		return;
-	NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager]
-	               enumeratorAtURL:[vst3Url URLByResolvingSymlinksInPath]
-	    includingPropertiesForKeys:nil
-	                       options:NSDirectoryEnumerationSkipsPackageDescendants
-	                  errorHandler:nil];
-	for (NSURL* url in enumerator)
-	{
-		if ([[[url lastPathComponent] pathExtension] isEqualToString:@"vst3"])
-		{
-			result.emplace_back ([url.path UTF8String]);
-		}
-	}
+	findModulesInDirectory (vst3Url, result);
 }
 
 //------------------------------------------------------------------------

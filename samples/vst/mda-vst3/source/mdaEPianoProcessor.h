@@ -35,10 +35,10 @@ public:
 
 	void doProcessing (ProcessData& data) SMTG_OVERRIDE;
 
-	virtual bool hasProgram () const SMTG_OVERRIDE { return true; }
-	virtual Steinberg::uint32 getCurrentProgram () const SMTG_OVERRIDE { return currentProgram; }
-	virtual void setCurrentProgram (Steinberg::uint32 val) SMTG_OVERRIDE;
-	virtual void setCurrentProgramNormalized (ParamValue val) SMTG_OVERRIDE;
+	bool hasProgram () const SMTG_OVERRIDE { return true; }
+	Steinberg::uint32 getCurrentProgram () const SMTG_OVERRIDE { return currentProgram; }
+	void setCurrentProgram (Steinberg::uint32 val) SMTG_OVERRIDE;
+	void setCurrentProgramNormalized (ParamValue val) SMTG_OVERRIDE;
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new EPianoProcessor; }

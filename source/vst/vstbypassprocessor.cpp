@@ -105,14 +105,12 @@ static bool delay (int32 sampleFrames, float* inStream, float* outStream, float*
 	return true;
 }
 
-
 //------------------------------------------------------------------------
 // AudioBuffer Implementation
 //------------------------------------------------------------------------
-AudioBuffer::AudioBuffer ()
-: mBuffer (nullptr)
-, mMaxSamples (0)
-{}
+AudioBuffer::AudioBuffer () : mBuffer (nullptr), mMaxSamples (0)
+{
+}
 
 //------------------------------------------------------------------------
 AudioBuffer::~AudioBuffer ()
@@ -129,8 +127,10 @@ void AudioBuffer::resize (int32 _maxSamples)
 		if (mMaxSamples <= 0)
 		{
 			if (mBuffer)
-				free (mBuffer),
+			{
+				free (mBuffer);
 				mBuffer = nullptr;
+			}
 		}
 		else
 		{
@@ -166,14 +166,17 @@ BypassProcessor::BypassProcessor () : mActive (false), mMainIOBypass (false)
 }
 
 //------------------------------------------------------------------------
-BypassProcessor::~BypassProcessor () { reset (); }
+BypassProcessor::~BypassProcessor ()
+{
+	reset ();
+}
 
 //------------------------------------------------------------------------
 void BypassProcessor::setup (IAudioProcessor& audioProcessor, ProcessSetup& processSetup,
                              int32 delaySamples)
 {
 	reset ();
-	
+
 	SpeakerArrangement inputArr = 0;
 	bool hasInput = audioProcessor.getBusArrangement (kInput, 0, inputArr) == kResultOk;
 
@@ -248,6 +251,10 @@ void BypassProcessor::setActive (bool state)
 //------------------------------------------------------------------------
 void BypassProcessor::process (ProcessData& data)
 {
+	// flush
+	if (data.numInputs == 0 || data.numOutputs == 0)
+		return;
+
 	if (mMainIOBypass)
 	{
 		AudioBusBuffers& inBus = data.inputs[0];

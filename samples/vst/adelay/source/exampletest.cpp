@@ -80,18 +80,16 @@ bool PLUGIN_API ADelayTest::setup ()
 //-----------------------------------------------------------------------------
 bool PLUGIN_API ADelayTest::run (ITestResult* testResult)
 {
-	ADelayController* controller = FCast<ADelayController> (plugProvider->getController ());
-	ADelayProcessor* processor = FCast<ADelayProcessor> (plugProvider->getComponent ());
-	if (controller)
-		testResult->addMessage (String ("Correct IEditController"));
-	else
+	auto controller = plugProvider->getController ();
+	FUnknownPtr<IDelayTestController> testController (controller);
+	if (!controller)
+	{
 		testResult->addErrorMessage (String ("Unknown IEditController"));
-	if (processor)
-		testResult->addMessage (String ("Correct IComponent"));
-	else
-		testResult->addErrorMessage (String ("Unknown IComponent"));
-	plugProvider->releasePlugIn (processor, controller);
-	return (controller && processor);
+		return false;
+	}
+	bool result = testController->doTest ();
+	plugProvider->releasePlugIn (nullptr, controller);
+	return (result);
 }
 
 //-----------------------------------------------------------------------------
@@ -103,12 +101,8 @@ bool PLUGIN_API ADelayTest::teardown ()
 //-----------------------------------------------------------------------------
 const tchar* PLUGIN_API ADelayTest::getDescription ()
 {
-	static String description ("Example Test");
-#ifdef UNICODE
-	return description.text16 ();
-#else
-	return description.text8 ();
-#endif
+	return STR ("Example Test");
 }
 
+//------------------------------------------------------------------------
 }} // namespaces

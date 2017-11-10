@@ -35,8 +35,8 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/vsteditcontroller.h"
-#include "pluginterfaces/base/ustring.h"
 #include "base/source/updatehandler.h"
+#include "pluginterfaces/base/ustring.h"
 
 #include <stdio.h>
 
@@ -48,10 +48,9 @@ KnobMode EditController::hostKnobMode = kCircularMode;
 //------------------------------------------------------------------------
 // EditController Implementation
 //------------------------------------------------------------------------
-EditController::EditController ()
-: componentHandler (0)
-, componentHandler2 (0)
-{}
+EditController::EditController () : componentHandler (nullptr), componentHandler2 (nullptr)
+{
+}
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditController::initialize (FUnknown* context)
@@ -67,13 +66,13 @@ tresult PLUGIN_API EditController::terminate ()
 	if (componentHandler)
 	{
 		componentHandler->release ();
-		componentHandler = 0;
+		componentHandler = nullptr;
 	}
 
 	if (componentHandler2)
 	{
 		componentHandler2->release ();
-		componentHandler2 = 0;
+		componentHandler2 = nullptr;
 	}
 
 	return ComponentBase::terminate ();
@@ -116,7 +115,8 @@ tresult PLUGIN_API EditController::getParameterInfo (int32 paramIndex, Parameter
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API EditController::getParamStringByValue (ParamID tag, ParamValue valueNormalized, String128 string)
+tresult PLUGIN_API EditController::getParamStringByValue (ParamID tag, ParamValue valueNormalized,
+                                                          String128 string)
 {
 	Parameter* parameter = getParameterObject (tag);
 	if (parameter)
@@ -128,7 +128,8 @@ tresult PLUGIN_API EditController::getParamStringByValue (ParamID tag, ParamValu
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API EditController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
+tresult PLUGIN_API EditController::getParamValueByString (ParamID tag, TChar* string,
+                                                          ParamValue& valueNormalized)
 {
 	Parameter* parameter = getParameterObject (tag);
 	if (parameter)
@@ -142,7 +143,8 @@ tresult PLUGIN_API EditController::getParamValueByString (ParamID tag, TChar* st
 }
 
 //------------------------------------------------------------------------
-ParamValue PLUGIN_API EditController::normalizedParamToPlain (ParamID tag, ParamValue valueNormalized)
+ParamValue PLUGIN_API EditController::normalizedParamToPlain (ParamID tag,
+                                                              ParamValue valueNormalized)
 {
 	Parameter* parameter = getParameterObject (tag);
 	if (parameter)
@@ -171,7 +173,7 @@ ParamValue PLUGIN_API EditController::getParamNormalized (ParamID tag)
 	{
 		return parameter->getNormalized ();
 	}
-	return 0.0;
+	return 0.;
 }
 
 //------------------------------------------------------------------------
@@ -209,7 +211,7 @@ tresult PLUGIN_API EditController::setComponentHandler (IComponentHandler* newHa
 	if (componentHandler2)
 	{
 		componentHandler2->release ();
-		componentHandler2 = 0;
+		componentHandler2 = nullptr;
 	}
 
 	if (newHandler)
@@ -305,8 +307,7 @@ tresult EditController::requestOpenEditor (FIDString name)
 // EditorView Implementation
 //------------------------------------------------------------------------
 EditorView::EditorView (EditController* controller, ViewRect* size)
-: CPluginView (size)
-, controller (controller)
+: CPluginView (size), controller (controller)
 {
 	if (controller)
 	{
@@ -345,7 +346,10 @@ void EditorView::removedFromParent ()
 //------------------------------------------------------------------------
 // EditControllerEx1 implementation
 //------------------------------------------------------------------------
-EditControllerEx1::EditControllerEx1 () : selectedUnit (kRootUnitId) { UpdateHandler::instance (); }
+EditControllerEx1::EditControllerEx1 () : selectedUnit (kRootUnitId)
+{
+	UpdateHandler::instance ();
+}
 
 //------------------------------------------------------------------------
 EditControllerEx1::~EditControllerEx1 ()
@@ -400,7 +404,7 @@ bool EditControllerEx1::addProgramList (ProgramList* list)
 ProgramList* EditControllerEx1::getProgramList (ProgramListID listId) const
 {
 	ProgramIndexMap::const_iterator it = programIndexMap.find (listId);
-	return it == programIndexMap.end () ? 0 : programLists[it->second];
+	return it == programIndexMap.end () ? nullptr : programLists[it->second];
 }
 
 //------------------------------------------------------------------------
@@ -520,8 +524,7 @@ Unit::Unit (const String128 name, UnitID unitId, UnitID parentUnitId, ProgramLis
 }
 
 //------------------------------------------------------------------------
-Unit::Unit (const UnitInfo& info)
-: info (info)
+Unit::Unit (const UnitInfo& info) : info (info)
 {
 }
 
@@ -535,7 +538,7 @@ void Unit::setName (const String128 newName)
 // ProgramList implementation
 //------------------------------------------------------------------------
 ProgramList::ProgramList (const String128 name, ProgramListID listId, UnitID unitId)
-: unitId (unitId), parameter (0)
+: unitId (unitId), parameter (nullptr)
 {
 	UString128 (name).copyTo (info.name, 128);
 	info.id = listId;
@@ -547,7 +550,7 @@ ProgramList::ProgramList (const ProgramList& programList)
 : info (programList.info)
 , unitId (programList.unitId)
 , programNames (programList.programNames)
-, parameter (0)
+, parameter (nullptr)
 {
 }
 
@@ -563,7 +566,7 @@ int32 ProgramList::addProgram (const String128 name)
 //------------------------------------------------------------------------
 bool ProgramList::setProgramInfo (int32 programIndex, CString attributeId, const String128 value)
 {
-	if (programIndex >= 0 && programIndex < static_cast<int32>(programNames.size ()))
+	if (programIndex >= 0 && programIndex < static_cast<int32> (programNames.size ()))
 	{
 		programInfos.at (programIndex).insert (std::make_pair (attributeId, value));
 		return true;
@@ -575,7 +578,7 @@ bool ProgramList::setProgramInfo (int32 programIndex, CString attributeId, const
 tresult ProgramList::getProgramInfo (int32 programIndex, CString attributeId,
                                      String128 value /*out*/)
 {
-	if (programIndex >= 0 && programIndex < static_cast<int32>(programNames.size ()))
+	if (programIndex >= 0 && programIndex < static_cast<int32> (programNames.size ()))
 	{
 		StringMap::const_iterator it = programInfos[programIndex].find (attributeId);
 		if (it != programInfos[programIndex].end ())
@@ -593,7 +596,7 @@ tresult ProgramList::getProgramInfo (int32 programIndex, CString attributeId,
 //------------------------------------------------------------------------
 tresult ProgramList::getProgramName (int32 programIndex, String128 name /*out*/)
 {
-	if (programIndex >= 0 && programIndex < static_cast<int32>(programNames.size ()))
+	if (programIndex >= 0 && programIndex < static_cast<int32> (programNames.size ()))
 	{
 		programNames.at (programIndex).copyTo16 (name, 0, 128);
 		return kResultTrue;
@@ -604,7 +607,7 @@ tresult ProgramList::getProgramName (int32 programIndex, String128 name /*out*/)
 //------------------------------------------------------------------------
 tresult ProgramList::setProgramName (int32 programIndex, const String128 name /*in*/)
 {
-	if (programIndex >= 0 && programIndex < static_cast<int32>(programNames.size ()))
+	if (programIndex >= 0 && programIndex < static_cast<int32> (programNames.size ()))
 	{
 		programNames.at (programIndex) = name;
 		if (parameter)
@@ -619,7 +622,7 @@ tresult ProgramList::setProgramName (int32 programIndex, const String128 name /*
 //------------------------------------------------------------------------
 Parameter* ProgramList::getParameter ()
 {
-	if (parameter == 0)
+	if (parameter == nullptr)
 	{
 		StringListParameter* listParameter = new StringListParameter (
 		    info.name, info.id, 0,
@@ -659,10 +662,10 @@ bool ProgramListWithPitchNames::setPitchName (int32 programIndex, int16 pitch,
 {
 	if (programIndex < 0 || programIndex >= getCount ())
 		return false;
-	
+
 	bool nameChanged = true;
 	std::pair<PitchNameMap::iterator, bool> res =
-		pitchNames[programIndex].insert (std::make_pair (pitch, pitchName));
+	    pitchNames[programIndex].insert (std::make_pair (pitch, pitchName));
 	if (!res.second)
 	{
 		if (res.first->second == pitchName)
@@ -670,7 +673,7 @@ bool ProgramListWithPitchNames::setPitchName (int32 programIndex, int16 pitch,
 		else
 			res.first->second = pitchName;
 	}
-	
+
 	if (nameChanged)
 		changed ();
 	return true;

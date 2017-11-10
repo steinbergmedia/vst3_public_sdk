@@ -52,8 +52,8 @@ tresult PLUGIN_API HostApplication::getName (String128 name)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostApplication::createInstance (TUID cid, TUID _iid, void** obj)
 {
-	FUID classID (cid);
-	FUID interfaceID (_iid);
+	FUID classID (FUID::fromTUID (cid));
+	FUID interfaceID (FUID::fromTUID (_iid));
 	if (classID == IMessage::iid && interfaceID == IMessage::iid)
 	{
 		*obj = new HostMessage;

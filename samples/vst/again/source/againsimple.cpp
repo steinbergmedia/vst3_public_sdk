@@ -40,11 +40,13 @@
 #include "version.h" // for versionning
 
 #include "public.sdk/source/main/pluginfactoryvst3.h"
+#include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/base/ustring.h"	// for UString128
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 
 #include "vstgui/plugin-bindings/vst3editor.h"
 
@@ -138,11 +140,11 @@ tresult PLUGIN_API AGainSimple::initialize (FUnknown* context)
 
 	//---create Audio In/Out buses------
 	// we want a stereo Input and a Stereo Output
-	addAudioInput (USTRING ("Stereo In"), SpeakerArr::kStereo);
-	addAudioOutput (USTRING ("Stereo Out"), SpeakerArr::kStereo);
+	addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
+	addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
 
-	//---create MIDI In/Out buses (1 bus with only 1 channel)------
-	addEventInput (USTRING ("MIDI In"), 1);
+	//---create Event In/Out buses (1 bus with only 1 channel)------
+	addEventInput (STR16 ("Event In"), 1);
 
 	//---Create Parameters------------
 
@@ -200,10 +202,10 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 	// finally the process function
 	// In this example there are 4 steps:
 	// 1) Read inputs parameters coming from host (in order to adapt our model values)
-	// 2) Read inputs events coming from host (we apply a gain reduction depending of the velocity
-	// of pressed key)
+	// 2) Read inputs events coming from host (we apply a gain reduction depending of the velocity of pressed key)
 	// 3) Process the gain of the input buffer to the output buffer
 	// 4) Write the new VUmeter value to the output Parameters queue
+
 
 	//---1) Read inputs parameter changes-----------
 	IParameterChanges* paramChanges = data.inputParameterChanges;
@@ -216,34 +218,35 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 			IParamValueQueue* paramQueue = paramChanges->getParameterData (i);
 			if (paramQueue)
 			{
-				int32 offsetSamples;
-				double value;
+				ParamValue value;
+				int32 sampleOffset;
 				int32 numPoints = paramQueue->getPointCount ();
 				switch (paramQueue->getParameterId ())
 				{
 					case kGainId:
 						// we use in this example only the last point of the queue.
-						// in some wanted case for specific kind of parameter it makes sense to
-						// retrieve all points
+						// in some wanted case for specific kind of parameter it makes sense to retrieve all points
 						// and process the whole audio block in small blocks.
-						if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) ==
-						    kResultTrue)
+						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
+						{
 							fGain = (float)value;
+						}
 						break;
 
 					case kBypassId:
-						if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) ==
-						    kResultTrue)
+						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
+						{
 							bBypass = (value > 0.5f);
+						}
 						break;
 				}
 			}
 		}
 	}
-
+	
 	//---2) Read input events-------------
 	IEventList* eventList = data.inputEvents;
-	if (eventList)
+	if (eventList) 
 	{
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
@@ -253,13 +256,13 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 			{
 				switch (event.type)
 				{
-                //----------------------
+					//----------------------
 					case Event::kNoteOnEvent:
 						// use the velocity as gain modifier
 						fGainReduction = event.noteOn.velocity;
 						break;
-
-                //----------------------
+					
+					//----------------------
 					case Event::kNoteOffEvent:
 						// noteOff reset the reduction
 						fGainReduction = 0.f;
@@ -268,22 +271,23 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 			}
 		}
 	}
-
-	//--- ----------------------------------
+		
+	//-------------------------------------
 	//---3) Process Audio---------------------
-	//--- ----------------------------------
+	//-------------------------------------
 	if (data.numInputs == 0 || data.numOutputs == 0)
 	{
 		// nothing to do
 		return kResultOk;
 	}
 
-	// (simplification) we suppose in this example that we have the same input channel count than
-	// the output
+	// (simplification) we suppose in this example that we have the same input channel count than the output
 	int32 numChannels = data.inputs[0].numChannels;
+
 	//---get audio buffers----------------
-	float** in = data.inputs[0].channelBuffers32;
-	float** out = data.outputs[0].channelBuffers32;
+	uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
+	void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
+	void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
 
 	//---check if silence---------------
 	// normally we have to check each channel (simplification)
@@ -291,17 +295,14 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 	{
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
-
-		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are
-		// clear
-		int32 sampleFrames = data.numSamples;
+		
+		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// do not need to be cleared if the buffers are the same (in this case input buffer are
-			// already cleared by the host)
+			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
 			if (in[i] != out[i])
-			{
-				memset (out[i], 0, sampleFrames * sizeof (float));
+			{				
+				memset (out[i], 0, sampleFramesSize);
 			}
 		}
 
@@ -315,12 +316,13 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 	//---in bypass mode outputs should be like inputs-----
 	if (bBypass)
 	{
-		int32 sampleFrames = data.numSamples;
 		for (int32 i = 0; i < numChannels; i++)
 		{
 			// do not need to be copied if the buffers are the same
 			if (in[i] != out[i])
-				memcpy (out[i], in[i], sampleFrames * sizeof (float));
+			{
+				memcpy (out[i], in[i], sampleFramesSize);
+			}
 		}
 		// in this example we do not update the VuMeter in Bypass
 	}
@@ -334,53 +336,38 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 		{
 			gain = gain * 0.5f;
 		}
-
+		
+		// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set the silence flags. 
 		if (gain < 0.0000001)
 		{
-			int32 sampleFrames = data.numSamples;
 			for (int32 i = 0; i < numChannels; i++)
 			{
-				memset (out[i], 0, sampleFrames * sizeof (float));
+				memset (out[i], 0, sampleFramesSize);
 			}
-			data.outputs[0].silenceFlags =
-			    (1 << numChannels) - 1; // this will set to 1 all channels
-			fVuPPM = 0.f;
+			data.outputs[0].silenceFlags = (1 << numChannels) - 1;  // this will set to 1 all channels
 		}
 		else
 		{
-			// in real Plug-in it would be better to do dezippering to avoid jump (click) in gain
-			// value
-			for (int32 i = 0; i < numChannels; i++)
-			{
-				int32 sampleFrames = data.numSamples;
-				float* ptrIn = in[i];
-				float* ptrOut = out[i];
-				float tmp;
-				while (--sampleFrames >= 0)
-				{
-					// apply gain
-					tmp = (*ptrIn++) * gain;
-					(*ptrOut++) = tmp;
-
-					// check only positive values
-					if (tmp > fVuPPM)
-						fVuPPM = tmp;
-				}
-			}
+			if (data.symbolicSampleSize == kSample32)
+				fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
+				                                 data.numSamples, gain);
+			else
+				fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
+				                                 data.numSamples, gain);
 		}
 
 		//---3) Write outputs parameter changes-----------
-		IParameterChanges* paramChanges = data.outputParameterChanges;
-		// a new value of VuMeter will be send to the host
+		IParameterChanges* outParamChanges = data.outputParameterChanges;
+		// a new value of VuMeter will be send to the host 
 		// (the host will send it back in sync to our controller for updating our editor)
-		if (paramChanges && fVuPPMOld != fVuPPM)
+		if (outParamChanges && fVuPPMOld != fVuPPM)
 		{
 			int32 index = 0;
-			IParamValueQueue* paramQueue = paramChanges->addParameterData (kVuPPMId, index);
+			IParamValueQueue* paramQueue = outParamChanges->addParameterData (kVuPPMId, index);
 			if (paramQueue)
 			{
 				int32 index2 = 0;
-				paramQueue->addPoint (0, fVuPPM, index2);
+				paramQueue->addPoint (0, fVuPPM, index2); 
 			}
 		}
 		fVuPPMOld = fVuPPM;
@@ -393,25 +380,68 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 {
 	// we receive the current  (processor part)
-	if (state)
-	{
-		float savedGain = 0.f;
-		if (state->read (&savedGain, 4) != kResultOk)
-			return kResultFalse;
+	// called when we load a preset, the model has to be reloaded
 
-		float savedGainReduction = 0.f;
-		if (state->read (&savedGainReduction, 4) != kResultOk)
-			return kResultFalse;
+	float savedGain = 0.f;
+	if (state->read (&savedGain, sizeof (float)) != kResultOk)
+	{
+		return kResultFalse;
+	}
+
+	float savedGainReduction = 0.f;
+	if (state->read (&savedGainReduction, sizeof (float)) != kResultOk)
+	{
+		return kResultFalse;
+	}
+
+	int32 savedBypass = 0;
+	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
+	{
+		return kResultFalse;
+	}
 
 #if BYTEORDER == kBigEndian
-		SWAP_32 (savedGain)
-		SWAP_32 (savedGainReduction)
+	SWAP_32 (savedGain)
+	SWAP_32 (savedGainReduction)
+	SWAP_32 (savedBypass)
 #endif
 
-		fGain = savedGain;
-		fGainReduction = savedGainReduction;
+	fGain = savedGain;
+	fGainReduction = savedGainReduction;
+	bBypass = savedBypass > 0;
 
-		setParamNormalized (kGainId, savedGain);
+	setParamNormalized (kGainId, savedGain);
+	setParamNormalized (kBypassId, bBypass);
+
+
+	// Example of using the IStreamAttributes interface
+	FUnknownPtr<IStreamAttributes> stream (state);
+	if (stream)
+	{
+		IAttributeList* list = stream->getAttributes ();
+		if (list)
+		{
+			// get the current type (project/Default..) of this state
+			String128 string = {0};
+			if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) == kResultTrue)
+			{
+				UString128 tmp (string);
+				char ascii[128];
+				tmp.toAscii (ascii, 128);
+				if (!strncmp (ascii, StateType::kProject, strlen (StateType::kProject)))
+				{
+					// we are in project loading context...
+				}
+			}
+
+			// get the full file path of this state
+			TChar fullPath[1024];
+			memset (fullPath, 0, 1024 * sizeof (TChar));
+			if (list->getString (PresetAttributes::kFilePathStringType, fullPath, 1024 * sizeof (TChar)) == kResultTrue)
+			{
+				// here we have the full path ...
+			}
+		}
 	}
 
 	return kResultOk;
@@ -420,21 +450,31 @@ tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 //------------------------------------------------------------------------
 tresult PLUGIN_API AGainSimple::getState (IBStream* state)
 {
-	float savedGain = fGain;
-	float savedGainReduction = fGainReduction;
+	// here we need to save the model
+
+	float toSaveGain = fGain;
+	float toSaveGainReduction = fGainReduction;
+	int32 toSaveBypass = bBypass ? 1 : 0;
 
 #if BYTEORDER == kBigEndian
-	SWAP_32 (savedGain)
-	SWAP_32 (savedGainReduction)
+	SWAP_32 (toSaveGain)
+	SWAP_32 (toSaveGainReduction)
+	SWAP_32 (toSaveBypass)
 #endif
 
-	state->write (&savedGain, 4);
-	return state->write (&savedGainReduction, 4);
+	state->write (&toSaveGain, sizeof (float));
+	state->write (&toSaveGainReduction, sizeof (float));
+	state->write (&toSaveBypass, sizeof (int32));
+
+	return kResultOk;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API AGainSimple::setupProcessing (ProcessSetup& newSetup)
 {
+	// called before the process call, always in a disable state (not active)
+
+	// here we keep a trace of the processing mode (offline,...) for example.
 	currentProcessMode = newSetup.processMode;
 
 	return SingleComponentEffect::setupProcessing (newSetup);
@@ -446,35 +486,65 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 {
 	if (numIns == 1 && numOuts == 1)
 	{
-		if (inputs[0] == SpeakerArr::kMono && outputs[0] == SpeakerArr::kMono)
+		// the host wants Mono => Mono (or 1 channel -> 1 channel)
+		if (SpeakerArr::getChannelCount (inputs[0]) == 1 &&
+		    SpeakerArr::getChannelCount (outputs[0]) == 1)
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
-				if (bus->getArrangement () != SpeakerArr::kMono)
+				// check if we are Mono => Mono, if not we need to recreate the buses
+				if (bus->getArrangement () != inputs[0])
 				{
 					removeAudioBusses ();
-					addAudioInput (USTRING ("Mono In"), SpeakerArr::kMono);
-					addAudioOutput (USTRING ("Mono Out"), SpeakerArr::kMono);
+					addAudioInput  (STR16 ("Mono In"),  inputs[0]);
+					addAudioOutput (STR16 ("Mono Out"), inputs[0]);
 				}
 				return kResultOk;
 			}
 		}
+		// the host wants something else than Mono => Mono, in this case we are always Stereo => Stereo
 		else
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
-				if (bus->getArrangement () != SpeakerArr::kStereo)
+				tresult result = kResultFalse;
+				
+				// the host wants 2->2 (could be LsRs -> LsRs)
+				if (SpeakerArr::getChannelCount (inputs[0]) == 2 && SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
 					removeAudioBusses ();
-					addAudioInput (USTRING ("Stereo In"), SpeakerArr::kStereo);
-					addAudioOutput (USTRING ("Stereo Out"), SpeakerArr::kStereo);
+					addAudioInput  (STR16 ("Stereo In"),  inputs[0]);
+					addAudioOutput (STR16 ("Stereo Out"), outputs[0]);
+					result = kResultTrue;
 				}
-				return kResultOk;
+				// the host want something different than 1->1 or 2->2 : in this case we want stereo
+				else if (bus->getArrangement () != SpeakerArr::kStereo)
+				{
+					removeAudioBusses ();
+					addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
+					addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
+					result = kResultFalse;
+				}
+
+				return result;
 			}
 		}
 	}
+	return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API AGainSimple::canProcessSampleSize (int32 symbolicSampleSize)
+{
+	if (symbolicSampleSize == kSample32)
+		return kResultTrue;
+
+	// we support double processing
+	if (symbolicSampleSize == kSample64)
+		return kResultTrue;
+
 	return kResultFalse;
 }
 
@@ -632,12 +702,12 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID (0xB9F9ADE1, 0xCD9C4B6D, 0xA57E61E3, 0x123535FD),
 				PClassInfo::kManyInstances,					// cardinality  
-				kVstAudioEffectClass,						// the component category (dont changed this)
+				kVstAudioEffectClass,						// the component category (do not changed this)
 				"AGainSimple VST3",							// here the Plug-in name (to be changed)
 				0,											// single component effects can not be destributed so this is zero
 				"Fx",										// Subcategory for this Plug-in (to be changed)
 				FULL_VERSION_STR,							// Plug-in version (to be changed)
-				kVstVersionString,							// the VST 3 SDK version (dont changed this, use always this define)
+				kVstVersionString,							// the VST 3 SDK version (do not changed this, use always this define)
 				Steinberg::Vst::AGainSimple::createInstance)// function pointer called when this component should be instantiated
 
 END_FACTORY

@@ -12,24 +12,24 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -37,48 +37,93 @@
 #include "vsttestsuite.h"
 #include "public.sdk/source/vst/hosting/stringconvert.h"
 
-#include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
-#include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/ivstmessage.h"
-#include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstprocesscontext.h"
+#include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
 
 #include <cstdio>
-#include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 namespace Steinberg {
 namespace Vst {
 
-#define NUM_ITERATIONS			20
-#define DEFAULT_SAMPLE_RATE		44100
-#define DEFAULT_BLOCK_SIZE		64
-#define MAX_BLOCK_SIZE			8192
-#define BUFFERS_ARE_EQUAL		0
+#define NUM_ITERATIONS 20
+#define DEFAULT_SAMPLE_RATE 44100
+#define DEFAULT_BLOCK_SIZE 64
+#define MAX_BLOCK_SIZE 8192
+#define BUFFERS_ARE_EQUAL 0
 #define NUM_AUDIO_BLOCKS_TO_PROCESS 3
-#define CHANNEL_IS_SILENT		1
+#define CHANNEL_IS_SILENT 1
 
-#define TOUGHTESTS				0
+#define TOUGHTESTS 0
 
 DEF_CLASS_IID (IPlugProvider)
 
 FUnknown* gStandardPluginContext = nullptr;
-void setStandardPluginContext (FUnknown* context) { gStandardPluginContext = context; };
+void setStandardPluginContext (FUnknown* context)
+{
+	gStandardPluginContext = context;
+};
 
 //------------------------------------------------------------------------
-template<class T> struct ArrayDeleter
-{	
-	ArrayDeleter (T* array): array (array) {}
-	~ArrayDeleter () { if (array) delete[] array; }
-	
+template <class T>
+struct ArrayDeleter
+{
+	ArrayDeleter (T* array) : array (array) {}
+	~ArrayDeleter ()
+	{
+		if (array)
+			delete[] array;
+	}
+
 	T* array;
 };
 
+//------------------------------------------------------------------------
+static void addMessage (ITestResult* testResult, const std::u16string& str)
+{
+	testResult->addMessage ((const tchar*)str.data ());
+}
+
+//------------------------------------------------------------------------
+static void addMessage (ITestResult* testResult, const tchar* str)
+{
+	testResult->addMessage (str);
+}
+
+//------------------------------------------------------------------------
+static void addErrorMessage (ITestResult* testResult, const tchar* str)
+{
+	testResult->addErrorMessage (str);
+}
+
+//------------------------------------------------------------------------
+static void addErrorMessage (ITestResult* testResult, const std::u16string& str)
+{
+	testResult->addErrorMessage ((const tchar*)str.data ());
+}
+
+//------------------------------------------------------------------------
+static std::u16string printf (const char8* format, ...)
+{
+	using VST3::StringConvert::convert;
+
+	char8 string[1024 * 4];
+
+	va_list marker;
+	va_start (marker, format);
+
+	vsnprintf (string, kPrintfBufferSize, format, marker);
+	return convert (string).data ();
+}
 
 //------------------------------------------------------------------------
 // VstTestBase
@@ -86,37 +131,22 @@ template<class T> struct ArrayDeleter
 VstTestBase::VstTestBase (IPlugProvider* plugProvider)
 : plugProvider (plugProvider)
 , vstPlug (nullptr)
-, controller (nullptr)
-{
-	FUNKNOWN_CTOR 
-
-	if (plugProvider)
-		plugProvider->addRef ();
-}
+, controller (nullptr) {FUNKNOWN_CTOR}
 
 //------------------------------------------------------------------------
 VstTestBase::VstTestBase ()
 : plugProvider (nullptr)
 , vstPlug (nullptr)
-, controller (nullptr)
-{
-	FUNKNOWN_CTOR 
-}
+, controller (nullptr) {FUNKNOWN_CTOR}
 
 //------------------------------------------------------------------------
-VstTestBase::~VstTestBase ()
-{
-	FUNKNOWN_DTOR
-
-	if (plugProvider)
-		plugProvider->release ();
-}
+VstTestBase::~VstTestBase () {FUNKNOWN_DTOR}
 
 //------------------------------------------------------------------------
 IMPLEMENT_FUNKNOWN_METHODS (VstTestBase, ITest, ITest::iid)
 
 //------------------------------------------------------------------------
-bool VstTestBase::setup ()
+    bool VstTestBase::setup ()
 {
 	if (plugProvider)
 	{
@@ -127,7 +157,7 @@ bool VstTestBase::setup ()
 		{
 			vstPlug->activateBus (kAudio, kInput, 0, true);
 			vstPlug->activateBus (kAudio, kOutput, 0, true);
-	
+
 			return true;
 		}
 	}
@@ -150,16 +180,25 @@ bool VstTestBase::teardown ()
 }
 
 //------------------------------------------------------------------------
-// Component Initialize / Terminate 
-//------------------------------------------------------------------------
+void VstTestBase::printTestHeader (ITestResult* testResult)
+{
+	using VST3::StringConvert::convert;
 
+	std::string str = "===";
+	str += getName ();
+	str += " ====================================";
+	addMessage (testResult, convert (str));
+}
+
+//------------------------------------------------------------------------
+// Component Initialize / Terminate
+//------------------------------------------------------------------------
 
 //------------------------------------------------------------------------
 // VstTestEnh
 //------------------------------------------------------------------------
 VstTestEnh::VstTestEnh (IPlugProvider* plugProvider, ProcessSampleSize sampl)
-: VstTestBase (plugProvider)
-, audioEffect (nullptr)
+: VstTestBase (plugProvider), audioEffect (nullptr)
 {
 	// process setup defaults
 	memset (&processSetup, 0, sizeof (ProcessSetup));
@@ -195,59 +234,10 @@ bool VstTestEnh::teardown ()
 {
 	if (audioEffect)
 		audioEffect->release ();
-	
+
 	bool res = VstTestBase::teardown ();
-	
+
 	return res && audioEffect;
-}
-
-//------------------------------------------------------------------------
-static void addMessage (ITestResult* testResult, const std::u16string& str)
-{
-	testResult->addMessage ((const tchar*)str.data ());
-}
-
-//------------------------------------------------------------------------
-static void addMessage (ITestResult* testResult, const tchar* str)
-{
-	testResult->addMessage (str);
-}
-
-//------------------------------------------------------------------------
-static void addErrorMessage (ITestResult* testResult, const tchar* str)
-{
-	testResult->addErrorMessage (str);
-}
-
-//------------------------------------------------------------------------
-static void addErrorMessage (ITestResult* testResult, const std::u16string& str)
-{
-	testResult->addErrorMessage ((const tchar*)str.data ());
-}
-
-//------------------------------------------------------------------------
-static void printTestHeader (VstTestBase* test, ITestResult* testResult)
-{
-	using VST3::StringConvert::convert;
-
-	std::string str = "===";
-	str += test->getName ();
-	str += " ====================================";
-	addMessage (testResult, convert (str));
-}
-
-//------------------------------------------------------------------------
-static std::u16string printf (const char8* format, ...)
-{
-	using VST3::StringConvert::convert;
-
-	char8 string[1024 * 4];
-	
-	va_list marker;
-	va_start (marker, format);
-	
-	vsnprintf (string, kPrintfBufferSize, format, marker);
-	return convert (string).data ();
 }
 
 //------------------------------------------------------------------------
@@ -255,15 +245,16 @@ static std::u16string printf (const char8* format, ...)
 //------------------------------------------------------------------------
 VstSuspendResumeTest::VstSuspendResumeTest (IPlugProvider* plugProvider, ProcessSampleSize sampl)
 : VstTestEnh (plugProvider, sampl)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstSuspendResumeTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	for (int32 i = 0; i < 3; ++i)
 	{
@@ -275,16 +266,16 @@ bool PLUGIN_API VstSuspendResumeTest::run (ITestResult* testResult)
 				processSetup.symbolicSampleSize = kSample64;
 			else
 			{
-				addErrorMessage (testResult, STR ("No appropriate symbolic sample size supported!"));
+				addErrorMessage (testResult,
+				                 STR ("No appropriate symbolic sample size supported!"));
 				return false;
 			}
-			
+
 			if (audioEffect->setupProcessing (processSetup) != kResultOk)
 			{
 				addErrorMessage (testResult, STR ("Process setup failed!"));
 				return false;
 			}
-			
 		}
 		tresult result = vstPlug->setActive (true);
 		if (result != kResultOk)
@@ -297,22 +288,22 @@ bool PLUGIN_API VstSuspendResumeTest::run (ITestResult* testResult)
 	return true;
 }
 
-
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 // VstTerminateInitializeTest
 //------------------------------------------------------------------------
 VstTerminateInitializeTest::VstTerminateInitializeTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool VstTerminateInitializeTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	bool result = true;
 	if (vstPlug->terminate () != kResultTrue)
@@ -331,17 +322,17 @@ bool VstTerminateInitializeTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 // VstScanBussesTest
 //------------------------------------------------------------------------
-VstScanBussesTest::VstScanBussesTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
-{}
+VstScanBussesTest::VstScanBussesTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstScanBussesTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	int32 numBusses = 0;
 
@@ -349,16 +340,18 @@ bool PLUGIN_API VstScanBussesTest::run (ITestResult* testResult)
 	{
 		int32 numInputs = vstPlug->getBusCount (mediaType, kInput);
 		int32 numOutputs = vstPlug->getBusCount (mediaType, kOutput);
-		
+
 		numBusses += (numInputs + numOutputs);
-		
+
 		if ((mediaType == (kNumMediaTypes - 1)) && (numBusses == 0))
 		{
 			addErrorMessage (testResult, STR ("This component does not export any buses!!!"));
 			return false;
 		}
 
-		addMessage (testResult, printf ("=> %s Buses: [%d In(s) => %d Out(s)]", mediaType == kAudio ? "Audio" : "Event", numInputs, numOutputs));
+		addMessage (testResult,
+		            printf ("=> %s Buses: [%d In(s) => %d Out(s)]",
+		                    mediaType == kAudio ? "Audio" : "Event", numInputs, numOutputs));
 
 		for (int32 i = 0; i < numInputs + numOutputs; ++i)
 		{
@@ -368,19 +361,19 @@ bool PLUGIN_API VstScanBussesTest::run (ITestResult* testResult)
 			BusInfo busInfo = {0};
 			if (vstPlug->getBusInfo (mediaType, busDirection, busIndex, busInfo) == kResultTrue)
 			{
-				auto busName = VST3::StringConvert::convert (busInfo.name);;
+				auto busName = VST3::StringConvert::convert (busInfo.name);
+				;
 
 				if (busName.empty ())
 				{
 					addErrorMessage (testResult, printf ("Bus %d has no name!!!", busIndex));
 					return false;
 				}
-				addMessage (testResult, printf ("     %s[%d]: \"%s\" (%s-%s) ",
-										busDirection == kInput ? "In " : "Out",
-										busIndex,
-										busName.data(),
-										busInfo.busType == kMain ? "Main" : "Aux",
-										busInfo.kDefaultActive ? "Default Active" : "Default Inactive"));
+				addMessage (
+				    testResult,
+				    printf ("     %s[%d]: \"%s\" (%s-%s) ", busDirection == kInput ? "In " : "Out",
+				            busIndex, busName.data (), busInfo.busType == kMain ? "Main" : "Aux",
+				            busInfo.kDefaultActive ? "Default Active" : "Default Inactive"));
 			}
 			else
 				return false;
@@ -394,22 +387,23 @@ bool PLUGIN_API VstScanBussesTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstScanParametersTest::VstScanParametersTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 {
 	if (!testResult || !vstPlug)
 		return false;
-	
-	printTestHeader (this, testResult);
-	
+
+	printTestHeader (testResult);
+
 	if (!controller)
 	{
 		addMessage (testResult, STR ("No Edit Controller supplied!"));
 		return true;
 	}
-		
+
 	int32 numParameters = controller->getParameterCount ();
 	if (numParameters <= 0)
 	{
@@ -422,7 +416,9 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 	FUnknownPtr<IUnitInfo> iUnitInfo2 (controller);
 	if (!iUnitInfo2 && numParameters > 20)
 	{
-		addMessage (testResult, STR ("Note: it could be better to use UnitInfo in order to sort Parameters (>20)."));
+		addMessage (
+		    testResult,
+		    STR ("Note: it could be better to use UnitInfo in order to sort Parameters (>20)."));
 	}
 
 	// used for ID check
@@ -432,7 +428,7 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 	for (int32 i = 0; i < numParameters; ++i)
 	{
 		ParameterInfo paramInfo = {0};
-	
+
 		tresult result = controller->getParameterInfo (i, paramInfo);
 		if (result != kResultOk)
 		{
@@ -445,7 +441,7 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		if (paramId < 0)
 		{
 			addErrorMessage (testResult, printf ("Param %03d: Invalid Id!!!", i));
-			return false;			
+			return false;
 		}
 
 		// check if ID is already used by another parameter
@@ -453,7 +449,8 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		{
 			if (paramIds[idIndex] == paramIds[i])
 			{
-				addErrorMessage (testResult, printf ("Param %03d: ID already used (by %03d)!!!", i, idIndex));
+				addErrorMessage (testResult,
+				                 printf ("Param %03d: ID already used (by %03d)!!!", i, idIndex));
 				return false;
 			}
 		}
@@ -471,7 +468,6 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		else
 			paramType = STR ("Discrete");
 
-		
 		auto paramTitle = VST3::StringConvert::convert (paramInfo.title);
 		auto paramUnits = VST3::StringConvert::convert (paramInfo.units);
 
@@ -481,9 +477,11 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 			return false;
 		}
 
-		if (paramInfo.defaultNormalizedValue != -1.f && (paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))
+		if (paramInfo.defaultNormalizedValue != -1.f &&
+		    (paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))
 		{
-			addErrorMessage (testResult, printf ("Param %03d: defaultValue is not normalized!!!", i));
+			addErrorMessage (testResult,
+			                 printf ("Param %03d: defaultValue is not normalized!!!", i));
 			return false;
 		}
 
@@ -491,14 +489,18 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		if (unitId < -1)
 		{
 			addErrorMessage (testResult, printf ("Param %03d: No appropriate unit ID!!!", i));
-			return false;			
+			return false;
 		}
 		if (unitId >= -1)
 		{
 			FUnknownPtr<IUnitInfo> iUnitInfo (controller);
 			if (!iUnitInfo && unitId != 0)
 			{
-				addErrorMessage (testResult, printf ("IUnitInfo interface is missing, but ParameterInfo::unitID is not %03d (kRootUnitId).", kRootUnitId));
+				addErrorMessage (
+				    testResult,
+				    printf (
+				        "IUnitInfo interface is missing, but ParameterInfo::unitID is not %03d (kRootUnitId).",
+				        kRootUnitId));
 				return false;
 			}
 			else if (iUnitInfo)
@@ -518,14 +520,19 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 				}
 				if (!found && unitId != kRootUnitId)
 				{
-					addErrorMessage (testResult, STR ("Parameter has a UnitID, which isn't defined in IUnitInfo."));
+					addErrorMessage (
+					    testResult,
+					    STR ("Parameter has a UnitID, which isn't defined in IUnitInfo."));
 					return false;
 				}
 			}
 		}
-		if (((paramInfo.flags & ParameterInfo::kCanAutomate) != 0) && ((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0))
+		if (((paramInfo.flags & ParameterInfo::kCanAutomate) != 0) &&
+		    ((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0))
 		{
-			addErrorMessage (testResult, STR ("Parameter must not be kCanAutomate and kReadOnly at the same time."));
+			addErrorMessage (
+			    testResult,
+			    STR ("Parameter must not be kCanAutomate and kReadOnly at the same time."));
 			return false;
 		}
 
@@ -540,10 +547,12 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 			}
 		}
 
-		addMessage (testResult, printf ("   Param %03d (ID = %d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
-										i, paramId, paramTitle.data (), paramUnits.data (),
-										paramType, paramInfo.defaultNormalizedValue, unitId)
-								);
+		addMessage (
+		    testResult,
+		    printf (
+		        "   Param %03d (ID = %d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
+		        i, paramId, paramTitle.data (), paramUnits.data (), paramType,
+		        paramInfo.defaultNormalizedValue, unitId));
 	}
 
 	if (foundBypass == false)
@@ -552,7 +561,7 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 	}
 
 	if (paramIds)
-		delete [] paramIds;
+		delete[] paramIds;
 
 	return true;
 }
@@ -560,18 +569,18 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 // VstMidiMappingTest
 //------------------------------------------------------------------------
-VstMidiMappingTest::VstMidiMappingTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
-{}
+VstMidiMappingTest::VstMidiMappingTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 {
 	if (!testResult || !vstPlug)
 		return false;
-	
-	printTestHeader (this, testResult);
-	
+
+	printTestHeader (testResult);
+
 	if (!controller)
 	{
 		addMessage (testResult, STR ("No Edit Controller supplied!"));
@@ -619,13 +628,17 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 				{
 					if (bus >= eventBusCount)
 					{
-						addMessage (testResult, STR ("MIDI Mapping supplied for an unknown event bus"));
+						addMessage (testResult,
+						            STR ("MIDI Mapping supplied for an unknown event bus"));
 						interruptProcess = true;
 						break;
 					}
 					if (cc >= kCountCtrlNumber)
 					{
-						addMessage (testResult, STR ("MIDI Mapping supplied for an wrong ControllerNumbers value (bigger than the max)"));
+						addMessage (
+						    testResult,
+						    STR (
+						        "MIDI Mapping supplied for an wrong ControllerNumbers value (bigger than the max)"));
 						break;
 					}
 
@@ -644,7 +657,9 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 					}
 					if (!foundParameter)
 					{
-						addErrorMessage (testResult, printf ("Unknown ParamID [%d] returned for MIDI Mapping", tag));
+						addErrorMessage (
+						    testResult,
+						    printf ("Unknown ParamID [%d] returned for MIDI Mapping", tag));
 						return false;
 					}
 					foundCount++;
@@ -657,7 +672,11 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 			}
 			if (foundCount == 0 && (bus < eventBusCount))
 			{
-				addMessage (testResult, printf ("MIDI Mapping getMidiControllerAssignment (%d, %d) : no assignment available!", bus, channel));
+				addMessage (
+				    testResult,
+				    printf (
+				        "MIDI Mapping getMidiControllerAssignment (%d, %d) : no assignment available!",
+				        bus, channel));
 			}
 		}
 	}
@@ -670,7 +689,8 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstNoteExpressionTest::VstNoteExpressionTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
@@ -678,7 +698,7 @@ bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
 	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	if (!controller)
 	{
@@ -699,37 +719,54 @@ bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
 	{
 		BusInfo busInfo;
 		vstPlug->getBusInfo (kEvent, kInput, bus, busInfo);
-		
+
 		for (int16 channel = 0; channel < busInfo.channelCount; channel++)
 		{
 			int32 count = noteExpression->getNoteExpressionCount (bus, channel);
 			if (count > 0)
 			{
-				addMessage (testResult, printf ("Note Expression count bus[%d], channel[%d]: %d", bus, channel, count));
+				addMessage (testResult, printf ("Note Expression count bus[%d], channel[%d]: %d",
+				                                bus, channel, count));
 			}
-			
+
 			for (int32 i = 0; i < count; ++i)
 			{
 				NoteExpressionTypeInfo info;
 				if (noteExpression->getNoteExpressionInfo (bus, channel, i, info) == kResultTrue)
 				{
-					addMessage (testResult, printf ("Note Expression TypeID: %d [%s]", info.typeId, VST3::StringConvert::convert (info.title).data ()));
+					addMessage (testResult,
+					            printf ("Note Expression TypeID: %d [%s]", info.typeId,
+					                    VST3::StringConvert::convert (info.title).data ()));
 					NoteExpressionTypeID id = info.typeId;
 					NoteExpressionValue valueNormalized = info.valueDesc.defaultValue;
 					String128 string;
-					if (noteExpression->getNoteExpressionStringByValue (bus, channel, id, valueNormalized, string) != kResultTrue)
+					if (noteExpression->getNoteExpressionStringByValue (
+					        bus, channel, id, valueNormalized, string) != kResultTrue)
 					{
-						addMessage (testResult, printf ("Note Expression getNoteExpressionStringByValue (%d, %d, %d) return kResultFalse!", bus, channel, id));
+						addMessage (
+						    testResult,
+						    printf (
+						        "Note Expression getNoteExpressionStringByValue (%d, %d, %d) return kResultFalse!",
+						        bus, channel, id));
 					}
 
-					if (noteExpression->getNoteExpressionValueByString (bus, channel, id, string, valueNormalized) != kResultTrue)
+					if (noteExpression->getNoteExpressionValueByString (
+					        bus, channel, id, string, valueNormalized) != kResultTrue)
 					{
-						addMessage (testResult, printf ("Note Expression getNoteExpressionValueByString (%d, %d, %d) return kResultFalse!", bus, channel, id));
+						addMessage (
+						    testResult,
+						    printf (
+						        "Note Expression getNoteExpressionValueByString (%d, %d, %d) return kResultFalse!",
+						        bus, channel, id));
 					}
 				}
 				else
 				{
-					addErrorMessage (testResult, printf ("Note Expression getNoteExpressionInfo (%d, %d, %d) return kResultFalse!", bus, channel, i));
+					addErrorMessage (
+					    testResult,
+					    printf (
+					        "Note Expression getNoteExpressionInfo (%d, %d, %d) return kResultFalse!",
+					        bus, channel, i));
 					return false;
 				}
 			}
@@ -739,14 +776,12 @@ bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
 	return true;
 }
 
-
-
 //------------------------------------------------------------------------
 // VstKeyswitchTest
 //------------------------------------------------------------------------
-VstKeyswitchTest::VstKeyswitchTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
-{}
+VstKeyswitchTest::VstKeyswitchTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstKeyswitchTest::run (ITestResult* testResult)
@@ -754,7 +789,7 @@ bool PLUGIN_API VstKeyswitchTest::run (ITestResult* testResult)
 	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	if (!controller)
 	{
@@ -779,10 +814,11 @@ bool PLUGIN_API VstKeyswitchTest::run (ITestResult* testResult)
 		for (int16 channel = 0; channel < busInfo.channelCount; channel++)
 		{
 			int32 count = keyswitch->getKeyswitchCount (bus, channel);
-			
+
 			if (count > 0)
 			{
-				addMessage (testResult, printf ("Keyswitch support bus[%d], channel[%d]: %d", bus, channel, count));
+				addMessage (testResult, printf ("Keyswitch support bus[%d], channel[%d]: %d", bus,
+				                                channel, count));
 			}
 
 			for (int32 i = 0; i < count; ++i)
@@ -793,7 +829,10 @@ bool PLUGIN_API VstKeyswitchTest::run (ITestResult* testResult)
 				}
 				else
 				{
-					addErrorMessage (testResult, printf ("Keyswitch getKeyswitchInfo (%d, %d, %d) return kResultFalse!", bus, channel, i));
+					addErrorMessage (
+					    testResult,
+					    printf ("Keyswitch getKeyswitchInfo (%d, %d, %d) return kResultFalse!", bus,
+					            channel, i));
 					return false;
 				}
 			}
@@ -808,29 +847,33 @@ bool PLUGIN_API VstKeyswitchTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstEditorClassesTest::VstEditorClassesTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstEditorClassesTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	// no controller is allowed...
 	if (FUnknownPtr<IEditController> (vstPlug).getInterface ())
 	{
 		addMessage (testResult, STR ("Processor and edit controller united."));
-		return true;	
-	}
-
-	FUID controllerClassUID;
-	if (vstPlug->getControllerClassId (controllerClassUID) != kResultOk)
-	{
-		addMessage (testResult, STR ("This component does not export an edit controller class ID!!!"));
 		return true;
 	}
+
+	TUID controllerClassTUID;
+	if (vstPlug->getControllerClassId (controllerClassTUID) != kResultOk)
+	{
+		addMessage (testResult,
+		            STR ("This component does not export an edit controller class ID!!!"));
+		return true;
+	}
+	FUID controllerClassUID;
+	controllerClassUID = FUID::fromTUID (controllerClassTUID);
 	if (controllerClassUID.isValid () == false)
 	{
 		addErrorMessage (testResult, STR ("The edit controller class has no valid UID!!!"));
@@ -847,22 +890,20 @@ bool PLUGIN_API VstEditorClassesTest::run (ITestResult* testResult)
 	return true;
 }
 
-
 //------------------------------------------------------------------------
 // VstUnitInfoTest
 //------------------------------------------------------------------------
-VstUnitInfoTest::VstUnitInfoTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
+VstUnitInfoTest::VstUnitInfoTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
 {
 }
 
 //------------------------------------------------------------------------
 bool VstUnitInfoTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
 	if (iUnitInfo)
@@ -870,13 +911,14 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 		int32 unitCount = iUnitInfo->getUnitCount ();
 		if (unitCount <= 0)
 		{
-			addMessage (testResult, STR ("No units found, while controller implements IUnitInfo !!!"));
+			addMessage (testResult,
+			            STR ("No units found, while controller implements IUnitInfo !!!"));
 		}
 		else
 		{
 			addMessage (testResult, printf ("This component has %d unit(s).", unitCount));
 		}
-		
+
 		int32* unitIds = new int32[unitCount];
 		ArrayDeleter<int32> unitIdDeleter (unitIds);
 
@@ -899,7 +941,8 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 				{
 					if (unitIds[idIndex] == unitIds[unitIndex])
 					{
-						addErrorMessage (testResult, printf ("Unit %03d: ID already used!!!", unitIndex));
+						addErrorMessage (testResult,
+						                 printf ("Unit %03d: ID already used!!!", unitIndex));
 						return false;
 					}
 				}
@@ -908,30 +951,36 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 				if (unitName.empty ())
 				{
 					addErrorMessage (testResult, printf ("Unit %03d: No name!", unitIndex));
-					return false;				
+					return false;
 				}
 
 				int32 parentUnitId = unitInfo.parentUnitId;
 				if (parentUnitId < -1)
 				{
-					addErrorMessage (testResult, printf ("Unit %03d: Invalid parent ID!", unitIndex));
-					return false;	
+					addErrorMessage (testResult,
+					                 printf ("Unit %03d: Invalid parent ID!", unitIndex));
+					return false;
 				}
 				else if (parentUnitId == unitId)
 				{
-					addErrorMessage (testResult, printf ("Unit %03d: Parent ID is equal to Unit ID!", unitIndex));
-					return false;	
+					addErrorMessage (
+					    testResult,
+					    printf ("Unit %03d: Parent ID is equal to Unit ID!", unitIndex));
+					return false;
 				}
 
 				int32 unitProgramListId = unitInfo.programListId;
 				if (unitProgramListId < -1)
 				{
-					addErrorMessage (testResult, printf ("Unit %03d: Invalid programlist ID!", unitIndex));
-					return false;	
+					addErrorMessage (testResult,
+					                 printf ("Unit %03d: Invalid programlist ID!", unitIndex));
+					return false;
 				}
 
-				addMessage (testResult, printf ("   Unit%03d (ID = %d): \"%s\" (parent ID = %d, programlist ID = %d)",
-										unitIndex, unitId, unitName.data (), parentUnitId, unitProgramListId));
+				addMessage (
+				    testResult,
+				    printf ("   Unit%03d (ID = %d): \"%s\" (parent ID = %d, programlist ID = %d)",
+				            unitIndex, unitId, unitName.data (), parentUnitId, unitProgramListId));
 
 				// test select Unit
 				if (iUnitInfo->selectUnit (unitIndex) == kResultTrue)
@@ -939,8 +988,11 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 					UnitID newSelected = iUnitInfo->getSelectedUnit ();
 					if (newSelected != unitIndex)
 					{
-						addMessage (testResult, printf ("The host has selected Unit ID = %d but getSelectedUnit returns ID = %d!!!",
-												unitIndex, newSelected));
+						addMessage (
+						    testResult,
+						    printf (
+						        "The host has selected Unit ID = %d but getSelectedUnit returns ID = %d!!!",
+						        unitIndex, newSelected));
 					}
 				}
 			}
@@ -948,7 +1000,7 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 			{
 				addMessage (testResult, printf ("Unit%03d: No unit info!", unitIndex));
 			}
-		}	
+		}
 	}
 	else
 	{
@@ -957,7 +1009,6 @@ bool VstUnitInfoTest::run (ITestResult* testResult)
 
 	return true;
 }
-
 
 //------------------------------------------------------------------------
 // VstUnitStructureTest
@@ -970,10 +1021,10 @@ VstUnitStructureTest::VstUnitStructureTest (IPlugProvider* plugProvider)
 //------------------------------------------------------------------------
 bool VstUnitStructureTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
 	if (iUnitInfo)
@@ -981,7 +1032,8 @@ bool VstUnitStructureTest::run (ITestResult* testResult)
 		int32 unitCount = iUnitInfo->getUnitCount ();
 		if (unitCount <= 0)
 		{
-			addMessage (testResult, STR ("No units found, while controller implements IUnitInfo !!!"));
+			addMessage (testResult,
+			            STR ("No units found, while controller implements IUnitInfo !!!"));
 		}
 
 		UnitInfo unitInfo = {0};
@@ -1008,7 +1060,8 @@ bool VstUnitStructureTest::run (ITestResult* testResult)
 					}
 					if (noParent && unitInfo.parentUnitId != kRootUnitId)
 					{
-						addErrorMessage (testResult, printf ("Unit %03d: Parent does not exist!!", unitInfo.id));
+						addErrorMessage (
+						    testResult, printf ("Unit %03d: Parent does not exist!!", unitInfo.id));
 						return false;
 					}
 				}
@@ -1018,14 +1071,20 @@ bool VstUnitStructureTest::run (ITestResult* testResult)
 					if (unitInfo.id != kRootUnitId)
 					{
 						// we should have a root unit id
-						addErrorMessage (testResult, printf ("Unit %03d: Should be the Root Unit => id should be %03d!!", unitInfo.id, kRootUnitId));
+						addErrorMessage (
+						    testResult,
+						    printf ("Unit %03d: Should be the Root Unit => id should be %03d!!",
+						            unitInfo.id, kRootUnitId));
 						return false;
 					}
 					rootFound = true;
 				}
 				else
 				{
-					addErrorMessage (testResult, printf ("Unit %03d: Has no parent, but there is a root already.", unitInfo.id));
+					addErrorMessage (
+					    testResult,
+					    printf ("Unit %03d: Has no parent, but there is a root already.",
+					            unitInfo.id));
 					return false;
 				}
 			}
@@ -1044,22 +1103,20 @@ bool VstUnitStructureTest::run (ITestResult* testResult)
 	return true;
 }
 
-
 //------------------------------------------------------------------------
 // VstProgramInfoTest
 //------------------------------------------------------------------------
-VstProgramInfoTest::VstProgramInfoTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
+VstProgramInfoTest::VstProgramInfoTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
 {
 }
 
 //------------------------------------------------------------------------
 bool VstProgramInfoTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
 	if (iUnitInfo)
@@ -1072,25 +1129,27 @@ bool VstProgramInfoTest::run (ITestResult* testResult)
 		}
 		else if (programListCount < 0)
 		{
-			addErrorMessage (testResult, STR ("IUnitInfo::getProgramListCount () returned a negative number."));
+			addErrorMessage (testResult,
+			                 STR ("IUnitInfo::getProgramListCount () returned a negative number."));
 			return false;
 		}
 
 		// used to check double IDs
-		int32* programListIds = new int32 [programListCount];
+		int32* programListIds = new int32[programListCount];
 		ArrayDeleter<int32> idDeleter (programListIds);
 
 		for (int32 programListIndex = 0; programListIndex < programListCount; programListIndex++)
 		{
-			// get programm list info 
+			// get programm list info
 			ProgramListInfo programListInfo;
 			if (iUnitInfo->getProgramListInfo (programListIndex, programListInfo) == kResultOk)
 			{
 				int32 programListId = programListInfo.id;
-				programListIds [programListIndex] = programListId;
+				programListIds[programListIndex] = programListId;
 				if (programListId < 0)
 				{
-					addErrorMessage (testResult, printf ("Programlist%03d: Invalid ID!!!", programListIndex));
+					addErrorMessage (testResult,
+					                 printf ("Programlist%03d: Invalid ID!!!", programListIndex));
 					return false;
 				}
 
@@ -1099,7 +1158,8 @@ bool VstProgramInfoTest::run (ITestResult* testResult)
 				{
 					if (programListIds[idIndex] == programListIds[programListIndex])
 					{
-						addErrorMessage (testResult, printf ("Programlist%03d: ID already used!!!", programListIndex));
+						addErrorMessage (testResult, printf ("Programlist%03d: ID already used!!!",
+						                                     programListIndex));
 						return false;
 					}
 				}
@@ -1107,52 +1167,70 @@ bool VstProgramInfoTest::run (ITestResult* testResult)
 				auto programListName = VST3::StringConvert::convert (programListInfo.name);
 				if (programListName.empty ())
 				{
-					addErrorMessage (testResult, printf ("Programlist%03d (ID = %d): No name!!!", programListIndex, programListId));
+					addErrorMessage (testResult, printf ("Programlist%03d (ID = %d): No name!!!",
+					                                     programListIndex, programListId));
 					return false;
 				}
 
 				int32 programCount = programListInfo.programCount;
 				if (programCount <= 0)
 				{
-					addMessage (testResult, printf ("Programlist%03d (ID = %d): \"%s\" No programs!!! (programCount is null!)", programListIndex, programListId, VST3::StringConvert::convert (programListName).data ()));
-					//return false;
+					addMessage (
+					    testResult,
+					    printf (
+					        "Programlist%03d (ID = %d): \"%s\" No programs!!! (programCount is null!)",
+					        programListIndex, programListId,
+					        VST3::StringConvert::convert (programListName).data ()));
+					// return false;
 				}
-				
-				addMessage (testResult, printf ("Programlist%03d (ID = %d):  \"%s\" (%d programs).", programListIndex, programListId, programListName.data (), programCount));
+
+				addMessage (testResult, printf ("Programlist%03d (ID = %d):  \"%s\" (%d programs).",
+				                                programListIndex, programListId,
+				                                programListName.data (), programCount));
 
 				for (int32 programIndex = 0; programIndex < programCount; programIndex++)
-				{	
+				{
 					TChar programName[256];
-					if (iUnitInfo->getProgramName (programListId, programIndex, programName) == kResultOk)
+					if (iUnitInfo->getProgramName (programListId, programIndex, programName) ==
+					    kResultOk)
 					{
 						if (programName[0] == 0)
 						{
-							addErrorMessage (testResult, printf ("Programlist%03d-Program%03d: has no name!!!", programListIndex, programIndex));
+							addErrorMessage (testResult,
+							                 printf ("Programlist%03d-Program%03d: has no name!!!",
+							                         programListIndex, programIndex));
 							return false;
 						}
 
 						auto programNameUTF8 = VST3::StringConvert::convert (programName);
-						auto msg = printf ("Programlist%03d-Program%03d: \"%s\"", programListIndex, programIndex, programNameUTF8.data ());
-						
+						auto msg = printf ("Programlist%03d-Program%03d: \"%s\"", programListIndex,
+						                   programIndex, programNameUTF8.data ());
+
 						String128 programInfo {};
-						if (iUnitInfo->getProgramInfo (programListId, programIndex, PresetAttributes::kInstrument, programInfo) == kResultOk)
+						if (iUnitInfo->getProgramInfo (programListId, programIndex,
+						                               PresetAttributes::kInstrument,
+						                               programInfo) == kResultOk)
 						{
 							auto programInfoUTF8 = VST3::StringConvert::convert (programInfo);
 							msg += VST3::StringConvert::convert (" (instrument = \"");
 							msg += (const char16_t*)programInfo;
 							msg += VST3::StringConvert::convert ("\")");
 						}
-					
+
 						addMessage (testResult, msg.data ());
 
-						if (iUnitInfo->hasProgramPitchNames (programListId, programIndex) == kResultOk)
+						if (iUnitInfo->hasProgramPitchNames (programListId, programIndex) ==
+						    kResultOk)
 						{
-							addMessage (testResult, printf (" => \"%s\": supports PitchNames", programNameUTF8.data ()));
+							addMessage (testResult, printf (" => \"%s\": supports PitchNames",
+							                                programNameUTF8.data ()));
 
 							String128 pitchName = {0};
 							for (int16 midiPitch = 0; midiPitch < 128; midiPitch++)
 							{
-								if (iUnitInfo->getProgramPitchName (programListId, programIndex, midiPitch, pitchName) == kResultOk)
+								if (iUnitInfo->getProgramPitchName (programListId, programIndex,
+								                                    midiPitch,
+								                                    pitchName) == kResultOk)
 								{
 									msg = printf ("   => MIDI Pitch %d => \"", midiPitch);
 									msg += (const char16_t*)pitchName;
@@ -1177,15 +1255,16 @@ bool VstProgramInfoTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstValidStateTransitionTest::VstValidStateTransitionTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstValidStateTransitionTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	for (int32 i = 0; i < 3; ++i)
 	{
@@ -1213,38 +1292,39 @@ bool PLUGIN_API VstValidStateTransitionTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstInvalidStateTransitionTest::VstInvalidStateTransitionTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstInvalidStateTransitionTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	// created
 	tresult result = vstPlug->initialize (gStandardPluginContext);
 	if (result == kResultFalse)
-			return false;
+		return false;
 
 	// initialized
 	result = vstPlug->setActive (false);
 	if (result == kResultOk)
-			return false;
+		return false;
 
 	result = vstPlug->setActive (true);
 	if (result == kResultFalse)
-			return false;
+		return false;
 
 	// allocated
 	result = vstPlug->initialize (gStandardPluginContext);
 	if (result == kResultOk)
-			return false;
+		return false;
 
 	result = vstPlug->setActive (false);
 	if (result == kResultFalse)
-			return false;
+		return false;
 
 	// deallocated (initialized)
 	result = vstPlug->initialize (gStandardPluginContext);
@@ -1253,16 +1333,16 @@ bool PLUGIN_API VstInvalidStateTransitionTest::run (ITestResult* testResult)
 
 	result = vstPlug->terminate ();
 	if (result == kResultFalse)
-			return false;
+		return false;
 
 	// terminated (created)
 	result = vstPlug->setActive (false);
 	if (result == kResultOk)
-			return false;
+		return false;
 
 	result = vstPlug->terminate ();
 	if (result == kResultOk)
-			return false;
+		return false;
 
 	return true;
 }
@@ -1270,17 +1350,19 @@ bool PLUGIN_API VstInvalidStateTransitionTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 // VstRepeatIdenticalStateTransitionTest
 //------------------------------------------------------------------------
-VstRepeatIdenticalStateTransitionTest::VstRepeatIdenticalStateTransitionTest (IPlugProvider* plugProvider)
+VstRepeatIdenticalStateTransitionTest::VstRepeatIdenticalStateTransitionTest (
+    IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool VstRepeatIdenticalStateTransitionTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	tresult result = vstPlug->initialize (gStandardPluginContext);
 	if (result != kResultFalse)
@@ -1328,10 +1410,10 @@ VstBusConsistencyTest::VstBusConsistencyTest (IPlugProvider* plugProvider)
 //------------------------------------------------------------------------
 bool PLUGIN_API VstBusConsistencyTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	bool failed = false;
 	int32 numFalseDescQueries = 0;
@@ -1340,7 +1422,7 @@ bool PLUGIN_API VstBusConsistencyTest::run (ITestResult* testResult)
 	{
 		for (BusDirection dir = kInput; dir <= kOutput; dir++)
 		{
-			int32 numBusses = vstPlug->getBusCount (mediaType, dir);	
+			int32 numBusses = vstPlug->getBusCount (mediaType, dir);
 			if (numBusses > 0)
 			{
 				BusInfo* busArray = new BusInfo[numBusses];
@@ -1352,8 +1434,8 @@ bool PLUGIN_API VstBusConsistencyTest::run (ITestResult* testResult)
 					{
 						memset (&busArray[busIndex], 0, sizeof (BusInfo));
 						vstPlug->getBusInfo (mediaType, dir, busIndex, busArray[busIndex]);
-					}	
-					
+					}
+
 					// test by getting descriptions randomly and comparing with saved ones
 					int32 randIndex = 0;
 					BusInfo info = {0};
@@ -1363,15 +1445,16 @@ bool PLUGIN_API VstBusConsistencyTest::run (ITestResult* testResult)
 						randIndex = rand () % (numBusses);
 
 						memset (&info, 0, sizeof (BusInfo));
-						
-						/*tresult result =*/ vstPlug->getBusInfo (mediaType, dir, randIndex, info);
-						if (memcmp ((void*)&busArray[randIndex], (void*)&info, sizeof (BusInfo)) != BUFFERS_ARE_EQUAL)
+
+						/*tresult result =*/vstPlug->getBusInfo (mediaType, dir, randIndex, info);
+						if (memcmp ((void*)&busArray[randIndex], (void*)&info, sizeof (BusInfo)) !=
+						    BUFFERS_ARE_EQUAL)
 						{
 							failed |= true;
 							numFalseDescQueries++;
 						}
 					}
-					delete [] busArray;
+					delete[] busArray;
 				}
 			}
 		}
@@ -1379,7 +1462,11 @@ bool PLUGIN_API VstBusConsistencyTest::run (ITestResult* testResult)
 
 	if (numFalseDescQueries > 0)
 	{
-		addErrorMessage (testResult, printf ("The component returned %i inconsistent buses! (getBusInfo () returns sometime different info for the same bus!", numFalseDescQueries));
+		addErrorMessage (
+		    testResult,
+		    printf (
+		        "The component returned %i inconsistent buses! (getBusInfo () returns sometime different info for the same bus!",
+		        numFalseDescQueries));
 	}
 
 	return failed == false;
@@ -1396,22 +1483,23 @@ VstBusInvalidIndexTest::VstBusInvalidIndexTest (IPlugProvider* plugProvider)
 //------------------------------------------------------------------------
 bool PLUGIN_API VstBusInvalidIndexTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	bool failed = false;
 	int32 numInvalidDesc = 0;
 
 	for (MediaType mediaType = kAudio; mediaType < kNumMediaTypes; mediaType++)
 	{
-		int32 numBusses = vstPlug->getBusCount (mediaType, kInput) + vstPlug->getBusCount (mediaType, kOutput);
+		int32 numBusses =
+		    vstPlug->getBusCount (mediaType, kInput) + vstPlug->getBusCount (mediaType, kOutput);
 		for (BusDirection dir = kInput; dir <= kOutput; dir++)
 		{
 			BusInfo descBefore = {0};
 			BusInfo descAfter = {0};
-	
+
 			int32 randIndex = 0;
 
 			// todo: rand with negative numbers
@@ -1420,8 +1508,8 @@ bool PLUGIN_API VstBusInvalidIndexTest::run (ITestResult* testResult)
 				randIndex = rand ();
 				if (0 > randIndex || randIndex > numBusses)
 				{
-					/*tresult result =*/ vstPlug->getBusInfo (mediaType, dir, randIndex, descAfter);
-					
+					/*tresult result =*/vstPlug->getBusInfo (mediaType, dir, randIndex, descAfter);
+
 					if (memcmp ((void*)&descBefore, (void*)&descAfter, sizeof (BusInfo)) != 0)
 					{
 						failed |= true;
@@ -1434,7 +1522,9 @@ bool PLUGIN_API VstBusInvalidIndexTest::run (ITestResult* testResult)
 
 	if (numInvalidDesc > 0)
 	{
-		addErrorMessage (testResult, printf ("The component returned %i buses queried with an invalid index!", numInvalidDesc));
+		addErrorMessage (testResult,
+		                 printf ("The component returned %i buses queried with an invalid index!",
+		                         numInvalidDesc));
 	}
 
 	return failed == false;
@@ -1465,7 +1555,7 @@ bool PLUGIN_API VstProcessTest::setup ()
 	if (processSetup.symbolicSampleSize != processData.symbolicSampleSize)
 		return false;
 	if (audioEffect->canProcessSampleSize (processSetup.symbolicSampleSize) != kResultOk)
-		return true;	// this fails in run (..)
+		return true; // this fails in run (..)
 
 	prepareProcessing ();
 
@@ -1479,11 +1569,12 @@ bool PLUGIN_API VstProcessTest::run (ITestResult* testResult)
 {
 	if (!testResult || !audioEffect)
 		return false;
+
 	if (processSetup.symbolicSampleSize != processData.symbolicSampleSize)
 		return false;
 	if (!canProcessSampleSize (testResult))
 		return true;
-
+	
 	audioEffect->setProcessing (true);
 
 	for (int32 i = 0; i < NUM_AUDIO_BLOCKS_TO_PROCESS; ++i)
@@ -1493,8 +1584,13 @@ bool PLUGIN_API VstProcessTest::run (ITestResult* testResult)
 		tresult result = audioEffect->process (processData);
 		if (result != kResultOk)
 		{
-			addErrorMessage (testResult, STR ("IAudioProcessor::process (..) failed."));
-			
+			if (processSetup.symbolicSampleSize == kSample32)
+				addErrorMessage (testResult,
+				                 STR ("IAudioProcessor::process (..with kSample32..) failed."));
+			else
+				addErrorMessage (testResult,
+				                 STR ("IAudioProcessor::process (..with kSample64..) failed."));
+
 			audioEffect->setProcessing (false);
 			return false;
 		}
@@ -1561,7 +1657,9 @@ bool VstProcessTest::prepareProcessing ()
 		for (BusDirection dir = kInput; dir <= kOutput; dir++)
 		{
 			int32 numBusses = vstPlug->getBusCount (kAudio, dir);
-			AudioBusBuffers* audioBuffers = dir == kInput ? processData.inputs : processData.outputs; //new AudioBusBuffers [numBusses];
+			AudioBusBuffers* audioBuffers =
+			    dir == kInput ? processData.inputs :
+			                    processData.outputs; // new AudioBusBuffers [numBusses];
 			if (!setupBuffers (numBusses, audioBuffers, dir))
 				return false;
 
@@ -1596,8 +1694,10 @@ bool VstProcessTest::setupBuffers (int32 numBusses, AudioBusBuffers* audioBuffer
 
 			if ((busInfo.flags & BusInfo::kDefaultActive) != 0)
 			{
-				for (int32 channelIndex = 0; channelIndex < busInfo.channelCount; channelIndex++) // channels per bus
-					audioBuffers[busIndex].silenceFlags |= (uint64)CHANNEL_IS_SILENT << channelIndex;
+				for (int32 channelIndex = 0; channelIndex < busInfo.channelCount;
+				     channelIndex++) // channels per bus
+					audioBuffers[busIndex].silenceFlags |= (uint64)CHANNEL_IS_SILENT
+					                                       << channelIndex;
 			}
 		}
 		else
@@ -1618,9 +1718,11 @@ bool VstProcessTest::setupBuffers (AudioBusBuffers& audioBuffers)
 		{
 			if (audioBuffers.channelBuffers32)
 			{
-				audioBuffers.channelBuffers32[channelIndex] = new Sample32[processSetup.maxSamplesPerBlock];
+				audioBuffers.channelBuffers32[channelIndex] =
+				    new Sample32[processSetup.maxSamplesPerBlock];
 				if (audioBuffers.channelBuffers32[channelIndex])
-					memset (audioBuffers.channelBuffers32[channelIndex], 0, processSetup.maxSamplesPerBlock * sizeof (Sample32));
+					memset (audioBuffers.channelBuffers32[channelIndex], 0,
+					        processSetup.maxSamplesPerBlock * sizeof (Sample32));
 				else
 					return false;
 			}
@@ -1631,9 +1733,11 @@ bool VstProcessTest::setupBuffers (AudioBusBuffers& audioBuffers)
 		{
 			if (audioBuffers.channelBuffers64)
 			{
-				audioBuffers.channelBuffers64[channelIndex] = new Sample64[processSetup.maxSamplesPerBlock];
+				audioBuffers.channelBuffers64[channelIndex] =
+				    new Sample64[processSetup.maxSamplesPerBlock];
 				if (audioBuffers.channelBuffers64[channelIndex])
-					memset (audioBuffers.channelBuffers64[channelIndex], 0, processSetup.maxSamplesPerBlock * sizeof (Sample64));
+					memset (audioBuffers.channelBuffers64[channelIndex], 0,
+					        processSetup.maxSamplesPerBlock * sizeof (Sample64));
 				else
 					return false;
 			}
@@ -1666,9 +1770,9 @@ bool VstProcessTest::freeBuffers (int32 numBuses, AudioBusBuffers* buses)
 		for (int32 channelIndex = 0; channelIndex < buses[busIndex].numChannels; channelIndex++)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
-				delete [] buses[busIndex].channelBuffers32[channelIndex];
+				delete[] buses[busIndex].channelBuffers32[channelIndex];
 			else if (processSetup.symbolicSampleSize == kSample64)
-				delete [] buses[busIndex].channelBuffers64[channelIndex];
+				delete[] buses[busIndex].channelBuffers64[channelIndex];
 			else
 				return false;
 		}
@@ -1676,15 +1780,14 @@ bool VstProcessTest::freeBuffers (int32 numBuses, AudioBusBuffers* buses)
 	return true;
 }
 
-
 //------------------------------------------------------------------------
 // VstSpeakerArrangementTest
 //------------------------------------------------------------------------
-VstSpeakerArrangementTest::VstSpeakerArrangementTest (IPlugProvider* plugProvider, ProcessSampleSize sampl, 
-													  SpeakerArrangement inSpArr, SpeakerArrangement outSpArr)
-: VstProcessTest (plugProvider, sampl)
-, inSpArr (inSpArr)
-, outSpArr (outSpArr)
+VstSpeakerArrangementTest::VstSpeakerArrangementTest (IPlugProvider* plugProvider,
+                                                      ProcessSampleSize sampl,
+                                                      SpeakerArrangement inSpArr,
+                                                      SpeakerArrangement outSpArr)
+: VstProcessTest (plugProvider, sampl), inSpArr (inSpArr), outSpArr (outSpArr)
 {
 }
 
@@ -1694,48 +1797,48 @@ const char* VstSpeakerArrangementTest::getSpeakerArrangementName (SpeakerArrange
 	const char* saName = nullptr;
 	switch (spArr)
 	{
-		case SpeakerArr::kMono:				saName = "Mono"; break;
-		case SpeakerArr::kStereo:			saName = "Stereo"; break;
-		case SpeakerArr::kStereoSurround:	saName = "StereoSurround"; break;
-		case SpeakerArr::kStereoCenter:		saName = "StereoCenter"; break;
-		case SpeakerArr::kStereoSide:		saName = "StereoSide"; break;
-		case SpeakerArr::kStereoCLfe:		saName = "StereoCLfe"; break;
-		case SpeakerArr::k30Cine:			saName = "30Cine"; break;
-		case SpeakerArr::k30Music:			saName = "30Music"; break;
-		case SpeakerArr::k31Cine:			saName = "31Cine"; break;
-		case SpeakerArr::k31Music:			saName = "31Music"; break;
-		case SpeakerArr::k40Cine:			saName = "40Cine"; break;
-		case SpeakerArr::k40Music:			saName = "40Music"; break;
-		case SpeakerArr::k41Cine:			saName = "41Cine"; break;
-		case SpeakerArr::k41Music:			saName = "41Music"; break;
-		case SpeakerArr::k50:				saName = "50"; break;
-		case SpeakerArr::k51:				saName = "51"; break;
-		case SpeakerArr::k60Cine:			saName = "60Cine"; break;
-		case SpeakerArr::k60Music:			saName = "60Music"; break;
-		case SpeakerArr::k61Cine:			saName = "61Cine"; break;
-		case SpeakerArr::k61Music:			saName = "61Music"; break;
-		case SpeakerArr::k70Cine:			saName = "70Cine"; break;
-		case SpeakerArr::k70Music:			saName = "70Music"; break;
-		case SpeakerArr::k71Cine:			saName = "71Cine"; break;
-		case SpeakerArr::k71Music:			saName = "71Music"; break;
-		case SpeakerArr::k80Cine:			saName = "80Cine"; break;
-		case SpeakerArr::k80Music:			saName = "80Music"; break;
-		case SpeakerArr::k81Cine:			saName = "81Cine"; break;
-		case SpeakerArr::k81Music:			saName = "81Music"; break;
-		case SpeakerArr::k102:				saName = "102"; break;
-		case SpeakerArr::k122:			    saName = "122"; break;
-		case SpeakerArr::k80Cube:		    saName = "80Cube"; break;
-		case SpeakerArr::kBFormat:			saName = "BFormat"; break;
-		case SpeakerArr::k90:		    saName = "9.0"; break;
-		case SpeakerArr::k91:		    saName = "9.1"; break;
-		case SpeakerArr::k100:		    saName = "10.0"; break;
-		case SpeakerArr::k101:		    saName = "10.1"; break;
-		case SpeakerArr::k110:		    saName = "11.0"; break;
-		case SpeakerArr::k111:		    saName = "11.1"; break;
-		case SpeakerArr::k130:		    saName = "13.0"; break;
-		case SpeakerArr::k131:		    saName = "13.1"; break;
-		case SpeakerArr::kEmpty:			saName = "Empty"; break;
-		default:							saName = "Unknown"; break;
+		case SpeakerArr::kMono: saName = "Mono"; break;
+		case SpeakerArr::kStereo: saName = "Stereo"; break;
+		case SpeakerArr::kStereoSurround: saName = "StereoSurround"; break;
+		case SpeakerArr::kStereoCenter: saName = "StereoCenter"; break;
+		case SpeakerArr::kStereoSide: saName = "StereoSide"; break;
+		case SpeakerArr::kStereoCLfe: saName = "StereoCLfe"; break;
+		case SpeakerArr::k30Cine: saName = "30Cine"; break;
+		case SpeakerArr::k30Music: saName = "30Music"; break;
+		case SpeakerArr::k31Cine: saName = "31Cine"; break;
+		case SpeakerArr::k31Music: saName = "31Music"; break;
+		case SpeakerArr::k40Cine: saName = "40Cine"; break;
+		case SpeakerArr::k40Music: saName = "40Music"; break;
+		case SpeakerArr::k41Cine: saName = "41Cine"; break;
+		case SpeakerArr::k41Music: saName = "41Music"; break;
+		case SpeakerArr::k50: saName = "50"; break;
+		case SpeakerArr::k51: saName = "51"; break;
+		case SpeakerArr::k60Cine: saName = "60Cine"; break;
+		case SpeakerArr::k60Music: saName = "60Music"; break;
+		case SpeakerArr::k61Cine: saName = "61Cine"; break;
+		case SpeakerArr::k61Music: saName = "61Music"; break;
+		case SpeakerArr::k70Cine: saName = "70Cine"; break;
+		case SpeakerArr::k70Music: saName = "70Music"; break;
+		case SpeakerArr::k71Cine: saName = "71Cine"; break;
+		case SpeakerArr::k71Music: saName = "71Music"; break;
+		case SpeakerArr::k80Cine: saName = "80Cine"; break;
+		case SpeakerArr::k80Music: saName = "80Music"; break;
+		case SpeakerArr::k81Cine: saName = "81Cine"; break;
+		case SpeakerArr::k81Music: saName = "81Music"; break;
+		case SpeakerArr::k102: saName = "102"; break;
+		case SpeakerArr::k122: saName = "122"; break;
+		case SpeakerArr::k80Cube: saName = "80Cube"; break;
+		case SpeakerArr::k90: saName = "9.0"; break;
+		case SpeakerArr::k91: saName = "9.1"; break;
+		case SpeakerArr::k100: saName = "10.0"; break;
+		case SpeakerArr::k101: saName = "10.1"; break;
+		case SpeakerArr::k110: saName = "11.0"; break;
+		case SpeakerArr::k111: saName = "11.1"; break;
+		case SpeakerArr::k130: saName = "13.0"; break;
+		case SpeakerArr::k131: saName = "13.1"; break;
+		case SpeakerArr::k222: saName = "22.2"; break;
+		case SpeakerArr::kEmpty: saName = "Empty"; break;
+		default: saName = "Unknown"; break;
 	}
 	return saName;
 }
@@ -1755,7 +1858,7 @@ const char* VstSpeakerArrangementTest::getName () const
 		str += " Channels, Out: ";
 		str += outSaName;
 		str += ": ";
-		str += std::to_string(SpeakerArr::getChannelCount (outSpArr));
+		str += std::to_string (SpeakerArr::getChannelCount (outSpArr));
 		str += " Channels";
 		return str.data ();
 	}
@@ -1767,7 +1870,7 @@ bool VstSpeakerArrangementTest::prepareProcessing ()
 {
 	if (!vstPlug || !audioEffect)
 		return false;
-	
+
 	bool ret = true;
 	int32 is = vstPlug->getBusCount (kAudio, kInput);
 	SpeakerArrangement* inSpArrs = new SpeakerArrangement[is];
@@ -1778,15 +1881,15 @@ bool VstSpeakerArrangementTest::prepareProcessing ()
 	SpeakerArrangement* outSpArrs = new SpeakerArrangement[os];
 	for (int32 o = 0; o < os; o++)
 		outSpArrs[o] = outSpArr;
-	
+
 	if (audioEffect->setBusArrangements (inSpArrs, is, outSpArrs, os) != kResultTrue)
 		ret = false;
-	
+
 	ret &= VstProcessTest::prepareProcessing ();
-	
-	delete [] inSpArrs;
-	delete [] outSpArrs;
-	
+
+	delete[] inSpArrs;
+	delete[] outSpArrs;
+
 	return ret;
 }
 
@@ -1795,8 +1898,8 @@ bool VstSpeakerArrangementTest::run (ITestResult* testResult)
 {
 	if (!testResult || !audioEffect || !vstPlug)
 		return false;
-	
-	printTestHeader (this, testResult);
+
+	printTestHeader (testResult);
 
 	SpeakerArrangement spArr = SpeakerArr::kEmpty;
 	SpeakerArrangement compareSpArr = SpeakerArr::kEmpty;
@@ -1821,41 +1924,48 @@ bool VstSpeakerArrangementTest::run (ITestResult* testResult)
 		{
 			if (audioEffect->getBusArrangement (bd, i, spArr) != kResultTrue)
 			{
-				addErrorMessage (testResult, STR ("IAudioProcessor::getBusArrangement (..) failed."));
+				addErrorMessage (testResult,
+				                 STR ("IAudioProcessor::getBusArrangement (..) failed."));
 				return false;
 			}
 			if (spArr != compareSpArr)
 			{
-				addMessage (testResult, printf ("    %s %sSpeakerArrangement is not supported. Plug-in suggests: %s.",
-												getSpeakerArrangementName (compareSpArr),
-												bd == kInput ? "Input-" : "Output-",
-												getSpeakerArrangementName (spArr)));
+				addMessage (
+				    testResult,
+				    printf ("    %s %sSpeakerArrangement is not supported. Plug-in suggests: %s.",
+				            getSpeakerArrangementName (compareSpArr),
+				            bd == kInput ? "Input-" : "Output-",
+				            getSpeakerArrangementName (spArr)));
 			}
 			if (vstPlug->getBusInfo (kAudio, bd, i, busInfo) != kResultTrue)
 			{
 				addErrorMessage (testResult, STR ("IComponent::getBusInfo (..) failed."));
 				return false;
 			}
-			if (spArr == compareSpArr && SpeakerArr::getChannelCount (spArr) != busInfo.channelCount)
+			if (spArr == compareSpArr &&
+			    SpeakerArr::getChannelCount (spArr) != busInfo.channelCount)
 			{
-				addErrorMessage (testResult, STR ("SpeakerArrangement mismatch (BusInfo::channelCount inconsistency)."));
+				addErrorMessage (
+				    testResult,
+				    STR ("SpeakerArrangement mismatch (BusInfo::channelCount inconsistency)."));
 				return false;
 			}
 		}
 		bd = kOutput;
 	} while (count < 2);
-	
+
 	bool ret = true;
-	
+
 	// not a Pb ret &= verifySA (processData.numInputs, processData.inputs, inSpArr, testResult);
 	// not a Pb ret &= verifySA (processData.numOutputs, processData.outputs, outSpArr, testResult);
 	ret &= VstProcessTest::run (testResult);
-	
+
 	return ret;
 }
 
 //------------------------------------------------------------------------
-bool VstSpeakerArrangementTest::verifySA (int32 numBusses, AudioBusBuffers* buses, SpeakerArrangement spArr, ITestResult* testResult)
+bool VstSpeakerArrangementTest::verifySA (int32 numBusses, AudioBusBuffers* buses,
+                                          SpeakerArrangement spArr, ITestResult* testResult)
 {
 	if (!testResult || !buses)
 		return false;
@@ -1879,7 +1989,7 @@ IMPLEMENT_FUNKNOWN_METHODS (VstAutomationTest, IParameterChanges, IParameterChan
 
 //------------------------------------------------------------------------
 VstAutomationTest::VstAutomationTest (IPlugProvider* plugProvider, ProcessSampleSize sampl,
-									  int32 everyNSamples, int32 numParams, bool sampleAccuracy)
+                                      int32 everyNSamples, int32 numParams, bool sampleAccuracy)
 : VstProcessTest (plugProvider, sampl)
 , bypassId (-1)
 , paramChanges (nullptr)
@@ -1887,10 +1997,7 @@ VstAutomationTest::VstAutomationTest (IPlugProvider* plugProvider, ProcessSample
 , everyNSamples (everyNSamples)
 , numParams (numParams)
 , sampleAccuracy (sampleAccuracy)
-, onceExecuted (false)
-{
-	FUNKNOWN_CTOR
-}
+, onceExecuted (false) {FUNKNOWN_CTOR}
 
 //------------------------------------------------------------------------
 VstAutomationTest::~VstAutomationTest ()
@@ -1934,7 +2041,7 @@ bool VstAutomationTest::setup ()
 		numParams = controller->getParameterCount ();
 	if (audioEffect && (numParams > 0))
 	{
-		paramChanges = new ParamChanges [numParams];
+		paramChanges = new ParamChanges[numParams];
 		ParameterInfo inf = {0};
 		for (int32 i = 0; i < numParams; ++i)
 		{
@@ -1964,10 +2071,11 @@ bool VstAutomationTest::setup ()
 //------------------------------------------------------------------------
 bool VstAutomationTest::run (ITestResult* testResult)
 {
-	printTestHeader (this, testResult);
-
 	if (!testResult)
 		return false;
+
+	printTestHeader (testResult);
+
 	if (numParams == 0)
 		addMessage (testResult, STR ("No Parameters present."));
 	bool ret = VstProcessTest::run (testResult);
@@ -1979,7 +2087,7 @@ bool VstAutomationTest::teardown ()
 {
 	if (paramChanges)
 	{
-		delete [] paramChanges;
+		delete[] paramChanges;
 		paramChanges = 0;
 	}
 	return VstProcessTest::teardown ();
@@ -2015,7 +2123,8 @@ bool VstAutomationTest::preProcess (ITestResult* testResult)
 				}
 			}
 			if (add)
-				check &= paramChanges[i].setPoint (point++, pos, ((float)(rand () % 1000000000)) / 1000000000.0);
+				check &= paramChanges[i].setPoint (point++, pos,
+				                                   ((float)(rand () % 1000000000)) / 1000000000.0);
 		}
 		if (check)
 			processData.inputParameterChanges = this;
@@ -2030,17 +2139,20 @@ bool VstAutomationTest::postProcess (ITestResult* testResult)
 		return false;
 	if (!paramChanges)
 		return numParams == 0;
-	
+
 	for (int32 i = 0; i < numParams; ++i)
 	{
-		if ((paramChanges[i].getPointCount () > 0) && !paramChanges[i].havePointsBeenRead (!sampleAccuracy))
+		if ((paramChanges[i].getPointCount () > 0) &&
+		    !paramChanges[i].havePointsBeenRead (!sampleAccuracy))
 		{
 			if (sampleAccuracy)
-				addMessage (testResult, STR ("   Not all points have been read via IParameterChanges"));
+				addMessage (testResult,
+				            STR ("   Not all points have been read via IParameterChanges"));
 			else
-				addMessage (testResult, STR ("   No point at all has been read via IParameterChanges"));
+				addMessage (testResult,
+				            STR ("   No point at all has been read via IParameterChanges"));
 
-			return true;// should not be a problem
+			return true; // should not be a problem
 		}
 	}
 	return true;
@@ -2077,42 +2189,71 @@ VstFlushParamTest::VstFlushParamTest (IPlugProvider* plugProvider, ProcessSample
 }
 
 //------------------------------------------------------------------------
-bool PLUGIN_API VstFlushParamTest::run (ITestResult* testResult)
+void VstFlushParamTest::prepareProcessData ()
 {
-	if (!vstPlug || !testResult || !audioEffect)
-		return false;
-	if (!canProcessSampleSize (testResult))
-		return true;
-
-	printTestHeader (this, testResult);
-
-	unprepareProcessing ();
-
 	processData.numSamples = 0;
 	processData.numInputs = 0;
 	processData.numOutputs = 0;
 	processData.inputs = nullptr;
 	processData.outputs = nullptr;
+}
+bool PLUGIN_API VstFlushParamTest::run (ITestResult* testResult)
+{
+	if (!vstPlug || !testResult || !audioEffect)
+		return false;
+
+	if (!canProcessSampleSize (testResult))
+		return true;
+
+	printTestHeader (testResult);
+
+	unprepareProcessing ();
+
+	prepareProcessData ();
 
 	audioEffect->setProcessing (true);
-	
+
 	preProcess (testResult);
-	
+
 	tresult result = audioEffect->process (processData);
 	if (result != kResultOk)
 	{
-		addErrorMessage (testResult, STR ("The component failed to process without audio buffers!"));
+		addErrorMessage (testResult,
+		                 STR ("The component failed to process without audio buffers!"));
 
 		audioEffect->setProcessing (false);
 		return false;
 	}
-	
+
 	postProcess (testResult);
-		
+
 	audioEffect->setProcessing (false);
 	return true;
 }
-
+VstFlushParamTest2::VstFlushParamTest2 (IPlugProvider* plugProvider, ProcessSampleSize sampl)
+	: VstFlushParamTest (plugProvider, sampl)
+{
+}
+void VstFlushParamTest2::prepareProcessData ()
+{
+	prepareProcessing ();
+	processData.numSamples = 0;
+	processData.numInputs = 0;
+	processData.numOutputs = 0;
+	if (processData.inputs)
+		processData.inputs[0].numChannels = 0;
+	if (processData.outputs)
+		processData.outputs[0].numChannels = 0;
+}
+VstFlushParamTest3::VstFlushParamTest3 (IPlugProvider* plugProvider, ProcessSampleSize sampl)
+	: VstFlushParamTest (plugProvider, sampl)
+{
+	if (paramChanges)
+	{
+		delete[] paramChanges;
+	}
+	paramChanges = 0;
+}
 
 //------------------------------------------------------------------------
 // VstSilenceFlagsTest
@@ -2127,25 +2268,32 @@ bool PLUGIN_API VstSilenceFlagsTest::run (ITestResult* testResult)
 {
 	if (!vstPlug || !testResult || !audioEffect)
 		return false;
+
 	if (!canProcessSampleSize (testResult))
 		return true;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	if (processData.inputs != 0)
 	{
 		audioEffect->setProcessing (true);
-	
+
 		for (int32 inputsIndex = 0; inputsIndex < processData.numInputs; inputsIndex++)
 		{
-			int32 numSilenceFlagsCombinations = (1 << processData.inputs[inputsIndex].numChannels) - 1;
-			for (int32 flagCombination = 0; flagCombination <= numSilenceFlagsCombinations; flagCombination++)
+			int32 numSilenceFlagsCombinations =
+			    (1 << processData.inputs[inputsIndex].numChannels) - 1;
+			for (int32 flagCombination = 0; flagCombination <= numSilenceFlagsCombinations;
+			     flagCombination++)
 			{
 				processData.inputs[inputsIndex].silenceFlags = flagCombination;
 				tresult result = audioEffect->process (processData);
 				if (result != kResultOk)
 				{
-					addErrorMessage (testResult, printf ("The component failed to process bus %i with silence flag combination %x!", inputsIndex, flagCombination));
+					addErrorMessage (
+					    testResult,
+					    printf (
+					        "The component failed to process bus %i with silence flag combination %x!",
+					        inputsIndex, flagCombination));
 					audioEffect->setProcessing (false);
 					return false;
 				}
@@ -2154,10 +2302,11 @@ bool PLUGIN_API VstSilenceFlagsTest::run (ITestResult* testResult)
 	}
 	else if (processData.numInputs > 0)
 	{
-		addErrorMessage (testResult, STR ("ProcessData::inputs are 0 but ProcessData::numInputs are nonzero."));
+		addErrorMessage (testResult,
+		                 STR ("ProcessData::inputs are 0 but ProcessData::numInputs are nonzero."));
 		return false;
 	}
-	
+
 	audioEffect->setProcessing (false);
 	return true;
 }
@@ -2165,13 +2314,15 @@ bool PLUGIN_API VstSilenceFlagsTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 // VstSilenceProcessingTest
 //------------------------------------------------------------------------
-VstSilenceProcessingTest::VstSilenceProcessingTest (IPlugProvider* plugProvider, ProcessSampleSize sampl)
+VstSilenceProcessingTest::VstSilenceProcessingTest (IPlugProvider* plugProvider,
+                                                    ProcessSampleSize sampl)
 : VstProcessTest (plugProvider, sampl)
 {
 }
 
 //------------------------------------------------------------------------
-bool VstSilenceProcessingTest::isBufferSilent (void* buffer, int32 numSamples, ProcessSampleSize sampl)
+bool VstSilenceProcessingTest::isBufferSilent (void* buffer, int32 numSamples,
+                                               ProcessSampleSize sampl)
 {
 	if (sampl == kSample32)
 	{
@@ -2205,10 +2356,11 @@ bool PLUGIN_API VstSilenceProcessingTest::run (ITestResult* testResult)
 {
 	if (!vstPlug || !testResult || !audioEffect)
 		return false;
+
 	if (!canProcessSampleSize (testResult))
 		return true;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	if (processData.inputs != 0)
 	{
@@ -2217,24 +2369,29 @@ bool PLUGIN_API VstSilenceProcessingTest::run (ITestResult* testResult)
 		for (int32 busIndex = 0; busIndex < processData.numInputs; busIndex++)
 		{
 			processData.inputs[busIndex].silenceFlags = 0;
-			for (int32 channelIndex = 0; channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
+			for (int32 channelIndex = 0; channelIndex < processData.inputs[busIndex].numChannels;
+			     channelIndex++)
 			{
 				processData.inputs[busIndex].silenceFlags |= (uint64)1 << (uint64)channelIndex;
 				if (processData.symbolicSampleSize == kSample32)
-					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0, sizeof (float) * processData.numSamples);
+					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
+					        sizeof (float) * processData.numSamples);
 				else if (processData.symbolicSampleSize == kSample64)
-					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0, sizeof (double) * processData.numSamples);
+					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
+					        sizeof (double) * processData.numSamples);
 			}
 		}
-		
+
 		for (int32 busIndex = 0; busIndex < processData.numOutputs; busIndex++)
 		{
 			if (processData.numInputs > busIndex)
-				processData.outputs[busIndex].silenceFlags = processData.inputs[busIndex].silenceFlags;
+				processData.outputs[busIndex].silenceFlags =
+				    processData.inputs[busIndex].silenceFlags;
 			else
 			{
 				processData.outputs[busIndex].silenceFlags = 0;
-				for (int32 channelIndex = 0; channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
+				for (int32 channelIndex = 0;
+				     channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
 					processData.outputs[busIndex].silenceFlags |= (uint64)1 << (uint64)channelIndex;
 			}
 		}
@@ -2247,30 +2404,36 @@ bool PLUGIN_API VstSilenceProcessingTest::run (ITestResult* testResult)
 			audioEffect->setProcessing (false);
 			return false;
 		}
-		
+
 		for (int32 busIndex = 0; busIndex < processData.numOutputs; busIndex++)
 		{
-			for (int32 channelIndex = 0; channelIndex < processData.outputs[busIndex].numChannels; channelIndex++)
+			for (int32 channelIndex = 0; channelIndex < processData.outputs[busIndex].numChannels;
+			     channelIndex++)
 			{
-				bool channelShouldBeSilent = (processData.outputs[busIndex].silenceFlags & (uint64)1 << (uint64)channelIndex) != 0;
-				bool channelIsSilent = isBufferSilent (processData.outputs[busIndex].channelBuffers32[channelIndex], processData.numSamples, processData.symbolicSampleSize);
+				bool channelShouldBeSilent = (processData.outputs[busIndex].silenceFlags &
+				                              (uint64)1 << (uint64)channelIndex) != 0;
+				bool channelIsSilent =
+				    isBufferSilent (processData.outputs[busIndex].channelBuffers32[channelIndex],
+				                    processData.numSamples, processData.symbolicSampleSize);
 				if (channelShouldBeSilent != channelIsSilent)
 				{
-					constexpr auto silentText = STR ("The component reported a wrong silent flag for its output buffer! : output is silent but silenceFlags not set !");
-					constexpr auto nonSilentText = STR ("The component reported a wrong silent flag for its output buffer! : silenceFlags is set to silence but output is not silent");
+					constexpr auto silentText = STR (
+					    "The component reported a wrong silent flag for its output buffer! : output is silent but silenceFlags not set !");
+					constexpr auto nonSilentText = STR (
+					    "The component reported a wrong silent flag for its output buffer! : silenceFlags is set to silence but output is not silent");
 					addMessage (testResult, channelIsSilent ? silentText : nonSilentText);
 					break;
 				}
 			}
 		}
-		
 	}
 	else if (processData.numInputs > 0)
 	{
-		addErrorMessage (testResult, STR ("ProcessData::inputs are 0 but ProcessData::numInputs are nonzero."));
+		addErrorMessage (testResult,
+		                 STR ("ProcessData::inputs are 0 but ProcessData::numInputs are nonzero."));
 		return false;
 	}
-	
+
 	audioEffect->setProcessing (false);
 	return true;
 }
@@ -2279,7 +2442,7 @@ bool PLUGIN_API VstSilenceProcessingTest::run (ITestResult* testResult)
 // VstVariableBlockSizeTest
 //------------------------------------------------------------------------
 VstVariableBlockSizeTest::VstVariableBlockSizeTest (IPlugProvider* plugProvider,
-													ProcessSampleSize sampl)
+                                                    ProcessSampleSize sampl)
 : VstProcessTest (plugProvider, sampl)
 {
 }
@@ -2289,10 +2452,11 @@ bool PLUGIN_API VstVariableBlockSizeTest::run (ITestResult* testResult)
 {
 	if (!vstPlug || !testResult || !audioEffect)
 		return false;
+
 	if (!canProcessSampleSize (testResult))
 		return true;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	audioEffect->setProcessing (true);
 
@@ -2302,54 +2466,58 @@ bool PLUGIN_API VstVariableBlockSizeTest::run (ITestResult* testResult)
 		processData.numSamples = sampleFrames;
 		if (i == 0)
 			processData.numSamples = 0;
-	#if TOUGHTESTS
+#if TOUGHTESTS
 		else if (i == 1)
 			processData.numSamples = -50000;
 		else if (i == 2)
 			processData.numSamples = processSetup.maxSamplesPerBlock * 2;
-	#endif
+#endif
 		tresult result = audioEffect->process (processData);
-		if ((result != kResultOk) 
-		#if TOUGHTESTS
-			&& (i > 1)
-		#else
-			&& (i > 0)
-		#endif
-			)
+		if ((result != kResultOk)
+#if TOUGHTESTS
+		    && (i > 1)
+#else
+		    && (i > 0)
+#endif
+		        )
 		{
-			addErrorMessage (testResult, printf ("The component failed to process an audioblock of size %i", sampleFrames));
+			addErrorMessage (
+			    testResult,
+			    printf ("The component failed to process an audioblock of size %i", sampleFrames));
 			audioEffect->setProcessing (false);
 			return false;
 		}
 	}
-	
+
 	audioEffect->setProcessing (false);
 	return true;
 }
-
 
 //------------------------------------------------------------------------
 // VstProcessFormatTest
 //------------------------------------------------------------------------
 VstProcessFormatTest::VstProcessFormatTest (IPlugProvider* plugProvider, ProcessSampleSize sampl)
 : VstProcessTest (plugProvider, sampl)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstProcessFormatTest::run (ITestResult* testResult)
 {
 	if (!vstPlug || !testResult || !audioEffect)
 		return false;
+
 	if (!canProcessSampleSize (testResult))
 		return true;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	int32 numFails = 0;
-	const int32 numRates = 11;
-	SampleRate sampleRateFormats [numRates] = {22050., 32000., 44100., 48000., 88200., 96000., 192000.,
-		1234.5678, 12345.678, 123456.78, 1234567.8};
-  	
+	const int32 numRates = 12;
+	SampleRate sampleRateFormats[numRates] = {22050.,    32000.,    44100.,    48000.,
+	                                          88200.,    96000.,    192000.,   384000.,
+	                                          1234.5678, 12345.678, 123456.78, 1234567.8};
+
 	tresult result = vstPlug->setActive (false);
 	if (result != kResultOk)
 	{
@@ -2361,7 +2529,7 @@ bool PLUGIN_API VstProcessFormatTest::run (ITestResult* testResult)
 
 	for (int32 i = 0; i < numRates; ++i)
 	{
-		processSetup.sampleRate = sampleRateFormats [i];
+		processSetup.sampleRate = sampleRateFormats[i];
 		result = audioEffect->setupProcessing (processSetup);
 		if (result == kResultOk)
 		{
@@ -2371,19 +2539,21 @@ bool PLUGIN_API VstProcessFormatTest::run (ITestResult* testResult)
 				addErrorMessage (testResult, STR ("IComponent::setActive (true) failed."));
 				return false;
 			}
-		
+
 			audioEffect->setProcessing (true);
 			result = audioEffect->process (processData);
 			audioEffect->setProcessing (false);
 
 			if (result == kResultOk)
 			{
-				addMessage (testResult, printf (" %10.10G Hz - processed successfully!", sampleRateFormats [i]));
+				addMessage (testResult,
+				            printf (" %10.10G Hz - processed successfully!", sampleRateFormats[i]));
 			}
 			else
 			{
 				numFails++;
-				addErrorMessage (testResult, printf (" %10.10G Hz - failed to process!", sampleRateFormats [i]));
+				addErrorMessage (testResult,
+				                 printf (" %10.10G Hz - failed to process!", sampleRateFormats[i]));
 			}
 
 			result = vstPlug->setActive (false);
@@ -2395,8 +2565,11 @@ bool PLUGIN_API VstProcessFormatTest::run (ITestResult* testResult)
 		}
 		else if (sampleRateFormats[i] > 0.)
 		{
-			addErrorMessage (testResult, printf ("IAudioProcessor::setupProcessing (..) failed for samplerate %.3f Hz! ", sampleRateFormats [i]));
-			//return false;
+			addErrorMessage (
+			    testResult,
+			    printf ("IAudioProcessor::setupProcessing (..) failed for samplerate %.3f Hz! ",
+			            sampleRateFormats[i]));
+			// return false;
 		}
 	}
 
@@ -2408,18 +2581,171 @@ bool PLUGIN_API VstProcessFormatTest::run (ITestResult* testResult)
 }
 
 //------------------------------------------------------------------------
+// VstProcessInputOverwritingTest
+//------------------------------------------------------------------------
+VstProcessInputOverwritingTest::VstProcessInputOverwritingTest (IPlugProvider* plugProvider,
+                                                                ProcessSampleSize sampl)
+: VstProcessTest (plugProvider, sampl)
+{
+}
+
+//------------------------------------------------------------------------
+bool VstProcessInputOverwritingTest::run (ITestResult* testResult)
+{
+	if (!testResult || !vstPlug)
+		return false;
+
+	printTestHeader (testResult);
+
+	bool ret = VstProcessTest::run (testResult);
+	return ret;
+}
+
+//------------------------------------------------------------------------
+bool VstProcessInputOverwritingTest::preProcess (ITestResult* testResult)
+{
+	int32 min = processData.numInputs < processData.numOutputs ? processData.numInputs :
+	                                                             processData.numOutputs;
+	noNeedtoProcess = true;
+
+	for (int32 i = 0; i < min; i++)
+	{
+		if (!noNeedtoProcess)
+			break;
+
+		int32 minChannel = processData.inputs[i].numChannels < processData.outputs[i].numChannels ?
+		                       processData.inputs[i].numChannels :
+		                       processData.outputs[i].numChannels;
+
+		auto ptrIn = processData.inputs[i].channelBuffers32;
+		auto ptrOut = processData.outputs[i].channelBuffers32;
+		for (int32 j = 0; j < minChannel; j++)
+		{
+			if (ptrIn[j] != ptrOut[j])
+			{
+				noNeedtoProcess = false;
+				break;
+			}
+		}
+	}
+	if (noNeedtoProcess)
+		return true;
+
+	for (int32 i = 0; i < processData.numInputs; i++)
+	{
+		if (processSetup.symbolicSampleSize == kSample32)
+		{
+			auto ptr = processData.inputs[i].channelBuffers32;
+			if (ptr)
+			{
+				float inc = 1.0 / (processData.numSamples - 1);
+				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
+				{
+					auto chaBuf = ptr[c];
+					for (int32 j = 0; j < processData.numSamples; j++)
+					{
+						*chaBuf = inc * j;
+						chaBuf++;
+					}
+				}
+			}
+		}
+		else if (processSetup.symbolicSampleSize == kSample64)
+		{
+			auto ptr = processData.inputs[i].channelBuffers64;
+			if (ptr)
+			{
+				float inc = 1.0 / (processData.numSamples - 1);
+				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
+				{
+					auto chaBuf = ptr[c];
+					for (int32 j = 0; j < processData.numSamples; j++)
+					{
+						*chaBuf = inc * j;
+						chaBuf++;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+
+//------------------------------------------------------------------------
+bool VstProcessInputOverwritingTest::postProcess (ITestResult* testResult)
+{
+	if (noNeedtoProcess)
+		return true;
+
+	for (int32 i = 0; i < processData.numInputs; i++)
+	{
+		if (processSetup.symbolicSampleSize == kSample32)
+		{
+			auto ptr = processData.inputs[i].channelBuffers32;
+			if (ptr)
+			{
+				float inc = 1.0 / (processData.numSamples - 1);
+				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
+				{
+					auto chaBuf = ptr[c];
+					for (int32 j = 0; j < processData.numSamples; j++)
+					{
+						if (*chaBuf != inc * j)
+						{
+							addErrorMessage (
+							    testResult,
+							    STR (
+							        "IAudioProcessor::process overwrites input buffer (..with kSample32..)!"));
+							return false;
+						}
+						chaBuf++;
+					}
+				}
+			}
+		}
+		else if (processSetup.symbolicSampleSize == kSample64)
+		{
+			auto ptr = processData.inputs[i].channelBuffers64;
+			if (ptr)
+			{
+				float inc = 1.0 / (processData.numSamples - 1);
+				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
+				{
+					auto chaBuf = ptr[c];
+					for (int32 j = 0; j < processData.numSamples; j++)
+					{
+						if (*chaBuf != inc * j)
+						{
+							addErrorMessage (
+							    testResult,
+							    STR (
+							        "IAudioProcessor::process overwrites input buffer (..with kSample64..)!"));
+							return false;
+						}
+						chaBuf++;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+
+//------------------------------------------------------------------------
 // VstBusActivationTest
 //------------------------------------------------------------------------
 VstBusActivationTest::VstBusActivationTest (IPlugProvider* plugProvider)
 : VstTestBase (plugProvider)
-{}
+{
+}
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstBusActivationTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
-	printTestHeader (this, testResult);
+
+	printTestHeader (testResult);
 
 	int32 numTotalBusses = 0;
 	int32 numFailedActivations = 0;
@@ -2435,7 +2761,7 @@ bool PLUGIN_API VstBusActivationTest::run (ITestResult* testResult)
 		{
 			BusDirection busDirection = i < numInputs ? kInput : kOutput;
 			int32 busIndex = busDirection == kInput ? i : i - numInputs;
-			
+
 			BusInfo busInfo = {0};
 			if (vstPlug->getBusInfo (type, busDirection, busIndex, busInfo) != kResultTrue)
 			{
@@ -2444,9 +2770,9 @@ bool PLUGIN_API VstBusActivationTest::run (ITestResult* testResult)
 			}
 
 			addMessage (testResult, printf ("   Bus Activation: %s %s Bus (%d) (%s)",
-									busDirection == kInput ? "Input" : "Output",
-									type == kAudio ? "Audio" : "Event", busIndex,
-									busInfo.busType == kMain ? "kMain" : "kAux"));
+			                                busDirection == kInput ? "Input" : "Output",
+			                                type == kAudio ? "Audio" : "Event", busIndex,
+			                                busInfo.busType == kMain ? "kMain" : "kAux"));
 
 			if ((busInfo.flags & BusInfo::kDefaultActive) == false)
 			{
@@ -2471,7 +2797,6 @@ bool PLUGIN_API VstBusActivationTest::run (ITestResult* testResult)
 	return (numFailedActivations == 0);
 }
 
-
 //------------------------------------------------------------------------
 // VstCheckAudioBusArrangementTest
 //------------------------------------------------------------------------
@@ -2483,24 +2808,25 @@ VstCheckAudioBusArrangementTest::VstCheckAudioBusArrangementTest (IPlugProvider*
 //------------------------------------------------------------------------
 bool VstCheckAudioBusArrangementTest::run (ITestResult* testResult)
 {
-	if (!vstPlug || !testResult)
+	if (!testResult || !vstPlug)
 		return false;
 
-	printTestHeader (this, testResult);
+	printTestHeader (testResult);
 
 	int32 numInputs = vstPlug->getBusCount (kAudio, kInput);
 	int32 numOutputs = vstPlug->getBusCount (kAudio, kOutput);
 	int32 arrangementMismatchs = 0;
-	
-	FUnknownPtr <IAudioProcessor> audioEffect (vstPlug);
+
+	FUnknownPtr<IAudioProcessor> audioEffect (vstPlug);
 	if (audioEffect)
 	{
 		for (int32 i = 0; i < numInputs + numOutputs; ++i)
 		{
 			BusDirection dir = i < numInputs ? kInput : kOutput;
 			int32 busIndex = dir == kInput ? i : i - numInputs;
-			
-			addMessage (testResult, printf ("   Check %s Audio Bus Arrangement (%d)", dir == kInput ? "Input" : "Output", busIndex));
+
+			addMessage (testResult, printf ("   Check %s Audio Bus Arrangement (%d)",
+			                                dir == kInput ? "Input" : "Output", busIndex));
 
 			BusInfo busInfo = {0};
 			if (vstPlug->getBusInfo (kAudio, dir, busIndex, busInfo) == kResultTrue)
@@ -2516,7 +2842,8 @@ bool VstCheckAudioBusArrangementTest::run (ITestResult* testResult)
 				}
 				else
 				{
-					addErrorMessage (testResult, STR ("IAudioProcessor::getBusArrangement (..) failed!"));
+					addErrorMessage (testResult,
+					                 STR ("IAudioProcessor::getBusArrangement (..) failed!"));
 					return false;
 				}
 			}
@@ -2540,22 +2867,19 @@ VstProcessTailTest::VstProcessTailTest (IPlugProvider* plugProvider, ProcessSamp
 , dataPtrFloat (nullptr)
 , dataPtrDouble (nullptr)
 , mInSilenceInput (false)
-, mDontTest (false)
-{
-	FUNKNOWN_CTOR
-}
+, mDontTest (false) {FUNKNOWN_CTOR}
 
 //------------------------------------------------------------------------
 VstProcessTailTest::~VstProcessTailTest ()
 {
 	if (dataPtrFloat)
 	{
-		delete []dataPtrFloat;
+		delete[] dataPtrFloat;
 		dataPtrFloat = nullptr;
 	}
 	if (dataPtrDouble)
 	{
-		delete []dataPtrDouble;
+		delete[] dataPtrDouble;
 		dataPtrDouble = nullptr;
 	}
 }
@@ -2569,7 +2893,8 @@ bool PLUGIN_API VstProcessTailTest::setup ()
 		mTailSamples = audioEffect->getTailSamples ();
 
 		std::string subCat (plugProvider->getSubCategories ());
-		if (subCat.find ("Generator") != std::string::npos || subCat.find ("Instrument") != std::string::npos)
+		if (subCat.find ("Generator") != std::string::npos ||
+		    subCat.find ("Instrument") != std::string::npos)
 		{
 			mDontTest = true;
 		}
@@ -2588,7 +2913,7 @@ bool VstProcessTailTest::preProcess (ITestResult* testResult)
 			if (!dataPtrFloat)
 				dataPtrFloat = new float[processData.numSamples];
 			float* ptr = dataPtrFloat;
-			for (int32 i = 0; i < processData.numSamples ; ++i)
+			for (int32 i = 0; i < processData.numSamples; ++i)
 				ptr[i] = (float)(2 * rand () / 32767.0 - 1);
 		}
 		else
@@ -2596,7 +2921,7 @@ bool VstProcessTailTest::preProcess (ITestResult* testResult)
 			if (!dataPtrDouble)
 				dataPtrDouble = new double[processData.numSamples];
 			double* ptr = (double*)dataPtrDouble;
-			for (int32 i = 0; i < processData.numSamples ; ++i)
+			for (int32 i = 0; i < processData.numSamples; ++i)
 				ptr[i] = (double)(2 * rand () / 32767.0 - 1);
 		}
 		for (int32 i = 0; i < processData.numOutputs; ++i)
@@ -2604,19 +2929,23 @@ bool VstProcessTailTest::preProcess (ITestResult* testResult)
 			for (int32 c = 0; c < processData.outputs->numChannels; ++c)
 			{
 				if (processSetup.symbolicSampleSize == kSample32)
-					memset (processData.outputs->channelBuffers32[c], 0, processData.numSamples * sizeof (float));
+					memset (processData.outputs->channelBuffers32[c], 0,
+					        processData.numSamples * sizeof (float));
 				else
-					memset (processData.outputs->channelBuffers64[c], 0, processData.numSamples * sizeof (double));
+					memset (processData.outputs->channelBuffers64[c], 0,
+					        processData.numSamples * sizeof (double));
 			}
 		}
-		for (int32 i = 0; i < processData.numInputs ; ++i)
+		for (int32 i = 0; i < processData.numInputs; ++i)
 		{
 			for (int32 c = 0; c < processData.inputs->numChannels; ++c)
 			{
 				if (processSetup.symbolicSampleSize == kSample32)
-					memcpy (processData.inputs->channelBuffers32[c], dataPtrFloat, processData.numSamples * sizeof (float));
+					memcpy (processData.inputs->channelBuffers32[c], dataPtrFloat,
+					        processData.numSamples * sizeof (float));
 				else
-					memcpy (processData.inputs->channelBuffers64[c], dataPtrDouble, processData.numSamples * sizeof (double));
+					memcpy (processData.inputs->channelBuffers64[c], dataPtrDouble,
+					        processData.numSamples * sizeof (double));
 			}
 		}
 	}
@@ -2628,9 +2957,11 @@ bool VstProcessTailTest::preProcess (ITestResult* testResult)
 			for (int32 c = 0; c < processData.outputs->numChannels; ++c)
 			{
 				if (processSetup.symbolicSampleSize == kSample32)
-					memset (processData.outputs->channelBuffers32[c], 0, processData.numSamples * sizeof (float));
+					memset (processData.outputs->channelBuffers32[c], 0,
+					        processData.numSamples * sizeof (float));
 				else
-					memset (processData.outputs->channelBuffers64[c], 0, processData.numSamples * sizeof (double));
+					memset (processData.outputs->channelBuffers64[c], 0,
+					        processData.numSamples * sizeof (double));
 			}
 		}
 		for (int32 i = 0; i < processData.numInputs; ++i)
@@ -2638,9 +2969,11 @@ bool VstProcessTailTest::preProcess (ITestResult* testResult)
 			for (int32 c = 0; c < processData.inputs->numChannels; ++c)
 			{
 				if (processSetup.symbolicSampleSize == kSample32)
-					memset (processData.inputs->channelBuffers32[c], 0, processData.numSamples * sizeof (float));
+					memset (processData.inputs->channelBuffers32[c], 0,
+					        processData.numSamples * sizeof (float));
 				else
-					memset (processData.inputs->channelBuffers64[c], 0, processData.numSamples * sizeof (double));
+					memset (processData.inputs->channelBuffers64[c], 0,
+					        processData.numSamples * sizeof (double));
 			}
 		}
 	}
@@ -2658,7 +2991,7 @@ bool VstProcessTailTest::postProcess (ITestResult* testResult)
 		{
 			int32 start = mTailSamples > mInTail ? mTailSamples - mInTail : 0;
 			int32 end = processData.numSamples;
-			
+
 			for (int32 i = 0; i < processData.numOutputs; ++i)
 			{
 				for (int32 c = 0; c < processData.outputs->numChannels; ++c)
@@ -2669,7 +3002,11 @@ bool VstProcessTailTest::postProcess (ITestResult* testResult)
 						{
 							if (fabsf (processData.outputs->channelBuffers32[c][s]) >= 1e-7)
 							{
-								addErrorMessage (testResult, printf ("IAudioProcessor::process (..) generates non silent output for silent input for tail above %d samples.", mTailSamples));
+								addErrorMessage (
+								    testResult,
+								    printf (
+								        "IAudioProcessor::process (..) generates non silent output for silent input for tail above %d samples.",
+								        mTailSamples));
 								return false;
 							}
 						}
@@ -2680,13 +3017,16 @@ bool VstProcessTailTest::postProcess (ITestResult* testResult)
 						{
 							if (fabs (processData.outputs->channelBuffers64[c][s]) >= 1e-7)
 							{
-								addErrorMessage (testResult, printf ("IAudioProcessor::process (..) generates non silent output for silent input for tail above %d samples.", mTailSamples));
+								addErrorMessage (
+								    testResult,
+								    printf (
+								        "IAudioProcessor::process (..) generates non silent output for silent input for tail above %d samples.",
+								        mTailSamples));
 								return false;
 							}
 						}
 					}
-					
-				}	
+				}
 			}
 		}
 		mInTail += processData.numSamples;
@@ -2699,6 +3039,7 @@ bool PLUGIN_API VstProcessTailTest::run (ITestResult* testResult)
 {
 	if (!testResult || !audioEffect)
 		return false;
+
 	if (processSetup.symbolicSampleSize != processData.symbolicSampleSize)
 		return false;
 	if (!canProcessSampleSize (testResult))
@@ -2707,15 +3048,16 @@ bool PLUGIN_API VstProcessTailTest::run (ITestResult* testResult)
 	if (mDontTest)
 		return true;
 
-	addMessage (testResult, printf ("===%s == Tail=%d ======================", getName (), mTailSamples));
+	addMessage (testResult,
+	            printf ("===%s == Tail=%d ======================", getName (), mTailSamples));
 
 	audioEffect->setProcessing (true);
-	
+
 	// process with signal (noise) and silence
 	for (int32 i = 0; i < 20 * NUM_AUDIO_BLOCKS_TO_PROCESS; ++i)
 	{
 		mInSilenceInput = i > 10;
-	
+
 		if (!preProcess (testResult))
 			return false;
 		tresult result = audioEffect->process (processData);

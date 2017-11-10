@@ -41,9 +41,9 @@
 
 #if VSTGUI_VERSION_MAJOR < 4
 #include "vstgui/cvstguitimer.h"
-#define VSTGUI_INT32	long
+#define VSTGUI_INT32 long
 #else
-#define VSTGUI_INT32	int32_t
+#define VSTGUI_INT32 int32_t
 #endif
 
 namespace Steinberg {
@@ -53,19 +53,20 @@ namespace Vst {
 /** Base class for an edit view using VSTGUI.
 \ingroup vstClasses  */
 //------------------------------------------------------------------------
-class VSTGUIEditor : public EditorView, public VSTGUIEditorInterface, public CBaseObject, public IPlugViewIdleHandler
+class VSTGUIEditor : public EditorView, public VSTGUIEditorInterface, public CBaseObject
 {
 public:
 	/** Constructor. */
-	VSTGUIEditor (void* controller, ViewRect* size = 0);
+	VSTGUIEditor (void* controller, ViewRect* size = nullptr);
 
 	/** Destructor. */
 	virtual ~VSTGUIEditor ();
 
-	//---Internal function-----
-	/** Called when the editor will be opened. */
+//---Internal function-----
+/** Called when the editor will be opened. */
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
-	virtual bool PLUGIN_API open (void* parent, const PlatformType& platformType = kDefaultNative) = 0;
+	virtual bool PLUGIN_API open (void* parent,
+	                              const PlatformType& platformType = kDefaultNative) = 0;
 #else
 	virtual bool PLUGIN_API open (void* parent) = 0;
 #endif
@@ -87,19 +88,18 @@ public:
 
 	//---from VSTGUIEditorInterface-------
 	/** Called from VSTGUI when a user begins editing.
-		The default implementation calls performEdit of the EditController. */
+	    The default implementation calls performEdit of the EditController. */
 	void beginEdit (VSTGUI_INT32 index) SMTG_OVERRIDE;
 	/** Called from VSTGUI when a user ends editing.
-		The default implementation calls endEdit of the EditController. */
+	    The default implementation calls endEdit of the EditController. */
 	void endEdit (VSTGUI_INT32 index) SMTG_OVERRIDE;
 
 	VSTGUI_INT32 getKnobMode () const SMTG_OVERRIDE;
 
 	OBJ_METHODS (VSTGUIEditor, EditorView)
 	DEFINE_INTERFACES
-		DEF_INTERFACE (IPlugViewIdleHandler)
 	END_DEFINE_INTERFACES (EditorView)
-	REFCOUNT_METHODS(EditorView)
+	REFCOUNT_METHODS (EditorView)
 private:
 	//---from IPlugView-------
 	tresult PLUGIN_API attached (void* parent, FIDString type) SMTG_OVERRIDE;
@@ -108,9 +108,6 @@ private:
 	tresult PLUGIN_API onKeyUp (char16 key, int16 keyMsg, int16 modifiers) SMTG_OVERRIDE;
 	tresult PLUGIN_API onWheel (float distance) SMTG_OVERRIDE;
 	tresult PLUGIN_API setFrame (IPlugFrame* frame) SMTG_OVERRIDE;
-
-	//---from IPlugViewIdle-------
-	void PLUGIN_API onPlugViewIdle () SMTG_OVERRIDE;
 
 	CVSTGUITimer* timer;
 };

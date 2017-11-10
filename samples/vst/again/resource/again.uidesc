@@ -37,7 +37,7 @@
 		<bitmap name="background" path="background.png"/>
 		<bitmap name="slider_background" path="slider_background.png"/>
 		<bitmap name="slider_handle" path="slider_handle.png"/>
-		<bitmap name="slider_handle#2x" path="slider_handle#2x.png" scale-factor="2"/>
+		<bitmap name="slider_handle#2x" path="slider_handle_2.0x.png" scale-factor="2"/>
 		<bitmap name="vu_off" path="vu_off.png"/>
 		<bitmap name="vu_on" path="vu_on.png"/>
 	</bitmaps>

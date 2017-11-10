@@ -50,12 +50,12 @@ class SpeakerArray
 {
 public:
 //------------------------------------------------------------------------
-	SpeakerArray (SpeakerArrangement arr = 0)
-	{
-		setArrangement (arr);
-	}
+	SpeakerArray (SpeakerArrangement arr = 0) { setArrangement (arr); }
 
-	enum { kMaxSpeakers = 64 };
+	enum
+	{
+		kMaxSpeakers = 64
+	};
 
 	typedef uint64 SpeakerType;
 

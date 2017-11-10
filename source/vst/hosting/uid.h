@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    :
+// Category    : Helpers
 // Filename    : public.sdk/source/vst/hosting/uid.h
 // Created by  : Steinberg, 08/2016
 // Description : UID

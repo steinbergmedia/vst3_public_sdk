@@ -53,7 +53,7 @@ typedef int32 ProcessSampleSize;
 
 //------------------------------------------------------------------------
 #define DECLARE_VSTTEST(name) \
-virtual const char* getName () const SMTG_OVERRIDE { return name; }
+const char* getName () const SMTG_OVERRIDE { return name; }
 
 /** Set from outside the plug-in context (simulating a host context) */
 extern void setStandardPluginContext (FUnknown* context);
@@ -210,6 +210,8 @@ public:
 	bool PLUGIN_API setup () SMTG_OVERRIDE;
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE {return false;}	// implement me
 	bool PLUGIN_API teardown () SMTG_OVERRIDE;
+
+	virtual void printTestHeader (ITestResult* testResult);
 //------------------------------------------------------------------------
 protected:
 	IPlugProvider* plugProvider;
@@ -627,6 +629,35 @@ public:
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Parameters Flush (no Buffer)")
+protected:
+	virtual void prepareProcessData ();
+};
+
+//------------------------------------------------------------------------
+/** Test Parameters Flush 2 (no Buffer).
+\ingroup TestClass */
+//------------------------------------------------------------------------
+class VstFlushParamTest2 : public VstFlushParamTest
+{
+public:
+	VstFlushParamTest2 (IPlugProvider* plugProvider, ProcessSampleSize sampl);
+
+	DECLARE_VSTTEST ("Parameters Flush 2 (only numChannel==0)")
+protected:
+	void prepareProcessData () SMTG_OVERRIDE;
+};
+
+
+//------------------------------------------------------------------------
+/** Test Parameters Flush 3 (no Buffer, no parameter change).
+\ingroup TestClass */
+//------------------------------------------------------------------------
+class VstFlushParamTest3 : public VstFlushParamTest
+{
+public:
+	VstFlushParamTest3 (IPlugProvider* plugProvider, ProcessSampleSize sampl);
+	DECLARE_VSTTEST ("Parameters Flush 2 (no Buffer, no parameter change)")
+protected:
 };
 
 //------------------------------------------------------------------------
@@ -640,6 +671,24 @@ public:
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Bus Activation")
+};
+
+//------------------------------------------------------------------------
+/** Test Input Overwriting
+\ingroup TestClass */
+//------------------------------------------------------------------------
+class VstProcessInputOverwritingTest : public VstProcessTest
+{
+public:
+	VstProcessInputOverwritingTest (IPlugProvider* plugProvider, ProcessSampleSize sampl);
+
+	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
+	bool preProcess (ITestResult* testResult) SMTG_OVERRIDE;
+	bool postProcess (ITestResult* testResult) SMTG_OVERRIDE;
+		
+	DECLARE_VSTTEST ("Process Input Overwriting")
+private:
+	bool noNeedtoProcess = false;
 };
 
 //------------------------------------------------------------------------

@@ -6,6 +6,7 @@ if(MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
 		Info.plist
 	)
 	add_library(${target} MODULE ${${target}_sources})
+	set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
 	set_target_properties(${target} PROPERTIES BUNDLE TRUE)
 	set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES")
 	set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_OTHER_LDFLAGS "-all_load")

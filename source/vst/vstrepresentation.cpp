@@ -42,10 +42,10 @@
 namespace Steinberg {
 namespace Vst {
 
-#define START_TAG_STRING(string) "<" string">"
-#define END_TAG_STRING(string)	 "</" string">"
-#define MEDIUM_TITLE_LIMIT			8
-#define SHORT_TITLE_LIMIT			4
+#define START_TAG_STRING(string) "<" string ">"
+#define END_TAG_STRING(string) "</" string ">"
+#define MEDIUM_TITLE_LIMIT 8
+#define SHORT_TITLE_LIMIT 4
 
 //------------------------------------------------------------------------
 struct StringWriter
@@ -73,10 +73,12 @@ XmlRepresentationHelper::XmlRepresentationHelper (const Vst::RepresentationInfo&
 	String string;
 	writer.write ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 	writer.write (ENDLINE_A);
-	string.printf ("<!DOCTYPE %s PUBLIC \"-//Steinberg//DTD VST Remote 1.1//EN\" \"http://dtd.steinberg.net/VST-Remote-1.1.dtd\">", ROOTXML_TAG);
+	string.printf (
+	    "<!DOCTYPE %s PUBLIC \"-//Steinberg//DTD VST Remote 1.1//EN\" \"http://dtd.steinberg.net/VST-Remote-1.1.dtd\">",
+	    ROOTXML_TAG);
 	writer.write (string.text8 ());
 	writer.write (ENDLINE_A);
-	
+
 	string.printf ("<%s %s=\"1.0\">", ROOTXML_TAG, ATTR_VERSION);
 	writer.write (string.text8 ());
 	writer.write (ENDLINE_A);
@@ -86,7 +88,8 @@ XmlRepresentationHelper::XmlRepresentationHelper (const Vst::RepresentationInfo&
 	char uidText[33];
 	uid.toString (uidText);
 
-	string.printf ("<%s %s=\"%s\" %s=\"%s\" %s=\"%s\"/>", PLUGIN_TAG, ATTR_CLASSID, uidText, ATTR_NAME, pluginName, ATTR_VENDOR, companyName);
+	string.printf ("<%s %s=\"%s\" %s=\"%s\" %s=\"%s\"/>", PLUGIN_TAG, ATTR_CLASSID, uidText,
+	               ATTR_NAME, pluginName, ATTR_VENDOR, companyName);
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
@@ -122,14 +125,14 @@ XmlRepresentationHelper::~XmlRepresentationHelper ()
 
 	StringWriter writer (stream);
 	String string;
-	
+
 	// end representation
-	string.printf ("\t%s", END_TAG_STRING(REPRESENTATION_TAG));
+	string.printf ("\t%s", END_TAG_STRING (REPRESENTATION_TAG));
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
 	// end piper
-	writer.write (END_TAG_STRING(ROOTXML_TAG));
+	writer.write (END_TAG_STRING (ROOTXML_TAG));
 	writer.write (ENDLINE_A);
 }
 
@@ -170,7 +173,7 @@ bool XmlRepresentationHelper::endPage ()
 
 	StringWriter writer (stream);
 	String string;
-	string.printf ("%s", END_TAG_STRING(PAGE_TAG));
+	string.printf ("%s", END_TAG_STRING (PAGE_TAG));
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
@@ -185,7 +188,7 @@ bool XmlRepresentationHelper::startCell ()
 
 	StringWriter writer (stream);
 	String string;
-	string.printf ("%s", START_TAG_STRING(CELL_TAG));
+	string.printf ("%s", START_TAG_STRING (CELL_TAG));
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
@@ -200,7 +203,7 @@ bool XmlRepresentationHelper::endCell ()
 
 	StringWriter writer (stream);
 	String string;
-	string.printf ("%s", END_TAG_STRING(CELL_TAG));
+	string.printf ("%s", END_TAG_STRING (CELL_TAG));
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
@@ -225,7 +228,8 @@ bool XmlRepresentationHelper::startEndCell ()
 }
 
 //------------------------------------------------------------------------
-bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _function, FIDString style)
+bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _function,
+                                          FIDString style)
 {
 	return startLayer (type, id, _function, style, false);
 }
@@ -238,7 +242,7 @@ bool XmlRepresentationHelper::endLayer ()
 
 	StringWriter writer (stream);
 	String string;
-	string.printf ("%s", END_TAG_STRING(LAYER_TAG));
+	string.printf ("%s", END_TAG_STRING (LAYER_TAG));
 	writer.write (string);
 	writer.write (ENDLINE_A);
 
@@ -246,13 +250,15 @@ bool XmlRepresentationHelper::endLayer ()
 }
 
 //------------------------------------------------------------------------
-bool XmlRepresentationHelper::startEndLayer (int32 type, int32 id, FIDString _function, FIDString style)
+bool XmlRepresentationHelper::startEndLayer (int32 type, int32 id, FIDString _function,
+                                             FIDString style)
 {
 	return startLayer (type, id, _function, style, true);
 }
 
 //------------------------------------------------------------------------
-bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _function, FIDString style, bool ended)
+bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _function,
+                                          FIDString style, bool ended)
 {
 	if (!checkState (kInLayer))
 		return false;
@@ -260,7 +266,8 @@ bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _funct
 	StringWriter writer (stream);
 	String string;
 
-	string.printf ("<%s %s=\"%s\" %s=\"%d\"", LAYER_TAG, ATTR_TYPE, Vst::LayerType::layerTypeFIDString[type], ATTR_PARAMID, id);
+	string.printf ("<%s %s=\"%s\" %s=\"%d\"", LAYER_TAG, ATTR_TYPE,
+	               Vst::LayerType::layerTypeFIDString[type], ATTR_PARAMID, id);
 	writer.write (string);
 
 	if (_function)
@@ -276,7 +283,7 @@ bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _funct
 		else if (type == Vst::LayerType::kLED)
 			string.printf (" %s=\"%s\"", Vst::Attributes::kLEDStyle, style);
 		else
-			string.printf (" %s=\"%s\"",  Vst::Attributes::kStyle, style);
+			string.printf (" %s=\"%s\"", Vst::Attributes::kStyle, style);
 		writer.write (string);
 	}
 
@@ -294,7 +301,8 @@ bool XmlRepresentationHelper::startLayer (int32 type, int32 id, FIDString _funct
 }
 
 //------------------------------------------------------------------------
-bool XmlRepresentationHelper::startEndCellOneLayer (int32 type, int32 id, FIDString _function, FIDString style)
+bool XmlRepresentationHelper::startEndCellOneLayer (int32 type, int32 id, FIDString _function,
+                                                    FIDString style)
 {
 	if (!startCell ())
 		return false;
@@ -313,7 +321,7 @@ bool XmlRepresentationHelper::startLayer (Vst::ParameterInfo& info, FIDString _f
 //------------------------------------------------------------------------
 bool XmlRepresentationHelper::startLayer (Vst::ParameterInfo& info, FIDString _function, bool ended)
 {
-	FIDString style = 0;
+	FIDString style = nullptr;
 	int32 type = Vst::LayerType::kKnob;
 	if (info.flags & Vst::ParameterInfo::kIsReadOnly)
 		type = Vst::LayerType::kLED;
@@ -344,7 +352,8 @@ bool XmlRepresentationHelper::startEndCellOneLayer (Vst::ParameterInfo& info, FI
 }
 
 //------------------------------------------------------------------------
-bool XmlRepresentationHelper::startEndCellOneLayerWithParamName (Vst::ParameterInfo& info, FIDString _function /*= 0*/)
+bool XmlRepresentationHelper::startEndCellOneLayerWithParamName (Vst::ParameterInfo& info,
+                                                                 FIDString _function /*= 0*/)
 {
 	if (!startCell ())
 		return false;
@@ -383,21 +392,21 @@ bool XmlRepresentationHelper::startEndTitleDisplay (Vst::ParameterInfo& info)
 		writer.write (ENDLINE_A);
 		return false;
 	}
-	
+
 	string.printf ("<%s>%s</%s>", NAME_TAG, nameString.text8 (), NAME_TAG);
 	writer.write (string);
 	writer.write (ENDLINE_A);
-	
+
 	if (nameString.length () > MEDIUM_TITLE_LIMIT)
 	{
 		nameString.assign (info.shortTitle);
 
-		if (! nameString.isEmpty ())
+		if (!nameString.isEmpty ())
 		{
-			nameString.removeChars ();							// remove space
+			nameString.removeChars (); // remove space
 
 			if (nameString.length () > MEDIUM_TITLE_LIMIT)
-				nameString.remove (MEDIUM_TITLE_LIMIT);			// Trimming the rest to get a short string
+				nameString.remove (MEDIUM_TITLE_LIMIT); // Trimming the rest to get a short string
 
 			string.printf ("<%s>%s</%s>", NAME_TAG, nameString.text8 (), NAME_TAG);
 			writer.write (string);
@@ -407,7 +416,7 @@ bool XmlRepresentationHelper::startEndTitleDisplay (Vst::ParameterInfo& info)
 
 	if (nameString.length () > SHORT_TITLE_LIMIT)
 	{
-		nameString.remove (SHORT_TITLE_LIMIT);					// Trimming the rest to get a short string
+		nameString.remove (SHORT_TITLE_LIMIT); // Trimming the rest to get a short string
 
 		string.printf ("<%s>%s</%s>", NAME_TAG, nameString.text8 (), NAME_TAG);
 		writer.write (string);

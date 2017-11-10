@@ -105,7 +105,6 @@ namespace Steinberg {
 
 //------------------------------------------------------------------------
 DEF_CLASS_IID (IPluginBase)
-DEF_CLASS_IID (IBStream)
 DEF_CLASS_IID (IPlugView)
 DEF_CLASS_IID (IPluginFactory2)
 
@@ -217,6 +216,7 @@ DEF_CLASS_IID (IUnitInfo)
 DEF_CLASS_IID (IConnectionPoint)
 DEF_CLASS_IID (IVst3ToVst2Wrapper)
 DEF_CLASS_IID (IVst3ToAUWrapper)
+DEF_CLASS_IID (IStreamAttributes) // VST 3.6
 
 //--------------------------------------------------------------------------------------------
 class SpeakerArrangementBase
@@ -585,7 +585,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 				}
 				component->activateBus (kAudio, kOutput, outputNo, true);
 			}
-			processData.prepare (*component);
+			processData.prepare (*component, 0, kSample32);
 
 			// initialize parameters
 			syncParameterValues ();
@@ -739,7 +739,7 @@ IPluginFactory* AUWrapper::getFactory ()
 }
 
 //------------------------------------------------------------------------
-// ComponentBase
+// MARK: ComponentBase
 ComponentResult AUWrapper::Version ()
 {
 	AutoreleasePool ap;
@@ -824,7 +824,7 @@ ComponentResult AUWrapper::Initialize ()
 
 		// After set Bus Arrangement, the channelbuffers may need to be reallocated -> hence the
 		// second prepare!
-		processData.prepare (*component);
+		processData.prepare (*component, 0, kSample32);
 
 		ProcessSetup ps;
 		ps.sampleRate = getSampleRate ();
@@ -842,7 +842,7 @@ ComponentResult AUWrapper::Initialize ()
 			OSStatus status =
 			    AUListenerCreate (paramChangedListenerProc, this, CFRunLoopGetCurrent (),
 			                      kCFRunLoopDefaultMode, 0.2, &paramListenerRef);
-			ASSERT (status == noErr)
+			SMTG_ASSERT (status == noErr)
 			if (paramListenerRef)
 			{
 				AudioUnitParameter sPar;
@@ -867,7 +867,7 @@ ComponentResult AUWrapper::Initialize ()
 
 					sPar.mParameterID = pi.id;
 					status = AUListenerAddParameter (paramListenerRef, 0, &sPar);
-					ASSERT (status == noErr)
+					SMTG_ASSERT (status == noErr)
 
 					if ((pi.flags & ParameterInfo::kIsProgramChange) != 0)
 					{
@@ -983,7 +983,7 @@ void AUWrapper::Cleanup ()
 }
 
 //------------------------------------------------------------------------
-// AUBase
+// MARK: AUBase
 //--------------------------------------------------------------------------------------------
 AUElement* AUWrapper::CreateElement (AudioUnitScope scope, AudioUnitElement element)
 {
@@ -1009,9 +1009,9 @@ UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 		CFStringRef processName = 0;
 		ProcessSerialNumber psn;
 		OSErr err = GetCurrentProcess (&psn);
-		ASSERT (err == noErr);
+		SMTG_ASSERT (err == noErr);
 		OSStatus stat = CopyProcessName (&psn, &processName);
-		ASSERT (stat == noErr);
+		SMTG_ASSERT (stat == noErr);
 		CFStringGetCString (processName, buffer, sizeof (buffer), kCFStringEncodingUTF8);
 		CFRelease (processName);
 		strncat (buffer, " SupportedNumChannels", sizeof (buffer) - strlen (buffer) - 1);
@@ -1100,7 +1100,7 @@ ComponentResult AUWrapper::SetConnection (const AudioUnitConnection& inConnectio
 	return result;
 }
 
-static const UnitInfo kNoUnitInfo = {0};
+// static const UnitInfo kNoUnitInfo = {0};
 //------------------------------------------------------------------------
 void AUWrapper::buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units) const
 {
@@ -1125,7 +1125,7 @@ ComponentResult AUWrapper::GetParameterInfo (AudioUnitScope inScope,
 	if (inScope != kAudioUnitScope_Global)
 		return kAudioUnitErr_InvalidScope;
 
-	FGuard guard (parameterCacheChanging);
+	Steinberg::Base::Thread::FGuard guard (parameterCacheChanging);
 	CachedParameterInfoMap::const_iterator it = cachedParameterInfos.find (inParameterID);
 	if (it == cachedParameterInfos.end ())
 		return kAudioUnitErr_InvalidParameter;
@@ -1392,9 +1392,9 @@ const uint8 kProgramChangeStatus = 0xC0; ///< program change
 const uint8 kAfterTouchStatus = 0xD0; ///< channel pressure
 const uint8 kPitchBendStatus = 0xE0; ///< lsb, msb
 
-const float kMidiScaler = 1.f / 127.f;
+//const float kMidiScaler = 1.f / 127.f;
 static const uint8 kChannelMask = 0x0F;
-static const uint8 kStatusMask = 0xF0;
+//static const uint8 kStatusMask = 0xF0;
 static const uint32 kDataMask = 0x7F;
 
 //------------------------------------------------------------------------
@@ -1847,7 +1847,7 @@ Float64 AUWrapper::GetTailTime ()
 }
 
 //------------------------------------------------------------------------
-// MusicDeviceBase
+// MARK: MusicDeviceBase
 //------------------------------------------------------------------------
 ComponentResult AUWrapper::StartNote (MusicDeviceInstrumentID inInstrument,
                                       MusicDeviceGroupID inGroupID,
@@ -1900,7 +1900,7 @@ OSStatus AUWrapper::GetInstrumentCount (UInt32& outInstCount) const
 }
 
 //------------------------------------------------------------------------
-// AUMIDIBase
+// MARK: AUMIDIBase
 //------------------------------------------------------------------------
 OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1, UInt8 data2,
                                         UInt32 inStartFrame)
@@ -1986,7 +1986,7 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 }
 
 //------------------------------------------------------------------------
-// IComponentHandler
+// MARK: IComponentHandler
 //------------------------------------------------------------------------
 tresult PLUGIN_API AUWrapper::beginEdit (ParamID tag)
 {
@@ -2066,7 +2066,7 @@ tresult PLUGIN_API AUWrapper::restartComponent (int32 flags)
 }
 
 //------------------------------------------------------------------------
-// Helpers
+// MARK: Helpers
 //------------------------------------------------------------------------
 void AUWrapper::syncParameterValues ()
 {
@@ -2096,7 +2096,7 @@ void AUWrapper::cacheParameterValues ()
 
 	if (editController)
 	{
-		FGuard guard (parameterCacheChanging);
+		Steinberg::Base::Thread::FGuard guard (parameterCacheChanging);
 
 		FUnknownPtr<IUnitInfo> unitInfoController (editController);
 		if (unitInfoController)
@@ -2186,7 +2186,7 @@ void AUWrapper::cacheParameterValues ()
 //------------------------------------------------------------------------
 void AUWrapper::clearParameterValueCache ()
 {
-	FGuard guard (parameterCacheChanging);
+	Steinberg::Base::Thread::FGuard guard (parameterCacheChanging);
 
 	for (CachedParameterInfoMap::const_iterator it = cachedParameterInfos.begin (),
 	                                            end = cachedParameterInfos.end ();
@@ -2471,7 +2471,7 @@ ComponentResult AUWrapper::ComponentEntryDispatch (ComponentParameters* params, 
 			if (inID == kAudioUnitProperty_ClassInfoFromDocument)
 			{
 				PARAM (AudioUnitScope, inScope, 1, 5);
-				PARAM (AudioUnitElement, inElement, 2, 5);
+				// PARAM (AudioUnitElement, inElement, 2, 5);
 				PARAM (const void*, inData, 3, 5);
 				PARAM (UInt32, inDataSize, 4, 5);
 
@@ -2513,9 +2513,9 @@ CleanupMemory _gCleanupMemory;
 CleanupMemory* gCleanupMemory = &_gCleanupMemory;
 
 #if __MAC_OS_X_VERSION_MAX_ALLOWED == 1060 // if compiling against the 10.6 sdk
-//------------------------------------------------------------------------
-// COMPONENT_ENTRY(AUWrapper)
-//------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+//MARK: COMPONENT_ENTRY(AUWrapper)
+//--------------------------------------------------------------------------------------------------------------
 extern "C" {
 ComponentResult AUWrapperEntry (ComponentParameters* params, AUWrapper* obj);
 __attribute__ ((visibility ("default"))) ComponentResult AUWrapperEntry (

@@ -100,23 +100,23 @@ public:
 
 	static bool hasEditor (IEditController* controller);
 
-	virtual bool getRect (ERect** rect);
-	virtual bool open (void* ptr);
-	virtual void close ();
-	virtual bool setKnobMode (VstInt32 val);
+	bool getRect (ERect** rect) SMTG_OVERRIDE;
+	bool open (void* ptr) SMTG_OVERRIDE;
+	void close () SMTG_OVERRIDE;
+	bool setKnobMode (VstInt32 val) SMTG_OVERRIDE;
 
 	///< Receives key down event. Return true only if key was really used!
-	virtual bool onKeyDown (VstKeyCode& keyCode);
+	bool onKeyDown (VstKeyCode& keyCode) SMTG_OVERRIDE;
 	///< Receives key up event. Return true only if key was really used!
-	virtual bool onKeyUp (VstKeyCode& keyCode);
+	bool onKeyUp (VstKeyCode& keyCode) SMTG_OVERRIDE;
 	///< Handles mouse wheel event, distance is positive or negative to indicate wheel direction.
-	virtual bool onWheel (float distance);
+	bool onWheel (float distance) SMTG_OVERRIDE;
 
 	// IPlugFrame
-	virtual tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* newSize);
-	virtual tresult PLUGIN_API queryInterface (const char* _iid, void** obj);
-	virtual uint32 PLUGIN_API addRef () { return 1; }
-	virtual uint32 PLUGIN_API release () { return 1; }
+	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* newSize) SMTG_OVERRIDE;
+	tresult PLUGIN_API queryInterface (const char* _iid, void** obj) SMTG_OVERRIDE;
+	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
+	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
 //------------------------------------------------------------------------
 protected:
 	void createView ();
@@ -439,12 +439,12 @@ public:
 	VstPresetStream (void* memory, TSize memorySize) : MemoryStream (memory, memorySize) {}
 
 	//---from Vst::IStreamAttributes-----
-	virtual tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE { return kNotImplemented; }
-	virtual IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return &attrList; }
+	tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE { return kNotImplemented; }
+	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return &attrList; }
 
 	//------------------------------------------------------------------------
 	DELEGATE_REFCOUNT (MemoryStream)
-	virtual tresult PLUGIN_API queryInterface (const TUID iid, void** obj) SMTG_OVERRIDE
+	tresult PLUGIN_API queryInterface (const TUID iid, void** obj) SMTG_OVERRIDE
 	{
 		QUERY_INTERFACE (iid, obj, IStreamAttributes::iid, IStreamAttributes)
 		return MemoryStream::queryInterface (iid, obj);
@@ -504,7 +504,7 @@ Vst2Wrapper::Vst2Wrapper (IAudioProcessor* processor, IEditController* controlle
 
 	// VST 2 stuff -----------------------------------------------
 	setUniqueID (vst2ID); // identify
-	mVst3EffectClassID = vst3ComponentID;
+	mVst3EffectClassID = FUID::fromTUID (vst3ComponentID);
 	canProcessReplacing (true); // supports replacing output
 	programsAreChunks (true);
 
@@ -1928,7 +1928,7 @@ bool Vst2Wrapper::getProgramListAndUnit (int32 midiChannel, UnitID& unitId,
 	programListId = kNoProgramListId;
 	unitId = -1;
 
-	// use the first input event bus (VST2 has only 1 bus for event)
+	// use the first input event bus (VST 2 has only 1 bus for event)
 	if (mUnitInfo && mUnitInfo->getUnitByBus (kEvent, kInput, 0, midiChannel, unitId) == kResultTrue)
 	{
 		for (int32 i = 0, unitCount = mUnitInfo->getUnitCount (); i < unitCount; i++)
@@ -2020,7 +2020,7 @@ uint32 Vst2Wrapper::makeCategoriesRecursive (std::vector<ProgramCategory>& chann
 	}
 
 	// make new
-	ProgramCategory cat = {0};
+	ProgramCategory cat = {};
 	memcpy (cat.vst3InstrumentAttribute, vst3Category, sizeof (String128));
 	singleName.copyTo8 (cat.vst2Category.name, 0, kVstMaxNameLen);
 	cat.vst2Category.parentCategoryIndex = parentCategorIndex;
@@ -2390,7 +2390,8 @@ void Vst2Wrapper::processMidiEvent (VstMidiEvent* midiEvent, int32 bus)
 		{
 			if (bus < kMaxMidiMappingBusses && mMidiCCMapping[bus][channel])
 			{
-				ParamID paramID = mMidiCCMapping[bus][channel][midiEvent->midiData[1]];
+				ParamID paramID =
+				    mMidiCCMapping[bus][channel][static_cast<size_t> (midiEvent->midiData[1])];
 				if (paramID != kNoParamId)
 				{
 					ParamValue value = (double)midiEvent->midiData[2] * kMidiScaler;
@@ -2852,7 +2853,7 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 			FUnknownPtr<IComponent> component (processor);
 			if (component)
 			{
-				FUID editorCID;
+				TUID editorCID;
 				if (component->getControllerClassId (editorCID) == kResultTrue)
 				{
 					factory->createInstance (editorCID, IEditController::iid, (void**)&controller);
@@ -2922,8 +2923,8 @@ tresult PLUGIN_API Vst2Wrapper::queryInterface (const char* iid, void** obj)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API Vst2Wrapper::createInstance (TUID cid, TUID iid, void** obj)
 {
-	FUID classID (cid);
-	FUID interfaceID (iid);
+	FUID classID (FUID::fromTUID (cid));
+	FUID interfaceID (FUID::fromTUID (iid));
 	if (classID == IMessage::iid && interfaceID == IMessage::iid)
 	{
 		*obj = new HostMessage;

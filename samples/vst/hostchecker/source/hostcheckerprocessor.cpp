@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2015, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -92,7 +92,7 @@ void HostCheckerProcessor::sendLogEventMessage (const LogEvent& logEvent)
 		IAttributeList* attributes = message->getAttributes ();
 		if (attributes)
 		{
-			ASSERT (logEvent.id >= 0);
+			SMTG_ASSERT (logEvent.id >= 0);
 			attributes->setInt ("ID", logEvent.id);
 			attributes->setInt ("Count", logEvent.count);
 			sendMessage (message);
@@ -152,9 +152,9 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			else if (id == kParam1Tag)
 			{
 			}
-			else if (id == kParam2Tag)
+			else if (id == kGeneratePeaksTag)
 			{
-				mGeneratePeaks = value > 0;
+				mGeneratePeaks = value;
 			}
 		});
 	});
@@ -167,11 +167,12 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 	{
 		Algo::clear32 (data.outputs, data.numSamples);
 
-		if (mGeneratePeaks)
+		if (mGeneratePeaks > 0)
 		{
+			float coef = mGeneratePeaks * mLastBlockMarkerValue;
 			for (int32 i = 0; i < data.outputs[0].numChannels; i++)
 			{
-				data.outputs[0].channelBuffers32[i][0] = mLastBlockMarkerValue;
+				data.outputs[0].channelBuffers32[i][0] = coef;
 			}
 			mLastBlockMarkerValue = -mLastBlockMarkerValue;
 
@@ -256,6 +257,17 @@ tresult PLUGIN_API HostCheckerProcessor::notify (IMessage* message)
 }
 
 //-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSampleSize)
+{
+	if (symbolicSampleSize == kSample32)
+		addLogEvent (kLogIdCanProcessSampleSize32);
+	else if (symbolicSampleSize == kSample64)
+		addLogEvent (kLogIdCanProcessSampleSize64);
+
+	return AudioEffect::canProcessSampleSize (symbolicSampleSize);
+}
+
+//-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 {
 	FUnknownPtr<IStreamAttributes> stream (state);
@@ -279,7 +291,7 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 #endif
 	if (saved != 12345.67f)
 	{
-		ASSERT (false)
+		SMTG_ASSERT (false)
 	}
 
 	uint32 latency = mLatency;

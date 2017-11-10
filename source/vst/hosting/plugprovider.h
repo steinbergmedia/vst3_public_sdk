@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : plugprovider.h
+// Filename    : public.sdk/source/vst/hosting/plugprovider.h
 // Created by  : Steinberg, 04/2005
 // Description : VST 3 Plug-in Provider class
 //

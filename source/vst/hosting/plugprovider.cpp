@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : plugprovider.cpp
+// Filename    : public.sdk/source/vst/hosting/plugprovider.cpp
 // Created by  : Steinberg, 08/2016
 // Description : VST 3 Plug-in Provider class
 //
@@ -187,7 +187,7 @@ IEditController* PlugProvider::getController ()
 //------------------------------------------------------------------------
 tresult PlugProvider::getPluginUID (FUID& uid) const
 {
-	uid = classInfo.ID ().data ();
+	uid = FUID::fromTUID (classInfo.ID ().data ());
 	return kResultOk;
 }
 

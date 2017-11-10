@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    :
+// Category    : Helpers
 // Filename    : public.sdk/source/vst/hosting/stringconvert.h
 // Created by  : Steinberg, 11/2014
 // Description : c++11 unicode string convert functions

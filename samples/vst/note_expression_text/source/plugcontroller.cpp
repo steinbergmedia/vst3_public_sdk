@@ -38,6 +38,8 @@
 #include "plugparamids.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/base/ibstream.h"
+#include "vstgui/lib/controls/ctextlabel.h"
+#include "vstgui/lib/cstring.h"
 
 
 namespace Steinberg {

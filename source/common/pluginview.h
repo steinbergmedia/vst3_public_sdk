@@ -51,7 +51,7 @@ class CPluginView: public FObject,
 {
 public:
 //------------------------------------------------------------------------
-	CPluginView (const ViewRect* rect = 0);
+	CPluginView (const ViewRect* rect = nullptr);
 	virtual ~CPluginView ();
 
 	/** Returns its current frame rectangle. */
@@ -61,7 +61,7 @@ public:
 	void setRect (const ViewRect& r)	{ rect = r; }
 
 	/** Checks if this view is attached to its parent view. */
-	bool isAttached () const			{ return systemWindow != 0; }
+	bool isAttached () const			{ return systemWindow != nullptr; }
 
 	/** Calls when this view will be attached to its parent view. */
 	virtual void attachedToParent () {}

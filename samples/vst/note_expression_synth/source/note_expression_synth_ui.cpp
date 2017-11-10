@@ -58,7 +58,7 @@ public:
 	{
 	}
 	
-	void valueChanged (VSTGUI::CControl* pControl) VSTGUI_OVERRIDE_VMETHOD
+	void valueChanged (VSTGUI::CControl* pControl) override
 	{
 		if (pControl->getValue ())
 		{

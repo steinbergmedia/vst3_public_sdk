@@ -46,6 +46,8 @@
 namespace Steinberg {
 namespace Vst {
 
+DEF_CLASS_IID (IDelayTestController)
+
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ADelayController::initialize (FUnknown* context)
 {
@@ -101,6 +103,14 @@ tresult PLUGIN_API ADelayController::setComponentState (IBStream* state)
 	}
 
 	return kResultOk;
+}
+
+//------------------------------------------------------------------------
+bool PLUGIN_API ADelayController::doTest ()
+{
+	// this is called when running thru the validator
+	// we can now run our own test cases
+	return true;
 }
 
 //------------------------------------------------------------------------

@@ -56,8 +56,7 @@ public:
 
 	/** Prepare buffer containers for all buses. If bufferSamples is not null buffers will be
 	 * created. */
-	bool prepare (IComponent& component, int32 bufferSamples = 0,
-	              int32 _symbolicSampleSize = kSample32);
+	bool prepare (IComponent& component, int32 bufferSamples, int32 _symbolicSampleSize);
 
 	/** Remove bus buffers. */
 	void unprepare ();

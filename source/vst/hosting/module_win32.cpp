@@ -1,7 +1,7 @@
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    :
+// Category    : Helpers
 // Filename    : public.sdk/source/vst/hosting/module_win32.cpp
 // Created by  : Steinberg, 08/2016
 // Description : hosting module classes (win32 implementation)
@@ -37,7 +37,7 @@
 #include "stringconvert.h"
 #include "module.h"
 #include <Windows.h>
-#include <Shlobj.h>
+#include <ShlObj.h>
 #include <algorithm>
 #include <experimental/filesystem>
 

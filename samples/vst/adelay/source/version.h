@@ -64,5 +64,5 @@
 #define stringFileDescription	"ADelay VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2016 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2017 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

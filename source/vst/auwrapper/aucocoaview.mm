@@ -72,6 +72,9 @@ protected:
 using namespace Steinberg;
 
 //------------------------------------------------------------------------
+#define SMTGCocoa_NSViewWrapperForAU SMTG_AU_PLUGIN_NAMESPACE (NSViewWrapperForAU)
+
+//------------------------------------------------------------------------
 @interface SMTGCocoa_NSViewWrapperForAU : NSView {
 //------------------------------------------------------------------------
 	IPlugView* plugView;

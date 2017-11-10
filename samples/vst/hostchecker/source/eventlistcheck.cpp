@@ -43,11 +43,8 @@
 //------------------------------------------------------------------------
 //    EventListCheck
 //------------------------------------------------------------------------
-EventListCheck::EventListCheck ()
-: mEventLogger (0)
-, mComponent (0)
+EventListCheck::EventListCheck () : mEventLogger (nullptr), mComponent (nullptr)
 {
-
 }
 
 //------------------------------------------------------------------------
@@ -145,7 +142,7 @@ void EventListCheck::checkEventProperties (const Steinberg::Vst::Event& event)
 			break;
 		}
 
-		case Steinberg::Vst::Event::kNoteOffEvent:				///< is \ref NoteOffEvent
+		case Steinberg::Vst::Event::kNoteOffEvent: ///< is \ref NoteOffEvent
 		{
 			if (!checkEventChannelIndex (event.busIndex, event.noteOff.channel))
 				mEventLogger->addLogEvent (kLogIdInvalidNoteOffChannelIndex);
@@ -176,12 +173,12 @@ void EventListCheck::checkEventProperties (const Steinberg::Vst::Event& event)
 			break;
 		}
 
-		case Steinberg::Vst::Event::kDataEvent:					///< is \ref DataEvent
+		case Steinberg::Vst::Event::kDataEvent: ///< is \ref DataEvent
 		{
 			break;
 		}
 
-		case Steinberg::Vst::Event::kPolyPressureEvent:			///< is \ref PolyPressureEvent
+		case Steinberg::Vst::Event::kPolyPressureEvent: ///< is \ref PolyPressureEvent
 		{
 			if (!checkEventChannelIndex (event.busIndex, event.polyPressure.channel))
 				mEventLogger->addLogEvent (kLogIdInvalidPolyPressChannelIndex);
@@ -189,16 +186,18 @@ void EventListCheck::checkEventProperties (const Steinberg::Vst::Event& event)
 			break;
 		}
 
-		case Steinberg::Vst::Event::kNoteExpressionValueEvent:	///< is \ref NoteExpressionValueEvent
+		case Steinberg::Vst::Event::kNoteExpressionValueEvent: ///< is \ref NoteExpressionValueEvent
 		{
 			if (!isNormalized (event.noteExpressionValue.value))
 				mEventLogger->addLogEvent (kLogIdNoteExpressValNotNormalized);
 
-			checkNoteExpressionValueEvent (event.noteExpressionValue.typeId, event.noteExpressionValue.noteId, event.noteExpressionValue.value);
+			checkNoteExpressionValueEvent (event.noteExpressionValue.typeId,
+			                               event.noteExpressionValue.noteId,
+			                               event.noteExpressionValue.value);
 			break;
 		}
 
-		default: 
+		default:
 		{
 			mEventLogger->addLogEvent (kLogIdUnknownEventType);
 			break;
@@ -211,7 +210,8 @@ bool EventListCheck::checkEventBusIndex (Steinberg::int32 busIndex)
 {
 	if (mComponent)
 	{
-		Steinberg::int32 busCount = mComponent->getBusCount (Steinberg::Vst::kEvent, Steinberg::Vst::kInput);
+		Steinberg::int32 busCount =
+		    mComponent->getBusCount (Steinberg::Vst::kEvent, Steinberg::Vst::kInput);
 		return busCount >= 0 && busIndex < busCount;
 	}
 
@@ -225,15 +225,18 @@ bool EventListCheck::checkEventSampleOffset (Steinberg::int32 sampleOffset)
 }
 
 //------------------------------------------------------------------------
-bool EventListCheck::checkEventChannelIndex (Steinberg::int32 busIndex, Steinberg::int32 channelIndex)
+bool EventListCheck::checkEventChannelIndex (Steinberg::int32 busIndex,
+                                             Steinberg::int32 channelIndex)
 {
 	if (mComponent)
 	{
-		Steinberg::int32 busCount = mComponent->getBusCount (Steinberg::Vst::kEvent, Steinberg::Vst::kInput);
+		Steinberg::int32 busCount =
+		    mComponent->getBusCount (Steinberg::Vst::kEvent, Steinberg::Vst::kInput);
 		if (busCount >= 0 && busIndex < busCount)
 		{
-			Steinberg::Vst::BusInfo busInfo = { 0 };
-			Steinberg::tresult tResult = mComponent->getBusInfo (Steinberg::Vst::kEvent, Steinberg::Vst::kInput, busIndex, busInfo);
+			Steinberg::Vst::BusInfo busInfo = {0};
+			Steinberg::tresult tResult = mComponent->getBusInfo (
+			    Steinberg::Vst::kEvent, Steinberg::Vst::kInput, busIndex, busInfo);
 			if (tResult == Steinberg::kResultOk)
 			{
 				return channelIndex >= 0 && channelIndex < busInfo.channelCount;
@@ -257,7 +260,9 @@ bool EventListCheck::isNormalized (float normVal) const
 }
 
 //------------------------------------------------------------------------
-void EventListCheck::checkNoteExpressionValueEvent (Steinberg::Vst::NoteExpressionTypeID type, Steinberg::int32 id, Steinberg::Vst::NoteExpressionValue exprVal) const
+void EventListCheck::checkNoteExpressionValueEvent (
+    Steinberg::Vst::NoteExpressionTypeID /*type*/, Steinberg::int32 /*id*/,
+    Steinberg::Vst::NoteExpressionValue exprVal) const
 {
 	if (!isNormalized (exprVal))
 	{

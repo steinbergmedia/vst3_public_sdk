@@ -46,6 +46,7 @@
 #include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 
 #include <stdio.h>
+#include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -160,15 +161,15 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 	int32 numChannels = data.inputs[0].numChannels;
 
 	//---get audio buffers----------------
-	uint32 sampleFramesSize = getSampleFramesSizeInBytes (data.numSamples);
-	void** in = getChannelBuffersPointer (data.inputs[0]);
-	void** out = getChannelBuffersPointer (data.outputs[0]);
-	void** auxIn = 0;
+	uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
+	void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
+	void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
+	void** auxIn = nullptr;
 	
 	bool auxActive = false;
 	if (getAudioInput (1)->isActive ())
 	{
-		auxIn = getChannelBuffersPointer (data.inputs[1]);
+		auxIn = getChannelBuffersPointer (processSetup, data.inputs[1]);
 		auxActive = true;
 	}
 
@@ -182,7 +183,7 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// dont need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
+			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
 			if (in[i] != out[i])
 			{
 				memset (out[i], 0, sampleFramesSize);
@@ -201,13 +202,13 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 	{
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// dont need to be copied if the buffers are the same
+			// do not need to be copied if the buffers are the same
 			if (in[i] != out[i])
 			{
 				memcpy (out[i], in[i], sampleFramesSize);
 			}
 		}
-		// in this example we dont update the VuMeter in Bypass
+		// in this example we do not update the VuMeter in Bypass
 	}
 	else
 	{
@@ -296,7 +297,7 @@ SampleType AGainWithSideChain::processAudioWithSideChain (SampleType** in, Sampl
 			tmp = (*ptrIn++ + *ptrAuxIn++) * gain;
 			(*ptrOut++) = tmp;
 
-			// check only positiv values
+			// check only positive values
 			if (tmp > vuPPM)
 			{
 				vuPPM = tmp;
@@ -315,7 +316,8 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 	if (numIns == 2 && numOuts == 1)
 	{
 		// the host wants Mono => Mono (or 1 channel -> 1 channel)
-		if (SpeakerArr::getChannelCount (inputs[0]) == 1 && SpeakerArr::getChannelCount (outputs[0]) == 1)
+		if (SpeakerArr::getChannelCount (inputs[0]) == 1 &&
+		    SpeakerArr::getChannelCount (outputs[0]) == 1)
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
@@ -324,44 +326,46 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 				if (bus->getArrangement () != inputs[0])
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Mono In"),  inputs[0]);
+					addAudioInput (STR16 ("Mono In"), inputs[0]);
 					addAudioOutput (STR16 ("Mono Out"), inputs[0]);
 
 					// recreate the Mono SideChain input bus
-					addAudioInput  (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
+					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
 				}
 				return kResultOk;
 			}
 		}
-		// the host wants something else than Mono => Mono, in this case we are always Stereo => Stereo
+		// the host wants something else than Mono => Mono, in this case we are always Stereo =>
+		// Stereo
 		else
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				tresult result = kResultFalse;
-		
+
 				// the host wants 2->2 (could be LsRs -> LsRs)
-				if (SpeakerArr::getChannelCount (inputs[0]) == 2 && SpeakerArr::getChannelCount (outputs[0]) == 2)
+				if (SpeakerArr::getChannelCount (inputs[0]) == 2 &&
+				    SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  inputs[0]);
+					addAudioInput (STR16 ("Stereo In"), inputs[0]);
 					addAudioOutput (STR16 ("Stereo Out"), outputs[0]);
-				
-					// recreate the Mono SideChain input bus
-					addAudioInput  (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
 
-					result = kResultTrue;		
+					// recreate the Mono SideChain input bus
+					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
+
+					result = kResultTrue;
 				}
 				// the host want something different than 1->1 or 2->2 : in this case we want stereo
 				else if (bus->getArrangement () != SpeakerArr::kStereo)
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
+					addAudioInput (STR16 ("Stereo In"), SpeakerArr::kStereo);
 					addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
-				
+
 					// recreate the Mono SideChain input bus
-					addAudioInput  (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
+					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
 
 					result = kResultFalse;
 				}

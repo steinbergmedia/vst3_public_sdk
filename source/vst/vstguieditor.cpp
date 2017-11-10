@@ -47,16 +47,16 @@
 #include <CoreFoundation/CoreFoundation.h>
 #include <dlfcn.h>
 namespace VSTGUI {
-	static void CreateVSTGUIBundleRef ();
-	static void ReleaseVSTGUIBundleRef ();
+static void CreateVSTGUIBundleRef ();
+static void ReleaseVSTGUIBundleRef ();
 }
 #elif WINDOWS
-void* hInstance = 0; // VSTGUI hInstance
+void* hInstance = nullptr; // VSTGUI hInstance
 extern void* moduleHandle;
 #elif LINUX
 extern void* moduleHandle;
 namespace VSTGUI {
-	void* soHandle = nullptr;
+void* soHandle = nullptr;
 } // VSTGUI
 #endif // MAC
 
@@ -65,17 +65,17 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 VSTGUIEditor::VSTGUIEditor (void* controller, ViewRect* size)
-: EditorView (static_cast<EditController*>(controller), size)
+: EditorView (static_cast<EditController*> (controller), size)
 {
-	#if MAC
+#if MAC
 	CreateVSTGUIBundleRef ();
-	#elif WINDOWS
+#elif WINDOWS
 	hInstance = moduleHandle;
-	#elif LINUX
+#elif LINUX
 	VSTGUI::soHandle = moduleHandle;
-	#endif
+#endif
 	// create a timer used for idle update: will call notify method
-	timer = new CVSTGUITimer (dynamic_cast<CBaseObject*>(this));
+	timer = new CVSTGUITimer (dynamic_cast<CBaseObject*> (this));
 }
 
 //------------------------------------------------------------------------
@@ -83,9 +83,9 @@ VSTGUIEditor::~VSTGUIEditor ()
 {
 	if (timer)
 		timer->forget ();
-	#if MAC
+#if MAC
 	ReleaseVSTGUIBundleRef ();
-	#endif
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -103,20 +103,20 @@ tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 		return kResultTrue;
 
 #elif MAC
-	#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		return kResultTrue;
-	#else
-	#if MAC_CARBON
+#else
+#if MAC_CARBON
 	if (strcmp (type, kPlatformTypeHIView) == 0)
 		return kResultTrue;
-	#endif
+#endif
 
-	#if MAC_COCOA
+#if MAC_COCOA
 	if (strcmp (type, kPlatformTypeNSView) == 0)
 		return kResultTrue;
-	#endif
-	#endif
+#endif
+#endif
 #elif LINUX
 	if (strcmp (type, kPlatformTypeX11EmbedWindowID) == 0)
 		return kResultTrue;
@@ -132,31 +132,28 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 	if (isPlatformTypeSupported (type) != kResultTrue)
 		return kResultFalse;
 
-	#if MAC_COCOA && MAC_CARBON && !(VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1)
+#if MAC_COCOA && MAC_CARBON && !(VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1)
 	CFrame::setCocoaMode (strcmp (type, kPlatformTypeNSView) == 0);
-	#endif
 #endif
-
-	if (timer)
-		timer->start ();
+#endif
 
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
 	PlatformType platformType = kDefaultNative;
 #if MAC
-	#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		platformType = kUIView;
-	#else
-	#if MAC_CARBON
+#else
+#if MAC_CARBON
 	if (strcmp (type, kPlatformTypeHIView) == 0)
 		platformType = kWindowRef;
-	#endif
+#endif
 
-	#if MAC_COCOA
+#if MAC_COCOA
 	if (strcmp (type, kPlatformTypeNSView) == 0)
 		platformType = kNSView;
-	#endif
-	#endif
+#endif
+#endif
 #endif // MAC
 	if (open (parent, platformType) == true)
 #else
@@ -167,6 +164,9 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 		setRect (vr);
 		if (plugFrame)
 			plugFrame->resizeView (this, &vr);
+
+		if (timer)
+			timer->start ();
 	}
 	return EditorView::attached (parent, type);
 }
@@ -221,12 +221,12 @@ CMessageResult VSTGUIEditor::notify (CBaseObject* /*sender*/, const char* messag
 	if (message == CVSTGUITimer::kMsgTimer)
 	{
 		if (frame)
- 			frame->idle ();
+			frame->idle ();
 
- 		return kMessageNotified;
- 	}
+		return kMessageNotified;
+	}
 
- 	return kMessageUnknown;
+	return kMessageUnknown;
 }
 
 //------------------------------------------------------------------------
@@ -239,7 +239,7 @@ static bool translateKeyMessage (VstKeyCode& keyCode, char16 key, int16 keyMsg, 
 		key = VirtualKeyCodeToChar ((uint8)keyMsg);
 	if (key)
 	{
-		String keyStr (STR(" "));
+		String keyStr (STR (" "));
 		keyStr.setChar16 (0, key);
 		keyStr.toMultiByte (kCP_Utf8);
 		if (keyStr.length () == 1)
@@ -307,6 +307,7 @@ tresult PLUGIN_API VSTGUIEditor::onWheel (float distance)
 //------------------------------------------------------------------------
 tresult PLUGIN_API VSTGUIEditor::setFrame (IPlugFrame* frame)
 {
+#if 0
 	if (frame)
 	{
 		FUnknownPtr<IPlugFrameIdle> frameIdle (frame);
@@ -320,13 +321,8 @@ tresult PLUGIN_API VSTGUIEditor::setFrame (IPlugFrame* frame)
 		if (frameIdle)
 			frameIdle->removeIdleHandler (this);
 	}
+#endif
 	return EditorView::setFrame (frame);
-}
-
-//------------------------------------------------------------------------
-void PLUGIN_API VSTGUIEditor::onPlugViewIdle ()
-{
-	frame->handleNextSystemEvents ();
 }
 
 //------------------------------------------------------------------------
@@ -335,7 +331,7 @@ void PLUGIN_API VSTGUIEditor::onPlugViewIdle ()
 
 #if MAC
 namespace VSTGUI {
-void* gBundleRef = 0;
+void* gBundleRef = nullptr;
 static int openCount = 0;
 //------------------------------------------------------------------------
 void CreateVSTGUIBundleRef ()
@@ -367,7 +363,8 @@ void CreateVSTGUIBundleRef ()
 				}
 				name.remove (delPos, name.length () - delPos);
 			}
-			CFURLRef bundleUrl = CFURLCreateFromFileSystemRepresentation (0, (const UInt8*)name.text8 (), name.length (), true);
+			CFURLRef bundleUrl = CFURLCreateFromFileSystemRepresentation (
+			    0, (const UInt8*)name.text8 (), name.length (), true);
 			if (bundleUrl)
 			{
 				gBundleRef = CFBundleCreate (0, bundleUrl);
@@ -385,7 +382,7 @@ void ReleaseVSTGUIBundleRef ()
 	if (gBundleRef)
 		CFRelease (gBundleRef);
 	if (openCount == 0)
-		gBundleRef = 0;
+		gBundleRef = nullptr;
 }
 
 //------------------------------------------------------------------------

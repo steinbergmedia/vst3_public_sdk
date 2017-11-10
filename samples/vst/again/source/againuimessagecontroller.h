@@ -80,15 +80,15 @@ private:
 	typedef VSTGUI::UTF8String UTF8String;
 
 	//--- from IControlListener ----------------------
-	void valueChanged (CControl* /*pControl*/) VSTGUI_OVERRIDE_VMETHOD {}
-	void controlBeginEdit (CControl* /*pControl*/) VSTGUI_OVERRIDE_VMETHOD {}
-	void controlEndEdit (CControl* pControl) VSTGUI_OVERRIDE_VMETHOD
+	void valueChanged (CControl* /*pControl*/) override {}
+	void controlBeginEdit (CControl* /*pControl*/) override {}
+	void controlEndEdit (CControl* pControl) override
 	{
 		if (pControl->getTag () == kSendMessageTag)
 		{
 			if (pControl->getValueNormalized () > 0.5f)
 			{
-				againController->sendTextMessage (textEdit->getText ().get ());
+				againController->sendTextMessage (textEdit->getText ().data ());
 				pControl->setValue (0.f);
 				pControl->invalid ();
 
@@ -111,7 +111,7 @@ private:
 	//--- from IControlListener ----------------------
 	//--- is called when a view is created -----
 	CView* verifyView (CView* view, const UIAttributes& /*attributes*/,
-	                   const IUIDescription* /*description*/) VSTGUI_OVERRIDE_VMETHOD
+					   const IUIDescription* /*description*/) override
 	{
 		if (CTextEdit* te = dynamic_cast<CTextEdit*> (view))
 		{
@@ -130,7 +130,7 @@ private:
 	}
 	//--- from IViewListenerAdapter ----------------------
 	//--- is called when a view will be deleted: the editor is closed -----
-	void viewWillDelete (CView* view) VSTGUI_OVERRIDE_VMETHOD
+	void viewWillDelete (CView* view) override
 	{
 		if (dynamic_cast<CTextEdit*> (view) == textEdit)
 		{
@@ -139,7 +139,7 @@ private:
 		}
 	}
 	//--- is called when the view is loosing the focus -----------------
-	void viewLostFocus (CView* view) VSTGUI_OVERRIDE_VMETHOD
+	void viewLostFocus (CView* view) override
 	{
 		if (dynamic_cast<CTextEdit*> (view) == textEdit)
 		{
@@ -147,7 +147,7 @@ private:
 			const UTF8String& text = textEdit->getText ();
 			String128 messageText;
 			String str;
-			str.fromUTF8 (text.get ());
+			str.fromUTF8 (text.data ());
 			str.copyTo (messageText, 128);
 			againController->setDefaultMessageText (messageText);
 		}

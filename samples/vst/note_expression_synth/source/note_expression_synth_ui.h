@@ -50,7 +50,7 @@ class ControllerWithUI : public Controller, public VST3EditorDelegate
 {
 public:
 	
-	virtual IPlugView* PLUGIN_API createView (FIDString name) SMTG_OVERRIDE;
+	IPlugView* PLUGIN_API createView (FIDString name) SMTG_OVERRIDE;
 	// VST3EditorDelegate
 	IController* createSubController (UTF8StringPtr name, const IUIDescription* description, VST3Editor* editor)  SMTG_OVERRIDE;
 	

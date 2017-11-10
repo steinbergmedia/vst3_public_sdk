@@ -36,29 +36,31 @@
 
 #include "pluginfactoryvst3.h"
 #include "pluginterfaces/gui/iplugview.h"
-#include "pluginterfaces/base/ibstream.h"
 
 #include <stdlib.h>
 
 namespace Steinberg {
 
-CPluginFactory* gPluginFactory = 0;
+CPluginFactory* gPluginFactory = nullptr;
 
 DEF_CLASS_IID (IPluginBase)
 DEF_CLASS_IID (IPlugView)
-DEF_CLASS_IID (IPlugViewIdleHandler)
 DEF_CLASS_IID (IPlugFrame)
-DEF_CLASS_IID (IPlugFrameIdle)
-DEF_CLASS_IID (IBStream)
 DEF_CLASS_IID (IPluginFactory)
 DEF_CLASS_IID (IPluginFactory2)
 DEF_CLASS_IID (IPluginFactory3)
-	
+
+#if LINUX
+DEF_CLASS_IID (Linux::IEventHandler)
+DEF_CLASS_IID (Linux::ITimerHandler)
+DEF_CLASS_IID (Linux::IRunLoop)
+#endif
+
 //------------------------------------------------------------------------
 //  CPluginFactory implementation
 //------------------------------------------------------------------------
 CPluginFactory::CPluginFactory (const PFactoryInfo& info)
-: classes (0)
+: classes (nullptr)
 , classCount (0)
 , maxClassCount (0)
 {
@@ -71,7 +73,7 @@ CPluginFactory::CPluginFactory (const PFactoryInfo& info)
 CPluginFactory::~CPluginFactory ()
 {
 	if (gPluginFactory == this)
-		gPluginFactory = 0;
+		gPluginFactory = nullptr;
 
 	if (classes)
 		free (classes);
@@ -89,7 +91,7 @@ tresult PLUGIN_API CPluginFactory::queryInterface (FIDString _iid, void** obj)
 	QUERY_INTERFACE (_iid, obj, IPluginFactory2::iid, IPluginFactory2)
 	QUERY_INTERFACE (_iid, obj, IPluginFactory3::iid, IPluginFactory3)
 	QUERY_INTERFACE (_iid, obj, FUnknown::iid, IPluginFactory)
-	*obj = 0;
+	*obj = nullptr;
 	return kNoInterface;
 }
 
@@ -178,7 +180,7 @@ bool CPluginFactory::isClassRegistered (const FUID& cid)
 {
 	for (int32 i = 0; i < classCount; i++)
 	{
-		if (cid == classes[i].info16.cid)
+		if (FUnknownPrivate::iidEqual (cid, classes[i].info16.cid))
 			return true;
 	}
 	return false;
@@ -265,7 +267,7 @@ tresult PLUGIN_API CPluginFactory::createInstance (FIDString cid, FIDString _iid
 		}
 	}
 
-	*obj = 0;
+	*obj = nullptr;
 	return kNoInterface;
 }
 

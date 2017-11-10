@@ -13,6 +13,7 @@ if(MAC)
 			NSDataIBStream.h
 			${SDK_ROOT}/pluginterfaces/base/funknown.cpp
 			${SDK_ROOT}/pluginterfaces/base/ustring.cpp
+			${SDK_ROOT}/pluginterfaces/base/coreiids.cpp
 			${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
 			${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.h
 			${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
@@ -23,6 +24,7 @@ if(MAC)
 			${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
 		)
 		add_library(${target} STATIC ${${target}_sources})
+		set_target_properties(${target} PROPERTIES ${SDK_IDE_LIBS_FOLDER})
 		target_link_libraries(${target} PRIVATE base "-framework AudioUnit" "-framework CoreMIDI" "-framework AudioToolbox" "-framework CoreFoundation" "-framework Carbon" "-framework Cocoa" "-framework CoreAudio")
 		target_include_directories(${target} PRIVATE "${SMTG_COREAUDIO_SDK_PATH}/**")
 	    add_custom_command(TARGET ${target} PRE_BUILD COMMAND /usr/bin/ruby "./generateCocoaClassNamePrefix.rb" "${CMAKE_CURRENT_LIST_DIR}" WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")

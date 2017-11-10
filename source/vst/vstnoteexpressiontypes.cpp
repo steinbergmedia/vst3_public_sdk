@@ -36,9 +36,9 @@
 
 #include "vstnoteexpressiontypes.h"
 #include "vstparameters.h"
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/base/futils.h"
 #include "base/source/fstring.h"
+#include "pluginterfaces/base/futils.h"
+#include "pluginterfaces/base/ustring.h"
 
 #include <cstring>
 
@@ -46,23 +46,23 @@ namespace Steinberg {
 namespace Vst {
 
 //-----------------------------------------------------------------------------
-NoteExpressionType::NoteExpressionType ()
-: precision (4)
+NoteExpressionType::NoteExpressionType () : precision (4)
 {
 	memset (&info, 0, sizeof (info));
 }
 
 //-----------------------------------------------------------------------------
-NoteExpressionType::NoteExpressionType (const NoteExpressionTypeInfo& _info)
-: precision (4)
+NoteExpressionType::NoteExpressionType (const NoteExpressionTypeInfo& _info) : precision (4)
 {
 	memcpy (&info, &_info, sizeof (info));
 }
 
 //-----------------------------------------------------------------------------
-NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TChar* _title, const TChar* _shortTitle, const TChar* _units,
-										int32 _unitId, NoteExpressionValue _defaultValue, NoteExpressionValue _minimum, NoteExpressionValue _maximum,
-										int32 _stepCount, int32 _flags, int32 _precision)
+NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TChar* _title,
+                                        const TChar* _shortTitle, const TChar* _units,
+                                        int32 _unitId, NoteExpressionValue _defaultValue,
+                                        NoteExpressionValue _minimum, NoteExpressionValue _maximum,
+                                        int32 _stepCount, int32 _flags, int32 _precision)
 : precision (_precision)
 {
 	memset (&info, 0, sizeof (info));
@@ -82,10 +82,11 @@ NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TCha
 }
 
 //-----------------------------------------------------------------------------
-NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TChar* _title, const TChar* _shortTitle, const TChar* _units,
-										int32 _unitId, Parameter* _associatedParameter, int32 _flags)
-: associatedParameter (_associatedParameter)
-, precision (4)
+NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TChar* _title,
+                                        const TChar* _shortTitle, const TChar* _units,
+                                        int32 _unitId, Parameter* _associatedParameter,
+                                        int32 _flags)
+: associatedParameter (_associatedParameter), precision (4)
 {
 	memset (&info, 0, sizeof (info));
 	info.typeId = _typeId;
@@ -110,7 +111,8 @@ NoteExpressionType::NoteExpressionType (NoteExpressionTypeID _typeId, const TCha
 }
 
 //-----------------------------------------------------------------------------
-tresult NoteExpressionType::getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+tresult NoteExpressionType::getStringByValue (NoteExpressionValue valueNormalized /*in*/,
+                                              String128 string /*out*/)
 {
 	if (associatedParameter)
 	{
@@ -120,7 +122,8 @@ tresult NoteExpressionType::getStringByValue (NoteExpressionValue valueNormalize
 	UString128 wrapper;
 	if (info.valueDesc.stepCount > 0)
 	{
-		int32 value = Min<int32> (info.valueDesc.stepCount, (int32)(valueNormalized * (info.valueDesc.stepCount + 1)));
+		int32 value = Min<int32> (info.valueDesc.stepCount,
+		                          (int32) (valueNormalized * (info.valueDesc.stepCount + 1)));
 		wrapper.printInt (value);
 	}
 	else
@@ -132,11 +135,13 @@ tresult NoteExpressionType::getStringByValue (NoteExpressionValue valueNormalize
 }
 
 //-----------------------------------------------------------------------------
-tresult NoteExpressionType::getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+tresult NoteExpressionType::getValueByString (const TChar* string /*in*/,
+                                              NoteExpressionValue& valueNormalized /*out*/)
 {
 	if (associatedParameter)
 	{
-		return associatedParameter->fromString (string, valueNormalized) ? kResultTrue : kResultFalse;
+		return associatedParameter->fromString (string, valueNormalized) ? kResultTrue :
+		                                                                   kResultFalse;
 	}
 	String wrapper (string);
 	if (info.valueDesc.stepCount > 0)
@@ -144,7 +149,8 @@ tresult NoteExpressionType::getValueByString (const TChar* string /*in*/, NoteEx
 		int32 value;
 		if (wrapper.scanInt32 (value) && value <= info.valueDesc.stepCount)
 		{
-			valueNormalized = (NoteExpressionValue)value / (NoteExpressionValue)info.valueDesc.stepCount;
+			valueNormalized =
+			    (NoteExpressionValue)value / (NoteExpressionValue)info.valueDesc.stepCount;
 			return kResultTrue;
 		}
 		return kResultFalse;
@@ -160,9 +166,10 @@ tresult NoteExpressionType::getValueByString (const TChar* string /*in*/, NoteEx
 }
 
 //-----------------------------------------------------------------------------
-RangeNoteExpressionType::RangeNoteExpressionType (NoteExpressionTypeID _typeId, const TChar* _title, const TChar* _shortTitle, const TChar* _units,
-						 int32 _unitId, NoteExpressionValue _defaultPlainValue, NoteExpressionValue _plainMin, NoteExpressionValue _plainMax,
-						 int32 _flags, int32 _precision)
+RangeNoteExpressionType::RangeNoteExpressionType (
+    NoteExpressionTypeID _typeId, const TChar* _title, const TChar* _shortTitle,
+    const TChar* _units, int32 _unitId, NoteExpressionValue _defaultPlainValue,
+    NoteExpressionValue _plainMin, NoteExpressionValue _plainMax, int32 _flags, int32 _precision)
 : NoteExpressionType (_typeId, _title, _shortTitle, _units, _unitId, 0, 0, 1, 0, _flags, _precision)
 , plainMin (_plainMin)
 , plainMax (_plainMax)
@@ -171,7 +178,8 @@ RangeNoteExpressionType::RangeNoteExpressionType (NoteExpressionTypeID _typeId, 
 }
 
 //-----------------------------------------------------------------------------
-tresult RangeNoteExpressionType::getStringByValue (NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+tresult RangeNoteExpressionType::getStringByValue (NoteExpressionValue valueNormalized /*in*/,
+                                                   String128 string /*out*/)
 {
 	NoteExpressionValue plain = valueNormalized * (getMax () - getMin ()) + getMin ();
 	UString128 wrapper;
@@ -181,10 +189,11 @@ tresult RangeNoteExpressionType::getStringByValue (NoteExpressionValue valueNorm
 }
 
 //-----------------------------------------------------------------------------
-tresult RangeNoteExpressionType::getValueByString (const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+tresult RangeNoteExpressionType::getValueByString (const TChar* string /*in*/,
+                                                   NoteExpressionValue& valueNormalized /*out*/)
 {
 	String wrapper (string);
-	double value = 0;
+	double value = 0.;
 	if (wrapper.scanFloat (value))
 	{
 		value = (value - getMin ()) / (getMax () - getMin ());
@@ -220,7 +229,7 @@ NoteExpressionTypeContainer::NoteExprTypeVector::const_iterator NoteExpressionTy
 //-----------------------------------------------------------------------------
 bool NoteExpressionTypeContainer::addNoteExpressionType (NoteExpressionType* noteExpType)
 {
-	noteExps.push_back(IPtr<NoteExpressionType> (noteExpType, false));
+	noteExps.push_back (IPtr<NoteExpressionType> (noteExpType, false));
 	return true;
 }
 
@@ -248,7 +257,7 @@ NoteExpressionType* NoteExpressionTypeContainer::getNoteExpressionType (NoteExpr
 	NoteExprTypeVector::const_iterator it = find (typeId);
 	if (it != noteExps.end ())
 		return (*it);
-	return 0;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -258,7 +267,8 @@ int32 NoteExpressionTypeContainer::getNoteExpressionCount ()
 }
 
 //-----------------------------------------------------------------------------
-tresult NoteExpressionTypeContainer::getNoteExpressionInfo (int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
+tresult NoteExpressionTypeContainer::getNoteExpressionInfo (int32 noteExpressionIndex,
+                                                            NoteExpressionTypeInfo& info /*out*/)
 {
 	if (noteExpressionIndex < 0 || noteExpressionIndex >= static_cast<int32> (noteExps.size ()))
 		return kInvalidArgument;
@@ -267,7 +277,8 @@ tresult NoteExpressionTypeContainer::getNoteExpressionInfo (int32 noteExpression
 }
 
 //-----------------------------------------------------------------------------
-tresult NoteExpressionTypeContainer::getNoteExpressionStringByValue (NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+tresult NoteExpressionTypeContainer::getNoteExpressionStringByValue (
+    NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
 {
 	NoteExpressionType* noteExpType = getNoteExpressionType (id);
 	if (noteExpType)
@@ -278,7 +289,9 @@ tresult NoteExpressionTypeContainer::getNoteExpressionStringByValue (NoteExpress
 }
 
 //-----------------------------------------------------------------------------
-tresult NoteExpressionTypeContainer::getNoteExpressionValueByString (NoteExpressionTypeID id, const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+tresult NoteExpressionTypeContainer::getNoteExpressionValueByString (
+    NoteExpressionTypeID id, const TChar* string /*in*/,
+    NoteExpressionValue& valueNormalized /*out*/)
 {
 	NoteExpressionType* noteExpType = getNoteExpressionType (id);
 	if (noteExpType)

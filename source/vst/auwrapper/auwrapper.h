@@ -34,39 +34,8 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-/**
-***************************
-\page auwrapper AudioUnit Wrapper
-***************************
-\section AUIntroduction Introduction
-***************************
-The VST 3 SDK comes with an AudioUnit wrapper, which can wrap one VST 3 Audio Processor and Edit Controller as an AudioUnit effect/instrument.
+#include "docAUv2.h"
 
-The wrapper is a small dynamic library which loads the VST 3 Plug-in.
-As AudioUnits store some important information in their resource fork, this library must be compiled for every VST 3 Plug-in.
-\n\n
-***************************
-\section AUhowdoesitwork How does it work ?
-***************************
-
-- build the auwrapper project (public.sdk/source/vst/auwrapper/auwrapper.xcodeproj)
-- create a copy of the again AU wrapper example project directory (public.sdk/source/vst/auwrapper/again/)
-- rename the copy to your needs
-- edit the target settings of the project and change
-	- Product Name
-	- Library search path so that it points to the directory where libauwrapper.a exists
-	- architecture setting so that it only includes architectures the VST 3 Plug-in supports
-
-- search in the project for AUWRAPPER_CHANGE and change the settings to your needs, especially in :
-	- edit audiounitconfig.h see comments there
-	- edit Info.plist see comments there
-- edit the "Make Links Script" for easier debugging/development
-- build your project
-- done... that is all!
-
-For the release version, you must place a copy or an alias of your VST 3 Plug-in in the resource folder of the bundle named "plugin.vst3"
-
- */
 /// \cond ignore
 
 #pragma once
@@ -87,7 +56,7 @@ For the release version, you must place a copy or an alias of your VST 3 Plug-in
 #include "public.sdk/source/vst/hosting/eventlist.h"
 #include "base/source/timer.h"
 #include "base/source/fstring.h"
-#include "base/source/flock.h"
+#include "base/thread/include/flock.h"
 #include <Cocoa/Cocoa.h>
 #include <AudioToolbox/AudioToolbox.h>
 #include <vector>
@@ -298,7 +267,7 @@ protected:
 	UnitInfoMap unitInfos;
 	ClumpGroupVector clumpGroups;
 	CachedParameterInfoMap cachedParameterInfos;
-	FLock parameterCacheChanging;
+	Steinberg::Base::Thread::FLock parameterCacheChanging;
 
 	NoteInstanceID noteCounter;
 	double sampleRate;

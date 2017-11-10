@@ -61,8 +61,8 @@ class GainParameter : public Parameter
 public:
 	GainParameter (int32 flags, int32 id);
 
-	virtual void toString (ParamValue normValue, String128 string) const;
-	virtual bool fromString (const TChar* string, ParamValue& normValue) const;
+	void toString (ParamValue normValue, String128 string) const SMTG_OVERRIDE;
+	bool fromString (const TChar* string, ParamValue& normValue) const SMTG_OVERRIDE;
 };
 
 //------------------------------------------------------------------------

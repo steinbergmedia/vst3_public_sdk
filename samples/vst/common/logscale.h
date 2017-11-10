@@ -134,7 +134,7 @@ void LogScale<T>::setScaling (T srcMin, T srcMax, T destMin, T destMax, T inValu
 
 	inValue = (inValue - srcMin) / (srcMax - srcMin);
 
-	ASSERT (inValue > 0.);
+	SMTG_ASSERT (inValue > 0.);
 
 	expo = ::log ((outValue - destMin) / scaleFactor) / ::log (inValue);
 	expoInv = 1.f / expo;

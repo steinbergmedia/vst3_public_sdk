@@ -69,6 +69,7 @@ public:
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
+	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API setupProcessing (ProcessSetup& newSetup) SMTG_OVERRIDE;
@@ -94,6 +95,37 @@ public:
 	void removeUIMessageController (UIMessageController* controller);
 	void setDefaultMessageText (String128 text);
 	TChar* getDefaultMessageText ();
+
+
+	//------------------------------------------------------------------------
+	template <typename SampleType>
+	SampleType processAudio (SampleType** in, SampleType** out, int32 numChannels,
+		int32 sampleFrames, float gain)
+	{
+		SampleType vuPPM = 0;
+
+		// in real Plug-in it would be better to do dezippering to avoid jump (click) in gain value
+		for (int32 i = 0; i < numChannels; i++)
+		{
+			int32 samples = sampleFrames;
+			SampleType* ptrIn = (SampleType*)in[i];
+			SampleType* ptrOut = (SampleType*)out[i];
+			SampleType tmp;
+			while (--samples >= 0)
+			{
+				// apply gain
+				tmp = (*ptrIn++) * gain;
+				(*ptrOut++) = tmp;
+
+				// check only positive values
+				if (tmp > vuPPM)
+				{
+					vuPPM = tmp;
+				}
+			}
+		}
+		return vuPPM;
+	}
 
 //------------------------------------------------------------------------
 private:

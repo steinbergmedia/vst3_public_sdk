@@ -80,35 +80,35 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(AGainProcessorUID),
 				PClassInfo::kManyInstances,	// cardinality  
-				kVstAudioEffectClass,		// the component category (dont changed this)
+				kVstAudioEffectClass,		// the component category (do not changed this)
 				stringPluginName,			// here the Plug-in name (to be changed)
 				Vst::kDistributable,	// means that component and controller could be distributed on different computers
 				"Fx",					// Subcategory for this Plug-in (to be changed)
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
-				kVstVersionString,		// the VST 3 SDK version (dont changed this, use always this define)
-				Steinberg::Vst::AGain::createInstance)	// function pointer called when this component should be instanciated
+				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
+				Steinberg::Vst::AGain::createInstance)	// function pointer called when this component should be instantiated
 
 	// its kVstComponentControllerClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID (AGainControllerUID),
 				PClassInfo::kManyInstances,  // cardinality   
-				kVstComponentControllerClass,// the Controller category (dont changed this)
+				kVstComponentControllerClass,// the Controller category (do not changed this)
 				stringPluginName "Controller",	// controller name (could be the same than component name)
 				0,						// not used here
 				"",						// not used here
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
-				kVstVersionString,		// the VST 3 SDK version (dont changed this, use always this define)
-				Steinberg::Vst::AGainController::createInstance)// function pointer called when this component should be instanciated
+				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
+				Steinberg::Vst::AGainController::createInstance)// function pointer called when this component should be instantiated
 
 	//---Second Plug-in (AGain with sidechain (only component, use the same controller) included in this factory-------
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(AGainWithSideChainProcessorUID),
 				PClassInfo::kManyInstances,	// cardinality  
-				kVstAudioEffectClass,		// the component category (dont changed this)
+				kVstAudioEffectClass,		// the component category (do not changed this)
 				stringPluginSideChainName,	// here the Plug-in name (to be changed)
 				Vst::kDistributable,	// means that component and controller could be distributed on different computers
 				"Fx",					// Subcategory for this Plug-in (to be changed)
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
-				kVstVersionString,		// the VST 3 SDK version (dont changed this, use always this define)
-				Steinberg::Vst::AGainWithSideChain::createInstance)	// function pointer called when this component should be instanciated
+				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
+				Steinberg::Vst::AGainWithSideChain::createInstance)	// function pointer called when this component should be instantiated
 	
 	//----for others Plug-ins contained in this factory, put like for the first Plug-in different DEF_CLASS2---
 
