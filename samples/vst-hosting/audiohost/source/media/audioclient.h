@@ -102,7 +102,7 @@ private:
 	void initProcessContext ();
 	bool updateProcessSetup ();
 	void preprocess (Buffers& buffers, int64_t continousFrames);
-	void postprocess ();
+	void postprocess (Buffers& buffers);
 	bool isPortInRange (int32 port, int32 channel) const;
 	bool processVstEvent (const IMidiClient::Event& event, int32 port);
 	bool processParamChange (const IMidiClient::Event& event, int32 port);
