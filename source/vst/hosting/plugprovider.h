@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -65,9 +65,10 @@ public:
 	IComponent* getComponent () SMTG_OVERRIDE;
 	IEditController* getController () SMTG_OVERRIDE;
 	tresult releasePlugIn (IComponent* component, IEditController* controller) SMTG_OVERRIDE;
-	const char8* getSubCategories () const SMTG_OVERRIDE
+	tresult getSubCategories (IString& result) const SMTG_OVERRIDE
 	{
-		return classInfo.subCategoriesString ().data ();
+		result.setText8 (classInfo.subCategoriesString ().data ());
+		return kResultTrue;
 	}
 	tresult getPluginUID (FUID& uid) const SMTG_OVERRIDE;
 

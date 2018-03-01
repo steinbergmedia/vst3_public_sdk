@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -58,10 +58,12 @@ public:
 
 	//---from IPluginBase--------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
-	
-	//---from EditController-----
+
+	//---from EditControllerEx1-----
 	tresult PLUGIN_API setParamNormalized (ParamID tag, ParamValue value) SMTG_OVERRIDE;
 	tresult PLUGIN_API setComponentState (IBStream* state) SMTG_OVERRIDE;
+	tresult PLUGIN_API getUnitByBus (MediaType /*type*/, BusDirection /*dir*/, int32 /*busIndex*/,
+	                                 int32 /*channel*/, UnitID& /*unitId*/ /*out*/) SMTG_OVERRIDE;
 
 	DELEGATE_REFCOUNT (EditControllerEx1)
 

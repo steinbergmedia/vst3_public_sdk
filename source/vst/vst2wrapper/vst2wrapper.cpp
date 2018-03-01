@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -168,12 +168,7 @@ tresult PLUGIN_API Vst2EditorWrapper::resizeView (IPlugView* view, ViewRect* new
 			AudioEffectX* effectx = dynamic_cast<AudioEffectX*> (effect);
 			if (effectx && effectx->sizeWindow (newSize->getWidth (), newSize->getHeight ()))
 			{
-#if MAC
-				ViewRect nSize (0, 0, newSize->right - newSize->left, newSize->bottom - newSize->top);
-				result = view->onSize (&nSize);
-#else
 				result = view->onSize (newSize);
-#endif
 			}
 		}
 	}
@@ -214,8 +209,8 @@ void Vst2EditorWrapper::createView ()
 		mView = mController->createView (ViewType::kEditor);
 		mView->setFrame (this);
 
-#if MAC
-#if PLATFORM_64
+#if SMTG_OS_MACOS
+#if SMTG_PLATFORM_64
 		if (mView && mView->isPlatformTypeSupported (kPlatformTypeNSView) != kResultTrue)
 #else
 		if (mView && mView->isPlatformTypeSupported (kPlatformTypeHIView) != kResultTrue)
@@ -264,11 +259,11 @@ bool Vst2EditorWrapper::open (void* ptr)
 
 	if (mView)
 	{
-#if WINDOWS
+#if SMTG_OS_WINDOWS
 		FIDString type = kPlatformTypeHWND;
-#elif MAC && PLATFORM_64
+#elif SMTG_OS_MACOS && SMTG_PLATFORM_64
 		FIDString type = kPlatformTypeNSView;
-#elif MAC
+#elif SMTG_OS_MACOS
 		FIDString type = kPlatformTypeHIView;
 #endif
 		return mView->attached (ptr, type) == kResultTrue;
@@ -455,8 +450,6 @@ protected:
 };
 
 //------------------------------------------------------------------------
-// Define the numeric max as "No ParamID"
-const ParamID kNoParamId = std::numeric_limits<ParamID>::max ();
 const int32 kMaxEvents = 2048;
 
 //------------------------------------------------------------------------
@@ -466,37 +459,14 @@ Vst2Wrapper::Vst2Wrapper (IAudioProcessor* processor, IEditController* controlle
                           audioMasterCallback audioMaster, const TUID vst3ComponentID,
                           VstInt32 vst2ID, IPluginFactory* factory)
 : AudioEffectX (audioMaster, 0, 0)
-, mVst2InputArrangement (nullptr)
-, mVst2OutputArrangement (nullptr)
 , mProcessor (processor)
-, mComponent (nullptr)
 , mController (controller)
-, mUnitInfo (nullptr)
-, mMidiMapping (nullptr)
-, componentInitialized (false)
-, controllerInitialized (false)
-, componentsConnected (false)
-, processing (false)
-, hasEventInputBuses (false)
-, hasEventOutputBuses (false)
-, mVst3SampleSize (kSample32)
-, mVst3processMode (kRealtime)
-, mBypassParameterID (kNoParamId)
-, mProgramParameterID (kNoParamId)
-, mProgramParameterIdx (-1)
-, mInputEvents (nullptr)
-, mOutputEvents (nullptr)
-, mVst2OutputEvents (nullptr)
-, mMainAudioInputBuses (0)
-, mMainAudioOutputBuses (0)
-, mTimer (nullptr)
 , mFactory (factory)
 {
 	memset (mName, 0, sizeof (mName));
 	memset (mVendor, 0, sizeof (mVendor));
 	memset (mSubCategories, 0, sizeof (mSubCategories));
 	memset (&mProcessContext, 0, sizeof (ProcessContext));
-	mVersion = 0;
 
 	for (int32 b = 0; b < kMaxMidiMappingBusses; b++)
 		for (int32 i = 0; i < 16; i++)
@@ -738,6 +708,7 @@ void Vst2Wrapper::suspend ()
 
 	if (mComponent)
 		mComponent->setActive (false);
+	mActive = false;
 }
 
 //------------------------------------------------------------------------
@@ -748,14 +719,15 @@ void Vst2Wrapper::resume ()
 
 	if (mComponent)
 		mComponent->setActive (true);
+	mActive = true;
 }
 
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::startProcess ()
 {
-	if (mProcessor && processing == false)
+	if (mProcessor && mProcessing == false)
 	{
-		processing = true;
+		mProcessing = true;
 		mProcessor->setProcessing (true);
 	}
 	return 0;
@@ -764,10 +736,10 @@ VstInt32 Vst2Wrapper::startProcess ()
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::stopProcess ()
 {
-	if (mProcessor && processing)
+	if (mProcessor && mProcessing)
 	{
 		mProcessor->setProcessing (false);
-		processing = false;
+		mProcessing = false;
 	}
 	return 0;
 }
@@ -793,7 +765,7 @@ bool Vst2Wrapper::setupProcessing (int32 processModeOverwrite)
 //------------------------------------------------------------------------
 void Vst2Wrapper::setSampleRate (float newSamplerate)
 {
-	if (processing)
+	if (mProcessing)
 		return;
 
 	if (newSamplerate != sampleRate)
@@ -806,7 +778,7 @@ void Vst2Wrapper::setSampleRate (float newSamplerate)
 //------------------------------------------------------------------------
 void Vst2Wrapper::setBlockSize (VstInt32 newBlockSize)
 {
-	if (processing)
+	if (mProcessing)
 		return;
 
 	if (blockSize != newBlockSize)
@@ -1761,7 +1733,7 @@ VstInt32 Vst2Wrapper::canDo (char* text)
 	}
 	else if (stricmp (text, "offline") == 0)
 	{
-		if (processing)
+		if (mProcessing)
 			return 0;
 		if (mVst3processMode == kOffline)
 			return 1;
@@ -2765,7 +2737,7 @@ inline void Vst2Wrapper::doProcess (VstInt32 sampleFrames)
 
 	mProcessData.numSamples = sampleFrames;
 
-	if (processing == false)
+	if (mProcessing == false)
 		startProcess ();
 
 	mProcessData.inputEvents = mInputEvents;
@@ -2782,6 +2754,8 @@ inline void Vst2Wrapper::doProcess (VstInt32 sampleFrames)
 
 	// VST 3 process call
 	mProcessor->process (mProcessData);
+
+	processOutputParametersChanges ();
 
 	mOutputTransfer.transferChangesFrom (mOutputChanges);
 	processOutputEvents ();
@@ -3054,7 +3028,7 @@ extern "C" {
 
 #if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
 #define VST_EXPORT __attribute__ ((visibility ("default")))
-#elif WINDOWS
+#elif SMTG_OS_WINDOWS
 #define VST_EXPORT __declspec( dllexport )
 #else
 #define VST_EXPORT

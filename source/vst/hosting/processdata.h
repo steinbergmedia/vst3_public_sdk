@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -78,7 +78,7 @@ public:
 	                         Sample64* sampleBuffer);
 
 	static const uint64 kAllChannelsSilent =
-#if MAC
+#if SMTG_OS_MACOS
 	    0xffffffffffffffffULL;
 #else
 	    0xffffffffffffffffUL;

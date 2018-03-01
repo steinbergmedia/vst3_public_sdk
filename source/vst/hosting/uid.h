@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -46,7 +46,7 @@ namespace VST3 {
 //------------------------------------------------------------------------
 struct UID
 {
-#if defined(WINDOWS) && WINDOWS == 1
+#if defined(SMTG_OS_WINDOWS) && SMTG_OS_WINDOWS == 1
 	static constexpr bool defaultComFormat = true;
 #else
 	static constexpr bool defaultComFormat = false;

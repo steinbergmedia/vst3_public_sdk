@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
 
 /**
 *******************************************
-\page AUv3Wrapper VST 3 - Audio Unit v3 Wrapper (Preview)
+\page AUv3Wrapper VST 3 - Audio Unit v3 Wrapper
 *******************************************
 
 Helper Class wrapping a VST 3 Plug-in to a Audio Unit v3 Plug-in

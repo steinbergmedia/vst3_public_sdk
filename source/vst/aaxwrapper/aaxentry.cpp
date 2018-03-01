@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -67,13 +67,13 @@
 #undef ACFStartup
 #undef ACFShutdown
 
-#if MAC
+#if SMTG_OS_MACOS
 #include <CoreFoundation/CoreFoundation.h>
 #include <dlfcn.h>
 #endif
 
 extern "C" {
-#if MAC
+#if SMTG_OS_MACOS
 bool bundleEntry (CFBundleRef);
 bool bundleExit (void);
 #else
@@ -185,7 +185,7 @@ ACFAPI ACFCanUnloadNow (IACFUnknown* pUnkHost)
 	return result;
 }
 
-#if MAC
+#if SMTG_OS_MACOS
 //------------------------------------------------------------------------
 static CFBundleRef GetBundleFromExecutable (const char* filepath)
 {
@@ -235,7 +235,7 @@ ACFAPI ACFStartup (IACFUnknown* pUnkHost)
 		result = AAXStartup (pUnkHost);
 		if (result == ACF_OK)
 		{
-#if MAC
+#if SMTG_OS_MACOS
 			bool rc = bundleEntry (GetCurrentBundle ());
 #else
 			bool rc = InitDll ();
@@ -265,7 +265,7 @@ ACFAPI ACFShutdown (IACFUnknown* pUnkHost)
 
 	try
 	{
-#if MAC
+#if SMTG_OS_MACOS
 		bundleExit ();
 #else
 		ExitDll ();

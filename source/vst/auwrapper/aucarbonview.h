@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,9 +38,15 @@
 
 #pragma once
 
-#if !__LP64__
+#include "pluginterfaces/base/fplatform.h"
 
+#if !SMTG_PLATFORM_64
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #include "AUPublic/AUCarbonViewBase/AUCarbonViewBase.h"
+#pragma clang diagnostic pop
+
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "base/source/fobject.h"
 #include "pluginterfaces/gui/iplugview.h"
@@ -78,6 +84,6 @@ protected:
 } // namespace Vst
 } // namespace Steinberg
 
-#endif // !__LP64__
+#endif // !SMTG_PLATFORM_64
 
 /// \endcond

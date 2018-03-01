@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@
 
 #include "aucarbonview.h"
 
-#if !__LP64__
+#if !SMTG_PLATFORM_64
 
 namespace Steinberg {
 namespace Vst {
@@ -162,6 +162,6 @@ extern "C" {
 //------------------------------------------------------------------------
 } // namespace Vst
 } // namespace Steinberg
-#endif
+#endif // !SMTG_PLATFORM_64
 
 /// \endcond

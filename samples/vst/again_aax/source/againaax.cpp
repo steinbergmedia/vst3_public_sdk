@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,13 +39,14 @@
 #include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
 
 #include "againcids.h"
+#include "againparamids.h"
 
 //------------------------------------------------------------------------
 #if 0 // for additional outputs
 AAX_Aux_Desc effAux_stereo[] = 
 {
 	// name, channel count
-	{ "Again AUX2",  2 }, 
+	{ "AGain AUX2",  2 }, 
 	{ nullptr }
 };
 #endif
@@ -61,44 +62,66 @@ AAX_MIDI_Desc effMIDI[] =
 #endif
 
 //------------------------------------------------------------------------
-#if 0 // Input/output meters not supported
+// Input/Output meters
 AAX_Meter_Desc effMeters[] = 
 {
-    { "Input", CCONST ('A', 'G', 'I', 'n'), 0 /*AAX_eMeterOrientation_Default*/, true },
-    { "Output", CCONST ('A', 'G', 'O', 'u'), 0 /*AAX_eMeterOrientation_Default*/, false },
-	{ nullptr}
+	// not used { "Input", CCONST ('A', 'G', 'I', 'n'),  0 /*AAX_eMeterOrientation_Default*/, 0 /*AAX_eMeterType_Input*/ },
+	{ "Output", kVuPPMId, 0 /*AAX_eMeterOrientation_Default*/, 1 /*AAX_eMeterType_Output*/ },
+	{ nullptr }
 };
-#endif
 
 //------------------------------------------------------------------------
-AAX_Plugin_Desc effPlugins[] =
-{
-    // effect-ID, name,	Native ID, AudioSuite ID,
-	// InChannels, OutChannels, InSideChain channels, MIDI, Aux, 
+AAX_Plugin_Desc effPlugins[] = {
+	// effect-ID, name,	
+	// Native ID, AudioSuite ID,
+	// InChannels, OutChannels, InSideChain channels,
+	// MIDI, Aux,
 	// Meters
-    // IDs must be unique across plugins
-    { "com.steinberg.again.mono", "AGain", CCONST ('A', 'G', 'N', '1'),
-        CCONST ('A', 'G', 'A', '1'), 1, 1, 0, nullptr /*effMIDI*/, nullptr /*effAux*/,
-        nullptr /*effMeters*/},
+	// Latency
+	// note: IDs must be unique across plugins
 
-    {"com.steinberg.again.stereo", "AGain", CCONST ('A', 'G', 'N', '2'),
-        CCONST ('A', 'G', 'A', '2'), 2, 2, 0, nullptr /*effMIDI*/, nullptr /*effAux*/,
-        nullptr /*effMeters*/},
-    { nullptr }
+	// Mono variant
+	{"com.steinberg.again.mono",
+	 "AGain", 
+	 CCONST ('A', 'G', 'N', '1'),
+	 CCONST ('A', 'G', 'A', '1'),
+	 1, /*mInputChannels*/
+	 1, /*mOutputChannels*/
+	 0, /*mSideChainInputChannels*/
+	 nullptr, /*effMIDI*/
+	 nullptr, /*effAux*/
+	 effMeters, /*effMeters*/
+	 0 /*Latency*/ 
+	},
+
+	// Stereo variant
+	{"com.steinberg.again.stereo",
+	 "AGain", 
+	 CCONST ('A', 'G', 'N', '2'),
+	 CCONST ('A', 'G', 'A', '2'), 
+	 2, /*mInputChannels*/
+	 2, /*mOutputChannels*/
+	 0, /*mSideChainInputChannels*/
+	 nullptr, /*effMIDI*/
+	 nullptr, /*effAux*/
+	 effMeters, /*effMeters*/
+	 0 /*Latency*/
+	},
+
+	{nullptr}
 };
 
 //------------------------------------------------------------------------
-AAX_Effect_Desc effDesc = 
-{
-    "Steinberg",                 // manufacturer
-	"AGain",                     // product
+AAX_Effect_Desc effDesc = {
+	"Steinberg",	// manufacturer
+	"AGain",		// product
 	CCONST ('S', 'M', 'T', 'G'), // manufacturer ID
 	CCONST ('A', 'G', 'S', 'B'), // product ID
-	"Fx",                        // VST category
-	{0},                         // VST3 class ID (set later)
-    1,                           // version
-    nullptr,                     // no pagetable file "again.xml",
-    effPlugins,
+	AGainVST3Category, // VST category (define againcids.h)
+	{0},			// VST3 class ID (set later)
+	1,				// version
+	nullptr,		// no pagetable file "again.xml",
+	effPlugins,
 };
 
 //------------------------------------------------------------------------

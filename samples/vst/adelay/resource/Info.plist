@@ -2,9 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>NSHumanReadableCopyright</key>
-  <string>2016 Steinberg Media Technologies</string>
-  <key>CFBundleDevelopmentRegion</key>
+	<key>NSHumanReadableCopyright</key>
+	<string>2018 Steinberg Media Technologies</string>
+	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
 	<string>adelay</string>
@@ -18,11 +18,11 @@
 	<string>BNDL</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-  <key>CFBundleVersion</key>
+	<key>CFBundleVersion</key>
 	<string>1.0</string>
-  <key>CFBundleShortVersionString</key>
-  <string>1.0</string>
-  <key>CSResourcesFileMapped</key>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CSResourcesFileMapped</key>
 	<true/>
 </dict>
 </plist>

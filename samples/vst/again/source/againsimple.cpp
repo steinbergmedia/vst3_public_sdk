@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -52,6 +52,7 @@
 
 #include <math.h>
 #include <stdio.h>
+#include "base/source/fstreamer.h"
 
 // this allows to enable the communication example between again and its controller
 #define AGAIN_TEST 1
@@ -382,29 +383,18 @@ tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 	// we receive the current  (processor part)
 	// called when we load a preset, the model has to be reloaded
 
+	IBStreamer streamer (state, kLittleEndian);
 	float savedGain = 0.f;
-	if (state->read (&savedGain, sizeof (float)) != kResultOk)
-	{
+	if (streamer.readFloat (savedGain) == false)
 		return kResultFalse;
-	}
 
 	float savedGainReduction = 0.f;
-	if (state->read (&savedGainReduction, sizeof (float)) != kResultOk)
-	{
+	if (streamer.readFloat (savedGainReduction) == false)
 		return kResultFalse;
-	}
 
 	int32 savedBypass = 0;
-	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-	{
+	if (streamer.readInt32 (savedBypass) == false)
 		return kResultFalse;
-	}
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedGain)
-	SWAP_32 (savedGainReduction)
-	SWAP_32 (savedBypass)
-#endif
 
 	fGain = savedGain;
 	fGainReduction = savedGainReduction;
@@ -412,7 +402,6 @@ tresult PLUGIN_API AGainSimple::setState (IBStream* state)
 
 	setParamNormalized (kGainId, savedGain);
 	setParamNormalized (kBypassId, bBypass);
-
 
 	// Example of using the IStreamAttributes interface
 	FUnknownPtr<IStreamAttributes> stream (state);
@@ -452,19 +441,11 @@ tresult PLUGIN_API AGainSimple::getState (IBStream* state)
 {
 	// here we need to save the model
 
-	float toSaveGain = fGain;
-	float toSaveGainReduction = fGainReduction;
-	int32 toSaveBypass = bBypass ? 1 : 0;
+	IBStreamer streamer (state, kLittleEndian);
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveGain)
-	SWAP_32 (toSaveGainReduction)
-	SWAP_32 (toSaveBypass)
-#endif
-
-	state->write (&toSaveGain, sizeof (float));
-	state->write (&toSaveGainReduction, sizeof (float));
-	state->write (&toSaveBypass, sizeof (int32));
+	streamer.writeFloat (fGain);
+	streamer.writeFloat (fGainReduction);
+	streamer.writeInt32 (bBypass ? 1 : 0);
 
 	return kResultOk;
 }
@@ -605,12 +586,17 @@ tresult PLUGIN_API AGainSimple::getEditorState (IBStream* state)
 {
 	// here we can save UI settings for example
 
+	IBStreamer streamer (state, kLittleEndian);
+
 	// as we save a Unicode string, we must know the byteorder when setState is called
 	int8 byteOrder = BYTEORDER;
-	if (state->write (&byteOrder, sizeof (int8)) == kResultTrue)
-		return state->write (defaultMessageText, 128 * sizeof (TChar));
+	if (streamer.writeInt8 (byteOrder) == false)
+		return kResultFalse;
 
-	return kResultFalse;
+	if (streamer.writeRaw (defaultMessageText, 128 * sizeof (TChar)) == false)
+		return kResultFalse;
+
+	return kResultTrue;
 }
 
 //------------------------------------------------------------------------

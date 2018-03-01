@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,7 +50,7 @@ DEF_CLASS_IID (IPluginFactory)
 DEF_CLASS_IID (IPluginFactory2)
 DEF_CLASS_IID (IPluginFactory3)
 
-#if LINUX
+#if SMTG_OS_LINUX
 DEF_CLASS_IID (Linux::IEventHandler)
 DEF_CLASS_IID (Linux::ITimerHandler)
 DEF_CLASS_IID (Linux::IRunLoop)

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,10 @@
 
 /// \cond ignore
 
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#pragma clang diagnostic ignored "-Wunused-value"
+#pragma clang diagnostic ignored "-Wparentheses"
+#pragma clang diagnostic ignored "-Woverloaded-virtual"
 
 #ifndef MAC_OS_X_VERSION_10_7
 	#define MAC_OS_X_VERSION_10_7 1070
@@ -56,6 +59,12 @@
 #import "AUPublic/AUBase/AUBase.cpp"
 
 #if !__LP64__
+	#ifndef verify_noerr
+		#define verify_noerr(x) x
+	#endif
+	#ifndef verify
+		#define verify(x)
+	#endif
 	#import "AUPublic/AUCarbonViewBase/AUCarbonViewBase.cpp"
 	#import "AUPublic/AUCarbonViewBase/AUCarbonViewControl.cpp"
 	#import "AUPublic/AUCarbonViewBase/AUCarbonViewDispatch.cpp"

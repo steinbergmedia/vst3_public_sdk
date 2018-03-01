@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,30 +42,23 @@
 
 @implementation AppDelegate
 
-
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
 	return YES;
 }
 
-
 - (void)applicationWillResignActive:(UIApplication *)application {
 }
-
 
 - (void)applicationDidEnterBackground:(UIApplication *)application {
 }
 
-
 - (void)applicationWillEnterForeground:(UIApplication *)application {
 }
-
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
 }
 
-
 - (void)applicationWillTerminate:(UIApplication *)application {
 }
-
 
 @end

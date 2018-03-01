@@ -14,11 +14,11 @@ set(${target}_sources
 	resource/PlugIn.ico
 )
 add_library(${target} STATIC ${${target}_sources})
-set_target_properties(${target} PROPERTIES ${SDK_IDE_LIBS_FOLDER})
 
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces")
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces/ACF")
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Libs/AAXLibrary/Include")
+smtg_setup_universal_binary(${target})
 
 if(XCODE)
 	add_compile_options(-Wno-incompatible-ms-struct)

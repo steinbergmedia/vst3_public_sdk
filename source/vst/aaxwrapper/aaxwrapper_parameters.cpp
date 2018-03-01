@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -60,7 +60,7 @@ using namespace Steinberg::Base::Thread;
 
 #else
 #define HAPI 0
-#if WINDOWS
+#if SMTG_OS_WINDOWS
 #define HLOG __noop
 #else
 #define HLOG(...) \
@@ -88,7 +88,7 @@ ParameterInfo kParamInfoBypass = {CCONST ('B', 'y', 'p', 0),
 // AAXWrapper_Parameters
 //------------------------------------------------------------------------
 AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
-: AAX_CEffectParameters (), mSimBypass (false)
+: AAX_CEffectParameters (), mSimulateBypass (false)
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
@@ -96,8 +96,8 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 	// the VST2Wrapper destructor
 
 	AAX_Effect_Desc* effDesc = AAXWrapper_GetDescription ();
-	mWrapper = AAXWrapper::create (GetPluginFactory (), effDesc->mVST3PluginID,
-	                               effDesc->mPluginDesc + plugIndex, this);
+	mPluginDesc = effDesc->mPluginDesc + plugIndex;
+	mWrapper = AAXWrapper::create (GetPluginFactory (), effDesc->mVST3PluginID, mPluginDesc, this);
 	if (!mWrapper)
 		return;
 
@@ -107,7 +107,8 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 		mWrapper->generatePageTables ("c:/tmp/pagetable.xml");
 #endif
 
-	mSimBypass = mWrapper->mBypassParameterID == -1;
+	// if no VST3 Bypass found then simulate it
+	mSimulateBypass = (mWrapper->mBypassParameterID != Vst::kNoParamId);
 
 	if (mParamNames.size () < (size_t)mWrapper->cEffect.numParams)
 	{
@@ -154,7 +155,7 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 		mParameterManager.AddParameter (param);
 	}
 
-	if (mSimBypass)
+	if (mSimulateBypass)
 	{
 		AAX_IParameter* param = 0;
 		param = new AAX_CParameter<bool> (kBypassId, AAX_CString ("Bypass"), 0,
@@ -200,7 +201,7 @@ int32 AAXWrapper_Parameters::getParameterInfo (AAX_CParamID aaxId,
 	AAX_Result result = mWrapper->getParameterInfo (aaxId, paramInfo);
 	if (result != AAX_SUCCESS)
 	{
-		if (mSimBypass && strcmp (aaxId, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (aaxId, kBypassId) == 0)
 		{
 			paramInfo = kParamInfoBypass;
 			result = AAX_SUCCESS;
@@ -213,7 +214,9 @@ int32 AAXWrapper_Parameters::getParameterInfo (AAX_CParamID aaxId,
 AAX_Result AAXWrapper_Parameters::GetNumberOfParameters (int32_t* oNumControls) const
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
-	*oNumControls = mWrapper->cEffect.numParams + mSimBypass;
+	*oNumControls = mWrapper->cEffect.numParams;
+	if (mSimulateBypass)
+		*oNumControls += 1;
 	return AAX_SUCCESS;
 }
 
@@ -222,7 +225,7 @@ AAX_Result AAXWrapper_Parameters::GetMasterBypassParameter (AAX_IString* oIDStri
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
-	*oIDString = mSimBypass ? kBypassId : AAX_CID (mWrapper->mBypassParameterID);
+	*oIDString = mSimulateBypass ? kBypassId : AAX_CID (mWrapper->mBypassParameterID);
 	return AAX_SUCCESS;
 }
 
@@ -356,7 +359,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterIndex (AAX_CParamID iParameterID,
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			*oControlIndex = mWrapper->numParams;
 			return AAX_SUCCESS;
@@ -380,7 +383,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterIDFromIndex (int32_t iControlIndex
 
 	if ((size_t)iControlIndex >= mWrapper->mParameterMap.size ())
 	{
-		if (mSimBypass && iControlIndex == mWrapper->numParams)
+		if (mSimulateBypass && iControlIndex == mWrapper->numParams)
 		{
 			oParameterIDString->Set (kBypassId);
 			return AAX_SUCCESS;
@@ -411,7 +414,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterValueFromString (
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			*oValue = strcmp (iValueString.Get (), "on") == 0;
 			return AAX_SUCCESS;
@@ -436,7 +439,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterStringFromValue (AAX_CParamID iPar
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			oValueString->Set (iValue >= 0.5 ? "on" : "off");
 			return AAX_SUCCESS;
@@ -479,7 +482,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterNormalizedValue (AAX_CParamID iPar
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			*oValuePtr = (mWrapper->mBypass ? 1 : 0);
 			return AAX_SUCCESS;
@@ -503,7 +506,7 @@ AAX_Result AAXWrapper_Parameters::SetParameterNormalizedValue (AAX_CParamID iPar
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 			return AAX_SUCCESS;
 		return AAX_ERROR_INVALID_PARAMETER_ID;
 	}
@@ -530,9 +533,10 @@ AAX_Result AAXWrapper_Parameters::SetParameterNormalizedRelative (AAX_CParamID i
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			mWrapper->mBypass = (mWrapper->mBypass + iValue >= 0.5);
+			mWrapper->setBypass (mWrapper->mBypass);
 			return AAX_SUCCESS;
 		}
 		return AAX_ERROR_INVALID_PARAMETER_ID;
@@ -593,8 +597,11 @@ AAX_Result AAXWrapper_Parameters::UpdateParameterNormalizedValue (AAX_CParamID i
 	Vst::ParamID id = getVstParamID (iParameterID);
 	if (id == -1)
 	{
-		if (mSimBypass && strcmp (iParameterID, kBypassId) == 0)
+		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
+		{
 			mWrapper->mBypass = iValue >= 0.5;
+			mWrapper->setBypass (mWrapper->mBypass);
+		}
 		else
 			return AAX_ERROR_INVALID_PARAMETER_ID;
 	}
@@ -739,11 +746,31 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
                                                         const void* iNotificationData,
                                                         uint32_t iNotificationDataSize)
 {
-	if (AAX_eNotificationEvent_SideChainBeingConnected == iNotificationType)
-		mWrapper->setSideChainEnable (true);
-	if (AAX_eNotificationEvent_SideChainBeingDisconnected == iNotificationType)
-		mWrapper->setSideChainEnable (false);
+	switch (iNotificationType)
+	{
+		case AAX_eNotificationEvent_SideChainBeingConnected:
+			mWrapper->setSideChainEnable (true);
+			break;
+		case AAX_eNotificationEvent_SideChainBeingDisconnected:
+			mWrapper->setSideChainEnable (false);
+			break;
+		case AAX_eNotificationEvent_SignalLatencyChanged:
+		{
+			int32_t outSample;
+			Controller ()->GetSignalLatency (&outSample);
+			
+			if (mPluginDesc)
+				mPluginDesc->mLatency = outSample;
 
-	return AAX_CEffectParameters::NotificationReceived (iNotificationType, iNotificationData,
-	                                                    iNotificationDataSize);
+			if (!mWrapper->isActive ())
+			{
+				mWrapper->suspend ();
+				mWrapper->resume ();
+			}
+			break;
+		}
+	}
+
+	return AAX_CEffectParameters::NotificationReceived (
+	    iNotificationType, iNotificationData, iNotificationDataSize);
 }

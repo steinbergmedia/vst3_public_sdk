@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -60,8 +60,8 @@ public:
 	tresult PLUGIN_API tell  (int64* pos) SMTG_OVERRIDE;
 
 	//---from Vst::IStreamAttributes-----
-	virtual tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE;
-	virtual IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE;
+	tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE;
+	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE;
 
 	//------------------------------------------------------------------------
 	DECLARE_FUNKNOWN_METHODS
@@ -79,7 +79,7 @@ public:
 	NSMutableDataIBStream (NSMutableData* data);
 	virtual ~NSMutableDataIBStream ();
 
-	tresult PLUGIN_API write (void* buffer, int32 numBytes, int32* numBytesWritten = 0);
+	tresult PLUGIN_API write (void* buffer, int32 numBytes, int32* numBytesWritten = 0) SMTG_OVERRIDE;
 //------------------------------------------------------------------------
 protected:
 	NSMutableData* mdata;

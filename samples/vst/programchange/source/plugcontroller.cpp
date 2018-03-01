@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,6 +39,8 @@
 
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/futils.h"
+#include "base/source/fstreamer.h"
+#include "pluginterfaces/vst/ivstcomponent.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -105,45 +107,48 @@ tresult PLUGIN_API PlugController::setParamNormalized (ParamID tag, ParamValue v
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API PlugController::getUnitByBus (MediaType type, BusDirection dir, int32 busIndex,
+	int32 channel, UnitID& unitId) 
+{
+	if (type == kEvent && dir == kInput && busIndex == 0 && channel == 0)
+	{
+		unitId = kRootUnitId;
+		return kResultTrue;
+	}
+
+	return kResultFalse;
+}
+
+//------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 {
 	// we receive the current state of the component (processor part)
 	// we read only the gain and bypass value...
-	if (state)
-	{
-		// read the bypass
-		int32 bypassState;
-		if (state->read (&bypassState, sizeof (bypassState)) == kResultTrue)
-		{
-#if BYTEORDER == kBigEndian
-			SWAP_32 (bypassState)
-#endif
-			setParamNormalized (kBypassId, bypassState ? 1 : 0);
-		}
+	if (!state)
+		return kResultFalse;
 
-		// read the program
-		int32 programState;
-		if (state->read (&programState, sizeof (programState)) == kResultTrue)
-		{
-#if BYTEORDER == kBigEndian
-			SWAP_32 (programState)
-#endif
-			EditControllerEx1::setParamNormalized (
-			    kProgramId, ToNormalized<ParamValue> (programState, kNumProgs - 1));
-		}
+	IBStreamer streamer (state, kLittleEndian);
 
-		// read the Gain param
-		float val;
-		if (state->read (&val, sizeof (val)) == kResultTrue)
-		{
-#if BYTEORDER == kBigEndian
-			SWAP_32 (val)
-#endif
-			setParamNormalized (kGainId, val);
-		}
-	}
+	// read the bypass
+	int32 bypassState = 0;
+	if (streamer.readInt32 (bypassState) == false)
+		return kResultFalse;
+	setParamNormalized (kBypassId, bypassState ? 1 : 0);
+
+	// read the program
+	int32 programState = 0;
+	if (streamer.readInt32 (programState) == false)
+		return kResultFalse;
+
+	EditControllerEx1::setParamNormalized (kProgramId,
+	                                       ToNormalized<ParamValue> (programState, kNumProgs - 1));
+
+	// read the Gain param
+	float savedGain = 0.f;
+	if (streamer.readFloat (savedGain) == false)
+		return kResultFalse;
+	setParamNormalized (kGainId, savedGain);
 
 	return kResultOk;
 }
-}
-} // namespaces
+}} // namespaces

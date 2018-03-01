@@ -1,3 +1,4 @@
+// clang-format off
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
@@ -5,10 +6,11 @@
 // Filename    : public.sdk/samples/vst/interappaudio/InterAppAudioExample/VSTInterAppAudioHostUIControllerViewController.mm
 // Created by  : Steinberg, 08/2013
 // Description :
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -33,21 +35,23 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
+// clang-format on
 
 #import "VSTInterAppAudioHostUIControllerViewController.h"
+
 #import "public.sdk/source/vst/interappaudio/AudioIO.h"
 
 using namespace Steinberg::Vst::InterAppAudio;
 
 //------------------------------------------------------------------------
-static UIImage *scaleImageToSize (UIImage *image, CGSize newSize)
+static UIImage* scaleImageToSize (UIImage* image, CGSize newSize)
 {
-    UIGraphicsBeginImageContextWithOptions (newSize, NO, 0.0);
-    [image drawInRect:CGRectMake (0, 0, newSize.width, newSize.height)];
-    UIImage *newImage = UIGraphicsGetImageFromCurrentImageContext ();
-    UIGraphicsEndImageContext ();
-	
-    return newImage;
+	UIGraphicsBeginImageContextWithOptions (newSize, NO, 0.0);
+	[image drawInRect:CGRectMake (0, 0, newSize.width, newSize.height)];
+	UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext ();
+	UIGraphicsEndImageContext ();
+
+	return newImage;
 }
 
 //------------------------------------------------------------------------
@@ -64,21 +68,22 @@ static UIImage *scaleImageToSize (UIImage *image, CGSize newSize)
 //------------------------------------------------------------------------
 - (id)init
 {
-    self = [super initWithNibName:@"VSTInterAppAudioHostUIControllerView" bundle:nil];
-    if (self) {
-    }
-    return self;
+	self = [super initWithNibName:@"VSTInterAppAudioHostUIControllerView" bundle:nil];
+	if (self)
+	{
+	}
+	return self;
 }
 
 //------------------------------------------------------------------------
 - (void)viewDidLoad
 {
-    [super viewDidLoad];
+	[super viewDidLoad];
 
 	UIImage* image = AudioIO::instance ()->getHostIcon ();
 	if (image)
 	{
-		image = scaleImageToSize(image, self.hostButton.bounds.size);
+		image = scaleImageToSize (image, self.hostButton.bounds.size);
 		[self.hostButton setTitle:@"" forState:UIControlStateNormal];
 		[self.hostButton setImage:image forState:UIControlStateNormal];
 	}
@@ -92,14 +97,16 @@ static UIImage *scaleImageToSize (UIImage *image, CGSize newSize)
 //------------------------------------------------------------------------
 - (IBAction)hideView:(id)sender
 {
-	[UIView animateWithDuration:0.3 animations:^{
-		CGRect frame = self.view.frame;
-		frame.origin.y += frame.size.height;
-		self.view.frame = frame;
-	} completion:^(BOOL finished) {
-		[self.view removeFromSuperview];
-		[self removeFromParentViewController];
-	}];
+	[UIView animateWithDuration:0.3
+	    animations:^{
+		  CGRect frame = self.view.frame;
+		  frame.origin.y += frame.size.height;
+		  self.view.frame = frame;
+	    }
+	    completion:^(BOOL finished) {
+		  [self.view removeFromSuperview];
+		  [self removeFromParentViewController];
+	    }];
 }
 
 //------------------------------------------------------------------------

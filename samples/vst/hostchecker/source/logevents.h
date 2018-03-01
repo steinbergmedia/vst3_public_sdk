@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -56,6 +56,7 @@ struct LogEvent
 //------------------------------------------------------------------------
 // Categories
 #define SETUP_CONTEXT "SetupContext"
+#define STATE "State"
 #define AUDIO_BUFFER "AudioBuffer"
 #define EVENT_LIST "EventList"
 #define PARAM_CHANGE "ParameterChanges"
@@ -74,6 +75,10 @@ struct LogEvent
 
 #define LOG_EVENT_LIST(LOG_DEF) \
 	LOG_DEF(kLogIdProcessorControllerConnection,CONTROL,	LOG_WARN, SETUP_CONTEXT, "Processor and controller are directly connected (direct pointers no wrapper)."), \
+	LOG_DEF(kLogIdInvalidStateInitializedMissing,PROCESS,	LOG_ERR, STATE, "Missing State: Uninitialized => Initialized."), \
+	LOG_DEF(kLogIdInvalidStateSetupMissing,		PROCESS,	LOG_ERR, STATE, "Missing State: Initialized => Setup Done."), \
+	LOG_DEF(kLogIdInvalidStateActivatedMissing,	PROCESS,	LOG_ERR, STATE, "Missing State: Setup Done => Activated."), \
+	LOG_DEF(kLogIdInvalidStateProcessingMissing,PROCESS,	LOG_ERR, STATE, "Missing State: Activated => Processing."), \
 	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdInvalidBlockSize,				PROCESS,	LOG_ERR, PROCESS_DATA, "Block size is either < 1 or >= max block size."),\

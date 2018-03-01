@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,6 +44,7 @@
 #include "AAX_Push8ByteStructAlignment.h"
 
 class AAXWrapper;
+struct AAX_Plugin_Desc;
 
 //------------------------------------------------------------------------
 // helper to convert to/from AAX/Vst IDs
@@ -139,7 +140,7 @@ public:
 	AAX_Result GetChunkIDFromIndex (int32_t index, AAX_CTypeID* chunkID) const SMTG_OVERRIDE;
 	AAX_Result GetChunkSize (AAX_CTypeID chunkID, uint32_t* oSize) const SMTG_OVERRIDE;
 	AAX_Result GetChunk (AAX_CTypeID chunkID, AAX_SPlugInChunk* oChunk) const SMTG_OVERRIDE;
-	AAX_Result SetChunk (AAX_CTypeID chunkID, const AAX_SPlugInChunk* iChunk);
+	AAX_Result SetChunk (AAX_CTypeID chunkID, const AAX_SPlugInChunk* iChunk) SMTG_OVERRIDE;
 	AAX_Result CompareActiveChunk (const AAX_SPlugInChunk* iChunk,
 	                               AAX_CBoolean* oIsEqual) const SMTG_OVERRIDE;
 	AAX_Result _GetNumberOfChanges (int32_t* oValue) const;
@@ -156,9 +157,11 @@ private:
 	Steinberg::int32 getParameterInfo (AAX_CParamID aaxId,
 	                                   Steinberg::Vst::ParameterInfo& paramInfo) const;
 
-	AAXWrapper* mWrapper;
+	AAXWrapper* mWrapper = nullptr;
 	std::vector<AAX_CID> mParamNames;
-	bool mSimBypass;
+
+	AAX_Plugin_Desc* mPluginDesc = nullptr;
+	bool mSimulateBypass = false;
 };
 
 #ifdef __clang__

@@ -1,3 +1,4 @@
+// clang-format off
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
@@ -5,10 +6,11 @@
 // Filename    : public.sdk/samples/vst/interappaudio/InterAppAudioExample/VSTInterAppAudioHostUIControllerViewController.h
 // Created by  : Steinberg, 08/2013
 // Description :
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -33,6 +35,7 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
+// clang-format on
 
 #import <UIKit/UIKit.h>
 
@@ -47,5 +50,5 @@
 - (IBAction)rewind:(id)sender;
 - (IBAction)record:(id)sender;
 
-
 @end
+

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -40,7 +40,7 @@
 #include <cassert>
 
 //! Workaround for Jack on Windows
-#if defined(WINDOWS) && defined(_STDINT)
+#if defined(SMTG_OS_WINDOWS) && defined(_STDINT)
 #define _STDINT_H
 #endif
 
@@ -248,8 +248,8 @@ bool JackClient::registerAudioPorts (IAudioClient* processor)
 		addAudioInputPort (input);
 
 	buffers.inputs = audioInputPointers.data ();
-	buffers.numInputs = audioInputPointers.size ();
-	buffers.numOutputs = audioOutputPointers.size ();
+	buffers.numInputs = (int32_t)audioInputPointers.size ();
+	buffers.numOutputs = (int32_t)audioOutputPointers.size ();
 	buffers.outputs = audioOutputPointers.data ();
 
 	return true;
@@ -319,7 +319,7 @@ int JackClient::processMidi (jack_nframes_t nframes)
 
 		jack_midi_event_t in_event;
 		auto event_count = jack_midi_get_event_count (portBuffer);
-		for (int i = 0; i < event_count; i++)
+		for (uint32_t i = 0; i < event_count; i++)
 		{
 			jack_midi_event_get (&in_event, portBuffer, i);
 			if (in_event.size == 0)

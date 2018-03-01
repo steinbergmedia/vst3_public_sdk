@@ -1,14 +1,14 @@
 
 set(noteexpressiontext_sources
-	source/plug.cpp
-	source/plug.h
-	source/plugcids.h
-	source/plugcontroller.cpp
-	source/plugcontroller.h
-	source/plugentry.cpp
-	source/plugparamids.h
-	source/version.h
-	resource/plug.uidesc
+    source/plug.cpp
+    source/plug.h
+    source/plugcids.h
+    source/plugcontroller.cpp
+    source/plugcontroller.h
+    source/plugentry.cpp
+    source/plugparamids.h
+    source/version.h
+    resource/plug.uidesc
 )
 
 set(target noteexpressiontext)
@@ -20,7 +20,7 @@ target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 smtg_add_vst3_resource(${target} "resource/plug.uidesc")
 
 if(MAC)
-	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
+    smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
 elseif(WIN)
-	target_sources(${target} PRIVATE resource/plug.rc)
+    target_sources(${target} PRIVATE resource/plug.rc)
 endif()

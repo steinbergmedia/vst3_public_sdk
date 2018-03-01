@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,36 +39,37 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 /*
-
 Things to do :
 	- Parameter Mapping could be better (indexed stuff), but needs work if we want to have this
 	- Speaker Arrangement -> Channel Layout (partially done, just doesn't work always in Logic 8)
 	- dynamic Bus management
-
 */
 
 #include "auwrapper.h"
-#include "aucocoaview.h"
 #include "NSDataIBStream.h"
-#include "pluginterfaces/gui/iplugview.h"
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
-#include "pluginterfaces/vst/vsttypes.h"
-#include "pluginterfaces/vst/vstpresetkeys.h"
-#include "public.sdk/source/vst/hosting/eventlist.h"
-#include "public.sdk/source/vst/hosting/processdata.h"
-#include "public.sdk/source/vst/hosting/parameterchanges.h"
-#include "public.sdk/source/vst/hosting/hostclasses.h"
-#include "public.sdk/source/vst/vsteditcontroller.h"
+#include "aucocoaview.h"
 #include "base/source/fdynlib.h"
 #include "base/source/fstring.h"
+#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/gui/iplugview.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
+#include "pluginterfaces/vst/vstpresetkeys.h"
+#include "pluginterfaces/vst/vsttypes.h"
+#include "public.sdk/source/vst/hosting/eventlist.h"
+#include "public.sdk/source/vst/hosting/hostclasses.h"
+#include "public.sdk/source/vst/hosting/parameterchanges.h"
+#include "public.sdk/source/vst/hosting/processdata.h"
+#include "public.sdk/source/vst/vsteditcontroller.h"
+
 #include <AudioToolbox/AudioToolbox.h>
-#if !__LP64__
+#if !SMTG_PLATFORM_64
 #include <AudioUnit/AudioUnitCarbonView.h>
 #endif
+
 #include <dlfcn.h>
 #include <algorithm>
 #include <objc/runtime.h>
+
 #if !CA_USE_AUDIO_PLUGIN_ONLY
 #include "CAXException.h"
 #endif
@@ -198,25 +199,23 @@ VST3DynLibrary* VST3DynLibrary::gInstance = 0;
 
 namespace Vst {
 
-const ParamID kNoParamId = std::numeric_limits<ParamID>::max ();
-
 //------------------------------------------------------------------------
-DEF_CLASS_IID (IEventList)
-DEF_CLASS_IID (IHostApplication)
-DEF_CLASS_IID (IParameterChanges)
-DEF_CLASS_IID (IParamValueQueue)
-DEF_CLASS_IID (IMessage)
 DEF_CLASS_IID (IAttributeList)
+DEF_CLASS_IID (IAudioProcessor)
 DEF_CLASS_IID (IComponent)
 DEF_CLASS_IID (IComponentHandler)
-DEF_CLASS_IID (IAudioProcessor)
-DEF_CLASS_IID (IEditController)
-DEF_CLASS_IID (IMidiMapping)
-DEF_CLASS_IID (IUnitInfo)
 DEF_CLASS_IID (IConnectionPoint)
-DEF_CLASS_IID (IVst3ToVst2Wrapper)
-DEF_CLASS_IID (IVst3ToAUWrapper)
+DEF_CLASS_IID (IEditController)
+DEF_CLASS_IID (IEventList)
+DEF_CLASS_IID (IHostApplication)
+DEF_CLASS_IID (IMessage)
+DEF_CLASS_IID (IMidiMapping)
+DEF_CLASS_IID (IParamValueQueue)
+DEF_CLASS_IID (IParameterChanges)
 DEF_CLASS_IID (IStreamAttributes) // VST 3.6
+DEF_CLASS_IID (IUnitInfo)
+DEF_CLASS_IID (IVst3ToAUWrapper)
+DEF_CLASS_IID (IVst3ToVst2Wrapper)
 
 //--------------------------------------------------------------------------------------------
 class SpeakerArrangementBase
@@ -1008,10 +1007,8 @@ UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 
 		CFStringRef processName = 0;
 		ProcessSerialNumber psn;
-		OSErr err = GetCurrentProcess (&psn);
-		SMTG_ASSERT (err == noErr);
-		OSStatus stat = CopyProcessName (&psn, &processName);
-		SMTG_ASSERT (stat == noErr);
+		SMTG_VERIFY_IS (GetCurrentProcess (&psn), noErr);
+		SMTG_VERIFY_IS (CopyProcessName (&psn, &processName), noErr);
 		CFStringGetCString (processName, buffer, sizeof (buffer), kCFStringEncodingUTF8);
 		CFRelease (processName);
 		strncat (buffer, " SupportedNumChannels", sizeof (buffer) - strlen (buffer) - 1);

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -55,12 +55,15 @@ public:
 	HostCheckerProcessor ();
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
+	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
+	
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
 	tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
 	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return mLatency; }
 	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
@@ -87,6 +90,15 @@ public:
 
 	static FUID cid;
 
+	enum State : uint32
+	{
+		kUninitialized = 0,
+		kInitialized,
+		kSetupDone,
+		kActivated,
+		kProcessing
+	};
+
 protected:
 	void addLogEvent (Steinberg::int32 logId);
 	void informLatencyChanged ();
@@ -100,6 +112,8 @@ protected:
 	uint32 mLatency = 0;
 	uint32 mWantedLatency = 0;
 	float mGeneratePeaks = 0;
+	State mCurrentState = kUninitialized;
+
 	bool mBypass = false;
 };
 

@@ -9,7 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>com.steinberg.audiounitv3app.audiounitv3extension.${PRODUCT_NAME}</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -46,7 +46,7 @@
 					<key>type</key>
 					<string>kAUcomponentType1</string>
 					<key>version</key>
-					<integer>kAUcomponentVersion</integer>
+					<string>kAUcomponentVersion</string>
 				</dict>
 			</array>
 		</dict>

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,6 +41,7 @@
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -55,6 +56,8 @@ FUID HostCheckerProcessor::cid (0x23FC190E, 0x02DD4499, 0xA8D2230E, 0x50617DA3);
 //-----------------------------------------------------------------------------
 HostCheckerProcessor::HostCheckerProcessor ()
 {
+	mCurrentState = State::kUninitialized;
+	
 	mLatency = 256;
 
 	setControllerClass (HostCheckerController::cid);
@@ -66,6 +69,11 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 	tresult result = AudioEffect::initialize (context);
 	if (result == kResultOk)
 	{
+		if (mCurrentState != kUninitialized)
+			addLogEvent (kLogIdInvalidStateInitializedMissing);
+
+		mCurrentState = State::kInitialized;
+
 		addAudioInput (USTRING ("Audio Input"), SpeakerArr::kStereo);
 		addAudioOutput (USTRING ("Audio Output"), SpeakerArr::kStereo);
 		addEventInput (USTRING ("Event Input"), 1);
@@ -73,6 +81,14 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		mHostCheck.setComponent (this);
 	}
 	return result;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::terminate () 
+{
+	mCurrentState = kUninitialized;
+
+	return AudioEffect::terminate ();
 }
 
 //------------------------------------------------------------------------
@@ -137,6 +153,11 @@ void HostCheckerProcessor::informLatencyChanged ()
 tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 {
 	mHostCheck.validate (data);
+	
+	if (mCurrentState != State::kProcessing)
+	{
+		addLogEvent (kLogIdInvalidStateProcessingMissing);
+	}
 
 	Algo::foreach (data.inputParameterChanges, [&] (IParamValueQueue& paramQueue) {
 		Algo::foreachLast (paramQueue, [&] (ParamID id, int32 sampleOffset, ParamValue value) {
@@ -216,6 +237,13 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setupProcessing (ProcessSetup& setup)
 {
+	if (mCurrentState != State::kInitialized)
+	{
+		addLogEvent (kLogIdInvalidStateInitializedMissing);
+	}
+	
+	mCurrentState = State::kSetupDone;
+
 	mHostCheck.setProcessSetup (setup);
 	return AudioEffect::setupProcessing (setup);
 }
@@ -224,9 +252,18 @@ tresult PLUGIN_API HostCheckerProcessor::setupProcessing (ProcessSetup& setup)
 tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 {
 	if (!state)
+	{
+		mCurrentState = State::kSetupDone;
 		mBypassProcessor.reset ();
+	}
 	else
 	{
+		if (mCurrentState != State::kSetupDone)
+		{
+			addLogEvent (kLogIdInvalidStateSetupMissing);
+		}
+
+		mCurrentState = State::kActivated;
 		mLatency = mWantedLatency;
 
 		// prepare bypass
@@ -268,6 +305,17 @@ tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSam
 }
 
 //-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::setProcessing (TBool state)
+{
+	if (state)
+		mCurrentState = State::kProcessing;
+	else
+		mCurrentState = State::kActivated;
+
+	return AudioEffect::setProcessing (state);
+}
+
+//-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 {
 	FUnknownPtr<IStreamAttributes> stream (state);
@@ -280,36 +328,24 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 		}
 	}
 
-	float saved = 0.f;
-	if (state->read (&saved, sizeof (float)) != kResultOk)
-	{
-		return kResultFalse;
-	}
+	IBStreamer streamer (state, kLittleEndian);
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSave)
-#endif
+	float saved = 0.f;
+	if (streamer.readFloat (saved) == false)
+		return kResultFalse;
 	if (saved != 12345.67f)
 	{
 		SMTG_ASSERT (false)
 	}
 
 	uint32 latency = mLatency;
-	if (state->read (&latency, sizeof (uint32)) == kResultOk)
-	{
-#if BYTEORDER == kBigEndian
-		SWAP_32 (latency)
-#endif
-	}
+	if (streamer.readInt32u (latency) == false)
+		return kResultFalse;
 
 	uint32 bypass;
-	if (state->read (&bypass, sizeof (uint32)) == kResultOk)
-	{
-#if BYTEORDER == kBigEndian
-		SWAP_32 (bypass)
-#endif
-		mBypassProcessor.setActive (bypass > 0);
-	}
+	if (streamer.readInt32u (bypass) == false)
+		return kResultFalse;
+	mBypassProcessor.setActive (bypass > 0);
 
 	if (latency != mLatency)
 	{
@@ -326,19 +362,12 @@ tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+	IBStreamer streamer (state, kLittleEndian);
+
 	float toSave = 12345.67f;
-	uint32 latency = mLatency;
-	uint32 bypass = mBypassProcessor.isActive () ? 1 : 0;
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSave);
-	SWAP_32 (latency);
-	SWAP_32 (bypass);
-#endif
-
-	state->write (&toSave, sizeof (float));
-	state->write (&latency, sizeof (uint32));
-	state->write (&bypass, sizeof (uint32));
+	streamer.writeFloat (toSave);
+	streamer.writeInt32u (mLatency);
+	streamer.writeInt32u (mBypassProcessor.isActive () ? 1 : 0);
 
 	return kResultOk;
 }

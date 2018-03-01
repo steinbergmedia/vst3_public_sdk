@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -45,6 +45,7 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/base/istringresult.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -69,7 +70,7 @@ public:
 	virtual IComponent* getComponent () = 0;
 	virtual IEditController* getController () = 0;
 	virtual tresult releasePlugIn (IComponent* component, IEditController* controller) = 0;
-	virtual const char8* getSubCategories () const = 0;
+	virtual tresult getSubCategories (IString& result) const = 0;
 	virtual tresult getPluginUID (FUID& uid) const = 0;
 
 //------------------------------------------------------------------------
@@ -85,15 +86,15 @@ class ParamPoint
 {
 public:
 	ParamPoint () : offsetSamples (-1), value (0.), read (false) {}
-	void set (int32 offsetSamples, double value)
+	void set (int32 _offsetSamples, double _value)
 	{
-		this->offsetSamples = offsetSamples;
-		this->value = value;
+		offsetSamples = _offsetSamples;
+		value = _value;
 	}
-	void get (int32& offsetSamples, double& value)
+	void get (int32& _offsetSamples, double& _value)
 	{
-		offsetSamples = this->offsetSamples;
-		value = this->value;
+		_offsetSamples = offsetSamples;
+		_value = value;
 		read = true;
 	}
 	bool wasRead () const { return read; }
@@ -110,7 +111,7 @@ private:
 class ParamChanges : public IParamValueQueue
 {
 public:
-	ParamChanges () : id (-1), numPoints (0), numUsedPoints (0), processedFrames (0), points (nullptr)
+	ParamChanges ()
 	{
 		FUNKNOWN_CTOR
 	}
@@ -123,10 +124,10 @@ public:
 
 	DECLARE_FUNKNOWN_METHODS
 
-	void init (ParamID id, int32 numPoints)
+	void init (ParamID _id, int32 _numPoints)
 	{
-		this->id = id;
-		this->numPoints = numPoints;
+		id = _id;
+		numPoints = _numPoints;
 		numUsedPoints = 0;
 		if (points)
 			delete[] points;
@@ -179,18 +180,18 @@ public:
 		}
 		return kResultFalse;
 	}
-	tresult PLUGIN_API addPoint (int32 offsetSamples, double value, int32& index) SMTG_OVERRIDE
+	tresult PLUGIN_API addPoint (int32 /*offsetSamples*/, double /*value*/, int32& /*index*/) SMTG_OVERRIDE
 	{
 		return kResultFalse;
 	}
 //---------------------------------------------------------
 
 private:
-	ParamID id;
-	int32 numPoints;
-	int32 numUsedPoints;
-	int32 processedFrames;
-	ParamPoint* points;
+	ParamID id = kNoParamId;
+	int32 numPoints = 0;
+	int32 numUsedPoints = 0;
+	int32 processedFrames = 0;
+	ParamPoint* points = nullptr;
 };
 
 //------------------------------------------------------------------------
@@ -208,7 +209,7 @@ public:
 	DECLARE_FUNKNOWN_METHODS
 
 	bool PLUGIN_API setup () SMTG_OVERRIDE;
-	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE {return false;}	// implement me
+	bool PLUGIN_API run (ITestResult* /*testResult*/) SMTG_OVERRIDE {return false;}	// implement me
 	bool PLUGIN_API teardown () SMTG_OVERRIDE;
 
 	virtual void printTestHeader (ITestResult* testResult);
@@ -529,7 +530,7 @@ protected:
 /** Test Valid State Transition.
 \ingroup TestClass */
 //------------------------------------------------------------------------
-class VstValidStateTransitionTest : public VstTestBase
+class VstValidStateTransitionTest : public VstTestEnh
 {
 public:
 	VstValidStateTransitionTest (IPlugProvider* plugProvider);
@@ -542,7 +543,7 @@ public:
 /** Test Invalid State Transition.
 \ingroup TestClass */
 //------------------------------------------------------------------------
-class VstInvalidStateTransitionTest : public VstTestBase
+class VstInvalidStateTransitionTest : public VstTestEnh
 {
 public:
 	VstInvalidStateTransitionTest (IPlugProvider* plugProvider);
@@ -555,7 +556,7 @@ public:
 /** Test Repeat Identical State Transition.
 \ingroup TestClass */
 //------------------------------------------------------------------------
-class VstRepeatIdenticalStateTransitionTest : public VstTestBase
+class VstRepeatIdenticalStateTransitionTest : public VstTestEnh
 {
 public:
 	VstRepeatIdenticalStateTransitionTest (IPlugProvider* plugProvider);

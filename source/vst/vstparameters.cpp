@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ namespace Vst {
 //------------------------------------------------------------------------
 Parameter::Parameter () : valueNormalized (0.), precision (4)
 {
-	memset (&info, 0, sizeof (ParameterInfo));
+	info = { 0 };
 }
 
 //------------------------------------------------------------------------
@@ -59,14 +59,16 @@ Parameter::Parameter (const ParameterInfo& info)
 //------------------------------------------------------------------------
 Parameter::Parameter (const TChar* title, ParamID tag, const TChar* units,
                       ParamValue defaultValueNormalized, int32 stepCount, int32 flags,
-                      UnitID unitID)
+                      UnitID unitID, const TChar* shortTitle)
 : precision (4)
 {
-	memset (&info, 0, sizeof (ParameterInfo));
+	info = { 0 };
 
 	UString (info.title, str16BufferSize (String128)).assign (title);
 	if (units)
 		UString (info.units, str16BufferSize (String128)).assign (units);
+	if (shortTitle)
+		UString (info.shortTitle, str16BufferSize (String128)).assign (shortTitle);
 
 	info.stepCount = stepCount;
 	info.defaultNormalizedValue = valueNormalized = defaultValueNormalized;
@@ -159,16 +161,14 @@ RangeParameter::RangeParameter (const ParameterInfo& paramInfo, ParamValue min, 
 RangeParameter::RangeParameter (const TChar* title, ParamID tag, const TChar* units,
                                 ParamValue minPlain, ParamValue maxPlain,
                                 ParamValue defaultValuePlain, int32 stepCount, int32 flags,
-                                UnitID unitID)
+                                UnitID unitID, const TChar* shortTitle)
 : minPlain (minPlain), maxPlain (maxPlain)
 {
 	UString (info.title, str16BufferSize (String128)).assign (title);
-
-	UString uUnits (info.units, str16BufferSize (String128));
 	if (units)
-	{
-		uUnits.assign (units);
-	}
+		UString (info.units, str16BufferSize (String128)).assign (units);
+	if (shortTitle)
+		UString (info.shortTitle, str16BufferSize (String128)).assign (shortTitle);
 
 	info.stepCount = stepCount;
 	info.defaultNormalizedValue = valueNormalized = toNormalized (defaultValuePlain);
@@ -245,15 +245,13 @@ StringListParameter::StringListParameter (const ParameterInfo& paramInfo) : Para
 
 //------------------------------------------------------------------------
 StringListParameter::StringListParameter (const TChar* title, ParamID tag, const TChar* units,
-                                          int32 flags, UnitID unitID)
+                                          int32 flags, UnitID unitID, const TChar* shortTitle)
 {
 	UString (info.title, str16BufferSize (String128)).assign (title);
-
-	UString uUnits (info.units, str16BufferSize (String128));
 	if (units)
-	{
-		uUnits.assign (units);
-	}
+		UString (info.units, str16BufferSize (String128)).assign (units);
+	if (shortTitle)
+		UString (info.shortTitle, str16BufferSize (String128)).assign (shortTitle);
 
 	info.stepCount = -1;
 	info.defaultNormalizedValue = 0;
@@ -276,6 +274,7 @@ void StringListParameter::appendString (const String128 string)
 	TChar* buffer = (TChar*)std::malloc ((length + 1) * sizeof (TChar));
 	if (!buffer)
 		return;
+
 	memcpy (buffer, string, length * sizeof (TChar));
 	buffer[length] = 0;
 	strings.push_back (buffer);
@@ -361,7 +360,7 @@ ParameterContainer::~ParameterContainer ()
 }
 
 //------------------------------------------------------------------------
-void ParameterContainer::init (int32 initialSize, int32 resizeDelta)
+void ParameterContainer::init (int32 initialSize, int32 /*resizeDelta*/)
 {
 	if (!params)
 	{
@@ -408,7 +407,7 @@ Parameter* ParameterContainer::getParameter (ParamID tag)
 //------------------------------------------------------------------------
 Parameter* ParameterContainer::addParameter (const TChar* title, const TChar* units,
                                              int32 stepCount, ParamValue defaultNormalizedValue,
-                                             int32 flags, int32 tag, UnitID unitID)
+                                             int32 flags, int32 tag, UnitID unitID, const TChar* shortTitle)
 {
 	if (!title)
 	{
@@ -418,12 +417,10 @@ Parameter* ParameterContainer::addParameter (const TChar* title, const TChar* un
 	ParameterInfo info = {0};
 
 	UString (info.title, str16BufferSize (String128)).assign (title);
-
-	UString uUnits (info.units, str16BufferSize (String128));
 	if (units)
-	{
-		uUnits.assign (units);
-	}
+		UString (info.units, str16BufferSize (String128)).assign (units);
+	if (shortTitle)
+		UString (info.shortTitle, str16BufferSize (String128)).assign (shortTitle);
 
 	info.stepCount = stepCount;
 	info.defaultNormalizedValue = defaultNormalizedValue;

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,6 +42,7 @@
 #if TARGET_OS_IPHONE
 #include "interappaudio/iosEditor.h"
 #endif
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -78,29 +79,21 @@ tresult PLUGIN_API ADelayController::setComponentState (IBStream* state)
 {
 	// we receive the current state of the component (processor part)
 	// we read only the gain and bypass value...
-	if (state)
+	if (!state)
+		return kResultFalse;
+	
+	IBStreamer streamer (state, kLittleEndian);
+	float savedDelay = 0.f;
+	if (streamer.readFloat (savedDelay) == false)
+		return kResultFalse;
+	setParamNormalized (kDelayId, savedDelay);
+
+	int32 bypassState = 0;
+	if (streamer.readInt32 (bypassState) == false)
 	{
-		float savedDelay = 0.f;
-		if (state->read (&savedDelay, sizeof (float)) != kResultOk)
-		{
-			return kResultFalse;
-		}
-
-#if BYTEORDER == kBigEndian
-		SWAP_32 (savedDelay)
-#endif
-		setParamNormalized (kDelayId, savedDelay);
-
-		// read the bypass
-		int32 bypassState;
-		if (state->read (&bypassState, sizeof (bypassState)) == kResultTrue)
-		{
-#if BYTEORDER == kBigEndian
-			SWAP_32 (bypassState)
-#endif
-			setParamNormalized (kBypassId, bypassState ? 1 : 0);
-		}
+		// could be an old version, continue 
 	}
+	setParamNormalized (kBypassId, bypassState ? 1 : 0);
 
 	return kResultOk;
 }

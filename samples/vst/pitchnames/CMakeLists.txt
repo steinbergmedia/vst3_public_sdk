@@ -1,11 +1,11 @@
 
 set(pitchnames_sources
-	source/factory.cpp
-	source/pitchnames.cpp
-	source/pitchnames.h
-	source/pitchnamesdatabrowsersource.cpp
-	source/pitchnamesdatabrowsersource.h
-	source/version.h
+    source/factory.cpp
+    source/pitchnames.cpp
+    source/pitchnames.h
+    source/pitchnamesdatabrowsersource.cpp
+    source/pitchnamesdatabrowsersource.h
+    source/version.h
 )
 
 set(target pitchnames)
@@ -17,7 +17,7 @@ target_link_libraries(${target} PRIVATE base sdk vstgui_support)
 smtg_add_vst3_resource(${target} "resource/pitchnames.uidesc")
 
 if(MAC)
-	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
+    smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
 elseif(WIN)
-	target_sources(${target} PRIVATE resource/pitchnames.rc)
+    target_sources(${target} PRIVATE resource/pitchnames.rc)
 endif()

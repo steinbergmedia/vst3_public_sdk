@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -85,6 +85,8 @@ public:
 	~Vst2Wrapper ();
 
 	bool init ();
+
+	bool isActive () const { return mActive; }
 
 	// AudioEffectX overrides -----------------------------------------------
 	void suspend () SMTG_OVERRIDE; // Called when Plug-in is switched to off
@@ -183,6 +185,9 @@ public:
 
 //-------------------------------------------------------------------------------------------------------
 protected:
+	using AudioEffectX::beginEdit;
+	using AudioEffectX::endEdit;
+
 	void setupBuses ();
 	void setupParameters ();
 	void initMidiCtrlerAssignment ();
@@ -197,6 +202,8 @@ protected:
 	void setEventPPQPositions ();
 	void processOutputEvents ();
 	void processMidiEvent (VstMidiEvent* midiEvent, int32 bus);
+	
+	virtual void processOutputParametersChanges () {}
 
 	/**	Returns the last param change from guiTransfer queue. */
 	bool getLastParamChange (ParamID id, ParamValue& value);
@@ -233,32 +240,34 @@ protected:
 	ParamID mProgramChangeParameterIDs[kMaxProgramChangeParameters]; // for each midi channel
 	int32 mProgramChangeParameterIdxs[kMaxProgramChangeParameters]; // for each midi channel
 
-	VstSpeakerArrangement* mVst2InputArrangement;
-	VstSpeakerArrangement* mVst2OutputArrangement;
+	VstSpeakerArrangement* mVst2InputArrangement = nullptr;
+	VstSpeakerArrangement* mVst2OutputArrangement = nullptr;
 
 	FUID mVst3EffectClassID;
 
 	// vst3 data
-	IAudioProcessor* mProcessor;
-	IComponent* mComponent;
-	IEditController* mController;
-	IUnitInfo* mUnitInfo;
-	IMidiMapping* mMidiMapping;
+	IAudioProcessor* mProcessor = nullptr;
+	IComponent* mComponent = nullptr;
+	IEditController* mController = nullptr;
+	IUnitInfo* mUnitInfo = nullptr;
+	IMidiMapping* mMidiMapping = nullptr;
 
-	bool componentInitialized;
-	bool controllerInitialized;
-	bool componentsConnected;
-	bool processing;
-	bool hasEventInputBuses;
-	bool hasEventOutputBuses;
+	bool componentInitialized = false;
+	bool controllerInitialized = false;
+	bool componentsConnected = false;
+	
+	bool mActive = false;
+	bool mProcessing = false;
+	bool hasEventInputBuses = false;
+	bool hasEventOutputBuses = false;
 
-	int32 mVst3SampleSize;
-	int32 mVst3processMode;
+	int32 mVst3SampleSize = kSample32;
+	int32 mVst3processMode = kRealtime;
 
 	char mName[PClassInfo::kNameSize];
 	char mVendor[PFactoryInfo::kNameSize];
 	char mSubCategories[PClassInfo2::kSubCategoriesSize];
-	int32 mVersion;
+	int32 mVersion = 0;
 
 	struct ParamMapEntry
 	{
@@ -268,19 +277,19 @@ protected:
 
 	std::vector<ParamMapEntry> mParameterMap;
 	std::map<ParamID, int32> mParamIndexMap;
-	ParamID mBypassParameterID;
-	ParamID mProgramParameterID;
-	int32 mProgramParameterIdx;
+	ParamID mBypassParameterID = kNoParamId;
+	ParamID mProgramParameterID = kNoParamId;
+	int32 mProgramParameterIdx = -1;
 
 	HostProcessData mProcessData;
 	ProcessContext mProcessContext;
 	ParameterChanges mInputChanges;
 	ParameterChanges mOutputChanges;
-	EventList* mInputEvents;
-	EventList* mOutputEvents;
-	Vst2MidiEventQueue* mVst2OutputEvents;
-	uint64 mMainAudioInputBuses;
-	uint64 mMainAudioOutputBuses;
+	EventList* mInputEvents = nullptr;
+	EventList* mOutputEvents = nullptr;
+	Vst2MidiEventQueue* mVst2OutputEvents = nullptr;
+	uint64 mMainAudioInputBuses = 0;
+	uint64 mMainAudioOutputBuses = 0;
 
 	ParameterChangeTransfer mInputTransfer;
 	ParameterChangeTransfer mOutputTransfer;
@@ -288,8 +297,8 @@ protected:
 
 	MemoryStream mChunk;
 
-	Timer* mTimer;
-	IPluginFactory* mFactory;
+	Timer* mTimer = nullptr;
+	IPluginFactory* mFactory = nullptr;
 
 	enum
 	{

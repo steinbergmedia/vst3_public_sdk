@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -55,11 +55,11 @@
 #define stringPluginName "mda"
 #define stringOriginalFilename stringPluginName".vst3"
 
-#if PLATFORM_64
+#if SMTG_PLATFORM_64
 #define stringFileDescription	"VST3 version of MDA Plug-ins (64Bit)"
 #else
 #define stringFileDescription	"VST3 version of MDA Plug-ins"
 #endif
 #define stringCompanyName		"mda"
-#define stringLegalCopyright	"© 2017 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2018 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

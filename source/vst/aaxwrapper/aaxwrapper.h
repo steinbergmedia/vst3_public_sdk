@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,6 +44,7 @@
 #include "base/thread/include/flock.h"
 #include <bitset>
 #include <list>
+#include <memory>
 
 struct AAX_Plugin_Desc;
 struct AAX_Effect_Desc;
@@ -90,6 +91,7 @@ public:
 	Steinberg::tresult PLUGIN_API performEdit (
 	    Steinberg::Vst::ParamID tag, Steinberg::Vst::ParamValue valueNormalized) SMTG_OVERRIDE;
 	Steinberg::tresult PLUGIN_API endEdit (Steinberg::Vst::ParamID tag) SMTG_OVERRIDE;
+	Steinberg::tresult PLUGIN_API restartComponent (Steinberg::int32 flags) SMTG_OVERRIDE;
 
 	// IComponentHandler2
 	Steinberg::tresult PLUGIN_API setDirty (Steinberg::TBool state) SMTG_OVERRIDE;
@@ -135,6 +137,8 @@ public:
 
 //------------------------------------------------------------------------
 private:
+	void processOutputParametersChanges () SMTG_OVERRIDE;
+	
 	Steinberg::tresult setupBusArrangements (AAX_Plugin_Desc* desc);
 	Steinberg::int32 countSidechainBusChannels (Steinberg::Vst::BusDirection dir,
 	                                            Steinberg::uint64& scBusBitset);
@@ -142,14 +146,14 @@ private:
 	void guessActiveOutputs (float** out, Steinberg::int32 num);
 	void updateActiveOutputState ();
 
-	AAXWrapper_Parameters* aaxParams;
-	AAXWrapper_GUI* aaxGUI;
+	AAXWrapper_Parameters* aaxParams = nullptr;
+	AAXWrapper_GUI* aaxGUI = nullptr;
 	VstTimeInfo timeInfo;
-	Steinberg::int32 aaxOutputs;
+	Steinberg::int32 aaxOutputs = 0;
 
 	Steinberg::Base::Thread::FLock syncCalls; // synchronize calls expected in the same thread in VST3
-	AAX_Plugin_Desc* pluginDesc;
-	Steinberg::int32 countMIDIports;
+	AAX_Plugin_Desc* pluginDesc = nullptr;
+	Steinberg::int32 countMIDIports = 0;
 
 	// as of ProTools 12 (?) the context struct does no longer allow unused slots,
 	//  so we have to generate indices into the context struct dynamically
@@ -168,15 +172,19 @@ private:
 	std::bitset<maxActiveChannels> activeChannels;
 	std::bitset<maxActiveChannels> propagatedChannels;
 
+	Steinberg::int32 cntMeters = 0;
+	std::unique_ptr<Steinberg::int32[]> meterIds;
+
 	struct GetChunkMessage;
 	void* mainThread = nullptr;
-	bool wantsSetChunk = false;
 	Steinberg::Base::Thread::FLock msgQueueLock;
 	std::list<GetChunkMessage*> msgQueue;
-
-	bool mSimBypass = false;
+	bool wantsSetChunk = false;
+	
+	bool mSimulateBypass = false;
 	bool mBypass = false;
 	float mBypassGain = 1.0;
+	float* mMetersTmp = nullptr;
 
 	friend class AAXWrapper_Parameters;
 	friend class AAXWrapper_GUI;

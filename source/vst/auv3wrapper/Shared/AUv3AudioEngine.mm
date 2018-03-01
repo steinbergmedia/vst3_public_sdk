@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,19 +35,19 @@
 //-----------------------------------------------------------------------------
 
 #import "AUv3AudioEngine.h"
-#import "audiounitconfig.h"
+#import "../audiounitconfig.h"
 
 @implementation AUv3AudioEngine
 {
-	AVAudioEngine *audioEngine;
-	AVAudioFile *audioFile;
-	AVAudioPCMBuffer *audioPCMBuffer;
-	AVAudioPlayerNode *playerNode;
+	AVAudioEngine* audioEngine;
+	AVAudioFile* audioFile;
+	AVAudioPCMBuffer* audioPCMBuffer;
+	AVAudioPlayerNode* playerNode;
 	UInt32 componentType;
 	BOOL playing;
 	BOOL isDone;
-	MIDIPortRef *inputPort;
-	MIDIClientRef *midiClient;
+	MIDIPortRef* inputPort;
+	MIDIClientRef* midiClient;
 }
 
 //------------------------------------------------------------------------

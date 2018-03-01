@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ namespace Steinberg {
 FUnknown* gStandardPluginContext = nullptr;
 }
 
-#if WINDOWS
+#if SMTG_OS_WINDOWS
 #include <windows.h>
 #include <conio.h>
 #endif
@@ -70,53 +70,53 @@ class TestSuite : public ITestSuite, public FObject
 public:
 	TestSuite (FIDString _name) : name (_name) {}
 
-	tresult PLUGIN_API addTest (FIDString name, ITest* test) SMTG_OVERRIDE
+	tresult PLUGIN_API addTest (FIDString _name, ITest* test) SMTG_OVERRIDE
 	{
-		tests.push_back (IPtr<Test> (NEW Test (name, test), false));
+		tests.push_back (IPtr<Test> (NEW Test (_name, test), false));
 		return kResultTrue;
 	}
 
-	tresult PLUGIN_API addTestSuite (FIDString name, ITestSuite* testSuite) SMTG_OVERRIDE
+	tresult PLUGIN_API addTestSuite (FIDString _name, ITestSuite* testSuite) SMTG_OVERRIDE
 	{
-		testSuites.push_back (std::make_pair (name, testSuite));
+		testSuites.push_back (std::make_pair (_name, testSuite));
 		return kResultTrue;
 	}
 
-	tresult PLUGIN_API setEnvironment (ITest* environment) SMTG_OVERRIDE
+	tresult PLUGIN_API setEnvironment (ITest* /*environment*/) SMTG_OVERRIDE
 	{
 		return kNotImplemented;
 	}
 
 	int32 getTestCount () const { return static_cast<int32> (tests.size ()); }
 
-	tresult getTest (int32 index, ITest*& test, std::string& name) const
+	tresult getTest (int32 index, ITest*& _test, std::string& _name) const
 	{
-		Test* _test = tests.at (index);
-		if (_test)
+		Test* test = tests.at (index);
+		if (test)
 		{
-			test = _test->test;
-			name = _test->name;
+			_test = test->test;
+			_name = test->name;
 			return kResultTrue;
 		}
 		return kResultFalse;
 	}
 
-	tresult getTestSuite (int32 index, ITestSuite*& testSuite, std::string& name) const
+	tresult getTestSuite (int32 index, ITestSuite*& testSuite, std::string& _name) const
 	{
 		if (index < 0 || index >= int32 (testSuites.size ()))
 			return kInvalidArgument;
 		const TestSuitePair& ts = testSuites[index];
-		name = ts.first;
+		_name = ts.first;
 		testSuite = ts.second;
 		return kResultTrue;
 	}
 
-	ITestSuite* getTestSuite (FIDString name) const
+	ITestSuite* getTestSuite (FIDString _name) const
 	{
 		for (TestSuiteVector::const_iterator it = testSuites.cbegin (), end = testSuites.cend ();
 		     it != end; ++it)
 		{
-			if (it->first == name)
+			if (it->first == _name)
 				return it->second;
 		}
 		return nullptr;
@@ -296,7 +296,7 @@ int Validator::run ()
 
 	const char* path = files.front ().c_str ();
 
-#if WINDOWS
+#if SMTG_OS_WINDOWS
 	// TODO: Impl
 #else
 	std::string absPath;
@@ -334,7 +334,7 @@ int Validator::run ()
 		*errorStream << "Invalid Module!\n";
 		if (!error.empty())
 			*errorStream << error << "\n";
-		return 0;
+		return -1;
 	}
 
 	auto factory = module->getFactory ();
@@ -392,19 +392,18 @@ int Validator::run ()
 		testModule = Module::create (customTestComponentPath, error);
 		if (testModule)
 		{
-			const auto& factory = testModule->getFactory ();
-			for (const auto& classInfo : factory.classInfos ())
+			const auto& _factory = testModule->getFactory ();
+			for (const auto& classInfo : _factory.classInfos ())
 			{
 				if (filterClassCategory (kTestClass, classInfo.category ().data ()))
 				{	// gather test factories supplied by the Plug-in
-					if (auto testFactory = factory.createInstance<ITestFactory>(classInfo.ID ()))
+					if (auto testFactory = _factory.createInstance<ITestFactory>(classInfo.ID ()))
 					{
 						testFactories.insert (std::make_pair (classInfo.name ().data (), testFactory));
 					}
 				}
 			}
 		}
-
 	}
 	if (infoStream && !testFactories.empty ())
 		*infoStream << "* Creating Plug-in supplied tests...\n\n";
@@ -437,7 +436,7 @@ int Validator::run ()
 		*infoStream << "Result: " << numTestsPassed << " tests passed, " << numTestsFailed << " tests failed\n";
 		*infoStream << SEPARATOR;
 
-	#if 0 // WINDOWS && _DEBUG
+	#if 0 // SMTG_OS_WINDOWS && _DEBUG
 		// TODO: running the validator as post build step makes the build hang
 		*infoStream << "Press any key to continue...";
 		getch ();
@@ -535,9 +534,9 @@ void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plu
 }
 
 //------------------------------------------------------------------------
-void Validator::addTest (ITestSuite* testSuite, VstTestBase* testItem)
+void Validator::addTest (ITestSuite* _testSuite, VstTestBase* testItem)
 {
-	testSuite->addTest (testItem->getName (), testItem);
+	_testSuite->addTest (testItem->getName (), testItem);
 	testItem->release ();
 }
 

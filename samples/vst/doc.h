@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ and an example of pitchnames support Plug-in (\ref PitchNames) and...:
 - \ref programchange
 
 Note: They use cmake as project generator: \ref cmakeUse
-
+\nIn order to add your own plug-ins check: \ref addownplugs
 \n
 \n
 ***************************

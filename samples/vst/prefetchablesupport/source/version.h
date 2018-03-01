@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -57,11 +57,11 @@
 #define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
 #define stringOriginalFilename	"IPrefetchableSupport.vst3"
-#if PLATFORM_64
+#if SMTG_PLATFORM_64
 #define stringFileDescription	"IPrefetchableSupport VST3-SDK (64Bit)"
 #else
 #define stringFileDescription	"IPrefetchableSupport VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2017 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2018 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

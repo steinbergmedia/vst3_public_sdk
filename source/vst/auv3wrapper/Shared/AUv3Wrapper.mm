@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -83,7 +83,6 @@ protected:
 };
 
 namespace Vst {
-const ParamID kNoParamId = std::numeric_limits<ParamID>::max ();
 
 //------------------------------------------------------------------------
 static CFStringRef createCFStringFromString128 (const String128& string)
@@ -92,6 +91,7 @@ static CFStringRef createCFStringFromString128 (const String128& string)
 	return CFStringCreateWithCharacters (0, (const UniChar*)string, str.getLength ());
 }
 
+//------------------------------------------------------------------------
 static SpeakerArrangement numChannelsToSpeakerArrangement (UInt32 numChannels)
 {
 	switch (numChannels)
@@ -244,7 +244,7 @@ class ComponentHelper : public IComponentHandler
 {
 public:
 	ComponentHelper (void* audioUnit);
-	~ComponentHelper ();
+	virtual ~ComponentHelper ();
 
 	__weak AUv3Wrapper* auv3Wrapper;
 
@@ -263,7 +263,6 @@ ComponentHelper::ComponentHelper (void* audioUnit)
 {
 	FUNKNOWN_CTOR
 	auv3Wrapper = (__bridge AUv3Wrapper*)audioUnit;
-	;
 }
 
 //------------------------------------------------------------------------
@@ -529,7 +528,7 @@ struct RenderMidiEventContext
 		if (prgChange || (cn >= 0 && (midiMapping->getMidiControllerAssignment (
 		                                  0, midiEvent.cable, cn, pid) == kResultTrue)))
 		{
-			ASSERT (false);
+			SMTG_ASSERT (false);
 			editPerformer.performEdit (pid, value);
 
 			// make sure that our edit controller get the changes
@@ -1078,9 +1077,12 @@ using namespace Vst;
 	    };
 
 	parameterObserverToken = [parameterTreeVar
-	    tokenByAddingParameterObserver:^(AUParameterAddress address, AUValue value) {
-		  [weakSelf setControllerParameter:(int)address value:value];
-	    }];
+		tokenByAddingParameterObserver:^(AUParameterAddress address, AUValue value) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				__strong AUv3Wrapper *strongSelf = weakSelf;
+				[strongSelf setControllerParameter:(int)address value:value];
+			});
+		}];
 
 	// A function to provide the parameter values of string representations.
 	parameterTreeVar.implementorValueFromStringCallback = ^(AUParameter* param, NSString* string) {

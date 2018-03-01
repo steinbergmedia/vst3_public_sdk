@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,6 +44,7 @@
 #include "pluginterfaces/base/futils.h"
 
 #include <stdio.h>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -72,6 +73,8 @@ tresult PLUGIN_API Plug::initialize (FUnknown* context)
 	// we want a stereo Input and a Stereo Output
 	addAudioInput (STR16 ("Stereo In"), SpeakerArr::kStereo);
 	addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
+
+	addEventInput (STR16 ("Event In"), 1);
 
 	return kResultOk;
 }
@@ -209,42 +212,29 @@ tresult PLUGIN_API Plug::setState (IBStream* state)
 {
 	// called when we load a preset, the model has to be reloaded
 
+	if (!state)
+		return kResultFalse;
+
+	IBStreamer streamer (state, kLittleEndian);
+
+	// read the bypass
 	int32 savedBypass = 0;
-	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-	{
+	if (streamer.readInt32 (savedBypass) == false)
 		return kResultFalse;
-	}
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedBypass)
-#endif
-
-	bBypass = savedBypass > 0;
-
-	//--- -----
+	// read the program
 	int32 savedProgram = 0;
-	if (state->read (&savedProgram, sizeof (int32)) != kResultOk)
-	{
+	if (streamer.readInt32 (savedProgram) == false)
 		return kResultFalse;
-	}
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedProgram)
-#endif
-
-	currentProgram = savedProgram;
 
 	// read the Gain param
-	float val;
-	if (state->read (&val, sizeof (val)) != kResultOk)
-	{
+	float savedGain = 0.f;
+	if (streamer.readFloat (savedGain) == false)
 		return kResultFalse;
-	}
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (val)
-#endif
-	currentGainValue = val;
+	bBypass = savedBypass > 0;
+	currentProgram = savedProgram;
+	currentGainValue = savedGain;
 
 	return kResultOk;
 }
@@ -254,30 +244,16 @@ tresult PLUGIN_API Plug::getState (IBStream* state)
 {
 	// here we need to save the model
 
-	int32 toSaveBypass = bBypass ? 1 : 0;
+	if (!state)
+		return kResultFalse;
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveBypass)
-#endif
-	state->write (&toSaveBypass, sizeof (toSaveBypass));
+	IBStreamer streamer (state, kLittleEndian);
 
-	//--- -----
-	int32 toSaveProgram = currentProgram;
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveProgram)
-#endif
-	state->write (&toSaveProgram, sizeof (toSaveProgram));
-
-	//--- -----
-	float toSaveGain = currentGainValue;
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveGain)
-#endif
-	state->write (&toSaveGain, sizeof (toSaveGain));
+	streamer.writeInt32 (bBypass ? 1 : 0);
+	streamer.writeInt32 (currentProgram);
+	streamer.writeFloat (currentGainValue);
 
 	return kResultOk;
 }
-}
-} // namespaces
+
+}} // namespaces

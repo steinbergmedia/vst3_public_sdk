@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@
 
 #include "public.sdk/source/vst/vsteditcontroller.h"
 
-#if MAC
+#if SMTG_OS_MACOS
 #include <TargetConditionals.h>
 #endif
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -34,8 +34,7 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#ifndef AUv3Wrapper_h
-#define AUv3Wrapper_h
+#pragma once
 
 #import <CoreAudioKit/AUViewController.h>
 
@@ -43,7 +42,7 @@
 
 @interface AUv3WrapperViewController : AUViewController
 
-@property (nonatomic) AUv3Wrapper* audioUnit;
+@property (nonatomic, assign) AUv3Wrapper* audioUnit;
 
 @end
 
@@ -54,4 +53,3 @@
 - (void)onTimer;
 @end
 
-#endif /* AUv3Wrapper_h */

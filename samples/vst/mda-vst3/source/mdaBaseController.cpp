@@ -18,6 +18,8 @@
 #include "mdaParameter.h"
 #include "helpers.h"
 #include "pluginterfaces/base/ibstream.h"
+#include "base/source/fstreamer.h"
+
 namespace Steinberg {
 namespace Vst {
 namespace mda {
@@ -113,44 +115,43 @@ tresult PLUGIN_API BaseController::notify (IMessage* message)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 {
+	if (!state)
+		return kResultFalse;
+
+	IBStreamer streamer (state, kLittleEndian);
+
 	uint32 temp;
-	state->read (&temp, sizeof (uint32)); // numParams or Header
-	SWAP32_BE (temp);
+	streamer.readInt32u (temp); // numParams or Header
 
 	if (temp == BaseController::kMagicNumber)
 	{
 		// read current Program
-		state->read (&temp, sizeof (uint32));
-		SWAP32_BE (temp);
+		streamer.readInt32u (temp);
 		Parameter* param = parameters.getParameter (kPresetParam);
 		if (param)
-		{
-			param->setNormalized(param->toNormalized (temp));
-		}
+			param->setNormalized (param->toNormalized (temp));
 
-		state->read (&temp, sizeof (uint32)); // numParams
-		SWAP32_BE (temp);
+		// numParams
+		streamer.readInt32u (temp);
 	}
 
+	// read each parameter
 	for (uint32 i = 0; i < temp; i++)
 	{
 		ParamValue value;
-		if (state->read (&value, sizeof (ParamValue)) == kResultTrue)
-		{
-			SWAP64_BE (value);
-			setParamNormalized (i, value);
-		}
+		if (streamer.readDouble (value) == false)
+			return kResultFalse;
+		setParamNormalized (i, value);
 	}
-	int32 bypassState;
-	if (state->read (&bypassState, sizeof (bypassState)) == kResultTrue)
-	{
-		Parameter* bypassParam = parameters.getParameter (kBypassParam);
-		if (bypassParam)
-		{
-			SWAP32_BE (bypassState);
-			bypassParam->setNormalized (bypassState);
-		}
-	}
+
+	// bypass
+	uint32 bypassState;
+	if (streamer.readInt32u (bypassState) == false)
+		return kResultFalse;
+
+	Parameter* bypassParam = parameters.getParameter (kBypassParam);
+	if (bypassParam)
+		bypassParam->setNormalized (bypassState);
 
 	return kResultTrue;
 }

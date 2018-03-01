@@ -5,40 +5,41 @@
 // Filename    : public.sdk/source/vst/interappaudio/PresetManager.mm
 // Created by  : Steinberg, 10/2013
 // Description : VST 3 InterAppAudio
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #import "PresetManager.h"
-#import "public.sdk/source/vst/vstpresetfile.h"
-#import "pluginterfaces/vst/ivstattributes.h"
 #import "PresetBrowserViewController.h"
 #import "PresetSaveViewController.h"
+#import "public.sdk/source/vst/vstpresetfile.h"
+#import "pluginterfaces/vst/ivstattributes.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -48,14 +49,14 @@ namespace InterAppAudio {
 class PresetStream : public ReadOnlyBStream, public IStreamAttributes
 {
 public:
-	PresetStream (IBStream* sourceStream, TSize sourceOffset, TSize sectionSize, const char* utf8Path)
-	: ReadOnlyBStream (sourceStream, sourceOffset, sectionSize)
-	, fileName (utf8Path)
+	PresetStream (IBStream* sourceStream, TSize sourceOffset, TSize sectionSize,
+	              const char* utf8Path)
+	: ReadOnlyBStream (sourceStream, sourceOffset, sectionSize), fileName (utf8Path)
 	{
 		fileName.toWideString (kCP_Utf8);
 	}
 
-	virtual tresult PLUGIN_API getFileName (String128 name)
+	virtual tresult PLUGIN_API getFileName (String128 name) override
 	{
 		if (fileName.length () > 0)
 		{
@@ -64,10 +65,10 @@ public:
 		}
 		return kResultFalse;
 	}
-	virtual IAttributeList* PLUGIN_API getAttributes () { return 0; }
+	virtual IAttributeList* PLUGIN_API getAttributes () override { return nullptr; }
 
-	DEF_INTERFACES_1(IStreamAttributes, ReadOnlyBStream)
-	REFCOUNT_METHODS(ReadOnlyBStream)
+	DEF_INTERFACES_1 (IStreamAttributes, ReadOnlyBStream)
+	REFCOUNT_METHODS (ReadOnlyBStream)
 protected:
 	String fileName;
 };
@@ -91,14 +92,23 @@ NSArray* PresetManager::getPresetPaths (PresetPathType type)
 {
 	if (type == kFactory)
 	{
-		return [[NSBundle mainBundle] URLsForResourcesWithExtension:@"vstpreset" subdirectory:@"Presets"];
+		return [[NSBundle mainBundle] URLsForResourcesWithExtension:@"vstpreset"
+		                                               subdirectory:@"Presets"];
 	}
 	NSFileManager* fs = [NSFileManager defaultManager];
-	NSURL* documentsUrl = [fs URLForDirectory:NSDocumentDirectory inDomain:NSUserDomainMask appropriateForURL:Nil create:YES error:NULL];
+	NSURL* documentsUrl = [fs URLForDirectory:NSDocumentDirectory
+	                                 inDomain:NSUserDomainMask
+	                        appropriateForURL:Nil
+	                                   create:YES
+	                                    error:NULL];
 	if (documentsUrl)
 	{
 		NSMutableArray* userUrls = [NSMutableArray new];
-		NSDirectoryEnumerator* enumerator = [fs enumeratorAtURL:documentsUrl includingPropertiesForKeys:nil options:NSDirectoryEnumerationSkipsSubdirectoryDescendants errorHandler:nil];
+		NSDirectoryEnumerator* enumerator =
+		    [fs enumeratorAtURL:documentsUrl
+		        includingPropertiesForKeys:nil
+		                           options:NSDirectoryEnumerationSkipsSubdirectoryDescendants
+		                      errorHandler:nil];
 		for (NSURL* url in enumerator.allObjects)
 		{
 			if ([[url pathExtension] isEqualToString:@"vstpreset"])
@@ -107,8 +117,8 @@ NSArray* PresetManager::getPresetPaths (PresetPathType type)
 			}
 		}
 		return [userUrls sortedArrayUsingComparator:^NSComparisonResult (NSURL* obj1, NSURL* obj2) {
-					return [[obj1 lastPathComponent] caseInsensitiveCompare:[obj2 lastPathComponent]];
-				}];
+		  return [[obj1 lastPathComponent] caseInsensitiveCompare:[obj2 lastPathComponent]];
+		}];
 	}
 	return nil;
 }
@@ -120,18 +130,20 @@ tresult PLUGIN_API PresetManager::runLoadPresetBrowser ()
 		return kResultFalse;
 
 	addRef ();
-	visiblePresetBrowserViewController = [[PresetBrowserViewController alloc] initWithCallback:[this](const char* path) {
-											  loadPreset (path);
-											  visiblePresetBrowserViewController = nil;
-											  release ();
-										  }];
+	visiblePresetBrowserViewController =
+	    [[PresetBrowserViewController alloc] initWithCallback:[this] (const char* path) {
+		    loadPreset (path);
+		    visiblePresetBrowserViewController = nil;
+		    release ();
+	    }];
 	addRef ();
 	dispatch_async (dispatch_get_global_queue (DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-		if (visiblePresetBrowserViewController)
-		{
-			[visiblePresetBrowserViewController setFactoryPresets:getPresetPaths (kFactory) userPresets:getPresetPaths (kUser)];
-		}
-		release ();
+	  if (visiblePresetBrowserViewController)
+	  {
+		  [visiblePresetBrowserViewController setFactoryPresets:getPresetPaths (kFactory)
+			                                        userPresets:getPresetPaths (kUser)];
+	  }
+	  release ();
 	});
 	return kResultTrue;
 }
@@ -143,11 +155,12 @@ tresult PLUGIN_API PresetManager::runSavePresetBrowser ()
 		return kResultFalse;
 
 	addRef ();
-	visibleSavePresetViewController = [[PresetSaveViewController alloc] initWithCallback:[this](const char* path) {
-										   savePreset (path);
-										   visibleSavePresetViewController = nil;
-										   release ();
-									   }];
+	visibleSavePresetViewController =
+	    [[PresetSaveViewController alloc] initWithCallback:[this] (const char* path) {
+		    savePreset (path);
+		    visibleSavePresetViewController = nil;
+		    release ();
+	    }];
 	return kResultTrue;
 }
 
@@ -166,22 +179,25 @@ tresult PLUGIN_API PresetManager::loadPreviousPreset ()
 //-----------------------------------------------------------------------------
 tresult PresetManager::loadPreset (bool next)
 {
-	NSArray* presets = [[getPresetPaths (kFactory) arrayByAddingObjectsFromArray:getPresetPaths (kUser)] sortedArrayUsingComparator:^NSComparisonResult (NSURL* obj1, NSURL* obj2) {
-		return [[obj1 lastPathComponent] caseInsensitiveCompare:[obj2 lastPathComponent]];
-	}];
+	NSArray* presets =
+	    [[getPresetPaths (kFactory) arrayByAddingObjectsFromArray:getPresetPaths (kUser)]
+	        sortedArrayUsingComparator:^NSComparisonResult (NSURL* obj1, NSURL* obj2) {
+		      return [[obj1 lastPathComponent] caseInsensitiveCompare:[obj2 lastPathComponent]];
+	        }];
 
 	__block NSUInteger index = NSNotFound;
-	if (lastPreset.isEmpty() == false)
+	if (lastPreset.isEmpty () == false)
 	{
-		NSURL* lastUrl = [[NSURL fileURLWithPath:[NSString stringWithUTF8String:lastPreset]] fileReferenceURL];
+		NSURL* lastUrl =
+		    [[NSURL fileURLWithPath:[NSString stringWithUTF8String:lastPreset]] fileReferenceURL];
 		if (lastUrl)
 		{
-			[presets enumerateObjectsUsingBlock:^(NSURL* obj, NSUInteger idx, BOOL *stop) {
-				if ([[obj fileReferenceURL] isEqual:lastUrl])
-				{
-					index = idx;
-					*stop = YES;
-				}
+			[presets enumerateObjectsUsingBlock:^(NSURL* obj, NSUInteger idx, BOOL* stop) {
+			  if ([[obj fileReferenceURL] isEqual:lastUrl])
+			  {
+				  index = idx;
+				  *stop = YES;
+			  }
 			}];
 		}
 	}
@@ -221,7 +237,8 @@ tresult PresetManager::loadPreset (const char* path)
 		IPtr<IBStream> stream = owned (FileStream::open (path, "r"));
 		if (stream)
 		{
-			[[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithUTF8String:path] forKey:@"PresetManager|lastPreset"];
+			[[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithUTF8String:path]
+			                                          forKey:@"PresetManager|lastPreset"];
 			lastPreset = path;
 			FUnknownPtr<IComponent> component (plugin->getAudioProcessor ());
 			IEditController* controller = plugin->getEditController ();
@@ -233,12 +250,13 @@ tresult PresetManager::loadPreset (const char* path)
 				if (pf.getClassID () != cid)
 					return kResultFalse;
 				const PresetFile::Entry* e = pf.getEntry (kComponentState);
-				if (e == 0)
+				if (e == nullptr)
 					return kResultFalse;
-				char* filename = strrchr (path, '/');
+				auto filename = strrchr (path, '/');
 				if (filename)
 					filename++;
-				IPtr<PresetStream> readOnlyBStream = owned (new PresetStream (stream, e->offset, e->size, filename));
+				IPtr<PresetStream> readOnlyBStream =
+				    owned (new PresetStream (stream, e->offset, e->size, filename));
 				tresult result = component->setState (readOnlyBStream);
 				if ((result == kResultTrue || result == kNotImplemented) && controller)
 				{
@@ -249,7 +267,8 @@ tresult PresetManager::loadPreset (const char* path)
 						e = pf.getEntry (kControllerState);
 						if (e)
 						{
-							readOnlyBStream = owned (new PresetStream (stream, e->offset, e->size, filename));
+							readOnlyBStream =
+							    owned (new PresetStream (stream, e->offset, e->size, filename));
 							controller->setState (readOnlyBStream);
 						}
 					}
@@ -277,5 +296,6 @@ void PresetManager::savePreset (const char* path)
 		loadPreset (path);
 	}
 }
-
-}}} // namespaces
+}
+}
+} // namespaces

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,35 +47,38 @@
 #include "AudioUnits/AUPublic/OtherBases/MusicDeviceBase.h"
 #define AUWRAPPER_BASE_CLASS MusicDeviceBase
 #endif
+
+#include "public.sdk/source/vst/hosting/eventlist.h"
+#include "public.sdk/source/vst/hosting/parameterchanges.h"
+#include "public.sdk/source/vst/hosting/processdata.h"
+#include "base/source/fstring.h"
+#include "base/source/timer.h"
+#include "base/thread/include/flock.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/ivstunits.h"
-#include "public.sdk/source/vst/hosting/parameterchanges.h"
-#include "public.sdk/source/vst/hosting/processdata.h"
-#include "public.sdk/source/vst/hosting/eventlist.h"
-#include "base/source/timer.h"
-#include "base/source/fstring.h"
-#include "base/thread/include/flock.h"
-#include <Cocoa/Cocoa.h>
+
 #include <AudioToolbox/AudioToolbox.h>
-#include <vector>
+#include <Cocoa/Cocoa.h>
 #include <map>
+#include <vector>
 
 namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-typedef struct MIDIMessageInfoStruct {
-	UInt8	status;
-	UInt8	channel;
-	UInt8	data1;
-	UInt8	data2;
-	UInt32	startFrame;
+typedef struct MIDIMessageInfoStruct
+{
+	UInt8 status;
+	UInt8 channel;
+	UInt8 data1;
+	UInt8 data2;
+	UInt32 startFrame;
 } MIDIMessageInfoStruct;
 
 //------------------------------------------------------------------------
-class MIDIOutputCallbackHelper 
+class MIDIOutputCallbackHelper
 {
 public:
 	MIDIOutputCallbackHelper ()
@@ -83,7 +86,7 @@ public:
 		mMIDIMessageList.reserve (16);
 		mMIDICallbackStruct.midiOutputCallback = NULL;
 	}
-	virtual	~MIDIOutputCallbackHelper () {};
+	virtual ~MIDIOutputCallbackHelper () {};
 
 	void SetCallbackInfo (AUMIDIOutputCallback callback, void* userData)
 	{
@@ -93,7 +96,7 @@ public:
 
 	void AddEvent (UInt8 status, UInt8 channel, UInt8 data1, UInt8 data2, UInt32 inStartFrame)
 	{
-		MIDIMessageInfoStruct info = {status, channel, data1, data2, inStartFrame};	
+		MIDIMessageInfoStruct info = {status, channel, data1, data2, inStartFrame};
 		mMIDIMessageList.push_back (info);
 	}
 
@@ -106,22 +109,26 @@ public:
 			std::vector<MIDIMessageInfoStruct>::iterator myIterator;
 			MIDIPacketList* pktlist = PacketList ();
 
-			for (myIterator = mMIDIMessageList.begin (); myIterator != mMIDIMessageList.end (); myIterator++)
+			for (myIterator = mMIDIMessageList.begin (); myIterator != mMIDIMessageList.end ();
+			     myIterator++)
 			{
 				MIDIMessageInfoStruct item = *myIterator;
-			
+
 				MIDIPacket* pkt = MIDIPacketListInit (pktlist);
 				bool tooBig = false;
-				Byte data[3] = { item.status, item.data1, item.data2 };
-				if ((pkt = MIDIPacketListAdd (pktlist, sizeof (mBuffersAllocated), pkt, item.startFrame, 4, const_cast<Byte*>(data))) == NULL)
+				Byte data[3] = {item.status, item.data1, item.data2};
+				if ((pkt = MIDIPacketListAdd (pktlist, sizeof (mBuffersAllocated), pkt,
+				                              item.startFrame, 4, const_cast<Byte*> (data))) ==
+				    NULL)
 					tooBig = true;
 
 				if (tooBig)
-				{	// send what we have and then clear the buffer and send again
+				{ // send what we have and then clear the buffer and send again
 					// issue the callback with what we got
-					OSStatus result = mMIDICallbackStruct.midiOutputCallback (mMIDICallbackStruct.userData, &inTimeStamp, 0, pktlist);
+					OSStatus result = mMIDICallbackStruct.midiOutputCallback (
+					    mMIDICallbackStruct.userData, &inTimeStamp, 0, pktlist);
 					if (result != noErr)
-						printf ("error calling output callback: %d", (int) result);
+						printf ("error calling output callback: %d", (int)result);
 
 					// clear stuff we've already processed, and fire again
 					mMIDIMessageList.erase (mMIDIMessageList.begin (), myIterator);
@@ -130,9 +137,10 @@ public:
 				}
 			}
 			// fire callback
-			OSStatus result = mMIDICallbackStruct.midiOutputCallback (mMIDICallbackStruct.userData, &inTimeStamp, 0, pktlist);
+			OSStatus result = mMIDICallbackStruct.midiOutputCallback (mMIDICallbackStruct.userData,
+			                                                          &inTimeStamp, 0, pktlist);
 			if (result != noErr)
-				printf ("error calling output callback: %d", (int) result);
+				printf ("error calling output callback: %d", (int)result);
 
 			mMIDIMessageList.clear ();
 		}
@@ -142,20 +150,16 @@ protected:
 	typedef std::vector<MIDIMessageInfoStruct> MIDIMessageList;
 
 private:
-	MIDIPacketList* PacketList () {return (MIDIPacketList*)mBuffersAllocated;}
+	MIDIPacketList* PacketList () { return (MIDIPacketList*)mBuffersAllocated; }
 
 	Byte mBuffersAllocated[1024];
 	AUMIDIOutputCallbackStruct mMIDICallbackStruct;
-	MIDIMessageList	mMIDIMessageList;
+	MIDIMessageList mMIDIMessageList;
 };
 
-
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
-class AUWrapper
-: public AUWRAPPER_BASE_CLASS
-, public IComponentHandler
-, public ITimerCallback
+class AUWrapper : public AUWRAPPER_BASE_CLASS, public IComponentHandler, public ITimerCallback
 {
 public:
 	AUWrapper (ComponentInstanceRecord* ci);
@@ -239,12 +243,12 @@ protected:
 	void syncParameterValues ();
 	void cacheParameterValues ();
 	void clearParameterValueCache ();
-	
+
 	virtual IPluginFactory* getFactory ();
 	void loadVST3Module ();
 	void unloadVST3Module ();
-	bool validateChannelPair (int inChannelsIn, int inChannelsOut, const AUChannelInfo* info, UInt32 numChanInfo) const;
-
+	bool validateChannelPair (int inChannelsIn, int inChannelsOut, const AUChannelInfo* info,
+	                          UInt32 numChanInfo) const;
 
 	IAudioProcessor* audioProcessor;
 	IEditController* editController;
@@ -287,6 +291,7 @@ protected:
 	int32 midiOutCount; // currently only 0 or 1 supported
 	MIDIOutputCallbackHelper mCallbackHelper;
 	EventList outputEvents;
+
 private:
 	void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units) const;
 };

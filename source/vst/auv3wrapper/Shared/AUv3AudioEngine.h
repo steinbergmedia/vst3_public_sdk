@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -34,19 +34,16 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#ifndef AUv3AudioEngine_h
-#define AUv3AudioEngine_h
+#pragma once
 
 #import <AVFoundation/AVFoundation.h>
 
 @interface AUv3AudioEngine : NSObject
 
-@property AUAudioUnit *currentAudioUnit;
+@property (assign) AUAudioUnit *currentAudioUnit;
 
 - (NSError*)loadAudioFile:(NSURL*) url;
 - (instancetype)initWithComponentType: (uint32_t) unitComponentType;
 - (void) loadAudioUnitWithComponentDescription: (AudioComponentDescription) desc completion:(void (^)(void))completionBlock;
 - (BOOL)startStop;
 @end
-
-#endif /* AUv3AudioEngine_h */

@@ -5,51 +5,51 @@
 // Filename    : public.sdk/source/vst/interappaudio/VST3Plugin.mm
 // Created by  : Steinberg, 08/2013.
 // Description : VST 3 InterAppAudio
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #import "VST3Plugin.h"
 #import "HostApp.h"
-#import "pluginterfaces/base/ipluginbase.h"
-#import "pluginterfaces/vst/ivstmessage.h"
-#import "pluginterfaces/vst/ivstmidicontrollers.h"
-#import "pluginterfaces/vst/ivstinterappaudio.h"
 #import "public.sdk/source/vst/auwrapper/NSDataIBStream.h"
 #import "public.sdk/source/vst/hosting/hostclasses.h"
 #import "base/source/updatehandler.h"
+#import "pluginterfaces/base/ipluginbase.h"
+#import "pluginterfaces/vst/ivstinterappaudio.h"
+#import "pluginterfaces/vst/ivstmessage.h"
+#import "pluginterfaces/vst/ivstmidicontrollers.h"
 #import <libkern/OSAtomic.h>
 
 //------------------------------------------------------------------------
-extern "C"
-{
-	bool bundleEntry (CFBundleRef);
-	bool bundleExit (void);
+extern "C" {
+bool bundleEntry (CFBundleRef);
+bool bundleExit (void);
 }
 
 namespace Steinberg {
@@ -57,24 +57,18 @@ namespace Vst {
 namespace InterAppAudio {
 
 //------------------------------------------------------------------------
-__attribute__((constructor))
-static void InitUpdateHandler ()
+__attribute__ ((constructor)) static void InitUpdateHandler ()
 {
 	UpdateHandler::instance ();
 }
 
 //------------------------------------------------------------------------
 VST3Plugin::VST3Plugin ()
-: processor (0)
-, editController (0)
-, timer (0)
-, processing (false)
 {
 	processData.processContext = &processContext;
 	processData.inputParameterChanges = &inputParamChanges;
 	processData.outputParameterChanges = &outputParamChanges;
 	processData.inputEvents = &inputEvents;
-
 }
 
 //------------------------------------------------------------------------
@@ -85,7 +79,7 @@ VST3Plugin::~VST3Plugin ()
 //------------------------------------------------------------------------
 bool VST3Plugin::init ()
 {
-	if (processor == 0 && editController == 0)
+	if (processor == nullptr && editController == nullptr)
 	{
 		::bundleEntry (CFBundleGetMainBundle ());
 		createProcessorAndController ();
@@ -97,9 +91,9 @@ bool VST3Plugin::init ()
 void VST3Plugin::createProcessorAndController ()
 {
 	Steinberg::IPluginFactory* factory = GetPluginFactory ();
-	if (factory == 0)
+	if (factory == nullptr)
 		return;
-	IComponent* component = 0;
+	IComponent* component = nullptr;
 	PClassInfo classInfo;
 	int32 classCount = factory->countClasses ();
 	for (int32 i = 0; i < classCount; i++)
@@ -108,7 +102,8 @@ void VST3Plugin::createProcessorAndController ()
 			return;
 		if (strcmp (classInfo.category, kVstAudioEffectClass) == 0)
 		{
-			if (factory->createInstance (classInfo.cid, IComponent::iid, (void **)&component) != kResultTrue)
+			if (factory->createInstance (classInfo.cid, IComponent::iid, (void**)&component) !=
+			    kResultTrue)
 			{
 				return;
 			}
@@ -117,24 +112,28 @@ void VST3Plugin::createProcessorAndController ()
 	}
 	if (component)
 	{
-		if (component->initialize (InterAppAudioHostApp::instance ()->unknownCast ()) != kResultTrue)
+		if (component->initialize (InterAppAudioHostApp::instance ()->unknownCast ()) !=
+		    kResultTrue)
 		{
 			component->release ();
 			return;
 		}
-		if (component->queryInterface (IEditController::iid, (void**)&editController) != kResultTrue)
+		if (component->queryInterface (IEditController::iid, (void**)&editController) !=
+		    kResultTrue)
 		{
-			FUID controllerCID;
-			if (component->getControllerClassId (controllerCID) == kResultTrue && controllerCID.isValid ())
+			TUID controllerCID {};
+			if (component->getControllerClassId (controllerCID) == kResultTrue)
 			{
-				if (factory->createInstance (controllerCID, IEditController::iid, (void**)&editController) != kResultTrue)
+				if (factory->createInstance (controllerCID, IEditController::iid,
+				                             (void**)&editController) != kResultTrue)
 					return;
 				editController->setComponentHandler (this);
-				if (editController->initialize (InterAppAudioHostApp::instance ()->unknownCast ()) != kResultTrue)
+				if (editController->initialize (
+				        InterAppAudioHostApp::instance ()->unknownCast ()) != kResultTrue)
 				{
 					component->release ();
 					editController->release ();
-					editController = 0;
+					editController = nullptr;
 					return;
 				}
 				FUnknownPtr<IConnectionPoint> compConnection (component);
@@ -152,12 +151,12 @@ void VST3Plugin::createProcessorAndController ()
 			}
 		}
 		component->queryInterface (IAudioProcessor::iid, (void**)&processor);
-		if (processor == 0)
+		if (processor == nullptr)
 		{
 			if (editController)
 			{
 				editController->release ();
-				editController = 0;
+				editController = nullptr;
 			}
 		}
 		else
@@ -203,15 +202,17 @@ VST3Plugin::MIDIControllerToParamIDMap VST3Plugin::createMIDIControllerToParamID
 				}
 			}
 		}
-		
+
 		ParamID paramID;
 		for (int32 channel = 0; channel < channelCount; channel++)
 		{
 			for (CtrlNumber ctrler = 0; ctrler < kCountCtrlNumber; ctrler++)
 			{
-				if (midiMapping->getMidiControllerAssignment (0, channel, ctrler, paramID) == kResultTrue)
+				if (midiMapping->getMidiControllerAssignment (0, channel, ctrler, paramID) ==
+				    kResultTrue)
 				{
-					newMap.insert (std::make_pair (channelAndCtrlNumber (channel, ctrler), paramID));
+					newMap.insert (
+					    std::make_pair (channelAndCtrlNumber (channel, ctrler), paramID));
 				}
 			}
 		}
@@ -224,7 +225,7 @@ tresult VST3Plugin::scheduleEventFromUI (Event& event)
 {
 	if (event.type == Event::kNoteOnEvent)
 		event.noteOn.noteId = lastNodeID++;
-	return uiScheduledEvents.write (event) ? kResultTrue : kResultFalse;
+	return uiScheduledEvents.push (event) ? kResultTrue : kResultFalse;
 }
 
 //------------------------------------------------------------------------
@@ -257,7 +258,7 @@ bool VST3Plugin::setProcessorState (NSData* data)
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -299,7 +300,7 @@ void VST3Plugin::willStartAudio (AudioIO* audioIO)
 	ProcessSetup setup;
 	setup.processMode = kRealtime;
 	setup.symbolicSampleSize = kSample32;
-	setup.maxSamplesPerBlock = 4096;// TODO:
+	setup.maxSamplesPerBlock = 4096; // TODO:
 	setup.sampleRate = audioIO->getSampleRate ();
 	processor->setupProcessing (setup);
 	SpeakerArrangement inputs[1];
@@ -307,16 +308,17 @@ void VST3Plugin::willStartAudio (AudioIO* audioIO)
 	inputs[0] = SpeakerArr::kStereo;
 	outputs[0] = SpeakerArr::kStereo;
 	processor->setBusArrangements (inputs, 1, outputs, 1);
-	
+
 	FUnknownPtr<IComponent> comp (processor);
 	comp->setActive (true);
 
-	processData.prepare (*comp);
+	processData.prepare (*comp, setup.maxSamplesPerBlock, setup.symbolicSampleSize);
 
 	FUnknownPtr<IInterAppAudioConnectionNotification> iaaConnectionNotification (editController);
 	if (iaaConnectionNotification)
 	{
-		iaaConnectionNotification->onInterAppAudioConnectionStateChange (audioIO->getInterAppAudioConnected () ? true : false);
+		iaaConnectionNotification->onInterAppAudioConnectionStateChange (
+		    audioIO->getInterAppAudioConnected () ? true : false);
 	}
 
 	timer = Timer::create (this, 16);
@@ -325,21 +327,22 @@ void VST3Plugin::willStartAudio (AudioIO* audioIO)
 //------------------------------------------------------------------------
 void VST3Plugin::didStopAudio (AudioIO* audioIO)
 {
-	processor->setProcessing (false); // TODO: currently not called in Audio Thread as it should according to the VST3 spec
+	processor->setProcessing (false);
 	processing = false;
-	
+
 	FUnknownPtr<IComponent> comp (processor);
 	comp->setActive (false);
 	timer->release ();
-	timer = 0;
+	timer = nullptr;
 }
 
 //------------------------------------------------------------------------
-void VST3Plugin::onMIDIEvent (UInt32 inStatus, UInt32 data1, UInt32 data2, UInt32 sampleOffset, bool withinRealtimeThread)
+void VST3Plugin::onMIDIEvent (UInt32 inStatus, UInt32 data1, UInt32 data2, UInt32 sampleOffset,
+                              bool withinRealtimeThread)
 {
 	Event e = {};
 	e.flags = Event::kIsLive;
-	
+
 	uint16 status = inStatus & 0xF0;
 	uint16 channel = inStatus & 0x0F;
 	if (status == 0x90 && data2 != 0) // note on
@@ -378,7 +381,7 @@ void VST3Plugin::onMIDIEvent (UInt32 inStatus, UInt32 data1, UInt32 data2, UInt3
 	else if (status == 0x80 || (status == 0x90 && data2 == 0)) // note off
 	{
 		auto noteID = noteIDPitchMap.find ((channel << 8) + data1);
-		if (noteID != noteIDPitchMap.end())
+		if (noteID != noteIDPitchMap.end ())
 		{
 			e.type = Event::kNoteOffEvent;
 			e.noteOff.noteId = noteID->second;
@@ -472,7 +475,8 @@ void VST3Plugin::onMIDIEvent (UInt32 inStatus, UInt32 data1, UInt32 data2, UInt3
 }
 
 //------------------------------------------------------------------------
-void VST3Plugin::process (const AudioTimeStamp* timeStamp, UInt32 busNumber, UInt32 numFrames, AudioBufferList* ioData, bool& outputIsSilence, AudioIO* audioIO)
+void VST3Plugin::process (const AudioTimeStamp* timeStamp, UInt32 busNumber, UInt32 numFrames,
+                          AudioBufferList* ioData, bool& outputIsSilence, AudioIO* audioIO)
 {
 	if (processing == false)
 	{
@@ -489,19 +493,20 @@ void VST3Plugin::process (const AudioTimeStamp* timeStamp, UInt32 busNumber, UIn
 		processData.setChannelBuffer (kInput, 0, i, (float*)ioData->mBuffers[i].mData);
 		processData.setChannelBuffer (kOutput, 0, i, (float*)ioData->mBuffers[i].mData);
 	}
-	
+
 	Event e;
-	while (uiScheduledEvents.read (e))
+	while (uiScheduledEvents.pop (e))
 	{
 		inputEvents.addEvent (e);
 		if (e.type == Event::kNoteOnEvent)
 		{
 			auto noteID = noteIDPitchMap.find ((e.noteOn.channel << 8) + e.noteOn.pitch);
 			if (noteID == noteIDPitchMap.end ())
-				noteIDPitchMap.insert (std::make_pair ((e.noteOn.channel << 8) + e.noteOn.pitch, e.noteOn.noteId));
+				noteIDPitchMap.insert (
+				    std::make_pair ((e.noteOn.channel << 8) + e.noteOn.pitch, e.noteOn.noteId));
 		}
 	}
-	
+
 	processData.numSamples = numFrames;
 	inputParamChangeTransfer.transferChangesTo (inputParamChanges);
 	if (processor->process (processData) == kResultTrue)
@@ -521,7 +526,8 @@ void VST3Plugin::updateProcessContext (AudioIO* audioIO)
 	Float64 beat = 0., tempo = 0.;
 	if (audioIO->getBeatAndTempo (beat, tempo))
 	{
-		processContext.state |= ProcessContext::kTempoValid | ProcessContext::kProjectTimeMusicValid;
+		processContext.state |=
+		    ProcessContext::kTempoValid | ProcessContext::kProjectTimeMusicValid;
 		processContext.tempo = tempo;
 		processContext.projectTimeMusic = beat;
 	}
@@ -534,9 +540,11 @@ void VST3Plugin::updateProcessContext (AudioIO* audioIO)
 	Float32 timeSigNumerator = 0;
 	UInt32 timeSigDenominator = 0;
 	Float64 currentMeasureDownBeat = 0;
-	if (audioIO->getMusicalTimeLocation (deltaSampleOffsetToNextBeat, timeSigNumerator, timeSigDenominator, currentMeasureDownBeat))
+	if (audioIO->getMusicalTimeLocation (deltaSampleOffsetToNextBeat, timeSigNumerator,
+	                                     timeSigDenominator, currentMeasureDownBeat))
 	{
-		processContext.state |= ProcessContext::kTimeSigValid | ProcessContext::kBarPositionValid | ProcessContext::kClockValid;
+		processContext.state |= ProcessContext::kTimeSigValid | ProcessContext::kBarPositionValid |
+		                        ProcessContext::kClockValid;
 		processContext.timeSigNumerator = timeSigNumerator;
 		processContext.timeSigDenominator = timeSigDenominator;
 		processContext.samplesToNextClock = deltaSampleOffsetToNextBeat;
@@ -549,7 +557,9 @@ void VST3Plugin::updateProcessContext (AudioIO* audioIO)
 	Boolean isCycling;
 	Float64 cycleStartBeat;
 	Float64 cycleEndBeat;
-	if (audioIO->getTransportState (isPlaying, isRecording, transportStateChanged, currentSampleInTimeLine, isCycling, cycleStartBeat, cycleEndBeat))
+	if (audioIO->getTransportState (isPlaying, isRecording, transportStateChanged,
+	                                currentSampleInTimeLine, isCycling, cycleStartBeat,
+	                                cycleEndBeat))
 	{
 		processContext.state |= ProcessContext::kCycleValid;
 		processContext.cycleStartMusic = cycleStartBeat;
@@ -603,5 +613,6 @@ void VST3Plugin::onTimer (Timer* timer)
 	}
 	UpdateHandler::instance ()->triggerDeferedUpdates ();
 }
-
-}}}
+}
+}
+}

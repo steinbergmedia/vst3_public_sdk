@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -46,6 +46,8 @@
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
+
+#include "base/source/fstring.h"
 
 #include <cstdio>
 #include <math.h>
@@ -557,7 +559,12 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 
 	if (foundBypass == false)
 	{
-		addMessage (testResult, STR ("Warning: No bypass parameter found. Is this intended ?"));
+		StringObject subCat;
+		plugProvider->getSubCategories (subCat);
+		if (subCat.findFirst ("Instrument") >= 0)
+			addMessage (testResult, STR ("No bypass parameter found. This is an instrument."));
+		else
+			addMessage (testResult, STR ("Warning: No bypass parameter found. Is this intended ?"));
 	}
 
 	if (paramIds)
@@ -645,10 +652,10 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 					bool foundParameter = false;
 					for (int32 i = 0; i < numParameters; ++i)
 					{
-						ParameterInfo info;
-						if (controller->getParameterInfo (i, info) == kResultTrue)
+						ParameterInfo info2;
+						if (controller->getParameterInfo (i, info2) == kResultTrue)
 						{
-							if (info.id == tag)
+							if (info2.id == tag)
 							{
 								foundParameter = true;
 								break;
@@ -1254,21 +1261,25 @@ bool VstProgramInfoTest::run (ITestResult* testResult)
 // VstValidStateTransitionTest
 //------------------------------------------------------------------------
 VstValidStateTransitionTest::VstValidStateTransitionTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
+: VstTestEnh (plugProvider, kSample32)
 {
 }
 
 //------------------------------------------------------------------------
 bool PLUGIN_API VstValidStateTransitionTest::run (ITestResult* testResult)
 {
-	if (!testResult || !vstPlug)
+	if (!testResult || !vstPlug || !audioEffect)
 		return false;
 
 	printTestHeader (testResult);
-
+	
 	for (int32 i = 0; i < 3; ++i)
 	{
-		tresult result = vstPlug->setActive (true);
+		tresult result = audioEffect->setupProcessing (processSetup);
+		if (result != kResultTrue)
+			return false;
+		
+		result = vstPlug->setActive (true);
 		if (result != kResultTrue)
 			return false;
 
@@ -1291,7 +1302,7 @@ bool PLUGIN_API VstValidStateTransitionTest::run (ITestResult* testResult)
 // VstInvalidStateTransitionTest
 //------------------------------------------------------------------------
 VstInvalidStateTransitionTest::VstInvalidStateTransitionTest (IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
+: VstTestEnh (plugProvider, kSample32)
 {
 }
 
@@ -1307,6 +1318,11 @@ bool PLUGIN_API VstInvalidStateTransitionTest::run (ITestResult* testResult)
 	tresult result = vstPlug->initialize (gStandardPluginContext);
 	if (result == kResultFalse)
 		return false;
+
+	// setupProcessing is missing !
+	/*result = audioEffect->setupProcessing (processSetup);
+	if (result != kResultTrue)
+		return false;*/
 
 	// initialized
 	result = vstPlug->setActive (false);
@@ -1352,20 +1368,24 @@ bool PLUGIN_API VstInvalidStateTransitionTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 VstRepeatIdenticalStateTransitionTest::VstRepeatIdenticalStateTransitionTest (
     IPlugProvider* plugProvider)
-: VstTestBase (plugProvider)
+: VstTestEnh (plugProvider, kSample32)
 {
 }
 
 //------------------------------------------------------------------------
 bool VstRepeatIdenticalStateTransitionTest::run (ITestResult* testResult)
 {
-	if (!testResult || !vstPlug)
+	if (!testResult || !vstPlug || !audioEffect)
 		return false;
 
 	printTestHeader (testResult);
 
 	tresult result = vstPlug->initialize (gStandardPluginContext);
 	if (result != kResultFalse)
+		return false;
+
+	result = audioEffect->setupProcessing (processSetup);
+	if (result != kResultTrue)
 		return false;
 
 	result = vstPlug->setActive (true);
@@ -1606,13 +1626,13 @@ bool PLUGIN_API VstProcessTest::run (ITestResult* testResult)
 }
 
 //------------------------------------------------------------------------
-bool VstProcessTest::preProcess (ITestResult* testResult)
+bool VstProcessTest::preProcess (ITestResult* /*testResult*/)
 {
 	return true;
 }
 
 //------------------------------------------------------------------------
-bool VstProcessTest::postProcess (ITestResult* testResult)
+bool VstProcessTest::postProcess (ITestResult* /*testResult*/)
 {
 	return true;
 }
@@ -1991,13 +2011,16 @@ IMPLEMENT_FUNKNOWN_METHODS (VstAutomationTest, IParameterChanges, IParameterChan
 VstAutomationTest::VstAutomationTest (IPlugProvider* plugProvider, ProcessSampleSize sampl,
                                       int32 everyNSamples, int32 numParams, bool sampleAccuracy)
 : VstProcessTest (plugProvider, sampl)
-, bypassId (-1)
+, bypassId (kNoParamId)
 , paramChanges (nullptr)
 , countParamChanges (0)
 , everyNSamples (everyNSamples)
 , numParams (numParams)
 , sampleAccuracy (sampleAccuracy)
-, onceExecuted (false) {FUNKNOWN_CTOR}
+, onceExecuted (false)
+{
+	FUNKNOWN_CTOR
+}
 
 //------------------------------------------------------------------------
 VstAutomationTest::~VstAutomationTest ()
@@ -2171,13 +2194,13 @@ IParamValueQueue* VstAutomationTest::getParameterData (int32 index)
 {
 	if (paramChanges && (index >= 0) && (index < getParameterCount ()))
 		return &paramChanges[index];
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
-IParamValueQueue* VstAutomationTest::addParameterData (const ParamID& id, int32& index)
+IParamValueQueue* VstAutomationTest::addParameterData (const ParamID& /*id*/, int32& /*index*/)
 {
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -2197,6 +2220,8 @@ void VstFlushParamTest::prepareProcessData ()
 	processData.inputs = nullptr;
 	processData.outputs = nullptr;
 }
+
+//------------------------------------------------------------------------
 bool PLUGIN_API VstFlushParamTest::run (ITestResult* testResult)
 {
 	if (!vstPlug || !testResult || !audioEffect)
@@ -2230,10 +2255,16 @@ bool PLUGIN_API VstFlushParamTest::run (ITestResult* testResult)
 	audioEffect->setProcessing (false);
 	return true;
 }
+
+//------------------------------------------------------------------------
+// VstFlushParamTest2
+//------------------------------------------------------------------------
 VstFlushParamTest2::VstFlushParamTest2 (IPlugProvider* plugProvider, ProcessSampleSize sampl)
 	: VstFlushParamTest (plugProvider, sampl)
 {
 }
+
+//------------------------------------------------------------------------
 void VstFlushParamTest2::prepareProcessData ()
 {
 	prepareProcessing ();
@@ -2245,6 +2276,10 @@ void VstFlushParamTest2::prepareProcessData ()
 	if (processData.outputs)
 		processData.outputs[0].numChannels = 0;
 }
+
+//------------------------------------------------------------------------
+// VstFlushParamTest3
+//------------------------------------------------------------------------
 VstFlushParamTest3::VstFlushParamTest3 (IPlugProvider* plugProvider, ProcessSampleSize sampl)
 	: VstFlushParamTest (plugProvider, sampl)
 {
@@ -2252,7 +2287,7 @@ VstFlushParamTest3::VstFlushParamTest3 (IPlugProvider* plugProvider, ProcessSamp
 	{
 		delete[] paramChanges;
 	}
-	paramChanges = 0;
+	paramChanges = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -2602,7 +2637,7 @@ bool VstProcessInputOverwritingTest::run (ITestResult* testResult)
 }
 
 //------------------------------------------------------------------------
-bool VstProcessInputOverwritingTest::preProcess (ITestResult* testResult)
+bool VstProcessInputOverwritingTest::preProcess (ITestResult* /*testResult*/)
 {
 	int32 min = processData.numInputs < processData.numOutputs ? processData.numInputs :
 	                                                             processData.numOutputs;
@@ -2892,9 +2927,10 @@ bool PLUGIN_API VstProcessTailTest::setup ()
 	{
 		mTailSamples = audioEffect->getTailSamples ();
 
-		std::string subCat (plugProvider->getSubCategories ());
-		if (subCat.find ("Generator") != std::string::npos ||
-		    subCat.find ("Instrument") != std::string::npos)
+		StringObject subCat;
+		plugProvider->getSubCategories (subCat);
+		if (subCat.findFirst ("Generator") >= 0 ||
+		    subCat.findFirst ("Instrument") >= 0)
 		{
 			mDontTest = true;
 		}
@@ -2904,7 +2940,7 @@ bool PLUGIN_API VstProcessTailTest::setup ()
 }
 
 //------------------------------------------------------------------------
-bool VstProcessTailTest::preProcess (ITestResult* testResult)
+bool VstProcessTailTest::preProcess (ITestResult* /*testResult*/)
 {
 	if (!mInSilenceInput)
 	{

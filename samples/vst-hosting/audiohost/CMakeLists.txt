@@ -1,5 +1,6 @@
   
-if (SMTG_ENABLE_USE_OF_JACK)
+if(SMTG_ADD_VST3_HOSTING_SAMPLES)
+if(SMTG_ENABLE_USE_OF_JACK)
 
 include(FindJack)
   
@@ -70,4 +71,5 @@ else()
 	message(STATUS "LIBJACK_FOUND is not set.")  
 endif()
 
+endif()
 endif()

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,6 +43,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 
 #include <stdio.h>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -217,16 +218,14 @@ tresult PLUGIN_API Plug::setState (IBStream* state)
 {
 	// called when we load a preset, the model has to be reloaded
 
-	int32 savedBypass = 0;
-	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-	{
+	if (!state)
 		return kResultFalse;
-	}
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedBypass)
-#endif
-	
+	IBStreamer streamer (state, kLittleEndian);
+
+	int32 savedBypass = 0;
+	if (streamer.readInt32 (savedBypass) == false)
+		return kResultFalse;
 	bBypass = savedBypass > 0;
 
 	return kResultOk;
@@ -237,15 +236,12 @@ tresult PLUGIN_API Plug::getState (IBStream* state)
 {
 	// here we need to save the model
 
-	int32 toSaveBypass = bBypass ? 1 : 0;
+	if (!state)
+		return kResultFalse;
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveBypass)
-#endif
-	state->write (&toSaveBypass, sizeof (int32));
+	IBStreamer streamer (state, kLittleEndian);
+	streamer.writeInt32 (bBypass ? 1 : 0);
 
 	return kResultOk;
 }
-
-
 }} // namespaces

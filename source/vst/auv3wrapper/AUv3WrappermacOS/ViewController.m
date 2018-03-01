@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,25 +35,23 @@
 //-----------------------------------------------------------------------------
 #import "ViewController.h"
 #import <CoreAudioKit/AUViewController.h>
-#import "AUv3AudioEngine.h"
-#import "AUv3Wrapper.h"
-#import "audiounitconfig.h"
+#import "../audiounitconfig.h"
+#import "../Shared/AUv3AudioEngine.h"
+#import "../Shared/AUv3Wrapper.h"
 
 @class AUv3WrapperViewController;
 
 @interface ViewController ()
 {
-    
-    // Button for playback
-    IBOutlet NSButton *playButton;
-	
-	AUv3AudioEngine *audioEngine;
-    
-    // Container for the custom view.
-    AUv3WrapperViewController *auV3ViewController;
-	
-    NSArray<AUAudioUnitPreset *> *factoryPresets;
+	// Button for playback
+	IBOutlet NSButton* playButton;
 
+	AUv3AudioEngine* audioEngine;
+
+	// Container for the custom view.
+	AUv3WrapperViewController* auV3ViewController;
+
+	NSArray<AUAudioUnitPreset*>* factoryPresets;
 }
 
 @property IBOutlet NSView *containerView;
@@ -113,7 +111,6 @@
     
     constraints = [NSLayoutConstraint constraintsWithVisualFormat: @"V:|-[view]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(view)];
     [_containerView addConstraints: constraints];
-    
 }
 
 //------------------------------------------------------------------------
@@ -169,7 +166,6 @@
 	
 	[playButton setTitle: isPlaying ? @"Stop" : @"Play"];
 }
-
 
 #pragma mark <NSWindowDelegate>
 //------------------------------------------------------------------------

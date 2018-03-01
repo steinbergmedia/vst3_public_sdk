@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -49,15 +49,15 @@ class Plug : public AudioEffect
 public:
 	Plug ();
 
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	// create function required for Plug-in factory,
 	// it will be called to create new instances of this Plug-in
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	static FUnknown* createInstance (void* context) { return (IAudioProcessor*)new Plug; }
 
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	// AudioEffect overrides:
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	/** Called at first after constructor */
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -715,7 +715,7 @@ tresult PLUGIN_API FileStream::read (void* buffer, int32 numBytes, int32* numByt
 	size_t result = fread (buffer, 1, numBytes, file);
 	if (numBytesRead)
 		*numBytesRead = (int32)result;
-	return result == numBytes ? kResultOk : kResultFalse;
+	return static_cast<int32> (result) == numBytes ? kResultOk : kResultFalse;
 }
 
 //------------------------------------------------------------------------
@@ -724,7 +724,7 @@ tresult PLUGIN_API FileStream::write (void* buffer, int32 numBytes, int32* numBy
 	size_t result = fwrite (buffer, 1, numBytes, file);
 	if (numBytesWritten)
 		*numBytesWritten = (int32)result;
-	return result == numBytes ? kResultOk : kResultFalse;
+	return static_cast<int32> (result) == numBytes ? kResultOk : kResultFalse;
 }
 
 //------------------------------------------------------------------------
@@ -774,9 +774,9 @@ ReadOnlyBStream::~ReadOnlyBStream ()
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API ReadOnlyBStream::queryInterface (const TUID iid, void** obj)
+tresult PLUGIN_API ReadOnlyBStream::queryInterface (const TUID _iid, void** obj)
 {
-	return sourceStream ? sourceStream->queryInterface (iid, obj) : kResultFalse;
+	return sourceStream ? sourceStream->queryInterface (_iid, obj) : kResultFalse;
 }
 
 //------------------------------------------------------------------------

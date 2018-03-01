@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -40,6 +40,7 @@
 #include "pluginterfaces/base/ibstream.h"
 #include "vstgui/lib/controls/ctextlabel.h"
 #include "vstgui/lib/cstring.h"
+#include "base/source/fstreamer.h"
 
 
 namespace Steinberg {
@@ -76,18 +77,18 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 {
 	// we receive the current state of the component (processor part)
 	// we read only the gain and bypass value...
-	if (state)
-	{
-		// read the bypass
-		int32 bypassState;
-		if (state->read (&bypassState, sizeof (bypassState)) == kResultTrue)
-		{
-		#if BYTEORDER == kBigEndian
-			SWAP_32 (bypassState)
-		#endif
-			setParamNormalized (kBypassId, bypassState ? 1 : 0);
-		}
-	}
+
+	if (!state)
+		return kResultFalse;
+
+	IBStreamer streamer (state, kLittleEndian);
+
+	// read the bypass
+	int32 savedBypass = 0;
+	if (streamer.readInt32 (savedBypass) == false)
+		return kResultFalse;
+
+	setParamNormalized (kBypassId, savedBypass > 0 ? 1 : 0);
 
 	return kResultOk;
 }

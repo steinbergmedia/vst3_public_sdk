@@ -22,6 +22,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -290,75 +291,69 @@ tresult PLUGIN_API BaseProcessor::setActive (TBool state)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
 {
+	if (!state)
+		return kResultFalse;
+
+	IBStreamer streamer (state, kLittleEndian);
+
 	uint32 temp;
-	state->read (&temp, sizeof (uint32)); // numParams or Header
-	SWAP32_BE (temp);
+	streamer.readInt32u (temp); // numParams or Header
 
 	if (temp == BaseController::kMagicNumber)
 	{
 		// read current Program
-		state->read (&temp, sizeof (uint32));
-		SWAP32_BE (temp);
+		streamer.readInt32u (temp);
 		setCurrentProgram (temp);
 
-		state->read (&temp, sizeof (uint32)); // numParams
-		SWAP32_BE (temp);
+		streamer.readInt32u (temp);
 	}
 
 	// read each parameter
 	for (uint32 i = 0; i < temp, i < numParams; i++)
 	{
-		state->read (&params[i], sizeof (ParamValue));
-		SWAP64_BE(params[i])
+		streamer.readDouble (params[i]);
 	}
 
 	// bypass
-	state->read (&temp, sizeof (uint32));
-	SWAP32_BE(temp)
+	streamer.readInt32u (temp);
 	bypassState = temp > 0;
 
 	recalculate ();
-	
+
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API BaseProcessor::getState (IBStream* state)
 {
-	uint32 temp;
+	if (!state)
+		return kResultFalse;
+
+	IBStreamer streamer (state, kLittleEndian);
 
 	if (hasProgram ())
 	{
 		// save header key
-		temp = BaseController::kMagicNumber;
-		SWAP32_BE (temp);
-		state->write (&temp, sizeof (uint32));
+		uint32 temp = BaseController::kMagicNumber;
+		streamer.writeInt32u (temp);
 
 		// save program
 		temp = getCurrentProgram ();
-		SWAP32_BE (temp);
-		state->write (&temp, sizeof (uint32));
+		streamer.writeInt32u (temp);
 	}
 
 	// save number of parameter
-	temp = numParams;
-	SWAP32_BE(temp);
-	state->write (&temp, sizeof (uint32));
-	
+	streamer.writeInt32u (numParams);
+
 	// save each parameter
 	for (uint32 i = 0; i < numParams; i++)
 	{
-		ParamValue value = params[i];
-		SWAP64_BE(value)
-		state->write (&value, sizeof (ParamValue));
+		streamer.writeDouble (params[i]);
 	}
-	
+
 	// save bypass
-	temp = bypassState ? 1 : 0;
-	SWAP32_BE(temp)
-	state->write (&temp, sizeof (uint32));
-	
+	streamer.writeInt32u (bypassState ? 1 : 0);
+
 	return kResultTrue;
 }
-
 }}} // namespace

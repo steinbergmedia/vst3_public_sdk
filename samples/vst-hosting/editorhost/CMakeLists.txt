@@ -1,4 +1,6 @@
 
+if(SMTG_ADD_VST3_HOSTING_SAMPLES)
+
 set(editorhost_sources
 	source/editorhost.cpp
 	source/editorhost.h
@@ -81,4 +83,6 @@ set_target_properties(${target} PROPERTIES ${SDK_IDE_HOSTING_EXAMPLES_FOLDER})
 target_link_libraries(${target} PRIVATE base sdk ${editorhost_PLATFORM_LIBS})
 if (APP_PROPERTIES)
 	set_target_properties(${target} PROPERTIES ${APP_PROPERTIES})
+endif()
+
 endif()

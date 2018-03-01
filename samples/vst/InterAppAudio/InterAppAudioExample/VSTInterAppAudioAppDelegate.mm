@@ -1,3 +1,4 @@
+// clang-format off
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
@@ -5,10 +6,11 @@
 // Filename    : public.sdk/samples/vst/interappaudio/InterAppAudioExample/VSTInterAppAudioAppDelegate.mm
 // Created by  : Steinberg, 08/2013
 // Description :
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -33,8 +35,10 @@
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
+// clang-format on
 
 #import "VSTInterAppAudioAppDelegate.h"
+
 #import "VSTInterAppAudioHostUIControllerViewController.h"
 #import "public.sdk/source/vst/interappaudio/AudioIO.h"
 
@@ -53,21 +57,26 @@ using namespace Steinberg::Vst::InterAppAudio;
 //------------------------------------------------------------------------
 
 //------------------------------------------------------------------------
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+- (BOOL)application:(UIApplication*)application
+    didFinishLaunchingWithOptions:(NSDictionary*)launchOptions
 {
 	if ([super application:application didFinishLaunchingWithOptions:launchOptions])
 	{
-		[self performSelector:@selector(createShowHostViewButton) withObject:nil afterDelay:0.2];
-		[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(audioIOConnectionChanged) name:AudioIO::kConnectionStateChange object:nil];
+		[self performSelector:@selector (createShowHostViewButton) withObject:nil afterDelay:0.2];
+		[[NSNotificationCenter defaultCenter] addObserver:self
+		                                         selector:@selector (audioIOConnectionChanged)
+		                                             name:AudioIO::kConnectionStateChange
+		                                           object:nil];
 		return YES;
 	}
-    return NO;
+	return NO;
 }
 
 //------------------------------------------------------------------------
-- (NSUInteger)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window
+- (NSUInteger)application:(UIApplication*)application
+    supportedInterfaceOrientationsForWindow:(UIWindow*)window
 {
-	return UIInterfaceOrientationMaskLandscapeLeft|UIInterfaceOrientationMaskLandscapeRight;
+	return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
 }
 
 //------------------------------------------------------------------------
@@ -78,7 +87,8 @@ using namespace Steinberg::Vst::InterAppAudio;
 	{
 		for (id childController in [self.window.rootViewController childViewControllers])
 		{
-			if ([childController isKindOfClass:[VSTInterAppAudioHostUIControllerViewController class]])
+			if ([childController
+			        isKindOfClass:[VSTInterAppAudioHostUIControllerViewController class]])
 			{
 				[childController hideView:self];
 			}
@@ -90,16 +100,19 @@ using namespace Steinberg::Vst::InterAppAudio;
 - (void)createShowHostViewButton
 {
 	showHostView = [UIButton buttonWithType:UIButtonTypeInfoDark];
-	[showHostView addTarget:self action:@selector(showHostViewAction:) forControlEvents:UIControlEventTouchDown];
-	
+	[showHostView addTarget:self
+	                 action:@selector (showHostViewAction:)
+	       forControlEvents:UIControlEventTouchDown];
+
 	const CGFloat margin = 15;
 	CGRect frame = showHostView.frame;
-	frame.origin.y = [self.window.rootViewController.view bounds].size.height - (frame.size.height + margin);
+	frame.origin.y =
+	    [self.window.rootViewController.view bounds].size.height - (frame.size.height + margin);
 	frame.origin.x = margin;
 	showHostView.frame = frame;
-	
+
 	[self.window.rootViewController.view addSubview:showHostView];
-	
+
 	if (AudioIO::instance ()->getInterAppAudioConnected () == false)
 	{
 		showHostView.hidden = YES;
@@ -109,7 +122,8 @@ using namespace Steinberg::Vst::InterAppAudio;
 //------------------------------------------------------------------------
 - (void)showHostViewAction:(id)sender
 {
-	VSTInterAppAudioHostUIControllerViewController* controller = [[VSTInterAppAudioHostUIControllerViewController alloc] init];
+	VSTInterAppAudioHostUIControllerViewController* controller =
+	    [[VSTInterAppAudioHostUIControllerViewController alloc] init];
 	[self.window.rootViewController addChildViewController:controller];
 	CGRect frame = controller.view.frame;
 	frame.origin.y = [self.window.rootViewController.view bounds].size.height;
@@ -119,9 +133,7 @@ using namespace Steinberg::Vst::InterAppAudio;
 
 	frame.origin.y = [self.window.rootViewController.view bounds].size.height - frame.size.height;
 
-	[UIView animateWithDuration:0.3 animations:^{
-		controller.view.frame = frame;
-	}];
+	[UIView animateWithDuration:0.3 animations:^{ controller.view.frame = frame; }];
 }
 
 @end

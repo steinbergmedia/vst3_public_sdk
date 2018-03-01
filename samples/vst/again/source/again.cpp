@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 #include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 
 #include <stdio.h>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -319,30 +320,19 @@ tresult PLUGIN_API AGain::setState (IBStream* state)
 {
 	// called when we load a preset, the model has to be reloaded
 
+	IBStreamer streamer (state, kLittleEndian);
 	float savedGain = 0.f;
-	if (state->read (&savedGain, sizeof (float)) != kResultOk)
-	{
+	if (streamer.readFloat (savedGain) == false)
 		return kResultFalse;
-	}
 
 	float savedGainReduction = 0.f;
-	if (state->read (&savedGainReduction, sizeof (float)) != kResultOk)
-	{
+	if (streamer.readFloat (savedGainReduction) == false)
 		return kResultFalse;
-	}
 
 	int32 savedBypass = 0;
-	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
-	{
+	if (streamer.readInt32 (savedBypass) == false)
 		return kResultFalse;
-	}
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedGain)
-	SWAP_32 (savedGainReduction)
-	SWAP_32 (savedBypass)
-#endif
-	
 	fGain = savedGain;
 	fGainReduction = savedGainReduction;
 	bBypass = savedBypass > 0;
@@ -356,7 +346,8 @@ tresult PLUGIN_API AGain::setState (IBStream* state)
 		{
 			// get the current type (project/Default..) of this state
 			String128 string = {0};
-			if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) == kResultTrue)
+			if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) ==
+			    kResultTrue)
 			{
 				UString128 tmp (string);
 				char ascii[128];
@@ -370,7 +361,8 @@ tresult PLUGIN_API AGain::setState (IBStream* state)
 			// get the full file path of this state
 			TChar fullPath[1024];
 			memset (fullPath, 0, 1024 * sizeof (TChar));
-			if (list->getString (PresetAttributes::kFilePathStringType, fullPath, 1024 * sizeof (TChar)) == kResultTrue)
+			if (list->getString (PresetAttributes::kFilePathStringType, fullPath,
+			                     1024 * sizeof (TChar)) == kResultTrue)
 			{
 				// here we have the full path ...
 			}
@@ -385,19 +377,11 @@ tresult PLUGIN_API AGain::getState (IBStream* state)
 {
 	// here we need to save the model
 
-	float toSaveGain = fGain;
-	float toSaveGainReduction = fGainReduction;
-	int32 toSaveBypass = bBypass ? 1 : 0;
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveGain)
-	SWAP_32 (toSaveGainReduction)
-	SWAP_32 (toSaveBypass)
-#endif
-
-	state->write (&toSaveGain, sizeof (float));
-	state->write (&toSaveGainReduction, sizeof (float));
-	state->write (&toSaveBypass, sizeof (int32));
+	IBStreamer streamer (state, kLittleEndian);
+	
+	streamer.writeFloat (fGain);
+	streamer.writeFloat (fGainReduction);
+	streamer.writeInt32 (bBypass ? 1 : 0);
 
 	return kResultOk;
 }

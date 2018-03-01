@@ -148,7 +148,7 @@ private:
 			String128 messageText;
 			String str;
 			str.fromUTF8 (text.data ());
-			str.copyTo (messageText, 128);
+			str.copyTo (messageText, 0, 128);
 			againController->setDefaultMessageText (messageText);
 		}
 	}

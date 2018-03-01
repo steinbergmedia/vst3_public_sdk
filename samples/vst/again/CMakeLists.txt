@@ -1,46 +1,50 @@
 
 if (SMTG_CREATE_VST2_VERSION)
-	set(again_vst2_sources
-		${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
-		${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
-		${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
-		${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
-		${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-		${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
-		${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
-		${SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
-		${SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
-		source/againentry_vst2.cpp
-	)
+    set(again_vst2_sources
+        ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
+        ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
+        ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
+        source/againentry_vst2.cpp
+    )
 endif()
 
 set(again_sources
-	source/again.cpp
-	source/again.h
-	source/againcids.h
-	source/againcontroller.cpp
-	source/againcontroller.h
-	source/againentry.cpp
-	source/againparamids.h
-	source/againprocess.h
-	source/againsidechain.cpp
-	source/againsidechain.h
-	source/againuimessagecontroller.h
-	source/version.h
+    source/again.cpp
+    source/again.h
+    source/againcids.h
+    source/againcontroller.cpp
+    source/againcontroller.h
+    source/againentry.cpp
+    source/againparamids.h
+    source/againprocess.h
+    source/againsidechain.cpp
+    source/againsidechain.h
+    source/againuimessagecontroller.h
+    source/version.h
 )
 
 set(again_simple_sources
-	${SDK_ROOT}/public.sdk/source/vst/vstsinglecomponenteffect.cpp
-	${SDK_ROOT}/public.sdk/source/vst/vstsinglecomponenteffect.h
-	source/againparamids.h
-	source/againsimple.cpp
-	source/againsimple.h
-	source/version.h
+    ${SDK_ROOT}/public.sdk/source/vst/vstsinglecomponenteffect.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/vstsinglecomponenteffect.h
+    source/againparamids.h
+    source/againsimple.cpp
+    source/againsimple.h
+    source/version.h
 )
 
 # VST2 is only defined for macOS and Windows
 if(MAC OR WIN)
-	set(again_sources ${again_sources} ${again_vst2_sources})
+    if (SMTG_CREATE_VST2_VERSION)
+        set(again_sources ${again_sources} ${again_vst2_sources})
+    else()
+        set(again_sources ${again_sources})
+    endif()
 endif()
 
 set(target again)
@@ -58,9 +62,9 @@ smtg_add_vst3_resource(${target} "resource/vu_on.png")
 smtg_add_vst3_resource(${target} "resource/vu_off.png")
 
 if(MAC)
-	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
+    smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
 elseif(WIN)
-	target_sources(${target} PRIVATE resource/again.rc)
+    target_sources(${target} PRIVATE resource/again.rc)
 endif()
 
 
@@ -85,12 +89,12 @@ elseif(WIN)
 endif()
 
 if (SMTG_CREATE_VST2_VERSION)
- 	message(STATUS "SMTG_CREATE_VST2_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .vst).")
-	 if(XCODE)
-    # fix missing VSTPluginMain symbol when also building VST 2 version
-    set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")
-  endif()
-  if (WIN)
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-  endif()
+    message(STATUS "SMTG_CREATE_VST2_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .vst).")
+    if(XCODE)
+        # fix missing VSTPluginMain symbol when also building VST 2 version
+        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")
+    endif()
+    if (WIN)
+        add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    endif()
 endif()

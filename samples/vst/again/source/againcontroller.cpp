@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,6 +43,7 @@
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 #include "base/source/fstring.h"
+#include "base/source/fstreamer.h"
 
 #include "vstgui/uidescription/delegationcontroller.h"
 
@@ -72,13 +73,13 @@ GainParameter::GainParameter (int32 flags, int32 id)
 {
 	Steinberg::UString (info.title, USTRINGSIZE (info.title)).assign (USTRING ("Gain"));
 	Steinberg::UString (info.units, USTRINGSIZE (info.units)).assign (USTRING ("dB"));
-	
+
 	info.flags = flags;
 	info.id = id;
 	info.stepCount = 0;
 	info.defaultNormalizedValue = 0.5f;
 	info.unitId = kRootUnitId;
-	
+
 	setNormalized (1.f);
 }
 
@@ -143,17 +144,17 @@ tresult PLUGIN_API AGainController::initialize (FUnknown* context)
 
 	// create a unit1 for the gain
 	unitInfo.id = 1;
-	unitInfo.parentUnitId = kRootUnitId;	// attached to the root unit
-	
+	unitInfo.parentUnitId = kRootUnitId; // attached to the root unit
+
 	Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Unit1"));
-	
+
 	unitInfo.programListId = kNoProgramListId;
-	
+
 	unit = new Unit (unitInfo);
 	addUnit (unit);
 
 	//---Create Parameters------------
-	
+
 	//---Gain parameter--
 	GainParameter* gainParam = new GainParameter (ParameterInfo::kCanAutomate, kGainId);
 	parameters.addParameter (gainParam);
@@ -170,7 +171,7 @@ tresult PLUGIN_API AGainController::initialize (FUnknown* context)
 	//---Bypass parameter---
 	stepCount = 1;
 	defaultVal = 0;
-	flags = ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass;
+	flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	tag = kBypassId;
 	parameters.addParameter (STR16 ("Bypass"), 0, stepCount, defaultVal, flags, tag);
 
@@ -178,12 +179,12 @@ tresult PLUGIN_API AGainController::initialize (FUnknown* context)
 
 	String str ("Hello World!");
 	str.copyTo16 (defaultMessageText, 0, 127);
-	
+
 	return result;
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGainController::terminate  ()
+tresult PLUGIN_API AGainController::terminate ()
 {
 	return EditControllerEx1::terminate ();
 }
@@ -193,32 +194,22 @@ tresult PLUGIN_API AGainController::setComponentState (IBStream* state)
 {
 	// we receive the current state of the component (processor part)
 	// we read only the gain and bypass value...
-	if (state)
-	{
-		float savedGain = 0.f;
-		if (state->read (&savedGain, sizeof (float)) != kResultOk)
-		{
-			return kResultFalse;
-		}
+	if (!state)
+		return kResultFalse;
 
-	#if BYTEORDER == kBigEndian
-		SWAP_32 (savedGain)
-	#endif
-		setParamNormalized (kGainId, savedGain);
+	IBStreamer streamer (state, kLittleEndian);
+	float savedGain = 0.f;
+	if (streamer.readFloat (savedGain) == false)
+		return kResultFalse;
+	setParamNormalized (kGainId, savedGain);
 
-		// jump the GainReduction
-		state->seek (sizeof (float), IBStream::kIBSeekCur);
-	
-		// read the bypass
-		int32 bypassState;
-		if (state->read (&bypassState, sizeof (bypassState)) == kResultTrue)
-		{
-		#if BYTEORDER == kBigEndian
-			SWAP_32 (bypassState)
-		#endif
-			setParamNormalized (kBypassId, bypassState ? 1 : 0);
-		}
-	}
+	// jump the GainReduction
+	streamer.seek (sizeof (float), kSeekCurrent);
+
+	int32 bypassState = 0;
+	if (streamer.readInt32 (bypassState) == false)
+		return kResultFalse;
+	setParamNormalized (kBypassId, bypassState ? 1 : 0);
 
 	return kResultOk;
 }
@@ -232,7 +223,7 @@ IPlugView* PLUGIN_API AGainController::createView (const char* name)
 		VST3Editor* view = new VST3Editor (this, "view", "again.uidesc");
 		return view;
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -252,17 +243,13 @@ IController* AGainController::createSubController (UTF8StringPtr name,
 //------------------------------------------------------------------------
 tresult PLUGIN_API AGainController::setState (IBStream* state)
 {
-	tresult result = kResultFalse;
+	IBStreamer streamer (state, kLittleEndian);
 
 	int8 byteOrder;
-	if ((result = state->read (&byteOrder, sizeof (int8))) != kResultTrue)
-	{
-		return result;
-	}
-	if ((result = state->read (defaultMessageText, 128 * sizeof (TChar))) != kResultTrue)
-	{
-		return result;
-	}
+	if (streamer.readInt8 (byteOrder) == false)
+		return kResultFalse;
+	if (streamer.readRaw (defaultMessageText, 128 * sizeof (TChar)) == false)
+		return kResultFalse;
 
 	// if the byteorder doesn't match, byte swap the text array ...
 	if (byteOrder != BYTEORDER)
@@ -274,10 +261,12 @@ tresult PLUGIN_API AGainController::setState (IBStream* state)
 	}
 
 	// update our editors
-	for (UIMessageControllerList::iterator it = uiMessageControllers.begin (), end = uiMessageControllers.end (); it != end; ++it)
+	for (UIMessageControllerList::iterator it = uiMessageControllers.begin (),
+	                                       end = uiMessageControllers.end ();
+	     it != end; ++it)
 		(*it)->setMessageText (defaultMessageText);
-	
-	return result;
+
+	return kResultTrue;
 }
 
 //------------------------------------------------------------------------
@@ -286,12 +275,17 @@ tresult PLUGIN_API AGainController::getState (IBStream* state)
 	// here we can save UI settings for example
 
 	// as we save a Unicode string, we must know the byteorder when setState is called
+
+	IBStreamer streamer (state, kLittleEndian);
+
 	int8 byteOrder = BYTEORDER;
-	if (state->write (&byteOrder, sizeof (int8)) == kResultTrue)
-	{
-		return state->write (defaultMessageText, 128 * sizeof (TChar));
-	}
-	return kResultFalse;
+	if (streamer.writeInt8 (byteOrder) == false)
+		return kResultFalse;
+
+	if (streamer.writeRaw (defaultMessageText, 128 * sizeof (TChar)) == false)
+		return kResultFalse;
+
+	return kResultTrue;
 }
 
 //------------------------------------------------------------------------
@@ -316,7 +310,8 @@ tresult PLUGIN_API AGainController::setParamNormalized (ParamID tag, ParamValue 
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGainController::getParamStringByValue (ParamID tag, ParamValue valueNormalized, String128 string)
+tresult PLUGIN_API AGainController::getParamStringByValue (ParamID tag, ParamValue valueNormalized,
+                                                           String128 string)
 {
 	/* example, but better to use a custom Parameter as seen in GainParameter
 	switch (tag)
@@ -340,7 +335,8 @@ tresult PLUGIN_API AGainController::getParamStringByValue (ParamID tag, ParamVal
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGainController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
+tresult PLUGIN_API AGainController::getParamValueByString (ParamID tag, TChar* string,
+                                                           ParamValue& valueNormalized)
 {
 	/* example, but better to use a custom Parameter as seen in GainParameter
 	switch (tag)
@@ -369,7 +365,8 @@ void AGainController::addUIMessageController (UIMessageController* controller)
 //------------------------------------------------------------------------
 void AGainController::removeUIMessageController (UIMessageController* controller)
 {
-	UIMessageControllerList::const_iterator it = std::find (uiMessageControllers.begin (), uiMessageControllers.end (), controller);
+	UIMessageControllerList::const_iterator it =
+	    std::find (uiMessageControllers.begin (), uiMessageControllers.end (), controller);
 	if (it != uiMessageControllers.end ())
 		uiMessageControllers.erase (it);
 }
@@ -395,8 +392,10 @@ tresult PLUGIN_API AGainController::queryInterface (const char* iid, void** obj)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGainController::getMidiControllerAssignment (int32 busIndex, int16 /*midiChannel*/,
-																 CtrlNumber midiControllerNumber, ParamID& tag)
+tresult PLUGIN_API AGainController::getMidiControllerAssignment (int32 busIndex,
+                                                                 int16 /*midiChannel*/,
+                                                                 CtrlNumber midiControllerNumber,
+                                                                 ParamID& tag)
 {
 	// we support for the Gain parameter all MIDI Channel but only first bus (there is only one!)
 	if (busIndex == 0 && midiControllerNumber == kCtrlVolume)

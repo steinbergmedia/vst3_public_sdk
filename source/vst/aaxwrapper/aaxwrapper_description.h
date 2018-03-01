@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -53,7 +53,7 @@ struct AAX_Meter_Desc
 	const char* mName;
 	uint32 mID;
 	uint32 mOrientation; // see AAX_EMeterOrientation
-	bool mInput;
+	uint32 mType; // see AAX_EMeterType
 };
 
 struct AAX_MIDI_Desc
@@ -76,6 +76,8 @@ struct AAX_Plugin_Desc
 	AAX_MIDI_Desc* mMIDIports;
 	AAX_Aux_Desc* mAuxOutputChannels; // zero terminated
 	AAX_Meter_Desc* mMeters;
+
+	uint32 mLatency;
 };
 
 struct AAX_Effect_Desc

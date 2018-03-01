@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,22 +43,22 @@
 
 #include "base/source/fstring.h"
 
-#if MAC
+#if SMTG_OS_MACOS
 #include <CoreFoundation/CoreFoundation.h>
 #include <dlfcn.h>
 namespace VSTGUI {
 static void CreateVSTGUIBundleRef ();
 static void ReleaseVSTGUIBundleRef ();
 }
-#elif WINDOWS
+#elif SMTG_OS_WINDOWS
 void* hInstance = nullptr; // VSTGUI hInstance
 extern void* moduleHandle;
-#elif LINUX
+#elif SMTG_OS_LINUX
 extern void* moduleHandle;
 namespace VSTGUI {
 void* soHandle = nullptr;
 } // VSTGUI
-#endif // MAC
+#endif // SMTG_OS_MACOS
 
 namespace Steinberg {
 namespace Vst {
@@ -67,11 +67,11 @@ namespace Vst {
 VSTGUIEditor::VSTGUIEditor (void* controller, ViewRect* size)
 : EditorView (static_cast<EditController*> (controller), size)
 {
-#if MAC
+#if SMTG_OS_MACOS
 	CreateVSTGUIBundleRef ();
-#elif WINDOWS
+#elif SMTG_OS_WINDOWS
 	hInstance = moduleHandle;
-#elif LINUX
+#elif SMTG_OS_LINUX
 	VSTGUI::soHandle = moduleHandle;
 #endif
 	// create a timer used for idle update: will call notify method
@@ -83,7 +83,7 @@ VSTGUIEditor::~VSTGUIEditor ()
 {
 	if (timer)
 		timer->forget ();
-#if MAC
+#if SMTG_OS_MACOS
 	ReleaseVSTGUIBundleRef ();
 #endif
 }
@@ -98,11 +98,11 @@ void VSTGUIEditor::setIdleRate (int32 millisec)
 //------------------------------------------------------------------------
 tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 {
-#if WINDOWS
+#if SMTG_OS_WINDOWS
 	if (strcmp (type, kPlatformTypeHWND) == 0)
 		return kResultTrue;
 
-#elif MAC
+#elif SMTG_OS_MACOS
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		return kResultTrue;
@@ -117,7 +117,7 @@ tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 		return kResultTrue;
 #endif
 #endif
-#elif LINUX
+#elif SMTG_OS_LINUX
 	if (strcmp (type, kPlatformTypeX11EmbedWindowID) == 0)
 		return kResultTrue;
 #endif
@@ -128,7 +128,7 @@ tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 //------------------------------------------------------------------------
 tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 {
-#if MAC
+#if SMTG_OS_MACOS
 	if (isPlatformTypeSupported (type) != kResultTrue)
 		return kResultFalse;
 
@@ -139,7 +139,7 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
 	PlatformType platformType = kDefaultNative;
-#if MAC
+#if SMTG_OS_MACOS
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		platformType = kUIView;
@@ -154,7 +154,7 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 		platformType = kNSView;
 #endif
 #endif
-#endif // MAC
+#endif // SMTG_OS_MACOS
 	if (open (parent, platformType) == true)
 #else
 	if (open (parent) == true)
@@ -329,7 +329,7 @@ tresult PLUGIN_API VSTGUIEditor::setFrame (IPlugFrame* frame)
 } // namespace Vst
 } // namespace Steinberg
 
-#if MAC
+#if SMTG_OS_MACOS
 namespace VSTGUI {
 void* gBundleRef = nullptr;
 static int openCount = 0;
@@ -388,4 +388,4 @@ void ReleaseVSTGUIBundleRef ()
 //------------------------------------------------------------------------
 } // namespace VSTGUI
 
-#endif // MAC
+#endif // SMTG_OS_MACOS

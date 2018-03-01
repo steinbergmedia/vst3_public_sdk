@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -495,7 +495,7 @@ tresult PLUGIN_API EditControllerEx1::getProgramPitchName (ProgramListID listId,
 }
 
 //------------------------------------------------------------------------
-void PLUGIN_API EditControllerEx1::update (FUnknown* changedUnknown, int32 message)
+void PLUGIN_API EditControllerEx1::update (FUnknown* changedUnknown, int32 /*message*/)
 {
 	ProgramList* programList = FCast<ProgramList> (changedUnknown);
 	if (programList)

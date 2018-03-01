@@ -5,42 +5,42 @@
 // Filename    : public.sdk/source/vst/interappaudio/VSTInterAppAudioAppDelegateBase.mm
 // Created by  : Steinberg, 08/2013.
 // Description : VST 3 InterAppAudio
+// Flags       : clang-format SMTGSequencer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #import "VSTInterAppAudioAppDelegateBase.h"
-
 #import "public.sdk/source/vst/interappaudio/AudioIO.h"
-#import "public.sdk/source/vst/interappaudio/MidiIO.h"
-#import "public.sdk/source/vst/interappaudio/VST3Plugin.h"
-#import "public.sdk/source/vst/interappaudio/VST3Editor.h"
 #import "public.sdk/source/vst/interappaudio/HostApp.h"
+#import "public.sdk/source/vst/interappaudio/MidiIO.h"
+#import "public.sdk/source/vst/interappaudio/VST3Editor.h"
+#import "public.sdk/source/vst/interappaudio/VST3Plugin.h"
 
 using namespace Steinberg::Vst::InterAppAudio;
 
@@ -48,9 +48,9 @@ using namespace Steinberg::Vst::InterAppAudio;
 static OSType fourCharCodeToOSType (NSString* inCode)
 {
 	OSType rval = 0;
-	NSData* data = [inCode dataUsingEncoding: NSMacOSRomanStringEncoding];
-	[data getBytes:&rval length:sizeof(rval)];
-	HTONL(rval);
+	NSData* data = [inCode dataUsingEncoding:NSMacOSRomanStringEncoding];
+	[data getBytes:&rval length:sizeof (rval)];
+	HTONL (rval);
 	return rval;
 }
 
@@ -60,7 +60,7 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 {
 	VST3Plugin plugin;
 	VST3Editor editor;
-	
+
 	BOOL audioIOInitialized;
 }
 @end
@@ -88,7 +88,8 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 				OSType subtype = fourCharCodeToOSType (subtypeStr);
 				OSType manufacturer = fourCharCodeToOSType (manufacturerStr);
 				AudioIO* audioIO = AudioIO::instance ();
-				if (audioIO->init (type, subtype, manufacturer, (__bridge CFStringRef)nameStr) == Steinberg::kResultTrue)
+				if (audioIO->init (type, subtype, manufacturer, (__bridge CFStringRef)nameStr) ==
+				    Steinberg::kResultTrue)
 				{
 					if (plugin.init ())
 					{
@@ -157,13 +158,15 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 //------------------------------------------------------------------------
 // UIApplicationDelegate methods
 //------------------------------------------------------------------------
-- (BOOL)application:(UIApplication *)application willFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+- (BOOL)application:(UIApplication*)application
+    willFinishLaunchingWithOptions:(NSDictionary*)launchOptions
 {
 	return [self initAudioIO];
 }
 
 //------------------------------------------------------------------------
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+- (BOOL)application:(UIApplication*)application
+    didFinishLaunchingWithOptions:(NSDictionary*)launchOptions
 {
 	BOOL result = [self createUI];
 	if (result)
@@ -174,7 +177,7 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 }
 
 //------------------------------------------------------------------------
-- (BOOL)application:(UIApplication *)application shouldSaveApplicationState:(NSCoder *)coder
+- (BOOL)application:(UIApplication*)application shouldSaveApplicationState:(NSCoder*)coder
 {
 	[self savePluginState:coder];
 	[coder encodeBool:MidiIO::instance ().isEnabled () forKey:@"MIDI Enabled"];
@@ -182,7 +185,7 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 }
 
 //------------------------------------------------------------------------
-- (BOOL)application:(UIApplication *)application shouldRestoreApplicationState:(NSCoder *)coder
+- (BOOL)application:(UIApplication*)application shouldRestoreApplicationState:(NSCoder*)coder
 {
 	[self restorePluginState:coder];
 	BOOL midiEnabled = [coder decodeBoolForKey:@"MIDI Enabled"];
@@ -191,17 +194,17 @@ static OSType fourCharCodeToOSType (NSString* inCode)
 }
 
 //------------------------------------------------------------------------
-- (void)applicationDidBecomeActive:(UIApplication *)application
+- (void)applicationDidBecomeActive:(UIApplication*)application
 {
 	AudioIO* audioIO = AudioIO::instance ();
 	audioIO->start ();
 }
 
 //------------------------------------------------------------------------
-- (void)applicationWillResignActive:(UIApplication *)application
+- (void)applicationWillResignActive:(UIApplication*)application
 {
 	AudioIO* audioIO = AudioIO::instance ();
-	if (audioIO->getInterAppAudioConnected () == false && MidiIO::instance().isEnabled () == false)
+	if (audioIO->getInterAppAudioConnected () == false && MidiIO::instance ().isEnabled () == false)
 	{
 		audioIO->stop ();
 	}

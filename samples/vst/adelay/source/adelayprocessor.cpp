@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,6 +41,7 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include <algorithm>
 #include <cstdlib>
+#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -185,22 +186,16 @@ tresult PLUGIN_API ADelayProcessor::setState (IBStream* state)
 
 	// called when we load a preset, the model has to be reloaded
 
+	IBStreamer streamer (state, kLittleEndian);
 	float savedDelay = 0.f;
-	if (state->read (&savedDelay, sizeof (float)) != kResultOk)
-	{
+	if (streamer.readFloat (savedDelay) == false)
 		return kResultFalse;
-	}
 
 	int32 savedBypass = 0;
-	if (state->read (&savedBypass, sizeof (int32)) != kResultOk)
+	if (streamer.readInt32 (savedBypass) == false)
 	{
 		// could be an old version, continue 
 	}
-
-#if BYTEORDER == kBigEndian
-	SWAP_32 (savedDelay)
-	SWAP_32 (savedBypass)
-#endif
 
 	mDelay = savedDelay;
 	mBypass = savedBypass > 0;
@@ -213,16 +208,10 @@ tresult PLUGIN_API ADelayProcessor::getState (IBStream* state)
 {
 	// here we need to save the model
 
-	float toSaveDelay = mDelay;
-	int32 toSaveBypass = mBypass ? 1 : 0;
+	IBStreamer streamer (state, kLittleEndian);
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSaveDelay)
-	SWAP_32 (toSaveBypass)
-#endif
-
-	state->write (&toSaveDelay, sizeof (float));
-	state->write (&toSaveBypass, sizeof (int32));
+	streamer.writeFloat (mDelay);
+	streamer.writeInt32 (mBypass ? 1 : 0);
 
 	return kResultOk;
 }

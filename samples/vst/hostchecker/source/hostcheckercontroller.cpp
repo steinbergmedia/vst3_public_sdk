@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -48,6 +48,7 @@
 #include "hostcheckerprocessor.h"
 #include "logevents.h"
 #include "vstgui/lib/cvstguitimer.h"
+#include "base/source/fstreamer.h"
 
 using namespace VSTGUI;
 
@@ -281,36 +282,28 @@ tresult PLUGIN_API HostCheckerController::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 {
-	float saved = 0.f;
-	if (state->read (&saved, sizeof (float)) != kResultOk)
-	{
+	if (!state)
 		return kResultFalse;
-	}
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (toSave)
-#endif
+	IBStreamer streamer (state, kLittleEndian);
+
+	float saved = 0.f;
+	if (streamer.readFloat (saved) == false)
+		return kResultFalse;
 	if (saved != 12345.67f)
 	{
 		SMTG_ASSERT (false)
 	}
 
 	uint32 latency;
-	if (state->read (&latency, sizeof (uint32)) == kResultOk)
-	{
-#if BYTEORDER == kBigEndian
-		SWAP_32 (latency)
-#endif
-	}
+	if (streamer.readInt32u (latency) == false)
+		return kResultFalse;
 
 	uint32 bypass;
-	if (state->read (&bypass, sizeof (uint32)) == kResultOk)
-	{
-#if BYTEORDER == kBigEndian
-		SWAP_32 (bypass)
-#endif
-		setParamNormalized (kBypassTag, bypass > 0 ? 1 : 0);
-	}
+	if (streamer.readInt32u (bypass) == false)
+		return kResultFalse;
+
+	setParamNormalized (kBypassTag, bypass > 0 ? 1 : 0);
 
 	return kResultOk;
 }
@@ -727,40 +720,19 @@ tresult PLUGIN_API HostCheckerController::setState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+	IBStreamer streamer (state, kLittleEndian);
+
 	uint32 version = 1;
-	if (state->read (&version, sizeof (uint32)) != kResultOk)
-	{
-		return kResultOk;
-	}
-	
-	uint32 _height;
-	uint32 _width;
-	double _sizeFactor;
+	if (streamer.readInt32u (version) == false)
+		return kResultFalse;
 
-	if (state->read (&_height, sizeof (uint32)) != kResultOk)
-	{
+	if (streamer.readInt32u (height) == false)
 		return kResultFalse;
-	}
-	
-	if (state->read (&_width, sizeof (uint32)) != kResultOk)
-	{
+	if (streamer.readInt32u (width) == false)
 		return kResultFalse;
-	}
-	if (state->read (&_sizeFactor, sizeof (double)) != kResultOk)
-	{
+	if (streamer.readDouble (sizeFactor) == false)
 		return kResultFalse;
-	}
-	
-#if BYTEORDER == kBigEndian
-	SWAP_32 (_height);
-	SWAP_32 (_width);
-	SWAP_64 (_sizeFactor);
-#endif
 
-	height = _height;
-	width =_width;
-	sizeFactor = _sizeFactor;
-	
 	for (auto& item : editorsSubCtlerMap)
 	{
 		item.second->setSizeFactor (sizeFactor);
@@ -775,23 +747,14 @@ tresult PLUGIN_API HostCheckerController::getState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+	IBStreamer streamer (state, kLittleEndian);
+
 	uint32 version = 1;
-	uint32 _height= height;
-	uint32 _width = width;
-	double _sizeFactor = sizeFactor;
+	streamer.writeInt32u (version);
+	streamer.writeInt32u (height);
+	streamer.writeInt32u (width);
+	streamer.writeDouble (sizeFactor);
 
-#if BYTEORDER == kBigEndian
-	SWAP_32 (version);
-	SWAP_32 (_height);
-	SWAP_32 (_width);
-	SWAP_64 (_sizeFactor);
-#endif
-
-	state->write (&version, sizeof (uint32));
-	state->write (&_height, sizeof (uint32));
-	state->write (&_width, sizeof (uint32));
-	state->write (&_sizeFactor, sizeof (double));
-	
 	return kResultOk;
 }
 

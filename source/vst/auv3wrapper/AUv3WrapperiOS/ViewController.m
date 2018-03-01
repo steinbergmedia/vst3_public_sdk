@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,17 +36,16 @@
 
 #import "ViewController.h"
 #import <CoreAudioKit/AUViewController.h>
-#import "AUv3Wrapper.h"
-#import "AUv3AudioEngine.h"
-#import "audiounitconfig.h"
+#import "../audiounitconfig.h"
+#import "../Shared/AUv3AudioEngine.h"
+#import "../Shared/AUv3Wrapper.h"
 
 @class AUv3WrapperViewController;
 
 @interface ViewController () {
 	// Button for playback
 	IBOutlet UIButton *playButton;
-	
-	
+
 	// Container for our custom view.
 	__weak IBOutlet UIView *auContainerView;
 	
@@ -109,7 +108,6 @@
 	
 	constraints = [NSLayoutConstraint constraintsWithVisualFormat: @"V:|-[view]-|" options:0 metrics:nil views:NSDictionaryOfVariableBindings(view)];
 	[auContainerView addConstraints: constraints];
-	
 }
 
 //------------------------------------------------------------------------
@@ -145,7 +143,6 @@
 {
 	[mediaPicker dismissViewControllerAnimated:YES completion:nil];
 }
-
 
 //------------------------------------------------------------------------
 -(IBAction)togglePlay:(id)sender {	

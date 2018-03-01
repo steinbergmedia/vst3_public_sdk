@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -65,7 +65,6 @@ float toNormalized (const MidiData& data)
 	return (float)data * kMidiScaler;
 }
 
-static const ParamID kNoParamId = std::numeric_limits<ParamID>::max ();
 using OptionalEvent = VST3::Optional<Event>;
 
 using ParameterChange = std::pair<ParamID, ParamValue>;

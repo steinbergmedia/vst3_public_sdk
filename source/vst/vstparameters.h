@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2017, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -59,7 +59,8 @@ public:
 	Parameter (const ParameterInfo&);
 	Parameter (const TChar* title, ParamID tag, const TChar* units = nullptr,
 	           ParamValue defaultValueNormalized = 0., int32 stepCount = 0,
-	           int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId);
+	           int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId,
+               const TChar* shortTitle = nullptr);
 	virtual ~Parameter ();
 
 	/** Returns its read only info. */
@@ -114,7 +115,8 @@ public:
 	RangeParameter (const TChar* title, ParamID tag, const TChar* units = nullptr,
 	                ParamValue minPlain = 0., ParamValue maxPlain = 1.,
 	                ParamValue defaultValuePlain = 0., int32 stepCount = 0,
-	                int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId);
+	                int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId,
+                    const TChar* shortTitle = nullptr);
 
 	/** Gets the minimum plain value, same as toPlain (0). */
 	virtual ParamValue getMin () const { return minPlain; }
@@ -155,7 +157,7 @@ public:
 	StringListParameter (const ParameterInfo& paramInfo);
 	StringListParameter (const TChar* title, ParamID tag, const TChar* units = nullptr,
 	                     int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsList,
-	                     UnitID unitID = kRootUnitId);
+	                     UnitID unitID = kRootUnitId, const TChar* shortTitle= nullptr);
 	virtual ~StringListParameter ();
 
 	/** Appends a string and increases the stepCount. */
@@ -201,7 +203,7 @@ public:
 	Parameter* addParameter (const TChar* title, const TChar* units = nullptr, int32 stepCount = 0,
 	                         ParamValue defaultValueNormalized = 0.,
 	                         int32 flags = ParameterInfo::kCanAutomate, int32 tag = -1,
-	                         UnitID unitID = kRootUnitId);
+	                         UnitID unitID = kRootUnitId, const TChar* shortTitle = nullptr);
 
 	/** Adds a given parameter. */
 	Parameter* addParameter (Parameter* p);
