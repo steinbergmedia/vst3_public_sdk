@@ -395,14 +395,14 @@ int32 AAXWrapper::getParameterInfo (AAX_CParamID aaxId, Vst::ParameterInfo& para
 	if (id == -1)
 		return AAX_ERROR_INVALID_PARAMETER_ID;
 
-	std::map<ParamID, int32>::iterator iter = mParamIndexMap.find (id);
-	if (iter == mParamIndexMap.end ())
-		return AAX_ERROR_INVALID_PARAMETER_ID;
+	for (auto iter=mParameterMap.begin(); iter!=mParameterMap.end(); ++iter)
+	{
+		if (iter->vst3ID == id
+		&& mController->getParameterInfo(iter->vst3Index, paramInfo) == kResultTrue)
+			return AAX_SUCCESS;
+	}
 
-	if (mController->getParameterInfo (iter->second, paramInfo) != kResultTrue)
-		return AAX_ERROR_INVALID_PARAMETER_ID;
-
-	return AAX_SUCCESS;
+	return AAX_ERROR_INVALID_PARAMETER_ID;
 }
 
 //------------------------------------------------------------------------
