@@ -73,6 +73,8 @@ using namespace Steinberg::Base::Thread;
 IPluginFactory* PLUGIN_API GetPluginFactory ();
 extern bool InitModule ();
 
+namespace Steinberg { namespace Vst { extern bool gExportBypassParameters; } }
+
 const char* kBypassId = "Byp";
 
 ParameterInfo kParamInfoBypass = {CCONST ('B', 'y', 'p', 0),
@@ -97,6 +99,8 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 
 	AAX_Effect_Desc* effDesc = AAXWrapper_GetDescription ();
 	mPluginDesc = effDesc->mPluginDesc + plugIndex;
+
+	gExportBypassParameters = true;
 	mWrapper = AAXWrapper::create (GetPluginFactory (), effDesc->mVST3PluginID, mPluginDesc, this);
 	if (!mWrapper)
 		return;
@@ -108,7 +112,7 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 #endif
 
 	// if no VST3 Bypass found then simulate it
-	mSimulateBypass = (mWrapper->mBypassParameterID != Vst::kNoParamId);
+	mSimulateBypass = (mWrapper->mBypassParameterID == Vst::kNoParamId);
 
 	if (mParamNames.size () < (size_t)mWrapper->cEffect.numParams)
 	{
@@ -218,8 +222,8 @@ AAX_Result AAXWrapper_Parameters::GetNumberOfParameters (int32_t* oNumControls) 
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 	*oNumControls = mWrapper->cEffect.numParams;
-	if (mSimulateBypass)
-		*oNumControls += 1;
+	// Master bypass
+	*oNumControls += 1;
 	return AAX_SUCCESS;
 }
 
