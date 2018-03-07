@@ -134,6 +134,9 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 		AAX_CSampleRate sampleRate;
 		if (ctrl->GetSampleRate (&sampleRate) == AAX_SUCCESS)
 			mWrapper->setSampleRate (sampleRate);
+
+		if (mWrapper->mProcessor)
+			ctrl->SetSignalLatency(mWrapper->mProcessor->getLatencySamples());
 	}
 
 	for (int32 i = 0; i < mWrapper->cEffect.numParams; i++)
