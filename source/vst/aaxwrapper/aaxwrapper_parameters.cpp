@@ -222,8 +222,8 @@ AAX_Result AAXWrapper_Parameters::GetNumberOfParameters (int32_t* oNumControls) 
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 	*oNumControls = mWrapper->cEffect.numParams;
-	// Master bypass
-	*oNumControls += 1;
+	if (mSimulateBypass)
+		*oNumControls += 1;
 	return AAX_SUCCESS;
 }
 
