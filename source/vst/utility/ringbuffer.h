@@ -54,12 +54,14 @@ template <typename ItemT>
 class RingBuffer
 {
 private:
-	using AtomicIndex = std::atomic<uint32>;
+	using AtomicUInt32 = std::atomic<uint32>;
+	using Index = uint32;
 	using StorageT = std::vector<ItemT>;
 
 	StorageT buffer;
-	AtomicIndex readPosition {0u};
-	AtomicIndex writePosition {0u};
+	Index readPosition {0u};
+	Index writePosition {0u};
+	AtomicUInt32 elementCount {0u};
 
 public:
 	/** Default constructor
@@ -72,6 +74,12 @@ public:
 			resize (initialNumberOfItems);
 	}
 
+	/** size
+	 *
+	 *	@return number of elements the buffer can hold
+	 */
+	size_t size () const noexcept { return buffer.size (); }
+
 	/** resize
 	 *
 	 *	note that you have to make sure that no other thread is reading or writing while calling
@@ -83,58 +91,64 @@ public:
 	/** push a new item into the ringbuffer
 	 *
 	 *	@item item to push
-	 *	@return true on success or false on buffer overflow
+	 *	@return true on success or false if buffer is full
 	 */
 	bool push (ItemT&& item) noexcept
 	{
-		auto pos = writePosition.load ();
-		if (pos == (readPosition.load () - 1))
+		if (elementCount.load () == buffer.size ())
 			return false; // full
 
+		auto pos = writePosition;
+
 		buffer[pos] = std::move (item);
+		elementCount++;
 		++pos;
 		if (pos >= buffer.size ())
 			pos = 0u;
 
-		writePosition.store (pos);
+		writePosition = pos;
 		return true;
 	}
 
 	/** push a new item into the ringbuffer
 	 *
 	 *	@item item to push
-	 *	@return true on success or false on buffer overflow
+	 *	@return true on success or false if buffer is full
 	 */
 	bool push (const ItemT& item) noexcept
 	{
-		auto pos = writePosition.load ();
-		if (pos == (readPosition.load () - 1))
+		if (elementCount.load () == buffer.size ())
 			return false; // full
 
+		auto pos = writePosition;
+
 		buffer[pos] = item;
+		elementCount++;
 		++pos;
 		if (pos >= buffer.size ())
 			pos = 0u;
 
-		writePosition.store (pos);
+		writePosition = pos;
 		return true;
 	}
 
 	/** pop an item out of the ringbuffer
 	 *
 	 *	@item item
-	 *	@return true on success or false if ringbuffer is empty
+	 *	@return true on success or false if buffer is empty
 	 */
 	bool pop (ItemT& item) noexcept
 	{
-		auto pos = readPosition.load ();
-		if (pos == writePosition.load ())
+		if (elementCount.load () == 0)
 			return false; // empty
+
+		auto pos = readPosition;
 		item = std::move (buffer[pos]);
+		elementCount--;
 		++pos;
 		if (pos >= buffer.size ())
 			pos = 0;
-		readPosition.store (pos);
+		readPosition = pos;
 		return true;
 	}
 };

@@ -39,6 +39,7 @@
 #include "adelayprocessor.h"
 #include "base/source/fstring.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
+#include "public.sdk/source/vst/utility/test/ringbuffertest.h"
 
 namespace Steinberg {
 
@@ -59,6 +60,7 @@ tresult PLUGIN_API ADelayTestFactory::createTests (FUnknown* context, ITestSuite
 	if (plugProvider)
 	{
 		parentSuite->addTest ("ExampleTest", owned (new ADelayTest (plugProvider)));
+		parentSuite->addTest ("Ringbuffer Tests", owned (new RingBufferTest ()));
 	}
 	return kResultTrue;
 }
