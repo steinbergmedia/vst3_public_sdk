@@ -87,6 +87,7 @@ EditorAvailability gPluginHasEditor = kDontKnow;
 // Set to 'true' in EditController::initialize
 // default: VST 3 kIsProgramChange parameter will not be exported in VST 2
 bool gExportProgramChangeParameters = false; 
+bool gExportBypassParameters = false;
 
 //------------------------------------------------------------------------
 // Vst2EditorWrapper Declaration
@@ -2159,6 +2160,15 @@ void Vst2Wrapper::setupParameters ()
 			{
 				if (mBypassParameterID == kNoParamId)
 					mBypassParameterID = paramInfo.id;
+
+				// Allow AAX wrapper to expose bypass parameter
+				if (gExportBypassParameters == true)
+				{
+					ParamMapEntry entry = { paramInfo.id, i };
+					mParameterMap.push_back(entry);
+					mParamIndexMap[paramInfo.id] = vst2ParamID;
+					vst2ParamID++;
+				}
 			}
 			//--- ------------------------------------------
 			else if ((paramInfo.flags & ParameterInfo::kIsProgramChange) != 0)

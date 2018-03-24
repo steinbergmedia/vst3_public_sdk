@@ -73,6 +73,8 @@ using namespace Steinberg::Base::Thread;
 IPluginFactory* PLUGIN_API GetPluginFactory ();
 extern bool InitModule ();
 
+namespace Steinberg { namespace Vst { extern bool gExportBypassParameters; } }
+
 const char* kBypassId = "Byp";
 
 ParameterInfo kParamInfoBypass = {CCONST ('B', 'y', 'p', 0),
@@ -97,6 +99,8 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 
 	AAX_Effect_Desc* effDesc = AAXWrapper_GetDescription ();
 	mPluginDesc = effDesc->mPluginDesc + plugIndex;
+
+	gExportBypassParameters = true;
 	mWrapper = AAXWrapper::create (GetPluginFactory (), effDesc->mVST3PluginID, mPluginDesc, this);
 	if (!mWrapper)
 		return;
@@ -108,7 +112,7 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 #endif
 
 	// if no VST3 Bypass found then simulate it
-	mSimulateBypass = (mWrapper->mBypassParameterID != Vst::kNoParamId);
+	mSimulateBypass = (mWrapper->mBypassParameterID == Vst::kNoParamId);
 
 	if (mParamNames.size () < (size_t)mWrapper->cEffect.numParams)
 	{
@@ -134,6 +138,9 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 		AAX_CSampleRate sampleRate;
 		if (ctrl->GetSampleRate (&sampleRate) == AAX_SUCCESS)
 			mWrapper->setSampleRate (sampleRate);
+
+		if (mWrapper->mProcessor)
+			ctrl->SetSignalLatency(mWrapper->mProcessor->getLatencySamples());
 	}
 
 	for (int32 i = 0; i < mWrapper->cEffect.numParams; i++)
