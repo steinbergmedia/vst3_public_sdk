@@ -1,4 +1,7 @@
-if(MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+if(MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
+	# TODO: VST3_OUTPUT_DIR should be declared somewhere more globally.
+	set(VST3_OUTPUT_DIR ${CMAKE_BINARY_DIR}/VST3)
+
     set(target again_au)
     set(${target}_sources
         doc.cpp
@@ -6,6 +9,7 @@ if(MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
         Info.plist
     )
     add_library(${target} MODULE ${${target}_sources})
+    smtg_setup_universal_binary(${target})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
     set_target_properties(${target} PROPERTIES BUNDLE TRUE)
     set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES")

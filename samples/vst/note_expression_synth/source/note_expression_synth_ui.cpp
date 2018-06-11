@@ -159,6 +159,16 @@ public:
 	: DelegationController (parent), player (player), selectedRange (range)
 	{
 	}
+	~KeyboardController () noexcept override
+	{
+		if (keyboard)
+			keyboard->unregisterViewListener (this);
+		if (rangeSelector)
+		{
+			rangeSelector->unregisterViewListener (this);
+			rangeSelector->unregisterKeyRangeChangedListener (this);
+		}
+	}
 
 	CView* verifyView (CView* view, const UIAttributes& attributes,
 	                   const IUIDescription* description) override

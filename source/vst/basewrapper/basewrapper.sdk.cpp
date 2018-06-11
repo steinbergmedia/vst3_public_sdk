@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/vst2wrapper/vst2wrapper.sdk.cpp
-// Created by  : Steinberg, 01/2009
-// Description : VST 3 -> VST 2 Wrapper
+// Filename    : public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp
+// Created by  : Steinberg, 05/2018
+// Description : Base Wrapper
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -34,8 +34,12 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp"
-#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp"
+#include "public.sdk/source/vst/basewrapper/basewrapper.cpp"
 
-#include "public.sdk/source/vst2.x/audioeffectx.cpp"
-#include "public.sdk/source/vst2.x/audioeffect.cpp"
+#include "public.sdk/source/vst/hosting/processdata.cpp"
+#include "public.sdk/source/vst/hosting/eventlist.cpp"
+#include "public.sdk/source/vst/hosting/hostclasses.cpp"
+#include "public.sdk/source/vst/hosting/parameterchanges.cpp"
+
+#include "public.sdk/source/common/memorystream.cpp"
+

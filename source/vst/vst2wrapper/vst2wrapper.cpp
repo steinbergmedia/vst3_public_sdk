@@ -41,17 +41,17 @@
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst2.x/aeffeditor.h"
 
-#include "pluginterfaces/gui/iplugview.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
-#include "pluginterfaces/vst/ivstmessage.h"
-#include "pluginterfaces/vst/vstpresetkeys.h"
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/keycodes.h"
+#include "pluginterfaces/gui/iplugview.h"
+#include "pluginterfaces/vst/ivstmessage.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
+#include "pluginterfaces/vst/vstpresetkeys.h"
 
 #include "base/source/fstreamer.h"
 
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <limits>
 
 extern bool DeinitModule (); //! Called in Vst2Wrapper destructor
@@ -70,40 +70,25 @@ namespace Vst {
 bool vst2WrapperFullParameterPath = true;
 
 //------------------------------------------------------------------------
-// some Globals
-//------------------------------------------------------------------------
-// In order to speed up hasEditor function gPluginHasEditor can be set in EditController::initialize
-enum
-{
-	kDontKnow = -1,
-	kNoEditor = 0,
-	kEditor,
-};
-
-// default: kDontKnow which uses createView to find out
-typedef int32 EditorAvailability;
-EditorAvailability gPluginHasEditor = kDontKnow;
-
-// Set to 'true' in EditController::initialize
-// default: VST 3 kIsProgramChange parameter will not be exported in VST 2
-bool gExportProgramChangeParameters = false; 
-
-//------------------------------------------------------------------------
 // Vst2EditorWrapper Declaration
 //------------------------------------------------------------------------
-class Vst2EditorWrapper : public AEffEditor, public IPlugFrame
+class Vst2EditorWrapper : public AEffEditor, public BaseEditorWrapper
 {
 public:
 //------------------------------------------------------------------------
 	Vst2EditorWrapper (AudioEffect* effect, IEditController* controller);
-	~Vst2EditorWrapper ();
 
-	static bool hasEditor (IEditController* controller);
+	//--- from BaseEditorWrapper ---------------------
+	void _close () SMTG_OVERRIDE;
 
+	//--- from AEffEditor-------------------
 	bool getRect (ERect** rect) SMTG_OVERRIDE;
 	bool open (void* ptr) SMTG_OVERRIDE;
-	void close () SMTG_OVERRIDE;
-	bool setKnobMode (VstInt32 val) SMTG_OVERRIDE;
+	void close () SMTG_OVERRIDE { _close (); }
+	bool setKnobMode (VstInt32 val) SMTG_OVERRIDE
+	{
+		return BaseEditorWrapper::_setKnobMode (static_cast<Vst::KnobMode> (val));
+	}
 
 	///< Receives key down event. Return true only if key was really used!
 	bool onKeyDown (VstKeyCode& keyCode) SMTG_OVERRIDE;
@@ -112,142 +97,67 @@ public:
 	///< Handles mouse wheel event, distance is positive or negative to indicate wheel direction.
 	bool onWheel (float distance) SMTG_OVERRIDE;
 
-	// IPlugFrame
+	//--- IPlugFrame ----------------------------
 	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* newSize) SMTG_OVERRIDE;
-	tresult PLUGIN_API queryInterface (const char* _iid, void** obj) SMTG_OVERRIDE;
-	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
-	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
+
 //------------------------------------------------------------------------
 protected:
-	void createView ();
-
-	IEditController* mController;
-	IPlugView* mView;
-
 	ERect mERect;
 };
+
+//------------------------------------------------------------------------
+bool areSizeEquals (const ViewRect &r1, const ViewRect& r2)
+{
+	if (r1.getHeight() != r2.getHeight ())
+		return false;
+	if (r1.getWidth() != r2.getWidth ())
+		return false;
+	return true;
+}
 
 //------------------------------------------------------------------------
 // Vst2EditorWrapper Implementation
 //------------------------------------------------------------------------
 Vst2EditorWrapper::Vst2EditorWrapper (AudioEffect* effect, IEditController* controller)
-: AEffEditor (effect), mController (controller), mView (0)
+: BaseEditorWrapper (controller), AEffEditor (effect)
 {
-	if (mController)
-		mController->addRef ();
-}
-
-//------------------------------------------------------------------------
-Vst2EditorWrapper::~Vst2EditorWrapper ()
-{
-	if (mView)
-		close ();
-
-	if (mController)
-		mController->release ();
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API Vst2EditorWrapper::queryInterface (const char* _iid, void** obj)
-{
-	QUERY_INTERFACE (_iid, obj, FUnknown::iid, FUnknown)
-	QUERY_INTERFACE (_iid, obj, IPlugFrame::iid, IPlugFrame)
-
-	*obj = 0;
-	return kNoInterface;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API Vst2EditorWrapper::resizeView (IPlugView* view, ViewRect* newSize)
 {
 	tresult result = kResultFalse;
-	if (view && newSize)
+	if (view && newSize && effect)
 	{
-		if (effect)
+		if (areSizeEquals (*newSize, mViewRect))
+			return kResultTrue;
+
+		auto* effectx = dynamic_cast<AudioEffectX*> (effect);
+		if (effectx && effectx->sizeWindow (newSize->getWidth (), newSize->getHeight ()))
 		{
-			AudioEffectX* effectx = dynamic_cast<AudioEffectX*> (effect);
-			if (effectx && effectx->sizeWindow (newSize->getWidth (), newSize->getHeight ()))
-			{
-				result = view->onSize (newSize);
-			}
+			result = view->onSize (newSize);
 		}
 	}
 
 	return result;
-}
-
-//------------------------------------------------------------------------
-bool Vst2EditorWrapper::hasEditor (IEditController* controller)
-{
-	/* Some Plug-ins might have large GUIs. In order to speed up hasEditor function while
-	 * initializing the Plug-in gPluginHasEditor can be set in EditController::initialize
-	 * beforehand. */
-	bool result = false;
-	if (gPluginHasEditor == kEditor)
-	{
-		result = true;
-	}
-	else if (gPluginHasEditor == kNoEditor)
-	{
-		result = false;
-	}
-	else
-	{
-		IPlugView* view = controller ? controller->createView (ViewType::kEditor) : 0;
-		FReleaser viewRel (view);
-		result = (view != 0);
-	}
-
-	return result;
-}
-
-//------------------------------------------------------------------------
-void Vst2EditorWrapper::createView ()
-{
-	if (mView == 0 && mController != 0)
-	{
-		mView = mController->createView (ViewType::kEditor);
-		mView->setFrame (this);
-
-#if SMTG_OS_MACOS
-#if SMTG_PLATFORM_64
-		if (mView && mView->isPlatformTypeSupported (kPlatformTypeNSView) != kResultTrue)
-#else
-		if (mView && mView->isPlatformTypeSupported (kPlatformTypeHIView) != kResultTrue)
-#endif
-		{
-			mView->release ();
-			mView = nullptr;
-			mController->release (); // do not try again
-			mController = nullptr;
-		}
-#endif
-	}
 }
 
 //------------------------------------------------------------------------
 bool Vst2EditorWrapper::getRect (ERect** rect)
 {
-	createView ();
-	if (mView)
+	ViewRect size;
+	if (BaseEditorWrapper::getRect (size))
 	{
-		ViewRect size;
-		if (mView->getSize (&size) == kResultTrue)
-		{
-			mERect.left = (VstInt16)size.left;
-			mERect.top = (VstInt16)size.top;
-			mERect.right = (VstInt16)size.right;
-			mERect.bottom = (VstInt16)size.bottom;
+		mERect.left = (VstInt16)size.left;
+		mERect.top = (VstInt16)size.top;
+		mERect.right = (VstInt16)size.right;
+		mERect.bottom = (VstInt16)size.bottom;
 
-			if ((mERect.bottom - mERect.top) > 0 && (mERect.right - mERect.left) > 0)
-			{
-				*rect = &mERect;
-				return true;
-			}
-		}
+		*rect = &mERect;
+		return true;
 	}
 
-	*rect = 0;
+	*rect = nullptr;
 	return false;
 }
 
@@ -255,89 +165,43 @@ bool Vst2EditorWrapper::getRect (ERect** rect)
 bool Vst2EditorWrapper::open (void* ptr)
 {
 	AEffEditor::open (ptr);
-	createView ();
-
-	if (mView)
-	{
-#if SMTG_OS_WINDOWS
-		FIDString type = kPlatformTypeHWND;
-#elif SMTG_OS_MACOS && SMTG_PLATFORM_64
-		FIDString type = kPlatformTypeNSView;
-#elif SMTG_OS_MACOS
-		FIDString type = kPlatformTypeHIView;
-#endif
-		return mView->attached (ptr, type) == kResultTrue;
-	}
-	return false;
+	return BaseEditorWrapper::_open (ptr);
 }
 
 //------------------------------------------------------------------------
-void Vst2EditorWrapper::close ()
+void Vst2EditorWrapper::_close ()
 {
-	if (mView)
-	{
-		mView->setFrame (0);
-		mView->removed ();
-		mView->release ();
-		mView = nullptr;
-	}
-
+	BaseEditorWrapper::_close ();
 	AEffEditor::close ();
-}
-
-//------------------------------------------------------------------------
-bool Vst2EditorWrapper::setKnobMode (VstInt32 val)
-{
-	bool result = false;
-	IEditController2* editController2;
-	if (mController &&
-	    mController->queryInterface (IEditController2::iid, (void**)&editController2) ==
-	        kResultTrue)
-	{
-		switch (val)
-		{
-			// Circular
-			case 0:
-				result = editController2->setKnobMode (Vst::kCircularMode) == kResultTrue;
-				break;
-
-			// Relative Circular
-			case 1:
-				result = editController2->setKnobMode (kRelativCircularMode) == kResultTrue;
-				break;
-
-			// Linear
-			case 2: result = editController2->setKnobMode (kLinearMode) == kResultTrue; break;
-		}
-		editController2->release ();
-	}
-	return result;
 }
 
 //------------------------------------------------------------------------
 bool Vst2EditorWrapper::onKeyDown (VstKeyCode& keyCode)
 {
-	if (mView)
-		return mView->onKeyDown (VirtualKeyCodeToChar (keyCode.virt), keyCode.virt,
-		                         keyCode.modifier) == kResultTrue;
-	return false;
+	if (!mView)
+		return false;
+
+	return mView->onKeyDown (VirtualKeyCodeToChar (keyCode.virt), keyCode.virt, keyCode.modifier) ==
+	       kResultTrue;
 }
 
 //------------------------------------------------------------------------
 bool Vst2EditorWrapper::onKeyUp (VstKeyCode& keyCode)
 {
-	if (mView)
-		return mView->onKeyUp (VirtualKeyCodeToChar (keyCode.virt), keyCode.virt,
-		                       keyCode.modifier) == kResultTrue;
-	return false;
+	if (!mView)
+		return false;
+
+	return mView->onKeyUp (VirtualKeyCodeToChar (keyCode.virt), keyCode.virt, keyCode.modifier) ==
+	       kResultTrue;
 }
 
 //------------------------------------------------------------------------
 bool Vst2EditorWrapper::onWheel (float distance)
 {
-	if (mView)
-		return mView->onWheel (distance) == kResultTrue;
-	return false;
+	if (!mView)
+		return false;
+
+	return mView->onWheel (distance) == kResultTrue;
 }
 
 //------------------------------------------------------------------------
@@ -365,7 +229,7 @@ protected:
 //------------------------------------------------------------------------
 // Vst2MidiEventQueue Implementation
 //------------------------------------------------------------------------
-Vst2MidiEventQueue::Vst2MidiEventQueue (int32 maxEventCount) : maxEventCount (maxEventCount)
+Vst2MidiEventQueue::Vst2MidiEventQueue (int32 _maxEventCount) : maxEventCount (_maxEventCount)
 {
 	eventList = (VstEvents*)new char[sizeof (VstEvents) + (maxEventCount - 2) * sizeof (VstEvent*)];
 	eventList->numEvents = 0;
@@ -398,7 +262,7 @@ bool Vst2MidiEventQueue::add (const VstMidiEvent& e)
 	if (eventList->numEvents >= maxEventCount)
 		return false;
 
-	VstMidiEvent* dst = (VstMidiEvent*)eventList->events[eventList->numEvents++];
+	auto* dst = (VstMidiEvent*)eventList->events[eventList->numEvents++];
 	memcpy (dst, &e, sizeof (VstMidiEvent));
 	dst->type = kVstMidiType;
 	dst->byteSize = sizeof (VstMidiEvent);
@@ -411,7 +275,7 @@ bool Vst2MidiEventQueue::add (const VstMidiSysexEvent& e)
 	if (eventList->numEvents >= maxEventCount)
 		return false;
 
-	VstMidiSysexEvent* dst = (VstMidiSysexEvent*)eventList->events[eventList->numEvents++];
+	auto* dst = (VstMidiSysexEvent*)eventList->events[eventList->numEvents++];
 	memcpy (dst, &e, sizeof (VstMidiSysexEvent));
 	dst->type = kVstSysExType;
 	dst->byteSize = sizeof (VstMidiSysexEvent);
@@ -425,382 +289,263 @@ void Vst2MidiEventQueue::flush ()
 }
 
 //------------------------------------------------------------------------
-// MemoryStream with attributes to add information "preset or project"
-//------------------------------------------------------------------------
-class VstPresetStream : public MemoryStream, Vst::IStreamAttributes
-{
-public:
-	VstPresetStream () {}
-	VstPresetStream (void* memory, TSize memorySize) : MemoryStream (memory, memorySize) {}
-
-	//---from Vst::IStreamAttributes-----
-	tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE { return kNotImplemented; }
-	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return &attrList; }
-
-	//------------------------------------------------------------------------
-	DELEGATE_REFCOUNT (MemoryStream)
-	tresult PLUGIN_API queryInterface (const TUID iid, void** obj) SMTG_OVERRIDE
-	{
-		QUERY_INTERFACE (iid, obj, IStreamAttributes::iid, IStreamAttributes)
-		return MemoryStream::queryInterface (iid, obj);
-	}
-
-protected:
-	HostAttributeList attrList;
-};
-
-//------------------------------------------------------------------------
-const int32 kMaxEvents = 2048;
-
-//------------------------------------------------------------------------
 // Vst2Wrapper
 //------------------------------------------------------------------------
-Vst2Wrapper::Vst2Wrapper (IAudioProcessor* processor, IEditController* controller,
-                          audioMasterCallback audioMaster, const TUID vst3ComponentID,
-                          VstInt32 vst2ID, IPluginFactory* factory)
-: AudioEffectX (audioMaster, 0, 0)
-, mProcessor (processor)
-, mController (controller)
-, mFactory (factory)
+Vst2Wrapper::Vst2Wrapper (BaseWrapper::SVST3Config& config, audioMasterCallback audioMaster,
+                          VstInt32 vst2ID)
+: BaseWrapper (config), AudioEffectX (audioMaster, 0, 0)
 {
-	memset (mName, 0, sizeof (mName));
-	memset (mVendor, 0, sizeof (mVendor));
-	memset (mSubCategories, 0, sizeof (mSubCategories));
-	memset (&mProcessContext, 0, sizeof (ProcessContext));
+	mUseExportedBypass = false;
+	mUseIncIndex = true;
 
-	for (int32 b = 0; b < kMaxMidiMappingBusses; b++)
-		for (int32 i = 0; i < 16; i++)
-			mMidiCCMapping[b][i] = 0;
-
-	// VST 2 stuff -----------------------------------------------
-	setUniqueID (vst2ID); // identify
-	mVst3EffectClassID = FUID::fromTUID (vst3ComponentID);
+	setUniqueID (vst2ID);
 	canProcessReplacing (true); // supports replacing output
 	programsAreChunks (true);
-
-	for (int32 i = 0; i < kMaxProgramChangeParameters; i++)
-	{
-		mProgramChangeParameterIDs[i] = kNoParamId;
-		mProgramChangeParameterIdxs[i] = -1;
-	}
-	if (factory)
-		factory->addRef ();
-}
-
-//------------------------------------------------------------------------
-bool Vst2Wrapper::init ()
-{
-	// VST 3 stuff -----------------------------------------------
-	if (mProcessor)
-		mProcessor->queryInterface (IComponent::iid, (void**)&mComponent);
-	if (mController)
-	{
-		mController->queryInterface (IUnitInfo::iid, (void**)&mUnitInfo);
-		mController->queryInterface (IMidiMapping::iid, (void**)&mMidiMapping);
-	}
-
-	//---init the processor component
-	componentInitialized = true;
-	if (mComponent->initialize ((IHostApplication*)this) != kResultTrue)
-		return false;
-
-	//---init the controller component
-	if (mController)
-	{
-		// do not initialize 2 times the component if it is singleComponent
-		if (FUnknownPtr<IEditController> (mComponent).getInterface () != mController)
-		{
-			controllerInitialized = true;
-			if (mController->initialize ((IHostApplication*)this) != kResultTrue)
-				return false;
-		}
-
-		//---set this class as Component Handler
-		mController->setComponentHandler (this);
-
-		//---connect the 2 components
-		FUnknownPtr<IConnectionPoint> cp1 (mProcessor);
-		FUnknownPtr<IConnectionPoint> cp2 (mController);
-		if (cp1 && cp2)
-		{
-			cp1->connect (cp2);
-			cp2->connect (cp1);
-
-			componentsConnected = true;
-		}
-
-		//---inform the component "controller" with the component "processor" state
-		MemoryStream stream;
-		if (mComponent->getState (&stream) == kResultTrue)
-		{
-			stream.seek (0, IBStream::kIBSeekSet, 0);
-			mController->setComponentState (&stream);
-		}
-	}
-
-	// VST 2 stuff -----------------------------------------------
-	if (mProcessor)
-	{
-		if (mProcessor->canProcessSampleSize (kSample64) == kResultTrue)
-		{
-			canDoubleReplacing (); // supports double precision processing
-
-			// we use the 64 as default only if 32 bit not supported
-			if (mProcessor->canProcessSampleSize (kSample32) != kResultTrue)
-				mVst3SampleSize = kSample64;
-			else
-				mVst3SampleSize = kSample32;
-		}
-
-		// latency -------------------------------
-		setInitialDelay (mProcessor->getLatencySamples ());
-
-		if (mProcessor->getTailSamples () == kNoTail)
-			noTail (true);
-
-		setupProcessing (); // initialize vst3 component processing parameters
-	}
-
-	// parameters
-	setupParameters ();
-
-	// setup inputs and outputs
-	setupBuses ();
-
-	if (mController)
-	{
-		if (Vst2EditorWrapper::hasEditor (mController))
-			setEditor (new Vst2EditorWrapper (this, mController));
-	}
-
-	// find out programs of root unit --------------------------
-	numPrograms = cEffect.numPrograms = 0;
-	if (mUnitInfo)
-	{
-		int32 programListCount = mUnitInfo->getProgramListCount ();
-		if (programListCount > 0)
-		{
-			ProgramListID rootUnitProgramListId = kNoProgramListId;
-			for (int32 i = 0; i < mUnitInfo->getUnitCount (); i++)
-			{
-				UnitInfo unit = {0};
-				if (mUnitInfo->getUnitInfo (i, unit) == kResultTrue)
-				{
-					if (unit.id == kRootUnitId)
-					{
-						rootUnitProgramListId = unit.programListId;
-						break;
-					}
-				}
-			}
-
-			if (rootUnitProgramListId != kNoProgramListId)
-			{
-				for (int32 i = 0; i < programListCount; i++)
-				{
-					ProgramListInfo progList = {0};
-					if (mUnitInfo->getProgramListInfo (i, progList) == kResultTrue)
-					{
-						if (progList.id == rootUnitProgramListId)
-						{
-							numPrograms = cEffect.numPrograms = progList.programCount;
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if (mTimer == 0)
-	{
-		mTimer = Timer::create (this, 50);
-	}
-
-	initMidiCtrlerAssignment ();
-
-	return true;
 }
 
 //------------------------------------------------------------------------
 Vst2Wrapper::~Vst2Wrapper ()
 {
-	if (mTimer)
+	//! editor needs to be destroyed BEFORE DeinitModule. Therefore destroy it here already
+	//  instead of AudioEffect destructor
+	if (mEditor)
 	{
-		mTimer->release ();
-		mTimer = nullptr;
+		setEditor (nullptr);
+		mEditor->release ();
+		mEditor = nullptr;
 	}
-
-	mProcessData.unprepare ();
 
 	if (mVst2InputArrangement)
 		free (mVst2InputArrangement);
 	if (mVst2OutputArrangement)
 		free (mVst2OutputArrangement);
 
-	//---Disconnect components
-	if (componentsConnected)
-	{
-		FUnknownPtr<IConnectionPoint> cp1 (mProcessor);
-		FUnknownPtr<IConnectionPoint> cp2 (mController);
-		if (cp1 && cp2)
-		{
-			cp1->disconnect (cp2);
-			cp2->disconnect (cp1);
-		}
-	}
-
-	//---Terminate Controller Component
-	if (mController)
-	{
-		mController->setComponentHandler (0);
-		if (controllerInitialized)
-			mController->terminate ();
-		controllerInitialized = false;
-	}
-
-	//---Terminate Processor Component
-	if (mComponent && componentInitialized)
-	{
-		mComponent->terminate ();
-		componentInitialized = false;
-	}
-
-	if (mUnitInfo)
-		mUnitInfo->release ();
-
-	if (mMidiMapping)
-		mMidiMapping->release ();
-	if (mMidiCCMapping[0])
-		for (int32 b = 0; b < kMaxMidiMappingBusses; b++)
-			for (int32 i = 0; i < 16; i++)
-				delete mMidiCCMapping[b][i];
-
-	if (mController)
-		mController->release ();
-
-	//! editor needs to be destroyed BEFORE DeinitModule. Therefore destroy it here already
-	//  instead of AudioEffect destructor
-	delete editor;
-	editor = nullptr;
-
-	if (mComponent)
-		mComponent->release ();
-
-	if (mProcessor)
-		mProcessor->release ();
-
-	delete mInputEvents;
-	delete mOutputEvents;
 	delete mVst2OutputEvents;
-
-	if (mFactory)
-		mFactory->release ();
-
-	DeinitModule ();
+	mVst2OutputEvents = nullptr;
 }
 
-// VST 2
+//------------------------------------------------------------------------
+bool Vst2Wrapper::init ()
+{
+	bool res = BaseWrapper::init ();
+
+	numPrograms = cEffect.numPrograms = mNumPrograms;
+
+	if (mController)
+	{
+		if (BaseEditorWrapper::hasEditor (mController))
+		{
+			auto* editor = new Vst2EditorWrapper (this, mController);
+			_setEditor (editor);
+			setEditor (editor);
+		}
+	}
+	return res;
+}
+
+//------------------------------------------------------------------------
+void Vst2Wrapper::_canDoubleReplacing (bool val)
+{
+	canDoubleReplacing (val);
+}
+
+//------------------------------------------------------------------------
+void Vst2Wrapper::_setInitialDelay (int32 delay)
+{
+	setInitialDelay (delay);
+}
+
+//------------------------------------------------------------------------
+void Vst2Wrapper::_noTail (bool val)
+{
+	noTail (val);
+}
+
+//------------------------------------------------------------------------
+void Vst2Wrapper::setupBuses ()
+{
+	BaseWrapper::setupBuses ();
+
+	if (mHasEventOutputBuses)
+	{
+		if (mVst2OutputEvents == nullptr)
+			mVst2OutputEvents = new Vst2MidiEventQueue (kMaxEvents);
+	}
+	else
+	{
+		if (mVst2OutputEvents)
+		{
+			delete mVst2OutputEvents;
+			mVst2OutputEvents = nullptr;
+		}
+	}
+}
+//------------------------------------------------------------------------
+void Vst2Wrapper::setupProcessTimeInfo ()
+{
+	VstTimeInfo* vst2timeInfo = AudioEffectX::getTimeInfo (0xffffffff);
+	if (vst2timeInfo)
+	{
+		const uint32 portableFlags =
+		    ProcessContext::kPlaying | ProcessContext::kCycleActive | ProcessContext::kRecording |
+		    ProcessContext::kSystemTimeValid | ProcessContext::kProjectTimeMusicValid |
+		    ProcessContext::kBarPositionValid | ProcessContext::kCycleValid |
+		    ProcessContext::kTempoValid | ProcessContext::kTimeSigValid |
+		    ProcessContext::kSmpteValid | ProcessContext::kClockValid;
+
+		mProcessContext.state = ((uint32)vst2timeInfo->flags) & portableFlags;
+		mProcessContext.sampleRate = vst2timeInfo->sampleRate;
+		mProcessContext.projectTimeSamples = (TSamples)vst2timeInfo->samplePos;
+
+		if (mProcessContext.state & ProcessContext::kSystemTimeValid)
+			mProcessContext.systemTime = (TSamples)vst2timeInfo->nanoSeconds;
+		else
+			mProcessContext.systemTime = 0;
+
+		if (mProcessContext.state & ProcessContext::kProjectTimeMusicValid)
+			mProcessContext.projectTimeMusic = vst2timeInfo->ppqPos;
+		else
+			mProcessContext.projectTimeMusic = 0;
+
+		if (mProcessContext.state & ProcessContext::kBarPositionValid)
+			mProcessContext.barPositionMusic = vst2timeInfo->barStartPos;
+		else
+			mProcessContext.barPositionMusic = 0;
+
+		if (mProcessContext.state & ProcessContext::kCycleValid)
+		{
+			mProcessContext.cycleStartMusic = vst2timeInfo->cycleStartPos;
+			mProcessContext.cycleEndMusic = vst2timeInfo->cycleEndPos;
+		}
+		else
+			mProcessContext.cycleStartMusic = mProcessContext.cycleEndMusic = 0.0;
+
+		if (mProcessContext.state & ProcessContext::kTempoValid)
+			mProcessContext.tempo = vst2timeInfo->tempo;
+		else
+			mProcessContext.tempo = 120.0;
+
+		if (mProcessContext.state & ProcessContext::kTimeSigValid)
+		{
+			mProcessContext.timeSigNumerator = vst2timeInfo->timeSigNumerator;
+			mProcessContext.timeSigDenominator = vst2timeInfo->timeSigDenominator;
+		}
+		else
+			mProcessContext.timeSigNumerator = mProcessContext.timeSigDenominator = 4;
+
+		mProcessContext.frameRate.flags = 0;
+		if (mProcessContext.state & ProcessContext::kSmpteValid)
+		{
+			mProcessContext.smpteOffsetSubframes = vst2timeInfo->smpteOffset;
+			switch (vst2timeInfo->smpteFrameRate)
+			{
+				case kVstSmpte24fps: ///< 24 fps
+					mProcessContext.frameRate.framesPerSecond = 24;
+					break;
+				case kVstSmpte25fps: ///< 25 fps
+					mProcessContext.frameRate.framesPerSecond = 25;
+					break;
+				case kVstSmpte2997fps: ///< 29.97 fps
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				case kVstSmpte30fps: ///< 30 fps
+					mProcessContext.frameRate.framesPerSecond = 30;
+					break;
+				case kVstSmpte2997dfps: ///< 29.97 drop
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags =
+					    FrameRate::kPullDownRate | FrameRate::kDropRate;
+					break;
+				case kVstSmpte30dfps: ///< 30 drop
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags = FrameRate::kDropRate;
+					break;
+				case kVstSmpteFilm16mm: // not a smpte rate
+				case kVstSmpteFilm35mm:
+					mProcessContext.state &= ~ProcessContext::kSmpteValid;
+					break;
+				case kVstSmpte239fps: ///< 23.9 fps
+					mProcessContext.frameRate.framesPerSecond = 24;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				case kVstSmpte249fps: ///< 24.9 fps
+					mProcessContext.frameRate.framesPerSecond = 25;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				case kVstSmpte599fps: ///< 59.9 fps
+					mProcessContext.frameRate.framesPerSecond = 60;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				case kVstSmpte60fps: ///< 60 fps
+					mProcessContext.frameRate.framesPerSecond = 60;
+					break;
+				default: mProcessContext.state &= ~ProcessContext::kSmpteValid; break;
+			}
+		}
+		else
+		{
+			mProcessContext.smpteOffsetSubframes = 0;
+			mProcessContext.frameRate.framesPerSecond = 0;
+		}
+
+		///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest)
+		if (mProcessContext.state & ProcessContext::kClockValid)
+			mProcessContext.samplesToNextClock = vst2timeInfo->samplesToNextClock;
+		else
+			mProcessContext.samplesToNextClock = 0;
+
+		mProcessData.processContext = &mProcessContext;
+	}
+	else
+		mProcessData.processContext = nullptr;
+}
+
 //------------------------------------------------------------------------
 void Vst2Wrapper::suspend ()
 {
-	stopProcess ();
-
-	if (mComponent)
-		mComponent->setActive (false);
-	mActive = false;
+	BaseWrapper::_suspend ();
 }
 
 //------------------------------------------------------------------------
 void Vst2Wrapper::resume ()
 {
 	AudioEffectX::resume ();
-	mChunk.setSize (0);
-
-	if (mComponent)
-		mComponent->setActive (true);
-	mActive = true;
+	BaseWrapper::_resume ();
 }
 
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::startProcess ()
 {
-	if (mProcessor && mProcessing == false)
-	{
-		mProcessing = true;
-		mProcessor->setProcessing (true);
-	}
+	BaseWrapper::_startProcess ();
 	return 0;
 }
 
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::stopProcess ()
 {
-	if (mProcessor && mProcessing)
-	{
-		mProcessor->setProcessing (false);
-		mProcessing = false;
-	}
+	BaseWrapper::_stopProcess ();
 	return 0;
-}
-
-//------------------------------------------------------------------------
-bool Vst2Wrapper::setupProcessing (int32 processModeOverwrite)
-{
-	if (!mProcessor)
-		return false;
-
-	ProcessSetup setup;
-	if (processModeOverwrite >= 0)
-		setup.processMode = processModeOverwrite;
-	else
-		setup.processMode = mVst3processMode;
-	setup.maxSamplesPerBlock = blockSize;
-	setup.sampleRate = sampleRate;
-	setup.symbolicSampleSize = mVst3SampleSize;
-
-	return mProcessor->setupProcessing (setup) == kResultTrue;
 }
 
 //------------------------------------------------------------------------
 void Vst2Wrapper::setSampleRate (float newSamplerate)
 {
-	if (mProcessing)
-		return;
-
-	if (newSamplerate != sampleRate)
-	{
-		AudioEffectX::setSampleRate (newSamplerate);
-		setupProcessing ();
-	}
+	BaseWrapper::_setSampleRate (newSamplerate);
+	AudioEffectX::setSampleRate (mSampleRate);
 }
 
 //------------------------------------------------------------------------
 void Vst2Wrapper::setBlockSize (VstInt32 newBlockSize)
 {
-	if (mProcessing)
-		return;
-
-	if (blockSize != newBlockSize)
-	{
+	if (BaseWrapper::_setBlockSize (newBlockSize))
 		AudioEffectX::setBlockSize (newBlockSize);
-		setupProcessing ();
-	}
 }
 
 //------------------------------------------------------------------------
 float Vst2Wrapper::getParameter (VstInt32 index)
 {
-	if (!mController)
-		return 0.f;
-
-	if (index < (int32)mParameterMap.size ())
-	{
-		ParamID id = mParameterMap.at (index).vst3ID;
-		return (float)mController->getParamNormalized (id);
-	}
-
-	return 0.f;
+	return BaseWrapper::_getParameter (index);
 }
 
 //------------------------------------------------------------------------
@@ -817,16 +562,9 @@ void Vst2Wrapper::setParameter (VstInt32 index, float value)
 }
 
 //------------------------------------------------------------------------
-void Vst2Wrapper::addParameterChange (ParamID id, ParamValue value, int32 sampleOffset)
-{
-	mGuiTransfer.addChange (id, value, sampleOffset);
-	mInputTransfer.addChange (id, value, sampleOffset);
-}
-
-//------------------------------------------------------------------------
 void Vst2Wrapper::setProgram (VstInt32 program)
 {
-	if (mProgramParameterID != kNoParamId && mController != 0 && mProgramParameterIdx != -1)
+	if (mProgramParameterID != kNoParamId && mController != nullptr && mProgramParameterIdx != -1)
 	{
 		AudioEffectX::setProgram (program);
 
@@ -910,40 +648,6 @@ void Vst2Wrapper::getParameterLabel (VstInt32 index, char* label)
 }
 
 //------------------------------------------------------------------------
-/*!	Usually VST 2 hosts call setParameter (...) and getParameterDisplay (...) synchronously.
-    In setParameter (...) param changes get queued (guiTransfer) and transfered in idle (::onTimer).
-    The ::onTimer call almost always comes AFTER getParameterDisplay (...) and therefore returns an
-   old
-    value. To avoid sending back old values, getLastParamChange (...) returns the latest value
-    from the guiTransfer queue. */
-//------------------------------------------------------------------------
-bool Vst2Wrapper::getLastParamChange (ParamID id, ParamValue& value)
-{
-	ParameterChanges changes;
-	mGuiTransfer.transferChangesTo (changes);
-	for (int32 i = 0; i < changes.getParameterCount (); ++i)
-	{
-		IParamValueQueue* queue = changes.getParameterData (i);
-		if (queue)
-		{
-			if (queue->getParameterId () == id)
-			{
-				int32 points = queue->getPointCount ();
-				if (points > 0)
-				{
-					mGuiTransfer.transferChangesFrom (changes);
-					int32 sampleOffset = 0;
-					return queue->getPoint (points - 1, sampleOffset, value) == kResultTrue;
-				}
-			}
-		}
-	}
-
-	mGuiTransfer.transferChangesFrom (changes);
-	return false;
-}
-
-//------------------------------------------------------------------------
 void Vst2Wrapper::getParameterDisplay (VstInt32 index, char* text)
 {
 	// string representation ("0.5", "-3", "PLATE", etc...) of the value of parameter \e index.
@@ -970,26 +674,6 @@ void Vst2Wrapper::getParameterDisplay (VstInt32 index, char* text)
 	}
 }
 
-//------------------------------------------------------------------------
-void Vst2Wrapper::getUnitPath (UnitID unitID, String& path)
-{
-	//! Build the unit path up to the root unit (e.g. "Modulators.LFO 1.". Separator is a ".")
-	for (int32 unitIndex = 0; unitIndex < mUnitInfo->getUnitCount (); ++unitIndex)
-	{
-		UnitInfo info = {0};
-		mUnitInfo->getUnitInfo (unitIndex, info);
-		if (info.id == unitID)
-		{
-			String unitName (info.name);
-			unitName.append (".");
-			path.insertAt (0, unitName);
-			if (info.parentUnitId != kRootUnitId)
-				getUnitPath (info.parentUnitId, path);
-
-			break;
-		}
-	}
-}
 //------------------------------------------------------------------------
 void Vst2Wrapper::getParameterName (VstInt32 index, char* text)
 {
@@ -1112,75 +796,13 @@ bool Vst2Wrapper::getParameterProperties (VstInt32 index, VstParameterProperties
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::getChunk (void** data, bool isPreset)
 {
-	// Host stores Plug-in state. Returns the size in bytes of the chunk (Plug-in allocates the data
-	// array)
-	MemoryStream componentStream;
-	if (mComponent && mComponent->getState (&componentStream) != kResultTrue)
-		componentStream.setSize (0);
-
-	MemoryStream controllerStream;
-	if (mController && mController->getState (&controllerStream) != kResultTrue)
-		controllerStream.setSize (0);
-
-	if (componentStream.getSize () + controllerStream.getSize () == 0)
-		return 0;
-
-	mChunk.setSize (0);
-	IBStreamer acc (&mChunk, kLittleEndian);
-
-	acc.writeInt64 (componentStream.getSize ());
-	acc.writeInt64 (controllerStream.getSize ());
-
-	acc.writeRaw (componentStream.getData (), (int32)componentStream.getSize ());
-	acc.writeRaw (controllerStream.getData (), (int32)controllerStream.getSize ());
-
-	int32 chunkSize = (int32)mChunk.getSize ();
-	*data = mChunk.getData ();
-	return chunkSize;
+	return BaseWrapper::_getChunk (data, isPreset);
 }
 
 //------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 {
-	if (!mComponent)
-		return 0;
-
-	// throw away all previously queued parameter changes, they are obsolete
-	mGuiTransfer.removeChanges ();
-	mInputTransfer.removeChanges ();
-
-	MemoryStream chunk (data, byteSize);
-	IBStreamer acc (&chunk, kLittleEndian);
-
-	int64 componentDataSize = 0;
-	int64 controllerDataSize = 0;
-
-	acc.readInt64 (componentDataSize);
-	acc.readInt64 (controllerDataSize);
-
-	VstPresetStream componentStream (((char*)data) + acc.tell (), componentDataSize);
-	VstPresetStream controllerStream (((char*)data) + acc.tell () + componentDataSize,
-	                                  controllerDataSize);
-
-	mComponent->setState (&componentStream);
-	componentStream.seek (0, IBStream::kIBSeekSet, 0);
-
-	if (mController)
-	{
-		if (!isPreset)
-		{
-			if (Vst::IAttributeList* attr = componentStream.getAttributes ())
-				attr->setString (Vst::PresetAttributes::kStateType,
-				                 String (Vst::StateType::kProject));
-			if (Vst::IAttributeList* attr = controllerStream.getAttributes ())
-				attr->setString (Vst::PresetAttributes::kStateType, 
-				                 String (Vst::StateType::kProject));
-		}
-		mController->setComponentState (&componentStream);
-		mController->setState (&controllerStream);
-	}
-
-	return 0;
+	return BaseWrapper::_setChunk (data, byteSize, isPreset);
 }
 
 //------------------------------------------------------------------------
@@ -1465,12 +1087,12 @@ void Vst2Wrapper::setupVst2Arrangement (VstSpeakerArrangement*& vst2arr,
 	if (vst2arr && (numChannels == 0 || (numChannels > vst2arr->numChannels && numChannels > 8)))
 	{
 		free (vst2arr);
-		vst2arr = 0;
+		vst2arr = nullptr;
 		if (numChannels == 0)
 			return;
 	}
 
-	if (vst2arr == 0)
+	if (vst2arr == nullptr)
 	{
 		int32 channelOverhead = numChannels > 8 ? numChannels - 8 : 0;
 		uint32 structSize =
@@ -1534,18 +1156,13 @@ bool Vst2Wrapper::getSpeakerArrangement (VstSpeakerArrangement** pluginInput,
 	*pluginInput = mVst2InputArrangement;
 	*pluginOutput = mVst2OutputArrangement;
 
-	return mVst2InputArrangement != 0 && mVst2OutputArrangement != 0;
+	return mVst2InputArrangement != nullptr && mVst2OutputArrangement != nullptr;
 }
 
 //------------------------------------------------------------------------
 bool Vst2Wrapper::setBypass (bool onOff)
 {
-	if (mBypassParameterID != kNoParamId)
-	{
-		addParameterChange (mBypassParameterID, onOff ? 1.0 : 0.0, 0);
-		return true;
-	}
-	return false;
+	return BaseWrapper::_setBypass (onOff);
 }
 
 //-----------------------------------------------------------------------------
@@ -1717,7 +1334,7 @@ VstInt32 Vst2Wrapper::canDo (char* text)
 	}
 	else if (stricmp (text, "sendVstMidiEvent") == 0)
 	{
-		return hasEventOutputBuses ? 1 : -1;
+		return mHasEventOutputBuses ? 1 : -1;
 	}
 	else if (stricmp (text, "receiveVstEvents") == 0)
 	{
@@ -1725,7 +1342,7 @@ VstInt32 Vst2Wrapper::canDo (char* text)
 	}
 	else if (stricmp (text, "receiveVstMidiEvent") == 0)
 	{
-		return hasEventInputBuses ? 1 : -1;
+		return mHasEventInputBuses ? 1 : -1;
 	}
 	else if (stricmp (text, "receiveVstTimeInfo") == 0)
 	{
@@ -1747,7 +1364,8 @@ VstInt32 Vst2Wrapper::canDo (char* text)
 		if (mUnitInfo)
 		{
 			UnitID unitId = -1;
-			if (mUnitInfo->getUnitByBus (kEvent, kInput, 0, 0, unitId) == kResultTrue && unitId >= 0)
+			if (mUnitInfo->getUnitByBus (kEvent, kInput, 0, 0, unitId) == kResultTrue &&
+			    unitId >= 0)
 				return 1;
 		}
 		return -1;
@@ -1757,38 +1375,6 @@ VstInt32 Vst2Wrapper::canDo (char* text)
 		return mBypassParameterID != kNoParamId ? 1 : -1;
 	}
 	return 0; // do not know
-}
-
-//-----------------------------------------------------------------------------
-bool Vst2Wrapper::setupMidiProgram (int32 midiChannel, ProgramListID programListId,
-									MidiProgramName& midiProgramName)
-{
-	if (mUnitInfo)
-	{
-		String128 string128 = {0};
-
-		if (mUnitInfo->getProgramName (programListId, midiProgramName.thisProgramIndex, string128) ==
-			kResultTrue)
-		{
-			String str (string128);
-			str.copyTo8 (midiProgramName.name, 0, kVstMaxNameLen);
-
-			midiProgramName.midiProgram = midiProgramName.thisProgramIndex;
-			midiProgramName.midiBankMsb = -1;
-			midiProgramName.midiBankLsb = -1;
-			midiProgramName.parentCategoryIndex = -1;
-			midiProgramName.flags = 0;
-
-			if (mUnitInfo->getProgramInfo (programListId, midiProgramName.thisProgramIndex,
-										  PresetAttributes::kInstrument, string128) == kResultTrue)
-			{
-				midiProgramName.parentCategoryIndex =
-					lookupProgramCategory (midiChannel, string128);
-			}
-			return true;
-		}
-	}
-	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -1825,12 +1411,12 @@ VstInt32 Vst2Wrapper::getCurrentMidiProgram (VstInt32 channel, MidiProgramName* 
 				if (mController->getParameterInfo (i, parameterInfo) == kResultTrue)
 				{
 					if ((parameterInfo.flags & ParameterInfo::kIsProgramChange) != 0 &&
-						parameterInfo.unitId == unitId)
+					    parameterInfo.unitId == unitId)
 					{
 						ParamValue normalized = mController->getParamNormalized (parameterInfo.id);
 						int32 discreteValue =
-							Min<int32> ((int32) (normalized * (parameterInfo.stepCount + 1)),
-										parameterInfo.stepCount);
+						    Min<int32> ((int32) (normalized * (parameterInfo.stepCount + 1)),
+						                parameterInfo.stepCount);
 
 						if (currentProgram)
 						{
@@ -1849,94 +1435,32 @@ VstInt32 Vst2Wrapper::getCurrentMidiProgram (VstInt32 channel, MidiProgramName* 
 }
 
 //-----------------------------------------------------------------------------
-VstInt32 Vst2Wrapper::getMidiProgramCategory (VstInt32 channel, MidiProgramCategory* category)
-{
-	// try to rebuild it each time
-	setupProgramCategories ();
-
-	if (channel >= (VstInt32)mProgramCategories.size ())
-		return 0;
-
-	std::vector<ProgramCategory>& channelCategories = mProgramCategories[channel];
-	if (category && category->thisCategoryIndex < (VstInt32)channelCategories.size ())
-	{
-		ProgramCategory& cat = channelCategories[category->thisCategoryIndex];
-		if (cat.vst2Category.thisCategoryIndex == category->thisCategoryIndex)
-			memcpy (category, &cat.vst2Category, sizeof (MidiProgramCategory));
-	}
-	return (VstInt32)channelCategories.size ();
-}
-
-//-----------------------------------------------------------------------------
-bool Vst2Wrapper::hasMidiProgramsChanged (VstInt32 channel)
-{
-	// names of programs or program categories have changed
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Vst2Wrapper::getMidiKeyName (VstInt32 channel, MidiKeyName* keyName)
-{
-	UnitID unitId;
-	ProgramListID programListId;
-	if (mUnitInfo && getProgramListAndUnit (channel, unitId, programListId))
-	{
-		String128 string128 = {0};
-		if (mUnitInfo->getProgramPitchName (programListId, keyName->thisProgramIndex,
-										   keyName->thisKeyNumber, string128))
-		{
-			String str (string128);
-			str.copyTo8 (keyName->keyName, 0, kVstMaxNameLen);
-			return true;
-		}
-	}
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Vst2Wrapper::getProgramListAndUnit (int32 midiChannel, UnitID& unitId,
-										 ProgramListID& programListId)
-{
-	programListId = kNoProgramListId;
-	unitId = -1;
-
-	// use the first input event bus (VST 2 has only 1 bus for event)
-	if (mUnitInfo && mUnitInfo->getUnitByBus (kEvent, kInput, 0, midiChannel, unitId) == kResultTrue)
-	{
-		for (int32 i = 0, unitCount = mUnitInfo->getUnitCount (); i < unitCount; i++)
-		{
-			UnitInfo unitInfoStruct = {0};
-			if (mUnitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
-			{
-				if (unitId == unitInfoStruct.id)
-				{
-					programListId = unitInfoStruct.programListId;
-					return programListId != kNoProgramListId;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-
-//-----------------------------------------------------------------------------
-bool Vst2Wrapper::getProgramListInfoByProgramListID (ProgramListID programListId,
-													 ProgramListInfo& info)
+bool Vst2Wrapper::setupMidiProgram (int32 midiChannel, ProgramListID programListId,
+                                    MidiProgramName& midiProgramName)
 {
 	if (mUnitInfo)
 	{
-		int32 programListCount = mUnitInfo->getProgramListCount ();
-		for (int32 i = 0; i < programListCount; i++)
+		String128 string128 = {0};
+
+		if (mUnitInfo->getProgramName (programListId, midiProgramName.thisProgramIndex,
+		                               string128) == kResultTrue)
 		{
-			memset (&info, 0, sizeof (ProgramListInfo));
-			if (mUnitInfo->getProgramListInfo (i, info) == kResultTrue)
+			String str (string128);
+			str.copyTo8 (midiProgramName.name, 0, 64);
+
+			midiProgramName.midiProgram = midiProgramName.thisProgramIndex;
+			midiProgramName.midiBankMsb = -1;
+			midiProgramName.midiBankLsb = -1;
+			midiProgramName.parentCategoryIndex = -1;
+			midiProgramName.flags = 0;
+
+			if (mUnitInfo->getProgramInfo (programListId, midiProgramName.thisProgramIndex,
+			                               PresetAttributes::kInstrument, string128) == kResultTrue)
 			{
-				if (info.id == programListId)
-				{
-					return true;
-				}
+				midiProgramName.parentCategoryIndex =
+				    lookupProgramCategory (midiChannel, string128);
 			}
+			return true;
 		}
 	}
 	return false;
@@ -1959,7 +1483,7 @@ int32 Vst2Wrapper::lookupProgramCategory (int32 midiChannel, String128 instrumen
 
 //-----------------------------------------------------------------------------
 uint32 Vst2Wrapper::makeCategoriesRecursive (std::vector<ProgramCategory>& channelCategories,
-											 String128 vst3Category)
+                                             String128 vst3Category)
 {
 	for (uint32 categoryIndex = 0; categoryIndex < channelCategories.size (); categoryIndex++)
 	{
@@ -2044,413 +1568,61 @@ void Vst2Wrapper::setupProgramCategories ()
 }
 
 //-----------------------------------------------------------------------------
-void Vst2Wrapper::setVendorName (char* name)
+VstInt32 Vst2Wrapper::getMidiProgramCategory (VstInt32 channel, MidiProgramCategory* category)
 {
-	memcpy (mVendor, name, sizeof (mVendor));
-}
+	// try to rebuild it each time
+	setupProgramCategories ();
 
-//-----------------------------------------------------------------------------
-void Vst2Wrapper::setEffectName (char* effectName)
-{
-	memcpy (mName, effectName, sizeof (mName));
-}
+	if (channel >= (VstInt32)mProgramCategories.size ())
+		return 0;
 
-//-----------------------------------------------------------------------------
-void Vst2Wrapper::setEffectVersion (char* version)
-{
-	if (!version)
-		mVersion = 0;
-	else
+	std::vector<ProgramCategory>& channelCategories = mProgramCategories[channel];
+	if (category && category->thisCategoryIndex < (VstInt32)channelCategories.size ())
 	{
-		int32 major = 1;
-		int32 minor = 0;
-		int32 subminor = 0;
-		int32 subsubminor = 0;
-		int32 ret = sscanf (version, "%d.%d.%d.%d", &major, &minor, &subminor, &subsubminor);
-		mVersion = (major & 0xff) << 24;
-		if (ret > 3)
-			mVersion += (subsubminor & 0xff);
-		if (ret > 2)
-			mVersion += (subminor & 0xff) << 8;
-		if (ret > 1)
-			mVersion += (minor & 0xff) << 16;
+		ProgramCategory& cat = channelCategories[category->thisCategoryIndex];
+		if (cat.vst2Category.thisCategoryIndex == category->thisCategoryIndex)
+			memcpy (category, &cat.vst2Category, sizeof (MidiProgramCategory));
 	}
+	return (VstInt32)channelCategories.size ();
 }
 
 //-----------------------------------------------------------------------------
-void Vst2Wrapper::setSubCategories (char* string)
+bool Vst2Wrapper::hasMidiProgramsChanged (VstInt32 channel)
 {
-	memcpy (mSubCategories, string, sizeof (mSubCategories));
-
-	if (strstr (mSubCategories, "Instrument"))
-		isSynth (true);
+	// names of programs or program categories have changed
+	return false;
 }
 
 //-----------------------------------------------------------------------------
-void Vst2Wrapper::setupBuses ()
+bool Vst2Wrapper::getMidiKeyName (VstInt32 channel, MidiKeyName* keyName)
 {
-	if (!mComponent)
-		return;
-
-	mProcessData.prepare (*mComponent, 0, mVst3SampleSize);
-
-	setNumInputs (countMainBusChannels (kInput, mMainAudioInputBuses));
-	setNumOutputs (countMainBusChannels (kOutput, mMainAudioOutputBuses));
-
-	hasEventInputBuses = mComponent->getBusCount (kEvent, kInput) > 0;
-	hasEventOutputBuses = mComponent->getBusCount (kEvent, kOutput) > 0;
-
-	if (hasEventInputBuses)
+	UnitID unitId;
+	ProgramListID programListId;
+	if (mUnitInfo && getProgramListAndUnit (channel, unitId, programListId))
 	{
-		if (mInputEvents == 0)
-			mInputEvents = new EventList (kMaxEvents);
-	}
-	else
-	{
-		if (mInputEvents)
+		String128 string128 = {0};
+		if (mUnitInfo->getProgramPitchName (programListId, keyName->thisProgramIndex,
+		                                    keyName->thisKeyNumber, string128))
 		{
-			delete mInputEvents;
-			mInputEvents = nullptr;
+			String str (string128);
+			str.copyTo8 (keyName->keyName, 0, kVstMaxNameLen);
+			return true;
 		}
 	}
-
-	if (hasEventOutputBuses)
-	{
-		if (mOutputEvents == 0)
-			mOutputEvents = new EventList (kMaxEvents);
-		if (mVst2OutputEvents == 0)
-			mVst2OutputEvents = new Vst2MidiEventQueue (kMaxEvents);
-	}
-	else
-	{
-		if (mOutputEvents)
-		{
-			delete mOutputEvents;
-			mOutputEvents = nullptr;
-		}
-		if (mVst2OutputEvents)
-		{
-			delete mVst2OutputEvents;
-			mVst2OutputEvents = nullptr;
-		}
-	}
+	return false;
 }
 
 //-----------------------------------------------------------------------------
 void Vst2Wrapper::setupParameters ()
 {
-	mParameterMap.clear ();
-	mParamIndexMap.clear ();
-	mBypassParameterID = mProgramParameterID = kNoParamId;
-	mProgramParameterIdx = -1;
-
-	std::vector<ParameterInfo> programParameterInfos;
-	std::vector<int32> programParameterIdxs;
-
-	int32 paramCount = mController ? mController->getParameterCount () : 0;
-    int32 vst2ParamID = 0;
-    for (int32 i = 0; i < paramCount; i++)
-	{
-		ParameterInfo paramInfo = {0};
-		if (mController->getParameterInfo (i, paramInfo) == kResultTrue)
-		{
-			//--- ------------------------------------------
-			if ((paramInfo.flags & ParameterInfo::kIsBypass) != 0)
-			{
-				if (mBypassParameterID == kNoParamId)
-					mBypassParameterID = paramInfo.id;
-			}
-			//--- ------------------------------------------
-			else if ((paramInfo.flags & ParameterInfo::kIsProgramChange) != 0)
-			{
-				programParameterInfos.push_back (paramInfo);
-				programParameterIdxs.push_back (i);
-				if (paramInfo.unitId == kRootUnitId)
-				{
-					if (mProgramParameterID == kNoParamId)
-					{
-						mProgramParameterID = paramInfo.id;
-						mProgramParameterIdx = i;
-					}
-				}
-
-				if (gExportProgramChangeParameters == true)
-				{
-					ParamMapEntry entry = {paramInfo.id, i};
-					mParameterMap.push_back (entry);
-					mParamIndexMap[paramInfo.id] = vst2ParamID;
-                    vst2ParamID++;
-				}
-			}
-			//--- ------------------------------------------
-			// do not export read only parameters to VST2
-			else if ((paramInfo.flags & ParameterInfo::kIsReadOnly) == 0)
-			{
-				ParamMapEntry entry = {paramInfo.id, i};
-				mParameterMap.push_back (entry);
-				mParamIndexMap[paramInfo.id] = vst2ParamID;
-                vst2ParamID++;
-			}
-		}
-	}
-
-	numParams = cEffect.numParams = (int32)mParameterMap.size ();
-
-	mInputTransfer.setMaxParameters (paramCount);
-	mOutputTransfer.setMaxParameters (paramCount);
-	mGuiTransfer.setMaxParameters (paramCount);
-	mInputChanges.setMaxParameters (paramCount);
-	mOutputChanges.setMaxParameters (paramCount);
-
-	for (int32 midiChannel = 0; midiChannel < kMaxProgramChangeParameters; midiChannel++)
-	{
-		mProgramChangeParameterIDs[midiChannel] = kNoParamId;
-		mProgramChangeParameterIdxs[midiChannel] = -1;
-
-		UnitID unitId;
-		ProgramListID programListId;
-		if (getProgramListAndUnit (midiChannel, unitId, programListId))
-		{
-			for (int32 i = 0; i < (int32)programParameterInfos.size (); i++)
-			{
-				const ParameterInfo& paramInfo = programParameterInfos.at (i);
-				if (paramInfo.unitId == unitId)
-				{
-					mProgramChangeParameterIDs[midiChannel] = paramInfo.id;
-					mProgramChangeParameterIdxs[midiChannel] = programParameterIdxs.at (i);
-					break;
-				}
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-void Vst2Wrapper::initMidiCtrlerAssignment ()
-{
-	if (!mMidiMapping || !mComponent)
-		return;
-
-	int32 busses = Min<int32> (mComponent->getBusCount (kEvent, kInput), kMaxMidiMappingBusses);
-
-	if (!mMidiCCMapping[0][0])
-	{
-		for (int32 b = 0; b < busses; b++)
-			for (int32 i = 0; i < 16; i++)
-				mMidiCCMapping[b][i] = NEW int32[Vst::kCountCtrlNumber];
-	}
-
-	ParamID paramID;
-	for (int32 b = 0; b < busses; b++)
-	{
-		for (int16 ch = 0; ch < 16; ch++)
-		{
-			for (int32 i = 0; i < Vst::kCountCtrlNumber; i++)
-			{
-				paramID = kNoParamId;
-				if (mMidiMapping->getMidiControllerAssignment (b, ch, (CtrlNumber)i, paramID) ==
-				    kResultTrue)
-				{
-					// TODO check if tag is associated to a parameter
-					mMidiCCMapping[b][ch][i] = paramID;
-				}
-				else
-					mMidiCCMapping[b][ch][i] = kNoParamId;
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-int32 Vst2Wrapper::countMainBusChannels (BusDirection dir, uint64& mainBusBitset)
-{
-	int32 result = 0;
-	mainBusBitset = 0;
-
-	int32 busCount = mComponent->getBusCount (kAudio, dir);
-	for (int32 i = 0; i < busCount; i++)
-	{
-		BusInfo busInfo = {0};
-		if (mComponent->getBusInfo (kAudio, dir, i, busInfo) == kResultTrue)
-		{
-			if (busInfo.busType == kMain)
-			{
-				result += busInfo.channelCount;
-				mainBusBitset |= (uint64 (1) << i);
-
-				mComponent->activateBus (kAudio, dir, i, true);
-			}
-			else if (busInfo.flags & BusInfo::kDefaultActive)
-			{
-				mComponent->activateBus (kAudio, dir, i, false);
-			}
-		}
-	}
-	return result;
-}
-
-//------------------------------------------------------------------------
-const uint8 kNoteOff = 0x80; ///< note, off velocity
-const uint8 kNoteOn = 0x90; ///< note, on velocity
-const uint8 kPolyPressure = 0xA0; ///< note, pressure
-const uint8 kController = 0xB0; ///< controller, value
-const uint8 kProgramChangeStatus = 0xC0; ///< program change
-const uint8 kAfterTouchStatus = 0xD0; ///< channel pressure
-const uint8 kPitchBendStatus = 0xE0; ///< lsb, msb
-
-const float kMidiScaler = 1.f / 127.f;
-static const uint8 kChannelMask = 0x0F;
-static const uint8 kStatusMask = 0xF0;
-static const uint32 kDataMask = 0x7F;
-
-//-----------------------------------------------------------------------------
-void Vst2Wrapper::processMidiEvent (VstMidiEvent* midiEvent, int32 bus)
-{
-	Event toAdd = {bus, 0};
-	uint8 status = midiEvent->midiData[0] & kStatusMask;
-	uint8 channel = midiEvent->midiData[0] & kChannelMask;
-	if (channel < 16)
-	{
-		//--- -----------------------------
-		if (status == kNoteOn || status == kNoteOff)
-		{
-			toAdd.sampleOffset = midiEvent->deltaFrames;
-			if (midiEvent->flags & kVstMidiEventIsRealtime)
-				toAdd.flags |= Event::kIsLive;
-
-			toAdd.ppqPosition = 0;
-
-			if (status == kNoteOff) // note off
-			{
-				toAdd.type = Event::kNoteOffEvent;
-				toAdd.noteOff.channel = channel;
-				toAdd.noteOff.pitch = midiEvent->midiData[1];
-				toAdd.noteOff.velocity = (float)midiEvent->noteOffVelocity * kMidiScaler;
-				toAdd.noteOff.noteId = -1; // TODO ?
-			}
-			else if (status == kNoteOn) // note on
-			{
-				toAdd.type = Event::kNoteOnEvent;
-				toAdd.noteOn.channel = channel;
-				toAdd.noteOn.pitch = midiEvent->midiData[1];
-				toAdd.noteOn.tuning = midiEvent->detune;
-				toAdd.noteOn.velocity = (float)midiEvent->midiData[2] * kMidiScaler;
-				toAdd.noteOn.length = midiEvent->noteLength;
-				toAdd.noteOn.noteId = -1; // TODO ?
-			}
-			mInputEvents->addEvent (toAdd);
-		}
-		//--- -----------------------------
-		else if (status == kPolyPressure)
-		{
-			toAdd.type = Vst::Event::kPolyPressureEvent;
-
-			toAdd.sampleOffset = midiEvent->deltaFrames;
-			if (midiEvent->flags & kVstMidiEventIsRealtime)
-				toAdd.flags |= Event::kIsLive;
-
-			toAdd.ppqPosition = 0;
-			toAdd.polyPressure.channel = channel;
-			toAdd.polyPressure.pitch = midiEvent->midiData[1] & kDataMask;
-			toAdd.polyPressure.pressure = (midiEvent->midiData[2] & kDataMask) * kMidiScaler;
-			toAdd.polyPressure.noteId = -1; // TODO ?
-
-			mInputEvents->addEvent (toAdd);
-		}
-		//--- -----------------------------
-		else if (status == kController) // controller
-		{
-			if (bus < kMaxMidiMappingBusses && mMidiCCMapping[bus][channel])
-			{
-				ParamID paramID =
-				    mMidiCCMapping[bus][channel][static_cast<size_t> (midiEvent->midiData[1])];
-				if (paramID != kNoParamId)
-				{
-					ParamValue value = (double)midiEvent->midiData[2] * kMidiScaler;
-
-					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
-						queue->addPoint (midiEvent->deltaFrames, value, index);
-					}
-					mGuiTransfer.addChange (paramID, value, midiEvent->deltaFrames);
-				}
-			}
-		}
-		//--- -----------------------------
-		else if (status == kPitchBendStatus)
-		{
-			if (bus < kMaxMidiMappingBusses && mMidiCCMapping[bus][channel])
-			{
-				ParamID paramID = mMidiCCMapping[bus][channel][Vst::kPitchBend];
-				if (paramID != kNoParamId)
-				{
-					const double kPitchWheelScaler = 1. / (double)0x3FFF;
-
-					const int32 ctrl = (midiEvent->midiData[1] & kDataMask) |
-					                   (midiEvent->midiData[2] & kDataMask) << 7;
-					ParamValue value = kPitchWheelScaler * (double)ctrl;
-
-					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
-						queue->addPoint (midiEvent->deltaFrames, value, index);
-					}
-					mGuiTransfer.addChange (paramID, value, midiEvent->deltaFrames);
-				}
-			}
-		}
-		//--- -----------------------------
-		else if (status == kAfterTouchStatus)
-		{
-			if (bus < kMaxMidiMappingBusses && mMidiCCMapping[bus][channel])
-			{
-				ParamID paramID = mMidiCCMapping[bus][channel][Vst::kAfterTouch];
-				if (paramID != kNoParamId)
-				{
-					ParamValue value =
-					    (ParamValue) (midiEvent->midiData[1] & kDataMask) * kMidiScaler;
-
-					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
-						queue->addPoint (midiEvent->deltaFrames, value, index);
-					}
-					mGuiTransfer.addChange (paramID, value, midiEvent->deltaFrames);
-				}
-			}
-		}
-		//--- -----------------------------
-		else if (status == kProgramChangeStatus)
-		{
-			if (mProgramChangeParameterIDs[channel] != kNoParamId &&
-			    mProgramChangeParameterIdxs[channel] != -1)
-			{
-				ParameterInfo paramInfo = {0};
-				if (mController->getParameterInfo (mProgramChangeParameterIdxs[channel],
-				                                   paramInfo) == kResultTrue)
-				{
-					int32 program = midiEvent->midiData[1];
-					if (paramInfo.stepCount > 0 && program <= paramInfo.stepCount)
-					{
-						ParamValue normalized =
-						    (ParamValue)program / (ParamValue)paramInfo.stepCount;
-						addParameterChange (mProgramChangeParameterIDs[channel], normalized,
-						                    midiEvent->deltaFrames);
-					}
-				}
-			}
-		}
-	}
+	BaseWrapper::setupParameters ();
+	cEffect.numParams = mNumParams;
 }
 
 //-----------------------------------------------------------------------------
 VstInt32 Vst2Wrapper::processEvents (VstEvents* events)
 {
-	if (mInputEvents == 0)
+	if (mInputEvents == nullptr)
 		return 0;
 	mInputEvents->clear ();
 
@@ -2459,16 +1631,18 @@ VstInt32 Vst2Wrapper::processEvents (VstEvents* events)
 		VstEvent* e = events->events[i];
 		if (e->type == kVstMidiType)
 		{
-			VstMidiEvent* midiEvent = (VstMidiEvent*)e;
-			processMidiEvent (midiEvent, 0);
+			auto* midiEvent = (VstMidiEvent*)e;
+			Event toAdd = {0, midiEvent->deltaFrames, 0};
+			processMidiEvent (toAdd, &midiEvent->midiData[0],
+			                  midiEvent->flags & kVstMidiEventIsRealtime, midiEvent->noteLength,
+			                  midiEvent->noteOffVelocity * kMidiScaler, midiEvent->detune);
 		}
 		//--- -----------------------------
 		else if (e->type == kVstSysExType)
 		{
-			Event toAdd = {0};
+			Event toAdd = {0, e->deltaFrames};
 			VstMidiSysexEvent& src = *(VstMidiSysexEvent*)e;
 			toAdd.type = Event::kDataEvent;
-			toAdd.sampleOffset = e->deltaFrames;
 			toAdd.data.type = DataEvent::kMidiSysEx;
 			toAdd.data.size = src.dumpBytes;
 			toAdd.data.bytes = (uint8*)src.sysexDump;
@@ -2548,262 +1722,43 @@ inline void Vst2Wrapper::processOutputEvents ()
 }
 
 //-----------------------------------------------------------------------------
-inline void Vst2Wrapper::setupProcessTimeInfo ()
+void Vst2Wrapper::updateProcessLevel ()
 {
-	VstTimeInfo* vst2timeInfo = getTimeInfo (0xffffffff);
-	if (vst2timeInfo)
+	auto currentLevel = getCurrentProcessLevel ();
+	if (mCurrentProcessLevel != currentLevel)
 	{
-		const uint32 portableFlags =
-		    ProcessContext::kPlaying | ProcessContext::kCycleActive | ProcessContext::kRecording |
-		    ProcessContext::kSystemTimeValid | ProcessContext::kProjectTimeMusicValid |
-		    ProcessContext::kBarPositionValid | ProcessContext::kCycleValid |
-		    ProcessContext::kTempoValid | ProcessContext::kTimeSigValid |
-		    ProcessContext::kSmpteValid | ProcessContext::kClockValid;
-
-		mProcessContext.state = ((uint32)vst2timeInfo->flags) & portableFlags;
-		mProcessContext.sampleRate = vst2timeInfo->sampleRate;
-		mProcessContext.projectTimeSamples = (TSamples)vst2timeInfo->samplePos;
-
-		if (mProcessContext.state & ProcessContext::kSystemTimeValid)
-			mProcessContext.systemTime = (TSamples)vst2timeInfo->nanoSeconds;
+		mCurrentProcessLevel = currentLevel;
+		if (mCurrentProcessLevel == kVstProcessLevelOffline)
+			mVst3processMode = kOffline;
 		else
-			mProcessContext.systemTime = 0;
+			mVst3processMode = kRealtime;
 
-		if (mProcessContext.state & ProcessContext::kProjectTimeMusicValid)
-			mProcessContext.projectTimeMusic = vst2timeInfo->ppqPos;
-		else
-			mProcessContext.projectTimeMusic = 0;
+		bool callStartStop = mProcessing;
 
-		if (mProcessContext.state & ProcessContext::kBarPositionValid)
-			mProcessContext.barPositionMusic = vst2timeInfo->barStartPos;
-		else
-			mProcessContext.barPositionMusic = 0;
+		if (callStartStop)
+			stopProcess ();
 
-		if (mProcessContext.state & ProcessContext::kCycleValid)
-		{
-			mProcessContext.cycleStartMusic = vst2timeInfo->cycleStartPos;
-			mProcessContext.cycleEndMusic = vst2timeInfo->cycleEndPos;
-		}
-		else
-			mProcessContext.cycleStartMusic = mProcessContext.cycleEndMusic = 0.0;
+		setupProcessing ();
 
-		if (mProcessContext.state & ProcessContext::kTempoValid)
-			mProcessContext.tempo = vst2timeInfo->tempo;
-		else
-			mProcessContext.tempo = 120.0;
-
-		if (mProcessContext.state & ProcessContext::kTimeSigValid)
-		{
-			mProcessContext.timeSigNumerator = vst2timeInfo->timeSigNumerator;
-			mProcessContext.timeSigDenominator = vst2timeInfo->timeSigDenominator;
-		}
-		else
-			mProcessContext.timeSigNumerator = mProcessContext.timeSigDenominator = 4;
-
-		mProcessContext.frameRate.flags = 0;
-		if (mProcessContext.state & ProcessContext::kSmpteValid)
-		{
-			mProcessContext.smpteOffsetSubframes = vst2timeInfo->smpteOffset;
-			switch (vst2timeInfo->smpteFrameRate)
-			{
-				case kVstSmpte24fps: ///< 24 fps
-					mProcessContext.frameRate.framesPerSecond = 24;
-					break;
-				case kVstSmpte25fps: ///< 25 fps
-					mProcessContext.frameRate.framesPerSecond = 25;
-					break;
-				case kVstSmpte2997fps: ///< 29.97 fps
-					mProcessContext.frameRate.framesPerSecond = 30;
-					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
-					break;
-				case kVstSmpte30fps: ///< 30 fps
-					mProcessContext.frameRate.framesPerSecond = 30;
-					break;
-				case kVstSmpte2997dfps: ///< 29.97 drop
-					mProcessContext.frameRate.framesPerSecond = 30;
-					mProcessContext.frameRate.flags =
-					    FrameRate::kPullDownRate | FrameRate::kDropRate;
-					break;
-				case kVstSmpte30dfps: ///< 30 drop
-					mProcessContext.frameRate.framesPerSecond = 30;
-					mProcessContext.frameRate.flags = FrameRate::kDropRate;
-					break;
-				case kVstSmpteFilm16mm: // not a smpte rate
-				case kVstSmpteFilm35mm:
-					mProcessContext.state &= ~ProcessContext::kSmpteValid;
-					break;
-				case kVstSmpte239fps: ///< 23.9 fps
-					mProcessContext.frameRate.framesPerSecond = 24;
-					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
-					break;
-				case kVstSmpte249fps: ///< 24.9 fps
-					mProcessContext.frameRate.framesPerSecond = 25;
-					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
-					break;
-				case kVstSmpte599fps: ///< 59.9 fps
-					mProcessContext.frameRate.framesPerSecond = 60;
-					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
-					break;
-				case kVstSmpte60fps: ///< 60 fps
-					mProcessContext.frameRate.framesPerSecond = 60;
-					break;
-				default: mProcessContext.state &= ~ProcessContext::kSmpteValid; break;
-			}
-		}
-		else
-		{
-			mProcessContext.smpteOffsetSubframes = 0;
-			mProcessContext.frameRate.framesPerSecond = 0;
-		}
-
-		///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest)
-		if (mProcessContext.state & ProcessContext::kClockValid)
-			mProcessContext.samplesToNextClock = vst2timeInfo->samplesToNextClock;
-		else
-			mProcessContext.samplesToNextClock = 0;
-
-		mProcessData.processContext = &mProcessContext;
+		if (callStartStop)
+			startProcess ();
 	}
-	else
-		mProcessData.processContext = nullptr;
-}
-
-//-----------------------------------------------------------------------------
-template <class T>
-inline void Vst2Wrapper::setProcessingBuffers (T** inputs, T** outputs)
-{
-	// set processing buffers
-	int32 sourceIndex = 0;
-	for (int32 i = 0; i < mProcessData.numInputs; i++)
-	{
-		AudioBusBuffers& buffers = mProcessData.inputs[i];
-		if (mMainAudioInputBuses & (uint64 (1) << i))
-		{
-			for (int32 j = 0; j < buffers.numChannels; j++)
-			{
-				buffers.channelBuffers32[j] = (Sample32*)inputs[sourceIndex++];
-			}
-		}
-		else
-			buffers.silenceFlags = HostProcessData::kAllChannelsSilent;
-	}
-
-	sourceIndex = 0;
-	for (int32 i = 0; i < mProcessData.numOutputs; i++)
-	{
-		AudioBusBuffers& buffers = mProcessData.outputs[i];
-		buffers.silenceFlags = 0;
-		if (mMainAudioOutputBuses & (uint64 (1) << i))
-		{
-			for (int32 j = 0; j < buffers.numChannels; j++)
-			{
-				buffers.channelBuffers32[j] = (Sample32*)outputs[sourceIndex++];
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-inline void Vst2Wrapper::setEventPPQPositions ()
-{
-	if (!mInputEvents)
-		return;
-
-	int32 eventCount = mInputEvents->getEventCount ();
-	if (eventCount > 0 && (mProcessContext.state & ProcessContext::kTempoValid) &&
-	    (mProcessContext.state & ProcessContext::kProjectTimeMusicValid))
-	{
-		TQuarterNotes projectTimeMusic = mProcessContext.projectTimeMusic;
-		double secondsToQuarterNoteScaler = mProcessContext.tempo / 60.0;
-		double multiplicator = secondsToQuarterNoteScaler / this->sampleRate;
-
-		for (int32 i = 0; i < eventCount; i++)
-		{
-			Event* e = mInputEvents->getEventByIndex (i);
-			if (e)
-			{
-				TQuarterNotes localTimeMusic = e->sampleOffset * multiplicator;
-				e->ppqPosition = projectTimeMusic + localTimeMusic;
-			}
-		}
-	}
-}
-
-//-----------------------------------------------------------------------------
-inline void Vst2Wrapper::doProcess (VstInt32 sampleFrames)
-{
-	if (!mProcessor)
-		return;
-
-	mProcessData.numSamples = sampleFrames;
-
-	if (mProcessing == false)
-		startProcess ();
-
-	mProcessData.inputEvents = mInputEvents;
-	mProcessData.outputEvents = mOutputEvents;
-
-	setupProcessTimeInfo ();
-	setEventPPQPositions ();
-
-	mInputTransfer.transferChangesTo (mInputChanges);
-
-	mProcessData.inputParameterChanges = &mInputChanges;
-	mProcessData.outputParameterChanges = &mOutputChanges;
-	mOutputChanges.clearQueue ();
-
-	// VST 3 process call
-	mProcessor->process (mProcessData);
-
-	processOutputParametersChanges ();
-
-	mOutputTransfer.transferChangesFrom (mOutputChanges);
-	processOutputEvents ();
-
-	// clear input parameters and events
-	mInputChanges.clearQueue ();
-	if (mInputEvents)
-		mInputEvents->clear ();
 }
 
 //-----------------------------------------------------------------------------
 void Vst2Wrapper::processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames)
 {
-	if (mProcessData.symbolicSampleSize != kSample32)
-		return;
+	updateProcessLevel ();
 
-	setProcessingBuffers<float> (inputs, outputs);
-	doProcess (sampleFrames);
+	_processReplacing (inputs, outputs, sampleFrames);
 }
 
 //-----------------------------------------------------------------------------
 void Vst2Wrapper::processDoubleReplacing (double** inputs, double** outputs, VstInt32 sampleFrames)
 {
-	if (mProcessData.symbolicSampleSize != kSample64)
-		return;
+	updateProcessLevel ();
 
-	setProcessingBuffers<double> (inputs, outputs);
-	doProcess (sampleFrames);
-}
-
-//-----------------------------------------------------------------------------
-void Vst2Wrapper::onTimer (Timer*)
-{
-	if (!mController)
-		return;
-
-	ParamID id;
-	ParamValue value;
-	int32 sampleOffset;
-
-	while (mOutputTransfer.getNextChange (id, value, sampleOffset))
-	{
-		mController->setParamNormalized (id, value);
-	}
-	while (mGuiTransfer.getNextChange (id, value, sampleOffset))
-	{
-		mController->setParamNormalized (id, value);
-	}
+	_processDoubleReplacing (inputs, outputs, sampleFrames);
 }
 
 //-----------------------------------------------------------------------------
@@ -2813,34 +1768,40 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
                                   VstInt32 vst2ID, audioMasterCallback audioMaster)
 {
 	if (!factory)
-		return 0;
+		return nullptr;
 
-	IAudioProcessor* processor = nullptr;
+	BaseWrapper::SVST3Config config;
+	config.factory = factory; 
+	config.processor = nullptr;
+	
 	FReleaser factoryReleaser (factory);
 
-	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&processor);
-	if (processor)
+	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&config.processor);
+	if (config.processor)
 	{
-		IEditController* controller = nullptr;
-		if (processor->queryInterface (IEditController::iid, (void**)&controller) != kResultTrue)
+		config.controller = nullptr;
+		if (config.processor->queryInterface (IEditController::iid, (void**)&config.controller) !=
+		    kResultTrue)
 		{
-			FUnknownPtr<IComponent> component (processor);
+			FUnknownPtr<IComponent> component (config.processor);
 			if (component)
 			{
 				TUID editorCID;
 				if (component->getControllerClassId (editorCID) == kResultTrue)
 				{
-					factory->createInstance (editorCID, IEditController::iid, (void**)&controller);
+					factory->createInstance (editorCID, IEditController::iid,
+					                         (void**)&config.controller);
 				}
 			}
 		}
 
-		Vst2Wrapper* wrapper =
-		    new Vst2Wrapper (processor, controller, audioMaster, vst3ComponentID, vst2ID, factory);
+		config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
+
+		auto* wrapper = new Vst2Wrapper (config, audioMaster, vst2ID);
 		if (wrapper->init () == false)
 		{
-			delete wrapper;
-			return 0;
+			wrapper->release ();
+			return nullptr;
 		}
 
 		FUnknownPtr<IPluginFactory2> factory2 (factory);
@@ -2873,44 +1834,7 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 		return wrapper;
 	}
 
-	return 0;
-}
-
-// FUnknown
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API Vst2Wrapper::queryInterface (const char* iid, void** obj)
-{
-	QUERY_INTERFACE (iid, obj, FUnknown::iid, Vst::IHostApplication)
-	QUERY_INTERFACE (iid, obj, Vst::IHostApplication::iid, Vst::IHostApplication)
-	QUERY_INTERFACE (iid, obj, Vst::IComponentHandler::iid, Vst::IComponentHandler)
-	QUERY_INTERFACE (iid, obj, Vst::IUnitHandler::iid, Vst::IUnitHandler)
-
-	// we are a VST 3 to VST 2 Wrapper
-	QUERY_INTERFACE (iid, obj, Vst::IVst3ToVst2Wrapper::iid, Vst::IVst3ToVst2Wrapper)
-
-	*obj = 0;
-	return kNoInterface;
-}
-
-//-----------------------------------------------------------------------------
-// IHostApplication
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API Vst2Wrapper::createInstance (TUID cid, TUID iid, void** obj)
-{
-	FUID classID (FUID::fromTUID (cid));
-	FUID interfaceID (FUID::fromTUID (iid));
-	if (classID == IMessage::iid && interfaceID == IMessage::iid)
-	{
-		*obj = new HostMessage;
-		return kResultTrue;
-	}
-	else if (classID == IAttributeList::iid && interfaceID == IAttributeList::iid)
-	{
-		*obj = new HostAttributeList;
-		return kResultTrue;
-	}
-	*obj = 0;
-	return kResultFalse;
+	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -2943,7 +1867,7 @@ tresult PLUGIN_API Vst2Wrapper::performEdit (ParamID tag, ParamValue valueNormal
 {
 	std::map<ParamID, int32>::const_iterator iter = mParamIndexMap.find (tag);
 	if (iter != mParamIndexMap.end () && audioMaster)
-		audioMaster (&cEffect, audioMasterAutomate, (*iter).second, 0, 0,
+		audioMaster (&cEffect, audioMasterAutomate, (*iter).second, 0, nullptr,
 		             (float)valueNormalized); // value is in opt
 
 	mInputTransfer.addChange (tag, valueNormalized, 0);
@@ -2961,60 +1885,37 @@ tresult PLUGIN_API Vst2Wrapper::endEdit (ParamID tag)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Vst2Wrapper::restartComponent (int32 flags)
+void Vst2Wrapper::_ioChanged ()
 {
-	tresult result = kResultFalse;
-
-	//--- ----------------------
-	if (flags & kIoChanged)
-	{
-		setupBuses ();
-		ioChanged ();
-		result = kResultTrue;
-	}
-
-	//--- ----------------------
-	if ((flags & kParamValuesChanged) || (flags & kParamTitlesChanged))
-	{
-		updateDisplay ();
-		result = kResultTrue;
-	}
-
-	//--- ----------------------
-	if (flags & kLatencyChanged)
-	{
-		if (mProcessor)
-			setInitialDelay (mProcessor->getLatencySamples ());
-
-		ioChanged ();
-		result = kResultTrue;
-	}
-
-	//--- ----------------------
-	if (flags & kMidiCCAssignmentChanged)
-	{
-		initMidiCtrlerAssignment ();
-		result = kResultTrue;
-	}
-
-	// kReloadComponent is Not supported in VST 2
-
-	return result;
+	BaseWrapper::_ioChanged ();
+	ioChanged ();
 }
 
 //-----------------------------------------------------------------------------
-// IUnitHandler
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API Vst2Wrapper::notifyUnitSelection (UnitID unitId)
+void Vst2Wrapper::_updateDisplay ()
 {
-	return kResultTrue;
+	BaseWrapper::_updateDisplay ();
+	updateDisplay ();
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Vst2Wrapper::notifyProgramListChange (ProgramListID listId, int32 programIndex)
+void Vst2Wrapper::_setNumInputs (int32 inputs)
 {
-	// TODO -> redirect to hasMidiProgramsChanged somehow...
-	return kResultTrue;
+	BaseWrapper::_setNumInputs (inputs);
+	setNumInputs (inputs);
+}
+
+//-----------------------------------------------------------------------------
+void Vst2Wrapper::_setNumOutputs (int32 outputs)
+{
+	BaseWrapper::_setNumOutputs (outputs);
+	setNumOutputs (outputs);
+}
+
+//-----------------------------------------------------------------------------
+bool Vst2Wrapper::_sizeWindow (int32 width, int32 height)
+{
+	return sizeWindow (width, height);
 }
 
 //-----------------------------------------------------------------------------
@@ -3029,7 +1930,7 @@ extern "C" {
 #if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
 #define VST_EXPORT __attribute__ ((visibility ("default")))
 #elif SMTG_OS_WINDOWS
-#define VST_EXPORT __declspec( dllexport )
+#define VST_EXPORT __declspec (dllexport)
 #else
 #define VST_EXPORT
 #endif
@@ -3040,16 +1941,16 @@ extern "C" {
 VST_EXPORT AEffect* VSTPluginMain (audioMasterCallback audioMaster)
 {
 	// Get VST Version of the Host
-	if (!audioMaster (0, audioMasterVersion, 0, 0, 0, 0))
-		return 0; // old version
+	if (!audioMaster (nullptr, audioMasterVersion, 0, 0, nullptr, 0))
+		return nullptr; // old version
 
 	if (InitModule () == false)
-		return 0;
+		return nullptr;
 
 	// Create the AudioEffect
 	AudioEffect* effect = createEffectInstance (audioMaster);
 	if (!effect)
-		return 0;
+		return nullptr;
 
 	// Return the VST AEffect structure
 	return effect->getAeffect ();

@@ -6,7 +6,6 @@
 // Created by  : Steinberg, 03/2018
 // Description : Test ringbuffer
 // Flags       : clang-format SMTGSequencer
-// SDKInclusion: Vst3Sdk, SkiYamSdk
 //
 //-----------------------------------------------------------------------------
 // LICENSE

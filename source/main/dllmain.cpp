@@ -50,8 +50,8 @@
 #endif
 
 //------------------------------------------------------------------------
-HINSTANCE ghInst = 0;
-void* moduleHandle = 0;
+HINSTANCE ghInst = nullptr;
+void* moduleHandle = nullptr;
 Steinberg::tchar gPath[MAX_PATH] = {0};
 
 //------------------------------------------------------------------------

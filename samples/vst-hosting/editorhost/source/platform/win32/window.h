@@ -148,8 +148,8 @@ private:
 		MDT_DEFAULT = MDT_EFFECTIVE_DPI
 	};
 
-	using GetDpiForMonitorProc = HRESULT (*) (HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
-	using SetProcessDpiAwarenessProc = HRESULT (*) (PROCESS_DPI_AWARENESS);
+	using GetDpiForMonitorProc = HRESULT (WINAPI*) (HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
+	using SetProcessDpiAwarenessProc = HRESULT (WINAPI*) (PROCESS_DPI_AWARENESS);
 
 	ShcoreLibrary () : DynamicLibrary ("Shcore.dll")
 	{

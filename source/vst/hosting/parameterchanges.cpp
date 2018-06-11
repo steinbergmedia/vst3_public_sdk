@@ -142,7 +142,7 @@ void ParameterChanges::setMaxParameters (int32 maxParameters)
 
 	while ((int32)queues.size () < maxParameters)
 	{
-		ParameterValueQueue* valueQueue = new ParameterValueQueue (0xffffffff);
+		auto* valueQueue = new ParameterValueQueue (0xffffffff);
 		queues.push_back (valueQueue);
 	}
 

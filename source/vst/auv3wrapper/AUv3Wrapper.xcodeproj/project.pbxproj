@@ -2717,7 +2717,6 @@
 		B2789B9D20230AF60021FE3C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_OBJC_ARC = NO;
@@ -2739,20 +2738,18 @@
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
-					/Volumes/Work/dev_pluginset_new/,
-					/Volumes/Work/dev_pluginset_new/vstgui4,
+					../../../../,
+					../../../../vstgui4,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				USE_HEADERMAP = NO;
 			};
 			name = Debug;
 		};
 		B2789B9E20230AF60021FE3C /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
 				CLANG_ENABLE_OBJC_ARC = NO;
@@ -2769,13 +2766,12 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = (
-					/Volumes/Work/dev_pluginset_new/,
-					/Volumes/Work/dev_pluginset_new/vstgui4,
+					../../../../,
+					../../../../vstgui4,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				USE_HEADERMAP = NO;
 			};
 			name = Release;
 		};
@@ -2996,7 +2992,7 @@
 				INFOPLIST_PREPROCESS = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
@@ -3023,7 +3019,7 @@
 				INFOPLIST_PREPROCESS = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

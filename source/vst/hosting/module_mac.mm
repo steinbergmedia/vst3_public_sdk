@@ -12,24 +12,24 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -182,17 +182,17 @@ public:
 
 	~MacModule ()
 	{
-        factory = PluginFactory (nullptr);
-        
+		factory = PluginFactory (nullptr);
+
 		if (bundle)
 		{
 			if (auto bundleExit = getFunctionPointer<BundleExitFunc> ("bundleExit"))
 				bundleExit ();
-            
-            if (CFBundleIsExecutableLoaded ((CFBundleRef)bundle))
-            {
-                CFBundleUnloadExecutable ((CFBundleRef)bundle);
-            }
+
+			if (CFBundleIsExecutableLoaded ((CFBundleRef)bundle))
+			{
+				CFBundleUnloadExecutable ((CFBundleRef)bundle);
+			}
 		}
 	}
 
@@ -272,6 +272,51 @@ void getApplicationModules (Module::PathList& result)
 }
 
 //------------------------------------------------------------------------
+void getModuleSnapshots (const std::string& path, Module::SnapshotList& result)
+{
+	auto bundleUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:path.data ()]];
+	if (!bundleUrl)
+		return;
+	auto urls = [NSBundle URLsForResourcesWithExtension:@"png"
+	                                       subdirectory:@"Snapshots"
+	                                    inBundleWithURL:bundleUrl];
+	if (!urls || [urls count] == 0)
+		return;
+
+	for (NSURL* url in urls)
+	{
+		std::string fullpath ([[url path] UTF8String]);
+		std::string filename ([[[url path] lastPathComponent] UTF8String]);
+		auto uid = Module::Snapshot::decodeUID (filename);
+		if (!uid)
+			continue;
+
+		auto scaleFactor = 1.;
+		if (auto decodedScaleFactor = Module::Snapshot::decodeScaleFactor (filename))
+			scaleFactor = *decodedScaleFactor;
+
+		Module::Snapshot::ImageDesc desc;
+		desc.scaleFactor = scaleFactor;
+		desc.path = std::move (fullpath);
+		bool found = false;
+		for (auto& entry : result)
+		{
+			if (entry.uid != *uid)
+				continue;
+			found = true;
+			entry.images.emplace_back (std::move (desc));
+			break;
+		}
+		if (found)
+			continue;
+		Module::Snapshot snapshot;
+		snapshot.uid = *uid;
+		snapshot.images.emplace_back (std::move (desc));
+		result.emplace_back (std::move (snapshot));
+	}
+}
+
+//------------------------------------------------------------------------
 } // anonymous
 
 //------------------------------------------------------------------------
@@ -298,6 +343,14 @@ Module::PathList Module::getModulePaths ()
 	getModules (NSLocalDomainMask, list);
 	// TODO getModules (NSNetworkDomainMask, list);
 	getApplicationModules (list);
+	return list;
+}
+
+//------------------------------------------------------------------------
+Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
+{
+	SnapshotList list;
+	getModuleSnapshots (modulePath, list);
 	return list;
 }
 

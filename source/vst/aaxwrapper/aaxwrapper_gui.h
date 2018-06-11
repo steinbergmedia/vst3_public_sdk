@@ -47,8 +47,8 @@ class AAXWrapper_GUI : public AAX_CEffectGUI
 public:
 	static AAX_IEffectGUI* AAX_CALLBACK Create ();
 
-	AAXWrapper_GUI ();
-	virtual ~AAXWrapper_GUI ();
+	AAXWrapper_GUI () = default;
+	virtual ~AAXWrapper_GUI () = default;
 
 	void CreateViewContents () SMTG_OVERRIDE;
 	void CreateViewContainer () SMTG_OVERRIDE;

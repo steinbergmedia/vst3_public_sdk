@@ -319,7 +319,7 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 		if (SpeakerArr::getChannelCount (inputs[0]) == 1 &&
 		    SpeakerArr::getChannelCount (outputs[0]) == 1)
 		{
-			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
+			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				// check if we are Mono => Mono, if not we need to recreate the buses
@@ -339,7 +339,7 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 		// Stereo
 		else
 		{
-			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
+			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				tresult result = kResultFalse;

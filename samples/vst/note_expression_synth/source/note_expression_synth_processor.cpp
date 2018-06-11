@@ -50,7 +50,7 @@ FUID Processor::cid (0x6EE65CD1, 0xB83A4AF4, 0x80AA7929, 0xAEA6B8A0);
 
 //-----------------------------------------------------------------------------
 Processor::Processor ()
-: voiceProcessor (0)
+: voiceProcessor (nullptr)
 {
 	setControllerClass (Controller::cid);
 
@@ -124,9 +124,9 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 {
 	if (state)
 	{
-		if (paramState.noiseBuffer == 0)
+		if (paramState.noiseBuffer == nullptr)
 			paramState.noiseBuffer = new BrownNoise<float> ((int32)processSetup.sampleRate, (float)processSetup.sampleRate);
-		if (voiceProcessor == 0)
+		if (voiceProcessor == nullptr)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
 			{
@@ -148,12 +148,12 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 		{
 			delete voiceProcessor;
 		}
-		voiceProcessor = 0;
+		voiceProcessor = nullptr;
 		if (paramState.noiseBuffer)
 		{
 			delete paramState.noiseBuffer;
 		}
-		paramState.noiseBuffer = 0;
+		paramState.noiseBuffer = nullptr;
 	}
 	return AudioEffect::setActive (state);
 }

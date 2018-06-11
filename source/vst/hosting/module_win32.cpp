@@ -12,32 +12,32 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "stringconvert.h"
 #include "module.h"
-#include <Windows.h>
+#include "stringconvert.h"
 #include <ShlObj.h>
+#include <Windows.h>
 #include <algorithm>
 #include <experimental/filesystem>
 
@@ -57,6 +57,16 @@ namespace Hosting {
 
 //------------------------------------------------------------------------
 namespace {
+
+#if defined(_M_ARM64)
+constexpr auto architectureString = "arm_64-win";
+#elif defined(_M_ARM)
+constexpr auto architectureString = "arm-win";
+#elif defined(_M_X64)
+constexpr auto architectureString = "x86_64-win";
+#elif defined(_M_IX86)
+constexpr auto architectureString = "x86-win";
+#endif
 
 //------------------------------------------------------------------------
 class Win32Module : public Module
@@ -87,9 +97,19 @@ public:
 		module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
 		if (!module)
 		{
-			// TODO: is there an API to get more information about the failure ?
-			errorDescription = "LoadLibray failed.";
-			return false;
+			filesystem::path p (inPath);
+			auto filename = p.filename ();
+			p /= "Contents";
+			p /= architectureString;
+			p /= filename;
+			wideStr = StringConvert::convert (p.string ());
+			module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+			if (!module)
+			{
+				// TODO: is there an API to get more information about the failure ?
+				errorDescription = "LoadLibray failed.";
+				return false;
+			}
 		}
 
 		auto dllEntry = getFunctionPointer<InitModuleFunc> ("InitDll");
@@ -127,19 +147,24 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 }
 
 //------------------------------------------------------------------------
-void findFilesWithExt (const std::string& path, const std::string& ext, Module::PathList& pathList)
+void findFilesWithExt (const filesystem::path& path, const std::string& ext,
+                       Module::PathList& pathList, bool recursive = true)
 {
-	for (auto& p : filesystem::recursive_directory_iterator (path))
+	for (auto& p : filesystem::directory_iterator (path))
 	{
 		if (p.path ().extension () == ext)
 		{
 			pathList.push_back (p.path ().generic_u8string ());
 		}
+		else if (recursive && p.status ().type () == filesystem::file_type::directory)
+		{
+			findFilesWithExt (p.path (), ext, pathList, recursive);
+		}
 	}
 }
 
 //------------------------------------------------------------------------
-void findModules (const std::string& path, Module::PathList& pathList)
+void findModules (const filesystem::path& path, Module::PathList& pathList)
 {
 	findFilesWithExt (path, ".vst3", pathList);
 }
@@ -172,7 +197,7 @@ Module::PathList Module::getModulePaths ()
 	{
 		filesystem::path p (*knownFolder);
 		p.append ("VST3");
-		findModules (p.generic_u8string (), list);
+		findModules (p, list);
 	}
 
 	// find plug-ins located in VST3 (application folder)
@@ -182,9 +207,52 @@ Module::PathList Module::getModulePaths ()
 	filesystem::path path (appPath);
 	path = path.parent_path ();
 	path = path.append ("VST3");
-	findModules (path.generic_u8string (), list);
+	findModules (path, list);
 
 	return list;
+}
+
+//------------------------------------------------------------------------
+Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
+{
+	SnapshotList result;
+	filesystem::path path (modulePath);
+	path /= "Contents";
+	path /= "Resources";
+	path /= "Snapshots";
+	PathList pngList;
+	findFilesWithExt (path, ".png", pngList, false);
+	for (auto& png : pngList)
+	{
+		filesystem::path p (png);
+		auto filename = p.filename ().generic_u8string ();
+		auto uid = Snapshot::decodeUID (filename);
+		if (!uid)
+			continue;
+		auto scaleFactor = 1.;
+		if (auto decodedScaleFactor = Snapshot::decodeScaleFactor (filename))
+			scaleFactor = *decodedScaleFactor;
+
+		Module::Snapshot::ImageDesc desc;
+		desc.scaleFactor = scaleFactor;
+		desc.path = std::move (png);
+		bool found = false;
+		for (auto& entry : result)
+		{
+			if (entry.uid != *uid)
+				continue;
+			found = true;
+			entry.images.emplace_back (std::move (desc));
+			break;
+		}
+		if (found)
+			continue;
+		Module::Snapshot snapshot;
+		snapshot.uid = *uid;
+		snapshot.images.emplace_back (std::move (desc));
+		result.emplace_back (std::move (snapshot));
+	}
+	return result;
 }
 
 //------------------------------------------------------------------------

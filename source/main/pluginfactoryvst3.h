@@ -56,17 +56,17 @@ public:
 	/** Registers a Plug-in class with classInfo version 1, returns true for success. */
 	bool registerClass (const PClassInfo* info,
 						FUnknown* (*createFunc)(void*),
-						void* context = 0);
+						void* context = nullptr);
 
 	/** Registers a Plug-in class with classInfo version 2, returns true for success. */
 	bool registerClass (const PClassInfo2* info,
 						FUnknown* (*createFunc)(void*),
-						void* context = 0);
+						void* context = nullptr);
 
 	/** Registers a Plug-in class with classInfo Unicode version, returns true for success. */
 	bool registerClass (const PClassInfoW* info,
 						FUnknown* (*createFunc)(void*),
-						void* context = 0);
+						void* context = nullptr);
 
 
 	/** Check if a class for a given classId is already registered. */

@@ -38,7 +38,7 @@
 
 #pragma once
 
-#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
+#include "public.sdk/source/vst/basewrapper/basewrapper.h"
 
 #include "AAX_CEffectParameters.h"
 #include "AAX_Push8ByteStructAlignment.h"

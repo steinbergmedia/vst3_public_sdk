@@ -37,7 +37,7 @@
 /**
 
 *******************************************
-\page AUWrapper VST 3 - AudioUnit Wrapper
+\page AUWrapper VST 3 - Audio Unit Wrapper
 *******************************************
 
 Helper Class wrapping a VST 3 Plug-in to a Audio Unit v2 Plug-in

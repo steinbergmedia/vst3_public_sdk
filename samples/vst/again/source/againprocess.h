@@ -71,5 +71,31 @@ SampleType AGain::processAudio (SampleType** in, SampleType** out, int32 numChan
 	return vuPPM;
 }
 
+
+//------------------------------------------------------------------------
+template <typename SampleType>
+SampleType AGain::processVuPPM (SampleType** in, int32 numChannels,	int32 sampleFrames)
+{
+	SampleType vuPPM = 0;
+
+	for (int32 i = 0; i < numChannels; i++)
+	{
+		int32 samples = sampleFrames;
+		SampleType* ptrIn = (SampleType*)in[i];
+		SampleType tmp;
+		while (--samples >= 0)
+		{
+			tmp = (*ptrIn++);
+			
+			// check only positive values
+			if (tmp > vuPPM)
+			{
+				vuPPM = tmp;
+			}
+		}
+	}
+	return vuPPM;
+}
+
 } // Vst
 } // Steinberg

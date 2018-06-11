@@ -166,6 +166,35 @@ void printAllInstalledPlugins ()
 }
 
 //------------------------------------------------------------------------
+void printAllSnapshots ()
+{
+	*infoStream << "Searching installed plug-ins...\n";
+	auto paths = VST3::Hosting::Module::getModulePaths ();
+	if (paths.empty ())
+	{
+		*infoStream << "No plug-ins found.\n";
+		return;
+	}
+	for (const auto& path : paths)
+	{
+		auto snapshots = VST3::Hosting::Module::getSnapshots (path);
+		if (snapshots.empty ())
+		{
+			*infoStream << "No snapshots in " << path << "\n";
+			continue;
+		}
+		for (auto& snapshot : snapshots)
+		{
+			for (auto& desc : snapshot.images)
+			{
+				*infoStream << "Snapshot : " << desc.path << "[" << desc.scaleFactor << "x]\n";
+			}
+		}
+	}
+
+}
+
+//------------------------------------------------------------------------
 // Validator
 //------------------------------------------------------------------------
 Validator::Validator (int argc, char* argv[])
@@ -243,6 +272,7 @@ tresult PLUGIN_API Validator::createInstance (TUID cid, TUID iid, void** obj)
 #define kQuietOption "q"
 #define kTestComponentPath "test-component"
 #define kLookupInstalledPlugIns "list"
+#define kLookupPlugInSnapshots "snapshots"
 
 //------------------------------------------------------------------------
 int Validator::run ()
@@ -264,6 +294,7 @@ int Validator::run ()
 		(kQuietOption, CommandLine::Description::kBool, "Only print errors")
 		(kTestComponentPath, CommandLine::Description::kString, "[path] Path to an additional component which includes custom tests")
 		(kLookupInstalledPlugIns, CommandLine::Description::kBool, "Show all installed Plug-Ins")
+		(kLookupPlugInSnapshots, CommandLine::Description::kBool, "List snapshots from all installed Plug-Ins")
 	;
 	CommandLine::parse (argc, argv, desc, valueMap, &files);
 	if (valueMap.count (kVersionOption))
@@ -274,6 +305,11 @@ int Validator::run ()
 	else if (valueMap.count (kLookupInstalledPlugIns))
 	{
 		printAllInstalledPlugins ();
+		return 0;
+	}
+	else if (valueMap.count (kLookupPlugInSnapshots))
+	{
+		printAllSnapshots ();
 		return 0;
 	}
 	else if (valueMap.hasError () || valueMap.count (kHelpOption) || files.size () != 1)
@@ -423,6 +459,49 @@ int Validator::run ()
 		}
 	}
 	testFactories.clear ();
+
+	//---check for snapshots-----------------
+	if (infoStream)
+		*infoStream << "* Checking snapshots...\n\n";
+
+	auto snapshots = VST3::Hosting::Module::getSnapshots (path);
+	if (snapshots.empty ())
+	{
+		if (infoStream)
+			*infoStream << "Warning: No snapshots in Bundle.\n\n";
+	}
+	else
+	{
+		for (auto& classInfo : factory.classInfos ())
+		{
+			if (!filterClassCategory (kVstAudioEffectClass, classInfo.category ().data ()))
+				continue;
+			bool found = false;
+			for (auto& snapshot : snapshots)
+			{
+				if (snapshot.uid == classInfo.ID ())
+				{
+					found = true;
+					if (infoStream)
+					{
+						*infoStream << "Found snapshots for '" << classInfo.name () << "'\n";
+						for (auto& image : snapshot.images)
+							*infoStream << " - " << image.path << " [" << image.scaleFactor << "x]\n";
+						*infoStream << "\n";
+					}
+					break;
+				}
+			}
+			if (!found)
+			{
+				if (infoStream)
+				{
+					*infoStream << "Warning: No snapshot for '" << classInfo.name ()
+					            << "' in Bundle.\n\n";
+				}
+			}
+		}
+	}
 
 	//---run tests---------------------------
 	if (infoStream)

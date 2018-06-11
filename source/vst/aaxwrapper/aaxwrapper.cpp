@@ -68,7 +68,7 @@
 #define HLOG(...) \
 	do            \
 	{             \
-	} while (0)
+	} while (false)
 #endif
 #endif
 
@@ -86,18 +86,13 @@ using namespace Steinberg::Base::Thread;
 
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
-AAXWrapper::AAXWrapper (IAudioProcessor* processor, IEditController* controller,
-                        AAXWrapper_Parameters* p, const TUID vst3ComponentID, AAX_Plugin_Desc* desc,
-                        IPluginFactory* factory)
-: Vst2Wrapper (processor, controller, 0, vst3ComponentID, desc->mPlugInIDNative, factory)
-, aaxParams (p)
-, pluginDesc (desc)
+AAXWrapper::AAXWrapper (BaseWrapper::SVST3Config& config, AAXWrapper_Parameters* p, AAX_Plugin_Desc* desc)
+: BaseWrapper (config), aaxParams (p), pluginDesc (desc)
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
-	memset (&timeInfo, 0, sizeof (timeInfo));
-	timeInfo.sampleRate = 44100;
-	timeInfo.tempo = 120;
+	mUseExportedBypass = true; 
+	mUseIncIndex = false;
 
 	mainThread = getCurrentThread ();
 
@@ -234,60 +229,70 @@ tresult PLUGIN_API AAXWrapper::finishGroupEdit ()
 }
 
 //------------------------------------------------------------------------
-VstTimeInfo* AAXWrapper::getTimeInfo (VstInt32 filter)
+bool AAXWrapper::init ()
 {
-	timeInfo.flags = 0;
-	timeInfo.sampleRate = sampleRate;
-	timeInfo.nanoSeconds = 0;
+	bool res = BaseWrapper::init ();
+
+	if (mController && BaseEditorWrapper::hasEditor (mController))
+		_setEditor (new BaseEditorWrapper (mController));
+
+	return res;
+}
+
+//------------------------------------------------------------------------
+void AAXWrapper::setupProcessTimeInfo ()
+{
+	mProcessContext.state = 0;
+	mProcessContext.sampleRate = mSampleRate;
 
 	if (AAX_ITransport* transport = aaxParams->Transport ())
 	{
 		int64_t splPos, ppqPos, loopStart, loopEnd;
 		bool playing, looping;
 		if (transport->GetCurrentNativeSampleLocation (&splPos) == AAX_SUCCESS)
-			timeInfo.samplePos = splPos;
+			mProcessContext.projectTimeSamples = (TSamples)splPos;
 
 		if (transport->GetCurrentTickPosition (&ppqPos) == AAX_SUCCESS)
 		{
-			timeInfo.ppqPos = ppqPos / 960000.0;
-			timeInfo.flags |= kVstPpqPosValid;
+			mProcessContext.projectTimeMusic = ppqPos / 960000.0;
+			mProcessContext.state |= ProcessContext::kProjectTimeMusicValid;
 		}
+		else
+			mProcessContext.projectTimeMusic = 0;
 
-		if (transport->GetCurrentTempo (&timeInfo.tempo) == AAX_SUCCESS)
-			timeInfo.flags |= kVstTempoValid;
+		if (transport->GetCurrentTempo (&mProcessContext.tempo) == AAX_SUCCESS)
+			mProcessContext.state |= ProcessContext::kTempoValid;
 
 		if (transport->GetCurrentLoopPosition (&looping, &loopStart, &loopEnd) == AAX_SUCCESS)
 		{
-			timeInfo.cycleStartPos = loopStart / 960000.0;
-			timeInfo.cycleEndPos = loopEnd / 960000.0;
-			timeInfo.flags |= kVstCyclePosValid;
-			timeInfo.flags |= (looping ? kVstTransportCycleActive : 0);
+			mProcessContext.cycleStartMusic = loopStart / 960000.0;
+			mProcessContext.cycleEndMusic = loopEnd / 960000.0;
+			mProcessContext.state |= ProcessContext::kCycleValid;
+			if (looping)
+				mProcessContext.state |= ProcessContext::kCycleActive;
 		}
 		int32_t num, den;
 		if (transport->GetCurrentMeter (&num, &den) == AAX_SUCCESS)
 		{
-			timeInfo.timeSigNumerator = num;
-			timeInfo.timeSigDenominator = den;
-			timeInfo.flags |= kVstTimeSigValid;
+			mProcessContext.timeSigNumerator = num;
+			mProcessContext.timeSigDenominator = den;
+			mProcessContext.state |= ProcessContext::kTimeSigValid;
 		}
+		else
+			mProcessContext.timeSigNumerator = mProcessContext.timeSigDenominator = 4;
 
 		if (transport->IsTransportPlaying (&playing) == AAX_SUCCESS)
 		{
-			timeInfo.flags |= (playing ? kVstTransportPlaying : 0);
+			mProcessContext.state |= (playing ? ProcessContext::kPlaying : 0);
 		}
-
-#if 0
-		timeInfo.barStartPos;	///< last Bar Start Position, in Quarter Note
-		timeInfo.smpteOffset;	///< SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)). The current SMPTE position can be calculated using #samplePos, #sampleRate, and #smpteFrameRate.
-		timeInfo.smpteFrameRate;	///< @see VstSmpteFrameRate
-		timeInfo.samplesToNextClock;///< MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
-#endif
+		mProcessData.processContext = &mProcessContext;
 	}
-	return &timeInfo;
+	else
+		mProcessData.processContext = nullptr;
 }
 
 //------------------------------------------------------------------------
-bool AAXWrapper::sizeWindow (VstInt32 width, VstInt32 height)
+bool AAXWrapper::_sizeWindow (int32 width, int32 height)
 {
 	HLOG (HAPI, "%s(width=%x, height=%x)", __FUNCTION__, width, height);
 
@@ -311,12 +316,12 @@ bool AAXWrapper::sizeWindow (VstInt32 width, VstInt32 height)
 struct AAXWrapper::GetChunkMessage : public FCondition
 {
 	void* mData = nullptr;
-	VstInt32 mDataSize = 0;
-	VstInt32 mResult = 0;
+	int32 mDataSize = 0;
+	int32 mResult = 0;
 };
 
 //------------------------------------------------------------------------
-VstInt32 AAXWrapper::getChunk (void** data, bool isPreset)
+int32 AAXWrapper::_getChunk (void** data, bool isPreset)
 {
 	if (wantsSetChunk)
 	{
@@ -325,9 +330,9 @@ VstInt32 AAXWrapper::getChunk (void** data, bool isPreset)
 		return mChunk.getSize ();
 	}
 	if (mainThread == getCurrentThread ())
-		return Vst2Wrapper::getChunk (data, isPreset);
+		return BaseWrapper::_getChunk (data, isPreset);
 
-	GetChunkMessage* msg = NEW GetChunkMessage;
+	auto* msg = NEW GetChunkMessage;
 	{
 		FGuard guard (msgQueueLock);
 		msgQueue.push_back (msg);
@@ -339,10 +344,10 @@ VstInt32 AAXWrapper::getChunk (void** data, bool isPreset)
 }
 
 //------------------------------------------------------------------------
-VstInt32 AAXWrapper::setChunk (void* data, VstInt32 byteSize, bool isPreset)
+int32 AAXWrapper::_setChunk (void* data, int32 byteSize, bool isPreset)
 {
 	if (mainThread == getCurrentThread ())
-		return Vst2Wrapper::setChunk (data, byteSize, isPreset);
+		return BaseWrapper::_setChunk (data, byteSize, isPreset);
 
 	FGuard guard (msgQueueLock);
 	mChunk.setSize (byteSize);
@@ -354,14 +359,14 @@ VstInt32 AAXWrapper::setChunk (void* data, VstInt32 byteSize, bool isPreset)
 //------------------------------------------------------------------------
 void AAXWrapper::onTimer (Timer* timer)
 {
-	Vst2Wrapper::onTimer (timer);
+	BaseWrapper::onTimer (timer);
 
 	AAX_ASSERT (mainThread == getCurrentThread ());
 
 	if (wantsSetChunk)
 	{
 		FGuard guard (msgQueueLock);
-		Vst2Wrapper::setChunk (mChunk.getData (), mChunk.getSize (), false);
+		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), false);
 		wantsSetChunk = false;
 	}
 
@@ -380,7 +385,7 @@ void AAXWrapper::onTimer (Timer* timer)
 		}
 		if (msg)
 		{
-			msg->mResult = Vst2Wrapper::getChunk (&msg->mData, false);
+			msg->mResult = BaseWrapper::_getChunk (&msg->mData, false);
 			msg->signal ();
 		}
 	}
@@ -478,14 +483,18 @@ static int32 getChannelsStem (int32 channels)
 		case 1: return AAX_eStemFormat_Mono;
 		case 2: return AAX_eStemFormat_Stereo;
 		case 3: return AAX_eStemFormat_LCR;
-		case 4: return AAX_eStemFormat_Quad;	// AAX_eStemFormat_Ambi_1_ACN
+		case 4:
+			return AAX_eStemFormat_Ambi_1_ACN; //  AAX_eStemFormat_Quad
 		case 5: return AAX_eStemFormat_5_0;
-		case 6: return AAX_eStemFormat_5_1;		// AAX_eStemFormat_6_0
-		case 7: return AAX_eStemFormat_6_1;		// AAX_eStemFormat_7_0_DTS
+		case 6:
+			return AAX_eStemFormat_5_1; // AAX_eStemFormat_6_0
+		case 7:
+			return AAX_eStemFormat_6_1; // AAX_eStemFormat_7_0_DTS
 		case 8: return AAX_eStemFormat_7_1_DTS;
-		case 9: return 	AAX_eStemFormat_7_0_2;	// AAX_eStemFormat_Ambi_2_ACN
+		case 9:
+			return AAX_eStemFormat_Ambi_2_ACN; // AAX_eStemFormat_7_0_2;
 		case 10: return AAX_eStemFormat_7_1_2;
-		case 16: return	AAX_eStemFormat_Ambi_3_ACN;
+		case 16: return AAX_eStemFormat_Ambi_3_ACN;
 	}
 	return AAX_eStemFormat_None;
 }
@@ -498,11 +507,14 @@ static SpeakerArrangement numChannelsToSpeakerArrangement (int32 numChannels)
 		case 1: return SpeakerArr::kMono;
 		case 2: return SpeakerArr::kStereo;
 		case 3: return SpeakerArr::k30Cine;
-		case 4: return SpeakerArr::k40Cine;
+		case 4: return SpeakerArr::kAmbi1stOrderACN;
 		case 5: return SpeakerArr::k50;
 		case 6: return SpeakerArr::k51;
 		case 7: return SpeakerArr::k61Cine;
 		case 8: return SpeakerArr::k71Cine;
+		case 9: return SpeakerArr::kAmbi2cdOrderACN;
+		case 10: return SpeakerArr::k71_2;
+		case 16: return SpeakerArr::kAmbi3rdOrderACN;
 	}
 	return 0;
 }
@@ -513,36 +525,39 @@ static SpeakerArrangement numChannelsToSpeakerArrangement (int32 numChannels)
 AAXWrapper* AAXWrapper::create (IPluginFactory* factory, const TUID vst3ComponentID,
                                 AAX_Plugin_Desc* desc, AAXWrapper_Parameters* params)
 {
-	// mostly a copy of Vst2Wrapper::create
+	// mostly a copy of BaseWrapper::create
 	if (!factory)
 		return nullptr;
 
-	IAudioProcessor* processor = nullptr;
+	BaseWrapper::SVST3Config config;
+	config.processor = nullptr;
+	config.factory = factory;
+
 	FReleaser factoryReleaser (factory);
 
-	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&processor);
-	if (!processor)
+	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&config.processor);
+	if (!config.processor)
 		return nullptr;
 
-	IEditController* controller = nullptr;
-	if (processor->queryInterface (IEditController::iid, (void**)&controller) != kResultTrue)
+	config.controller = nullptr;
+	if (config.processor->queryInterface (IEditController::iid, (void**)&config.controller) != kResultTrue)
 	{
-		FUnknownPtr<IComponent> component (processor);
+		FUnknownPtr<IComponent> component (config.processor);
 		if (component)
 		{
 			TUID editorCID;
 			if (component->getControllerClassId (editorCID) == kResultTrue)
 			{
-				factory->createInstance (editorCID, IEditController::iid, (void**)&controller);
+				factory->createInstance (editorCID, IEditController::iid, (void**)&config.controller);
 			}
 		}
 	}
+	config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
 
-	AAXWrapper* wrapper =
-	    new AAXWrapper (processor, controller, params, vst3ComponentID, desc, factory);
+	auto* wrapper = new AAXWrapper (config, params, desc);
 	if (wrapper->init () == false || wrapper->setupBusArrangements (desc) != kResultOk)
 	{
-		delete wrapper;
+		wrapper->release ();
 		return nullptr;
 	}
 	wrapper->setupBuses (); // again to adjust to changes done by setupBusArrangements
@@ -704,7 +719,7 @@ void AAXWrapper::setSideChainEnable (bool enable)
 //------------------------------------------------------------------------
 
 //------------------------------------------------------------------------
-typedef AAX_IEffectParameters* AAX_CALLBACK fnCreateParameters ();
+using fnCreateParameters = AAX_IEffectParameters* AAX_CALLBACK ();
 
 template <int32_t pluginIndex>
 struct CP
@@ -740,8 +755,8 @@ Steinberg::int32 AAXWrapper::ResetFieldData (Steinberg::int32 index, void* inDat
 {
 	if (index == idxContext && inDataSize == sizeof (AAXWrapper*))
 	{
-		suspend ();
-		resume ();
+		_suspend ();
+		_resume ();
 		*(AAXWrapper**)inData = this;
 	}
 	else
@@ -753,32 +768,27 @@ Steinberg::int32 AAXWrapper::ResetFieldData (Steinberg::int32 index, void* inDat
 //------------------------------------------------------------------------
 Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 {
-	//--- ------ Retrieve instance-specific information ---------//
+	//--- ------ Retrieve instance-specific information ---------
 	// Memory blocks
 	const int32_t bufferSize = *static_cast<int32_t*> (instance->ptr[idxBufferSize]);
 	AAX_ASSERT (bufferSize <= 1024);
 
-	// const int32_t	bypass		= *instance->mCtrlBypassP;	// 'int' not 'bool' for
-	// optimization
-	// const float		gain		= 0.5; //*instance->mGainP;
-	// float*			meterTaps	= *instance->mMetersPP;
-
 	int32 cntMidiPorts = getNumMIDIports ();
 	for (int32 m = 0; m < cntMidiPorts; m++)
 	{
-		AAX_IMIDINode* midiNode = static_cast<AAX_IMIDINode*> (instance->ptr[idxMidiPorts + m]);
+		auto* midiNode = static_cast<AAX_IMIDINode*> (instance->ptr[idxMidiPorts + m]);
 		AAX_CMidiStream* midiBuffer = midiNode->GetNodeBuffer ();
 
 		//- Check incoming MIDI packets ()
 		//
 		for (uint32_t i = 0; i < midiBuffer->mBufferSize; i++)
 		{
-			if (midiBuffer->mBuffer[i].mLength > 0)
+			AAX_CMidiPacket& buf = midiBuffer->mBuffer[i];
+			if (buf.mLength > 0)
 			{
-				VstMidiEvent ev = {kVstMidiType, 0};
-				memcpy (ev.midiData, midiBuffer->mBuffer[i].mData, 4);
-				ev.deltaFrames = midiBuffer->mBuffer[i].mTimestamp;
-				processMidiEvent (&ev, m);
+				Event toAdd = { m, static_cast<int32>(buf.mTimestamp), 0 };
+				bool isLive = buf.mIsImmediate || buf.mTimestamp == 0;
+				processMidiEvent (toAdd, (char*)&buf.mData[0], isLive);
 			}
 		}
 	}
@@ -801,8 +811,8 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 		}
 	}
 
-	float** const AAX_RESTRICT pdO =
-	    static_cast<float**> (instance->ptr[idxOutputChannels]); // First output
+	// First output
+	float** const AAX_RESTRICT pdO = static_cast<float**> (instance->ptr[idxOutputChannels]);
 
 	int32 cntOut = getNumOutputs ();
 	int32 aaxOut = getNumAAXOutputs ();
@@ -829,11 +839,11 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 
 	mMetersTmp = (cntMeters > 0) ? *static_cast<float**> (instance->ptr[idxMeters]) : nullptr;
 
-	processReplacing (pdI, outputs, bufferSize);
+	_processReplacing (pdI, outputs, bufferSize);
 
 	mMetersTmp = nullptr;
 
-	// apply bypass if not supported
+	// apply bypass if not supported ----------------------
 	if (mSimulateBypass)
 	{
 		static const float kDiffGain = 0.001f;
@@ -900,7 +910,7 @@ void AAXWrapper::processOutputParametersChanges ()
 //-----------------------------------------------------------------------------
 Steinberg::tresult PLUGIN_API AAXWrapper::restartComponent (Steinberg::int32 flags)
 {
-	tresult result = Vst2Wrapper::restartComponent (flags);
+	tresult result = BaseWrapper::restartComponent (flags);
 
 	//--- ----------------------
 	if (flags & kLatencyChanged)
@@ -943,48 +953,48 @@ static int32 vst3Category2AAXPlugInCategory (const char* cat)
 
 	int32 result = AAX_ePlugInCategory_None;
 
-	if (strstr (cat, "Fx") != 0)
+	if (strstr (cat, "Fx") != nullptr)
 	{
 		result = PDA_ePlugInCategory_Effect;
 	}
 
-	if (strstr (cat, "Instrument") != 0 || strstr (cat, "Generator") != 0)
+	if (strstr (cat, "Instrument") != nullptr || strstr (cat, "Generator") != nullptr)
 	{
-		if (strstr (cat, "External") != 0)
+		if (strstr (cat, "External") != nullptr)
 			result |= AAX_ePlugInCategory_HWGenerators;
 		else
 			result |= AAX_ePlugInCategory_SWGenerators;
 	}
 
-	if (strstr (cat, "Delay") != 0)
+	if (strstr (cat, "Delay") != nullptr)
 		result |= AAX_ePlugInCategory_Delay;
 
-	if (strstr (cat, "Distortion") != 0)
+	if (strstr (cat, "Distortion") != nullptr)
 		result |= AAX_ePlugInCategory_Harmonic;
 
-	if (strstr (cat, "Dynamics") != 0)
+	if (strstr (cat, "Dynamics") != nullptr)
 		result |= AAX_ePlugInCategory_Dynamics;
 
-	if (strstr (cat, "EQ") != 0)
+	if (strstr (cat, "EQ") != nullptr)
 		result |= AAX_ePlugInCategory_EQ;
 
-	if (strstr (cat, "Mastering") != 0)
+	if (strstr (cat, "Mastering") != nullptr)
 		result |= AAX_ePlugInCategory_Dither;
 
-	if (strstr (cat, "Modulation") != 0)
+	if (strstr (cat, "Modulation") != nullptr)
 		result |= AAX_ePlugInCategory_Modulation;
 
-	if (strstr (cat, "Pitch Shift") != 0)
+	if (strstr (cat, "Pitch Shift") != nullptr)
 		result |= AAX_ePlugInCategory_PitchShift;
 
-	if (strstr (cat, "Restoration") != 0)
+	if (strstr (cat, "Restoration") != nullptr)
 		result |= AAX_ePlugInCategory_NoiseReduction;
 
-	if (strstr (cat, "Reverb") != 0)
+	if (strstr (cat, "Reverb") != nullptr)
 		result |= AAX_ePlugInCategory_Reverb;
 
-	if (strstr (cat, "Spatial") != 0 || strstr (cat, "Surround") != 0 ||
-	    strstr (cat, "Up-Downmix") != 0)
+	if (strstr (cat, "Spatial") != nullptr || strstr (cat, "Surround") != nullptr ||
+	    strstr (cat, "Up-Downmix") != nullptr)
 	{
 		result |= AAX_ePlugInCategory_SoundField;
 	}
@@ -1117,7 +1127,7 @@ void AAXWrapper::DescribeAlgorithmComponent (AAX_IComponentDescriptor* outDesc,
 	// Native (Native and AudioSuite)
 	err = outDesc->AddProcessProc_Native<AAXWrapper_Context> (AlgorithmProcessFunction, properties,
 	                                                          AlgorithmInitFunction,
-	                                                          0 /*AlgorithmBackgroundFunction*/);
+	                                                          nullptr /*AlgorithmBackgroundFunction*/);
 	AAX_ASSERT (err == AAX_SUCCESS);
 }
 
@@ -1145,7 +1155,7 @@ static AAX_Result GetPlugInDescription (AAX_IEffectDescriptor* outDescriptor,
 
 	// Data model
 	int32 plugIndex = pdesc - desc->mPluginDesc;
-	fnCreateParameters* fn = 0;
+	fnCreateParameters* fn = nullptr;
 	switch (plugIndex)
 	{
 #define ADDPROCPTR(N) \

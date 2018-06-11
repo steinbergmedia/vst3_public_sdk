@@ -252,8 +252,8 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
 		                         kBypassTag);
 
-		mDataBrowser = 0;
-		mDataSource = 0;
+		mDataBrowser = nullptr;
+		mDataSource = nullptr;
 
 		if (!mDataSource)
 			mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));

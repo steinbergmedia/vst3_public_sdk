@@ -148,7 +148,7 @@ void PitchNamesDataBrowserSource::getPitchName (int16_t pitch, Steinberg::String
 void PitchNamesDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect& size, int32_t row,
                                               int32_t column, int32_t flags, CDataBrowser* browser)
 {
-	if (pitchnames == 0)
+	if (pitchnames == nullptr)
 		return;
 
 	if (flags & kRowSelected)

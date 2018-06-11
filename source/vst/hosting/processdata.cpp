@@ -159,14 +159,14 @@ int32 HostProcessData::createBuffers (IComponent& component, AudioBusBuffers*& b
 							if (bufferSamples > 0)
 								buffers[i].channelBuffers64[j] = new Sample64[bufferSamples];
 							else
-								buffers[i].channelBuffers64[j] = 0;
+								buffers[i].channelBuffers64[j] = nullptr;
 						}
 						else
 						{
 							if (bufferSamples > 0)
 								buffers[i].channelBuffers32[j] = new Sample32[bufferSamples];
 							else
-								buffers[i].channelBuffers32[j] = 0;
+								buffers[i].channelBuffers32[j] = nullptr;
 						}
 					}
 				}
@@ -213,7 +213,7 @@ void HostProcessData::destroyBuffers (AudioBusBuffers*& buffers, int32& busCount
 		}
 
 		delete[] buffers;
-		buffers = 0;
+		buffers = nullptr;
 	}
 	busCount = 0;
 }

@@ -1,15 +1,7 @@
 
-if(SMTG_AAX_SDK_PATH)
-    set(vst2_sources
-        ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
-        ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
-        ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
+if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
+    set(base_sources
+        ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp
     )
 
     set(again_aax_sources
@@ -27,7 +19,7 @@ if(SMTG_AAX_SDK_PATH)
         ../again/source/againuimessagecontroller.h
         ../again/source/version.h
     )
-    set(again_sources ${again_aax_sources} ${vst2_sources})
+    set(again_sources ${again_aax_sources} ${base_sources})
 
     set(target again_aax)
     smtg_add_vst3plugin(${target} ${SDK_ROOT} ${again_sources})

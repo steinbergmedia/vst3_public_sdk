@@ -42,7 +42,7 @@
 //------------------------------------------------------------------------
 //    ParameterChangesCheck
 //------------------------------------------------------------------------
-ParameterChangesCheck::ParameterChangesCheck () : mEventLogger (nullptr), mParameterIds (0) {}
+ParameterChangesCheck::ParameterChangesCheck () : mEventLogger (nullptr), mParameterIds (nullptr) {}
 
 //------------------------------------------------------------------------
 void ParameterChangesCheck::checkParameterChanges (Steinberg::Vst::IParameterChanges* paramChanges)

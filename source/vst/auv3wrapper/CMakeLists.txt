@@ -1,6 +1,6 @@
 
 # iOS target
-if(MAC)
+if(MAC AND SMTG_ADD_VSTGUI)
     if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         function(add_vst_resources varName)
             smtg_add_vst3_resource(${varName} "${SDK_ROOT}/public.sdk/samples/vst/again/resource/again.rc")

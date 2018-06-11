@@ -150,7 +150,7 @@ tresult PLUGIN_API AGainSimple::initialize (FUnknown* context)
 	//---Create Parameters------------
 
 	//---Gain parameter--
-	GainParameter* gainParam = new GainParameter (ParameterInfo::kCanAutomate, kGainId);
+	auto* gainParam = new GainParameter (ParameterInfo::kCanAutomate, kGainId);
 	parameters.addParameter (gainParam);
 
 	//---VuMeter parameter---
@@ -158,14 +158,14 @@ tresult PLUGIN_API AGainSimple::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kIsReadOnly;
 	int32 tag = kVuPPMId;
-	parameters.addParameter (USTRING ("VuPPM"), 0, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (USTRING ("VuPPM"), nullptr, stepCount, defaultVal, flags, tag);
 
 	//---Bypass parameter---
 	stepCount = 1;
 	defaultVal = 0;
 	flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	tag = kBypassId;
-	parameters.addParameter (USTRING ("Bypass"), 0, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (USTRING ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	//---Custom state init------------
 
@@ -471,7 +471,7 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 		if (SpeakerArr::getChannelCount (inputs[0]) == 1 &&
 		    SpeakerArr::getChannelCount (outputs[0]) == 1)
 		{
-			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
+			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				// check if we are Mono => Mono, if not we need to recreate the buses
@@ -479,7 +479,7 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 				{
 					removeAudioBusses ();
 					addAudioInput  (STR16 ("Mono In"),  inputs[0]);
-					addAudioOutput (STR16 ("Mono Out"), inputs[0]);
+					addAudioOutput (STR16 ("Mono Out"), outputs[0]);
 				}
 				return kResultOk;
 			}
@@ -487,7 +487,7 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 		// the host wants something else than Mono => Mono, in this case we are always Stereo => Stereo
 		else
 		{
-			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
+			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				tresult result = kResultFalse;
@@ -535,10 +535,10 @@ IPlugView* PLUGIN_API AGainSimple::createView (const char* name)
 	// someone wants my editor
 	if (name && strcmp (name, ViewType::kEditor) == 0)
 	{
-		VST3Editor* view = new VST3Editor (this, "view", "again.uidesc");
+		auto* view = new VST3Editor (this, "view", "again.uidesc");
 		return view;
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -548,11 +548,11 @@ IController* AGainSimple::createSubController (UTF8StringPtr name,
 {
 	if (UTF8StringView (name) == "MessageController")
 	{
-		UIMessageController* controller = new UIMessageController (this);
+		auto* controller = new UIMessageController (this);
 		addUIMessageController (controller);
 		return controller;
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -573,10 +573,8 @@ tresult PLUGIN_API AGainSimple::setEditorState (IBStream* state)
 			SWAP_16 (defaultMessageText[i])
 	}
 
-	for (UIMessageControllerList::iterator it = uiMessageControllers.begin (),
-	                                       end = uiMessageControllers.end ();
-	     it != end; ++it)
-		(*it)->setMessageText (defaultMessageText);
+	for (auto& uiMessageController : uiMessageControllers)
+		uiMessageController->setMessageText (defaultMessageText);
 
 	return result;
 }

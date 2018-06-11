@@ -63,7 +63,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (String ("Bypass"), 0, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (String ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	// create top root unit with kProgramId as id for the programList
 	addUnit (new Unit (String ("Root"), kRootUnitId, kNoParentUnitId, kProgramId));
@@ -87,7 +87,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	parameters.addParameter (prgParam);
 
 	//---Gain parameter---
-	parameters.addParameter (STR16 ("Gain"), 0, 0, 1.f, ParameterInfo::kCanAutomate, kGainId);
+	parameters.addParameter (STR16 ("Gain"), nullptr, 0, 1.f, ParameterInfo::kCanAutomate, kGainId);
 
 	return result;
 }

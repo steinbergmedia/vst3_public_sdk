@@ -61,8 +61,6 @@ AGain::AGain ()
 , fGainReduction (0.f)
 , fVuPPMOld (0.f)
 , currentProcessMode (-1) // -1 means not initialized
-, bHalfGain (false)
-, bBypass (false)
 {
 	// register its editor class (the same than used in againentry.cpp)
 	setControllerClass (AGainControllerUID);
@@ -87,7 +85,7 @@ tresult PLUGIN_API AGain::initialize (FUnknown* context)
 
 	//---create Audio In/Out buses------
 	// we want a stereo Input and a Stereo Output
-	addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
+	addAudioInput (STR16 ("Stereo In"), SpeakerArr::kStereo);
 	addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
 
 	//---create Event In/Out buses (1 bus with only 1 channel)------
@@ -97,7 +95,7 @@ tresult PLUGIN_API AGain::initialize (FUnknown* context)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API AGain::terminate  ()
+tresult PLUGIN_API AGain::terminate ()
 {
 	// nothing to do here yet...except calling our parent terminate
 	return AudioEffect::terminate ();
@@ -114,7 +112,7 @@ tresult PLUGIN_API AGain::setActive (TBool state)
 	{
 		sendTextMessage ("AGain::setActive (false)");
 	}
-	
+
 	// reset the VuMeter value
 	fVuPPMOld = 0.f;
 
@@ -151,16 +149,18 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 				{
 					case kGainId:
 						// we use in this example only the last point of the queue.
-						// in some wanted case for specific kind of parameter it makes sense to retrieve all points
-						// and process the whole audio block in small blocks.
-						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
+						// in some wanted case for specific kind of parameter it makes sense to
+						// retrieve all points and process the whole audio block in small blocks.
+						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+						    kResultTrue)
 						{
 							fGain = (float)value;
 						}
 						break;
 
 					case kBypassId:
-						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
+						if (paramQueue->getPoint (numPoints - 1, sampleOffset, value) ==
+						    kResultTrue)
 						{
 							bBypass = (value > 0.5f);
 						}
@@ -207,7 +207,8 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 		return kResultOk;
 	}
 
-	// (simplification) we suppose in this example that we have the same input channel count than the output
+	// (simplification) we suppose in this example that we have the same input channel count than
+	// the output
 	int32 numChannels = data.inputs[0].numChannels;
 
 	//---get audio buffers----------------
@@ -221,13 +222,15 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 	{
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
-		
-		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
+
+		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are
+		// clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
-			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
+			// do not need to be cleared if the buffers are the same (in this case input buffer are
+			// already cleared by the host)
 			if (in[i] != out[i])
-			{				
+			{
 				memset (out[i], 0, sampleFramesSize);
 			}
 		}
@@ -238,6 +241,8 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 
 	// mark our outputs has not silent
 	data.outputs[0].silenceFlags = 0;
+
+	float fVuPPM = 0.f;
 
 	//---in bypass mode outputs should be like inputs-----
 	if (bBypass)
@@ -250,27 +255,31 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 				memcpy (out[i], in[i], sampleFramesSize);
 			}
 		}
-		// in this example we do not update the VuMeter in Bypass
+
+		if (data.symbolicSampleSize == kSample32)
+			fVuPPM = processVuPPM<Sample32> ((Sample32**)in, numChannels, data.numSamples);
+		else
+			fVuPPM = processVuPPM<Sample64> ((Sample64**)in, numChannels, data.numSamples);
 	}
 	else
 	{
-		float fVuPPM = 0.f;
-
 		//---apply gain factor----------
 		float gain = (fGain - fGainReduction);
 		if (bHalfGain)
 		{
 			gain = gain * 0.5f;
 		}
-		
-		// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set the silence flags. 
+
+		// if the applied gain is nearly zero, we could say that the outputs are zeroed and we set
+		// the silence flags.
 		if (gain < 0.0000001)
 		{
 			for (int32 i = 0; i < numChannels; i++)
 			{
 				memset (out[i], 0, sampleFramesSize);
 			}
-			data.outputs[0].silenceFlags = (1 << numChannels) - 1;  // this will set to 1 all channels
+			data.outputs[0].silenceFlags =
+			    (1 << numChannels) - 1; // this will set to 1 all channels
 		}
 		else
 		{
@@ -281,23 +290,23 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 				fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
 				                                 data.numSamples, gain);
 		}
-
-		//---3) Write outputs parameter changes-----------
-		IParameterChanges* outParamChanges = data.outputParameterChanges;
-		// a new value of VuMeter will be send to the host 
-		// (the host will send it back in sync to our controller for updating our editor)
-		if (outParamChanges && fVuPPMOld != fVuPPM)
-		{
-			int32 index = 0;
-			IParamValueQueue* paramQueue = outParamChanges->addParameterData (kVuPPMId, index);
-			if (paramQueue)
-			{
-				int32 index2 = 0;
-				paramQueue->addPoint (0, fVuPPM, index2); 
-			}
-		}
-		fVuPPMOld = fVuPPM;
 	}
+
+	//---3) Write outputs parameter changes-----------
+	IParameterChanges* outParamChanges = data.outputParameterChanges;
+	// a new value of VuMeter will be send to the host
+	// (the host will send it back in sync to our controller for updating our editor)
+	if (outParamChanges && fVuPPMOld != fVuPPM)
+	{
+		int32 index = 0;
+		IParamValueQueue* paramQueue = outParamChanges->addParameterData (kVuPPMId, index);
+		if (paramQueue)
+		{
+			int32 index2 = 0;
+			paramQueue->addPoint (0, fVuPPM, index2);
+		}
+	}
+	fVuPPMOld = fVuPPM;
 
 	return kResultOk;
 }
@@ -309,7 +318,7 @@ tresult AGain::receiveText (const char* text)
 	fprintf (stderr, "[AGain] received: ");
 	fprintf (stderr, "%s", text);
 	fprintf (stderr, "\n");
-	
+
 	bHalfGain = !bHalfGain;
 
 	return kResultOk;
@@ -378,7 +387,7 @@ tresult PLUGIN_API AGain::getState (IBStream* state)
 	// here we need to save the model
 
 	IBStreamer streamer (state, kLittleEndian);
-	
+
 	streamer.writeFloat (fGain);
 	streamer.writeFloat (fGainReduction);
 	streamer.writeInt32 (bBypass ? 1 : 0);
@@ -390,10 +399,10 @@ tresult PLUGIN_API AGain::getState (IBStream* state)
 tresult PLUGIN_API AGain::setupProcessing (ProcessSetup& newSetup)
 {
 	// called before the process call, always in a disable state (not active)
-	
+
 	// here we keep a trace of the processing mode (offline,...) for example.
 	currentProcessMode = newSetup.processMode;
-	
+
 	return AudioEffect::setupProcessing (newSetup);
 }
 
@@ -414,25 +423,27 @@ tresult PLUGIN_API AGain::setBusArrangements (SpeakerArrangement* inputs, int32 
 				if (bus->getArrangement () != inputs[0])
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Mono In"),  inputs[0]);
+					addAudioInput (STR16 ("Mono In"), inputs[0]);
 					addAudioOutput (STR16 ("Mono Out"), inputs[0]);
 				}
 				return kResultOk;
 			}
 		}
-		// the host wants something else than Mono => Mono, in this case we are always Stereo => Stereo
+		// the host wants something else than Mono => Mono, 
+		// in this case we are always Stereo => Stereo
 		else
 		{
 			AudioBus* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
 				tresult result = kResultFalse;
-				
+
 				// the host wants 2->2 (could be LsRs -> LsRs)
-				if (SpeakerArr::getChannelCount (inputs[0]) == 2 && SpeakerArr::getChannelCount (outputs[0]) == 2)
+				if (SpeakerArr::getChannelCount (inputs[0]) == 2 &&
+				    SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  inputs[0]);
+					addAudioInput (STR16 ("Stereo In"), inputs[0]);
 					addAudioOutput (STR16 ("Stereo Out"), outputs[0]);
 					result = kResultTrue;
 				}
@@ -440,7 +451,7 @@ tresult PLUGIN_API AGain::setBusArrangements (SpeakerArrangement* inputs, int32 
 				else if (bus->getArrangement () != SpeakerArr::kStereo)
 				{
 					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
+					addAudioInput (STR16 ("Stereo In"), SpeakerArr::kStereo);
 					addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
 					result = kResultFalse;
 				}
@@ -457,11 +468,11 @@ tresult PLUGIN_API AGain::canProcessSampleSize (int32 symbolicSampleSize)
 {
 	if (symbolicSampleSize == kSample32)
 		return kResultTrue;
-	
+
 	// we support double processing
 	if (symbolicSampleSize == kSample64)
 		return kResultTrue;
-	
+
 	return kResultFalse;
 }
 

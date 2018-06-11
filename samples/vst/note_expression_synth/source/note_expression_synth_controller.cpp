@@ -54,7 +54,7 @@ class PanNoteExpressionType : public RangeNoteExpressionType
 {
 public:
 	PanNoteExpressionType ()
-	: RangeNoteExpressionType (kPanTypeID, String ("Pan"), String ("Pan"), 0, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar|NoteExpressionTypeInfo::kIsAbsolute, 0)
+	: RangeNoteExpressionType (kPanTypeID, String ("Pan"), String ("Pan"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar|NoteExpressionTypeInfo::kIsAbsolute, 0)
 	{
 	}
 
@@ -191,20 +191,20 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param->setPrecision (1);
 		parameters.addParameter (param);
 
-		param = parameters.addParameter (USTRING("Filter Q"), 0, 0, 0, ParameterInfo::kCanAutomate, kParamFilterQ);
+		param = parameters.addParameter (USTRING("Filter Q"), nullptr, 0, 0, ParameterInfo::kCanAutomate, kParamFilterQ);
 		param->setPrecision (2);
 
-		parameters.addParameter (USTRING("Bypass SNA"), 0, 1, 0, ParameterInfo::kCanAutomate, kParamBypassSNA);
+		parameters.addParameter (USTRING("Bypass SNA"), nullptr, 1, 0, ParameterInfo::kCanAutomate, kParamBypassSNA);
 
-		parameters.addParameter (new RangeParameter (USTRING("Active Voices"), kParamActiveVoices, 0, 0, MAX_VOICES, 0, MAX_VOICES, ParameterInfo::kIsReadOnly));
+		parameters.addParameter (new RangeParameter (USTRING("Active Voices"), kParamActiveVoices, nullptr, 0, MAX_VOICES, 0, MAX_VOICES, ParameterInfo::kIsReadOnly));
 
-		StringListParameter* tuningRangeParam = new StringListParameter (USTRING("Tuning Range"), kParamTuningRange, 0, ParameterInfo::kIsList);
+		StringListParameter* tuningRangeParam = new StringListParameter (USTRING("Tuning Range"), kParamTuningRange, nullptr, ParameterInfo::kIsList);
 		tuningRangeParam->appendString (USTRING("[-1, +1] Octave"));
 		tuningRangeParam->appendString (USTRING("[-3, +2] Tunes"));
 		parameters.addParameter (tuningRangeParam);
 
 	// Init Note Expression Types
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), 0, -1, 1., 0., 1., 0, 0));
+		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), nullptr, -1, 1., 0., 1., 0, 0));
 		noteExpressionTypes.addNoteExpressionType (new PanNoteExpressionType ());
 		NoteExpressionType* panNoteExpression = new RangeNoteExpressionType (kTuningTypeID, String ("Tuning"), String ("Tun"), String ("Half Tone"), -1, 0, 120, -120, NoteExpressionTypeInfo::kIsBipolar);
 		panNoteExpression->getInfo ().valueDesc.minimum = 0.5 - VoiceStatics::kNormTuningOneOctave;
@@ -215,9 +215,9 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleVolumeTypeID, String ("Triangle Volume"), String ("Tri Vol"), String ("%"), -1, getParameterObject (kParamTriangleVolume), NoteExpressionTypeInfo::kIsAbsolute));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSquareVolumeTypeID, String ("Square Volume"), String ("Square Vol"), String ("%"), -1, getParameterObject (kParamSquareVolume), NoteExpressionTypeInfo::kIsAbsolute));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kNoiseVolumeTypeID, String ("Noise Volume"), String ("Noise Vol"), String ("%"), -1, getParameterObject (kParamNoiseVolume), NoteExpressionTypeInfo::kIsAbsolute));
-		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), 0, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
-		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterQModTypeID, String ("Filter Q Modulation"), String ("Q Mod"), 0, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterTypeTypeID, String ("Filter Type"), String ("Flt Type"), 0, -1, getParameterObject (kParamFilterType), NoteExpressionTypeInfo::kIsBipolar));
+		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
+		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterQModTypeID, String ("Filter Q Modulation"), String ("Q Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
+		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterTypeTypeID, String ("Filter Type"), String ("Flt Type"), nullptr, -1, getParameterObject (kParamFilterType), NoteExpressionTypeInfo::kIsBipolar));
 		noteExpressionTypes.addNoteExpressionType (new ReleaseTimeModNoteExpressionType ());
 	}
 	return kResultTrue;

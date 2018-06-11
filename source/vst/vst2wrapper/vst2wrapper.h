@@ -39,25 +39,8 @@
 #include "docvst2.h"
 
 /// \cond ignore
-
-#include "pluginterfaces/base/ftypes.h"
-#include "pluginterfaces/vst/ivstaudioprocessor.h"
-#include "pluginterfaces/vst/ivsteditcontroller.h"
-#include "pluginterfaces/vst/ivsthostapplication.h"
-#include "pluginterfaces/vst/ivstprocesscontext.h"
-#include "pluginterfaces/vst/ivstunits.h"
-
-#include "public.sdk/source/common/memorystream.h"
-#include "public.sdk/source/vst/hosting/eventlist.h"
-#include "public.sdk/source/vst/hosting/parameterchanges.h"
-#include "public.sdk/source/vst/hosting/processdata.h"
+#include "public.sdk/source/vst/basewrapper/basewrapper.h"
 #include "public.sdk/source/vst2.x/audioeffectx.h"
-
-#include "base/source/fstring.h"
-#include "base/source/timer.h"
-
-#include <map>
-#include <vector>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -65,36 +48,52 @@ namespace Vst {
 
 class Vst2MidiEventQueue;
 
-//-------------------------------------------------------------------------------------------------------
-class Vst2Wrapper : public ::AudioEffectX,
-                    public IHostApplication,
-                    public IComponentHandler,
-                    public IUnitHandler,
-                    public ITimerCallback,
-                    public IVst3ToVst2Wrapper
+//------------------------------------------------------------------------
+class Vst2Wrapper : public BaseWrapper, public ::AudioEffectX, public IVst3ToVst2Wrapper
 {
 public:
-	//--- -------------------------------------------------------------------------------------------------
-	// static creation method
+	// will owned factory
 	static AudioEffect* create (IPluginFactory* factory, const TUID vst3ComponentID,
-	                            VstInt32 vst2ID, audioMasterCallback audioMaster);
+		VstInt32 vst2ID, audioMasterCallback audioMaster);
 
-	Vst2Wrapper (IAudioProcessor* processor, IEditController* controller,
-	             audioMasterCallback audioMaster, const TUID vst3ComponentID, VstInt32 vst2ID,
-	             IPluginFactory* factory = 0);
-	~Vst2Wrapper ();
+	Vst2Wrapper (BaseWrapper::SVST3Config& config, audioMasterCallback audioMaster, VstInt32 vst2ID);
+	virtual ~Vst2Wrapper ();
 
-	bool init ();
+	//--- ------------------------------------------------------
+	//--- BaseWrapper ------------------------------------------
+	bool init () SMTG_OVERRIDE;
+	void _canDoubleReplacing (bool val) SMTG_OVERRIDE;
+	void _setInitialDelay (int32 delay) SMTG_OVERRIDE;
+	void _noTail (bool val) SMTG_OVERRIDE;
+	void setupProcessTimeInfo () SMTG_OVERRIDE;
 
-	bool isActive () const { return mActive; }
+	void setupParameters () SMTG_OVERRIDE;
+	void setupBuses () SMTG_OVERRIDE;
 
-	// AudioEffectX overrides -----------------------------------------------
+	void _ioChanged () SMTG_OVERRIDE;
+	void _updateDisplay () SMTG_OVERRIDE;
+	void _setNumInputs (int32 inputs) SMTG_OVERRIDE;
+	void _setNumOutputs (int32 outputs) SMTG_OVERRIDE;
+	bool _sizeWindow (int32 width, int32 height) SMTG_OVERRIDE;
+
+	//--- ---------------------------------------------------------------------
+	// VST 3 Interfaces  ------------------------------------------------------
+	// IComponentHandler
+	tresult PLUGIN_API beginEdit (ParamID tag) SMTG_OVERRIDE;
+	tresult PLUGIN_API performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
+	tresult PLUGIN_API endEdit (ParamID tag) SMTG_OVERRIDE;
+
+	// IHostApplication
+	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE;
+
+	//--- ---------------------------------------------------------------------
+	// VST 2 AudioEffectX overrides -----------------------------------------------
 	void suspend () SMTG_OVERRIDE; // Called when Plug-in is switched to off
 	void resume () SMTG_OVERRIDE; // Called when Plug-in is switched to on
 	VstInt32 startProcess () SMTG_OVERRIDE;
 	VstInt32 stopProcess () SMTG_OVERRIDE;
 
-	 // Called when the sample rate changes (always in a suspend state)
+	// Called when the sample rate changes (always in a suspend state)
 	void setSampleRate (float newSamplerate) SMTG_OVERRIDE;
 
 	// Called when the maximum block size changes
@@ -124,9 +123,9 @@ public:
 	bool getInputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
 	bool getOutputProperties (VstInt32 index, VstPinProperties* properties) SMTG_OVERRIDE;
 	bool setSpeakerArrangement (VstSpeakerArrangement* pluginInput,
-	                            VstSpeakerArrangement* pluginOutput) SMTG_OVERRIDE;
+		VstSpeakerArrangement* pluginOutput) SMTG_OVERRIDE;
 	bool getSpeakerArrangement (VstSpeakerArrangement** pluginInput,
-	                            VstSpeakerArrangement** pluginOutput) SMTG_OVERRIDE;
+		VstSpeakerArrangement** pluginOutput) SMTG_OVERRIDE;
 	bool setBypass (bool onOff) SMTG_OVERRIDE;
 
 	bool setProcessPrecision (VstInt32 precision) SMTG_OVERRIDE;
@@ -137,13 +136,13 @@ public:
 	bool getVendorString (char* text) SMTG_OVERRIDE;
 	VstInt32 getVendorVersion () SMTG_OVERRIDE;
 	VstIntPtr vendorSpecific (VstInt32 lArg, VstIntPtr lArg2, void* ptrArg,
-	                                  float floatArg) SMTG_OVERRIDE;
+		float floatArg) SMTG_OVERRIDE;
 	VstPlugCategory getPlugCategory () SMTG_OVERRIDE;
 	VstInt32 canDo (char* text) SMTG_OVERRIDE;
 
 	VstInt32 getMidiProgramName (VstInt32 channel, MidiProgramName* midiProgramName) SMTG_OVERRIDE;
 	VstInt32 getCurrentMidiProgram (VstInt32 channel,
-	                                MidiProgramName* currentProgram) SMTG_OVERRIDE;
+		MidiProgramName* currentProgram) SMTG_OVERRIDE;
 	VstInt32 getMidiProgramCategory (VstInt32 channel, MidiProgramCategory* category) SMTG_OVERRIDE;
 	bool hasMidiProgramsChanged (VstInt32 channel) SMTG_OVERRIDE;
 	bool getMidiKeyName (VstInt32 channel, MidiKeyName* keyName) SMTG_OVERRIDE;
@@ -151,81 +150,37 @@ public:
 	// finally process...
 	void processReplacing (float** inputs, float** outputs, VstInt32 sampleFrames) SMTG_OVERRIDE;
 	void processDoubleReplacing (double** inputs, double** outputs,
-	                             VstInt32 sampleFrames) SMTG_OVERRIDE;
+		VstInt32 sampleFrames) SMTG_OVERRIDE;
 	VstInt32 processEvents (VstEvents* events) SMTG_OVERRIDE;
-
-	// VST 3 Interfaces  ------------------------------------------------------
-	// FUnknown
-	tresult PLUGIN_API queryInterface (const char* iid, void** obj) SMTG_OVERRIDE;
-	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
-	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
-
-	// IHostApplication
-	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE;
-	tresult PLUGIN_API createInstance (TUID cid, TUID iid, void** obj) SMTG_OVERRIDE;
-
-	// IComponentHandler
-	tresult PLUGIN_API beginEdit (ParamID tag) SMTG_OVERRIDE;
-	tresult PLUGIN_API performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
-	tresult PLUGIN_API endEdit (ParamID tag) SMTG_OVERRIDE;
-	tresult PLUGIN_API restartComponent (int32 flags) SMTG_OVERRIDE;
-
-	// IUnitHandler
-	tresult PLUGIN_API notifyUnitSelection (UnitID unitId) SMTG_OVERRIDE;
-	tresult PLUGIN_API notifyProgramListChange (ProgramListID listId,
-	                                                    int32 programIndex) SMTG_OVERRIDE;
-
-	void setVendorName (char* name);
-	void setEffectName (char* name);
-	void setEffectVersion (char* version);
-	void setSubCategories (char* string);
-
-	// ITimer
-	void onTimer (Timer* timer) SMTG_OVERRIDE;
-
-//-------------------------------------------------------------------------------------------------------
-protected:
-	using AudioEffectX::beginEdit;
-	using AudioEffectX::endEdit;
-
-	void setupBuses ();
-	void setupParameters ();
-	void initMidiCtrlerAssignment ();
-	void getUnitPath (UnitID unitID, String& path);
-
-	int32 countMainBusChannels (BusDirection dir, uint64& mainBusBitset);
-
-	template <class T>
-	void setProcessingBuffers (T** inputs, T** outputs);
-	void setupProcessTimeInfo ();
-	void doProcess (VstInt32 sampleFrames);
-	void setEventPPQPositions ();
-	void processOutputEvents ();
-	void processMidiEvent (VstMidiEvent* midiEvent, int32 bus);
-	
-	virtual void processOutputParametersChanges () {}
-
-	/**	Returns the last param change from guiTransfer queue. */
-	bool getLastParamChange (ParamID id, ParamValue& value);
-
-	bool setupProcessing (int32 processModeOverwrite = -1);
-	void addParameterChange (ParamID id, ParamValue value, int32 sampleOffset);
-
-	bool getProgramListAndUnit (int32 midiChannel, UnitID& unitId, ProgramListID& programListId);
-	bool getProgramListInfoByProgramListID (ProgramListID programListId, ProgramListInfo& info);
-	int32 lookupProgramCategory (int32 midiChannel, String128 instrumentAttribute);
-	bool setupMidiProgram (int32 midiChannel, ProgramListID programListId,
-	                       MidiProgramName& midiProgramName);
 
 	bool getPinProperties (BusDirection dir, VstInt32 pinIndex, VstPinProperties* properties);
 	bool pinIndexToBusChannel (BusDirection dir, VstInt32 pinIndex, int32& busIndex,
-	                           int32& busChannel);
+		int32& busChannel);
+
+	//--- ------------------------------------------------------
+	DEFINE_INTERFACES
+		DEF_INTERFACE (Vst::IVst3ToVst2Wrapper)
+	END_DEFINE_INTERFACES (BaseWrapper)
+	REFCOUNT_METHODS (BaseWrapper)
+
 	static VstInt32 vst3ToVst2SpeakerArr (SpeakerArrangement vst3Arr);
 	static SpeakerArrangement vst2ToVst3SpeakerArr (VstInt32 vst2Arr);
 	static VstInt32 vst3ToVst2Speaker (Speaker vst3Speaker);
 	static void setupVst2Arrangement (VstSpeakerArrangement*& vst2arr,
-	                                  Vst::SpeakerArrangement vst3Arrangement);
+		Vst::SpeakerArrangement vst3Arrangement);
 
+	//------------------------------------------------------------------------
+protected:
+	VstSpeakerArrangement* mVst2InputArrangement {nullptr};
+	VstSpeakerArrangement* mVst2OutputArrangement {nullptr};
+	Vst2MidiEventQueue* mVst2OutputEvents {nullptr};
+	VstInt32 mCurrentProcessLevel {kVstProcessLevelRealtime};
+
+	void updateProcessLevel ();
+
+	bool setupMidiProgram (int32 midiChannel, ProgramListID programListId,
+	                       MidiProgramName& midiProgramName);
+	int32 lookupProgramCategory (int32 midiChannel, String128 instrumentAttribute);
 	struct ProgramCategory
 	{
 		MidiProgramCategory vst2Category;
@@ -236,75 +191,8 @@ protected:
 	static uint32 makeCategoriesRecursive (std::vector<ProgramCategory>& channelCategories,
 	                                       String128 vst3Category);
 
-	static const int32 kMaxProgramChangeParameters = 16;
-	ParamID mProgramChangeParameterIDs[kMaxProgramChangeParameters]; // for each midi channel
-	int32 mProgramChangeParameterIdxs[kMaxProgramChangeParameters]; // for each midi channel
+	void processOutputEvents () SMTG_OVERRIDE;
 
-	VstSpeakerArrangement* mVst2InputArrangement = nullptr;
-	VstSpeakerArrangement* mVst2OutputArrangement = nullptr;
-
-	FUID mVst3EffectClassID;
-
-	// vst3 data
-	IAudioProcessor* mProcessor = nullptr;
-	IComponent* mComponent = nullptr;
-	IEditController* mController = nullptr;
-	IUnitInfo* mUnitInfo = nullptr;
-	IMidiMapping* mMidiMapping = nullptr;
-
-	bool componentInitialized = false;
-	bool controllerInitialized = false;
-	bool componentsConnected = false;
-	
-	bool mActive = false;
-	bool mProcessing = false;
-	bool hasEventInputBuses = false;
-	bool hasEventOutputBuses = false;
-
-	int32 mVst3SampleSize = kSample32;
-	int32 mVst3processMode = kRealtime;
-
-	char mName[PClassInfo::kNameSize];
-	char mVendor[PFactoryInfo::kNameSize];
-	char mSubCategories[PClassInfo2::kSubCategoriesSize];
-	int32 mVersion = 0;
-
-	struct ParamMapEntry
-	{
-		ParamID vst3ID;
-		int32 vst3Index;
-	};
-
-	std::vector<ParamMapEntry> mParameterMap;
-	std::map<ParamID, int32> mParamIndexMap;
-	ParamID mBypassParameterID = kNoParamId;
-	ParamID mProgramParameterID = kNoParamId;
-	int32 mProgramParameterIdx = -1;
-
-	HostProcessData mProcessData;
-	ProcessContext mProcessContext;
-	ParameterChanges mInputChanges;
-	ParameterChanges mOutputChanges;
-	EventList* mInputEvents = nullptr;
-	EventList* mOutputEvents = nullptr;
-	Vst2MidiEventQueue* mVst2OutputEvents = nullptr;
-	uint64 mMainAudioInputBuses = 0;
-	uint64 mMainAudioOutputBuses = 0;
-
-	ParameterChangeTransfer mInputTransfer;
-	ParameterChangeTransfer mOutputTransfer;
-	ParameterChangeTransfer mGuiTransfer;
-
-	MemoryStream mChunk;
-
-	Timer* mTimer = nullptr;
-	IPluginFactory* mFactory = nullptr;
-
-	enum
-	{
-		kMaxMidiMappingBusses = 4
-	};
-	int32* mMidiCCMapping[kMaxMidiMappingBusses][16];
 };
 
 //------------------------------------------------------------------------

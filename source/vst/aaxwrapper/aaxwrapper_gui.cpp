@@ -47,16 +47,6 @@ using namespace Steinberg::Vst;
 using namespace Steinberg::Base::Thread;
 
 //------------------------------------------------------------------------
-AAXWrapper_GUI::AAXWrapper_GUI ()
-{
-}
-
-//------------------------------------------------------------------------
-AAXWrapper_GUI::~AAXWrapper_GUI ()
-{
-}
-
-//------------------------------------------------------------------------
 void AAXWrapper_GUI::CreateViewContainer ()
 {
 	if (GetViewContainerType () == AAX_eViewContainer_Type_HWND ||
@@ -68,8 +58,8 @@ void AAXWrapper_GUI::CreateViewContainer ()
 
 		FGuard guard (wrapper->syncCalls);
 		wrapper->setGUI (this);
-		if (AEffEditor* editor = wrapper->getEditor ())
-			editor->open (mHWND);
+		if (auto* editor = wrapper->getEditor ())
+			editor->_open (mHWND);
 		// if ( mHWND && mPlugInHWND )
 		//	SetParent( mPlugInHWND, mHWND );
 	}
@@ -84,14 +74,11 @@ AAX_Result AAXWrapper_GUI::GetViewSize (AAX_Point* oEffectViewSize) const
 	AAXWrapper_GUI* that = const_cast<AAXWrapper_GUI*> (this);
 	AAXWrapper_Parameters* params =
 	    static_cast<AAXWrapper_Parameters*> (that->GetEffectParameters ());
-	if (AEffEditor* editor = params->getWrapper ()->getEditor ())
+	int32 width, height;
+	if (params->getWrapper ()->getEditorSize (width, height))
 	{
-		ERect* rect;
-		if (editor->getRect (&rect))
-		{
-			oEffectViewSize->horz = rect->right - rect->left;
-			oEffectViewSize->vert = rect->bottom - rect->top;
-		}
+		oEffectViewSize->horz = width;
+		oEffectViewSize->vert = height;
 	}
 	return AAX_SUCCESS;
 }
@@ -103,8 +90,8 @@ void AAXWrapper_GUI::DeleteViewContainer ()
 	    static_cast<AAXWrapper_Parameters*> (GetEffectParameters ())->getWrapper ();
 	wrapper->setGUI (nullptr);
 
-	if (AEffEditor* editor = wrapper->getEditor ())
-		editor->close ();
+	if (auto* editor = wrapper->getEditor ())
+		editor->_close ();
 }
 
 //------------------------------------------------------------------------

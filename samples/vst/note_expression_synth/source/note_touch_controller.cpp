@@ -46,7 +46,7 @@ namespace VSTGUI {
 //-----------------------------------------------------------------------------
 NoteTouchController::NoteTouchController (int32_t pitch, Steinberg::Vst::IInterAppAudioHost* host)
 : host (host)
-, pad (0)
+, pad (nullptr)
 , pitch (pitch)
 , noteID (-1)
 , xNEType (-1)
@@ -151,7 +151,7 @@ void NoteTouchController::valueChanged (CControl* pControl)
 //-----------------------------------------------------------------------------
 CView* NoteTouchController::verifyView (CView* view, const UIAttributes& attributes, const IUIDescription* description)
 {
-	if (pad == 0)
+	if (pad == nullptr)
 	{
 		pad = dynamic_cast<CXYPad*>(view);
 		pad->setListener (this);

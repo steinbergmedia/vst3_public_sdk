@@ -280,5 +280,55 @@ std::string ClassInfo::subCategoriesString () const noexcept
 }
 
 //------------------------------------------------------------------------
+namespace {
+
+//------------------------------------------------------------------------
+std::pair<size_t, size_t> rangeOfScaleFactor (const std::string& name)
+{
+	auto result = std::make_pair (std::string::npos, std::string::npos);
+	size_t xIndex = name.find_last_of ("x");
+	if (xIndex == std::string::npos)
+		return result;
+
+	size_t indicatorIndex = name.find_last_of ("_");
+	if (indicatorIndex == std::string::npos)
+		return result;
+	if (xIndex < indicatorIndex)
+		return result;
+	result.first = indicatorIndex + 1;
+	result.second = xIndex;
+	return result;
+}
+
+//------------------------------------------------------------------------
+} // anonymous
+
+//------------------------------------------------------------------------
+Optional<double> Module::Snapshot::decodeScaleFactor (const std::string& name)
+{
+	auto range = rangeOfScaleFactor (name);
+	if (range.first == std::string::npos || range.second == std::string::npos)
+		return {};
+	std::string tmp (name.data () + range.first, range.second - range.first);
+	std::istringstream sstream (tmp);
+	sstream.imbue (std::locale::classic ());
+	sstream.precision (static_cast<std::streamsize> (3));
+	double result;
+	sstream >> result;
+	return Optional<double> (result);
+}
+
+//------------------------------------------------------------------------
+Optional<UID> Module::Snapshot::decodeUID (const std::string& filename)
+{
+	if (filename.size () < 45)
+		return {};
+	if (filename.find ("_snapshot") != 32)
+		return {};
+	auto uidStr = filename.substr (0, 32);
+	return UID::fromString (uidStr);
+}
+
+//------------------------------------------------------------------------
 } // Hosting
 } // VST3

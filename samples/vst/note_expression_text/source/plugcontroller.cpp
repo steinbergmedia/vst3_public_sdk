@@ -51,7 +51,7 @@ namespace Vst {
 //------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 {
-	mTextLabel = 0;
+	mTextLabel = nullptr;
 	
 	tresult result = EditControllerEx1::initialize (context);
 	if (result != kResultOk)
@@ -66,7 +66,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (STR16 ("Bypass"), 0, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (STR16 ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 
 	return result;
@@ -101,7 +101,7 @@ IPlugView* PLUGIN_API PlugController::createView (const char* name)
 	{
 		return new VST3Editor (this, "Editor", "plug.uidesc");
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -113,13 +113,13 @@ CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes&
 		mTextLabel = new CTextLabel (size);
 		return mTextLabel;
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
 void PlugController::willClose (VST3Editor* editor) 
 {
-	mTextLabel = 0;
+	mTextLabel = nullptr;
 }
 
 //------------------------------------------------------------------------

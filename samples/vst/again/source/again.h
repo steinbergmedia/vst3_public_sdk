@@ -102,6 +102,9 @@ protected:
 	SampleType processAudio (SampleType** input, SampleType** output, int32 numChannels,
 	                         int32 sampleFrames, float gain);
 
+	template <typename SampleType>
+	SampleType processVuPPM (SampleType** input, int32 numChannels, int32 sampleFrames);
+
 	// our model values
 	float fGain;
 	float fGainReduction;
@@ -109,8 +112,8 @@ protected:
 
 	int32 currentProcessMode;
 
-	bool bHalfGain;
-	bool bBypass;
+	bool bHalfGain {false};
+	bool bBypass {false};
 };
 
 //------------------------------------------------------------------------

@@ -24,6 +24,7 @@ if(MAC)
             ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
         )
         add_library(${target} STATIC ${${target}_sources})
+        smtg_setup_universal_binary(${target})
         set_target_properties(${target} PROPERTIES ${SDK_IDE_LIBS_FOLDER})
         target_link_libraries(${target} PRIVATE base "-framework AudioUnit" "-framework CoreMIDI" "-framework AudioToolbox" "-framework CoreFoundation" "-framework Carbon" "-framework Cocoa" "-framework CoreAudio")
         target_include_directories(${target} PRIVATE "${SMTG_COREAUDIO_SDK_PATH}/**")

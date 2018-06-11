@@ -47,6 +47,7 @@
 #include "AAX_CUnitDisplayDelegateDecorator.h"
 
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/base/futils.h"
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -66,7 +67,7 @@ using namespace Steinberg::Base::Thread;
 #define HLOG(...) \
 	do            \
 	{             \
-	} while (0)
+	} while (false)
 #endif
 #endif
 
@@ -108,11 +109,11 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 #endif
 
 	// if no VST3 Bypass found then simulate it
-	mSimulateBypass = (mWrapper->mBypassParameterID != Vst::kNoParamId);
+	mSimulateBypass = (mWrapper->mBypassParameterID == Vst::kNoParamId);
 
-	if (mParamNames.size () < (size_t)mWrapper->cEffect.numParams)
+	if (mParamNames.size () < (size_t)mWrapper->mNumParams)
 	{
-		mParamNames.resize (mWrapper->cEffect.numParams);
+		mParamNames.resize (mWrapper->mNumParams);
 		for (size_t i = 0; i < mParamNames.size (); i++)
 			mParamNames[i].set (mWrapper->mParameterMap[i].vst3ID);
 	}
@@ -133,10 +134,12 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 	{
 		AAX_CSampleRate sampleRate;
 		if (ctrl->GetSampleRate (&sampleRate) == AAX_SUCCESS)
-			mWrapper->setSampleRate (sampleRate);
+			mWrapper->_setSampleRate (sampleRate);
+		if (mWrapper->mProcessor)
+			ctrl->SetSignalLatency (mWrapper->mProcessor->getLatencySamples ());
 	}
 
-	for (int32 i = 0; i < mWrapper->cEffect.numParams; i++)
+	for (int32 i = 0; i < mWrapper->mNumParams; i++)
 	{
 		AAX_CParamID iParameterID = mParamNames[i];
 		ParameterInfo paramInfo = {0};
@@ -214,7 +217,7 @@ int32 AAXWrapper_Parameters::getParameterInfo (AAX_CParamID aaxId,
 AAX_Result AAXWrapper_Parameters::GetNumberOfParameters (int32_t* oNumControls) const
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
-	*oNumControls = mWrapper->cEffect.numParams;
+	*oNumControls = mWrapper->mNumParams;
 	if (mSimulateBypass)
 		*oNumControls += 1;
 	return AAX_SUCCESS;
@@ -361,7 +364,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterIndex (AAX_CParamID iParameterID,
 	{
 		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
-			*oControlIndex = mWrapper->numParams;
+			*oControlIndex = mWrapper->mNumParams;
 			return AAX_SUCCESS;
 		}
 		return AAX_ERROR_INVALID_PARAMETER_ID;
@@ -383,7 +386,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterIDFromIndex (int32_t iControlIndex
 
 	if ((size_t)iControlIndex >= mWrapper->mParameterMap.size ())
 	{
-		if (mSimulateBypass && iControlIndex == mWrapper->numParams)
+		if (mSimulateBypass && iControlIndex == mWrapper->mNumParams)
 		{
 			oParameterIDString->Set (kBypassId);
 			return AAX_SUCCESS;
@@ -536,7 +539,7 @@ AAX_Result AAXWrapper_Parameters::SetParameterNormalizedRelative (AAX_CParamID i
 		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			mWrapper->mBypass = (mWrapper->mBypass + iValue >= 0.5);
-			mWrapper->setBypass (mWrapper->mBypass);
+			mWrapper->_setBypass (mWrapper->mBypass);
 			return AAX_SUCCESS;
 		}
 		return AAX_ERROR_INVALID_PARAMETER_ID;
@@ -600,7 +603,7 @@ AAX_Result AAXWrapper_Parameters::UpdateParameterNormalizedValue (AAX_CParamID i
 		if (mSimulateBypass && strcmp (iParameterID, kBypassId) == 0)
 		{
 			mWrapper->mBypass = iValue >= 0.5;
-			mWrapper->setBypass (mWrapper->mBypass);
+			mWrapper->_setBypass (mWrapper->mBypass);
 		}
 		else
 			return AAX_ERROR_INVALID_PARAMETER_ID;
@@ -681,7 +684,7 @@ AAX_Result AAXWrapper_Parameters::GetChunkSize (AAX_CTypeID chunkID, uint32_t* o
 	FGuard guard (mWrapper->syncCalls);
 	bool isPreset = false;
 	void* data;
-	*oSize = mWrapper->getChunk (&data, isPreset);
+	*oSize = mWrapper->_getChunk (&data, isPreset);
 	return AAX_SUCCESS;
 }
 
@@ -712,7 +715,7 @@ AAX_Result AAXWrapper_Parameters::SetChunk (AAX_CTypeID chunkID, const AAX_SPlug
 
 	FGuard guard (mWrapper->syncCalls);
 	bool isPreset = false;
-	mWrapper->setChunk (const_cast<char*> (iChunk->fData), iChunk->fSize, isPreset);
+	mWrapper->_setChunk (const_cast<char*> (iChunk->fData), iChunk->fSize, isPreset);
 	return AAX_SUCCESS;
 }
 
@@ -764,8 +767,8 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 
 			if (!mWrapper->isActive ())
 			{
-				mWrapper->suspend ();
-				mWrapper->resume ();
+				mWrapper->_suspend ();
+				mWrapper->_resume ();
 			}
 			break;
 		}

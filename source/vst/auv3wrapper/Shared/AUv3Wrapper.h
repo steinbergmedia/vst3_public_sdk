@@ -42,7 +42,7 @@
 
 @interface AUv3WrapperViewController : AUViewController
 
-@property (nonatomic, assign) AUv3Wrapper* audioUnit;
+@property (nonatomic, strong) AUv3Wrapper* audioUnit;
 
 @end
 

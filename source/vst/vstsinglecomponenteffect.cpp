@@ -87,9 +87,7 @@ tresult PLUGIN_API SingleComponentEffect::getBusInfo (MediaType type, BusDirecti
                                                       BusInfo& info)
 {
 	BusList* busList = getBusList (type, dir);
-	if (busList == nullptr)
-		return kInvalidArgument;
-	if (index >= static_cast<int32> (busList->size ()))
+	if (busList == nullptr || index >= static_cast<int32> (busList->size ()))
 		return kInvalidArgument;
 
 	Bus* bus = busList->at (index);
@@ -105,20 +103,22 @@ tresult PLUGIN_API SingleComponentEffect::activateBus (MediaType type, BusDirect
                                                        int32 index, TBool state)
 {
 	BusList* busList = getBusList (type, dir);
-	Bus* bus = busList ? (Bus*)busList->at (index) : nullptr;
-	if (bus)
-	{
-		bus->setActive (state);
-		return kResultTrue;
-	}
-	return kResultFalse;
+	if (busList == nullptr || index >= static_cast<int32> (busList->size ()))
+		return kInvalidArgument;
+
+	Bus* bus = busList->at (index);
+	if (!bus)
+		return kResultFalse;
+
+	bus->setActive (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 AudioBus* SingleComponentEffect::addAudioInput (const TChar* name, SpeakerArrangement arr,
                                                 BusType busType, int32 flags)
 {
-	AudioBus* newBus = new AudioBus (name, busType, flags, arr);
+	auto* newBus = new AudioBus (name, busType, flags, arr);
 	audioInputs.push_back (IPtr<Vst::Bus> (newBus, false));
 	return newBus;
 }
@@ -127,7 +127,7 @@ AudioBus* SingleComponentEffect::addAudioInput (const TChar* name, SpeakerArrang
 AudioBus* SingleComponentEffect::addAudioOutput (const TChar* name, SpeakerArrangement arr,
                                                  BusType busType, int32 flags)
 {
-	AudioBus* newBus = new AudioBus (name, busType, flags, arr);
+	auto* newBus = new AudioBus (name, busType, flags, arr);
 	audioOutputs.push_back (IPtr<Vst::Bus> (newBus, false));
 	return newBus;
 }
@@ -136,7 +136,7 @@ AudioBus* SingleComponentEffect::addAudioOutput (const TChar* name, SpeakerArran
 EventBus* SingleComponentEffect::addEventInput (const TChar* name, int32 channels, BusType busType,
                                                 int32 flags)
 {
-	EventBus* newBus = new EventBus (name, busType, flags, channels);
+	auto* newBus = new EventBus (name, busType, flags, channels);
 	eventInputs.push_back (IPtr<Vst::Bus> (newBus, false));
 	return newBus;
 }
@@ -145,7 +145,7 @@ EventBus* SingleComponentEffect::addEventInput (const TChar* name, int32 channel
 EventBus* SingleComponentEffect::addEventOutput (const TChar* name, int32 channels, BusType busType,
                                                  int32 flags)
 {
-	EventBus* newBus = new EventBus (name, busType, flags, channels);
+	auto* newBus = new EventBus (name, busType, flags, channels);
 	eventOutputs.push_back (IPtr<Vst::Bus> (newBus, false));
 	return newBus;
 }
@@ -214,7 +214,7 @@ tresult PLUGIN_API SingleComponentEffect::getBusArrangement (BusDirection dir, i
                                                              SpeakerArrangement& arr)
 {
 	BusList* busList = getBusList (kAudio, dir);
-	AudioBus* audioBus = busList ? FCast<Vst::AudioBus> (busList->at (busIndex)) : 0;
+	AudioBus* audioBus = busList ? FCast<Vst::AudioBus> (busList->at (busIndex)) : nullptr;
 	if (audioBus)
 	{
 		arr = audioBus->getArrangement ();

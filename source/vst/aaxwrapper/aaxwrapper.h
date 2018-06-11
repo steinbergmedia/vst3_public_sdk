@@ -40,7 +40,7 @@
 
 #pragma once
 
-#include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
+#include "public.sdk/source/vst/basewrapper/basewrapper.h"
 #include "base/thread/include/flock.h"
 #include <bitset>
 #include <list>
@@ -66,20 +66,17 @@ struct AAXWrapper_Context
 };
 
 //------------------------------------------------------------------------
-class AAXWrapper : public Steinberg::Vst::Vst2Wrapper,
+class AAXWrapper : public Steinberg::Vst::BaseWrapper,
                    public Steinberg::Vst::IComponentHandler2,
                    public Steinberg::Vst::IVst3ToAAXWrapper
 {
 public:
-	// static creation method
+	// static creation method (will owned factory)
 	static AAXWrapper* create (Steinberg::IPluginFactory* factory,
 	                           const Steinberg::TUID vst3ComponentID, AAX_Plugin_Desc* desc,
 	                           AAXWrapper_Parameters* p);
 
-	AAXWrapper (Steinberg::Vst::IAudioProcessor* processor,
-	            Steinberg::Vst::IEditController* controller, AAXWrapper_Parameters* p,
-	            const Steinberg::TUID vst3ComponentID, AAX_Plugin_Desc* desc,
-	            Steinberg::IPluginFactory* factory = nullptr);
+	AAXWrapper (Steinberg::Vst::BaseWrapper::SVST3Config& config, AAXWrapper_Parameters* p, AAX_Plugin_Desc* desc);
 	~AAXWrapper ();
 
 	//--- VST 3 Interfaces  ------------------------------------------------------
@@ -101,8 +98,8 @@ public:
 	Steinberg::tresult PLUGIN_API finishGroupEdit () SMTG_OVERRIDE;
 
 	// FUnknown
-	DEF_INTERFACES_2 (Steinberg::Vst::IComponentHandler2, Steinberg::Vst::IVst3ToAAXWrapper, Vst2Wrapper);
-	REFCOUNT_METHODS (Vst2Wrapper);
+	DEF_INTERFACES_2 (Steinberg::Vst::IComponentHandler2, Steinberg::Vst::IVst3ToAAXWrapper, BaseWrapper);
+	REFCOUNT_METHODS (BaseWrapper);
 
 	// AAXWrapper_Parameters callbacks
 	void setGUI (AAXWrapper_GUI* gui) { aaxGUI = gui; }
@@ -122,18 +119,18 @@ public:
 	                                        const AAX_Plugin_Desc* pdesc);
 
 	//--- ---------------------------------------------------------------------
-	Steinberg::int32 getNumInputs () const { return cEffect.numInputs; }
-	Steinberg::int32 getNumOutputs () const { return cEffect.numOutputs; }
 	Steinberg::int32 getNumAAXOutputs () const { return aaxOutputs; }
 
-	// VST 2 overrides
-	VstTimeInfo* getTimeInfo (VstInt32 filter) SMTG_OVERRIDE;
-	bool sizeWindow (VstInt32 width, VstInt32 height) SMTG_OVERRIDE;
+	//------------------------------------------------------------------------
+	// BaseWrapper overrides ---------------------------------
+	//------------------------------------------------------------------------
+	bool init () SMTG_OVERRIDE;
+	bool _sizeWindow (Steinberg::int32 width, Steinberg::int32 height) SMTG_OVERRIDE;
 	void onTimer (Steinberg::Timer* timer) SMTG_OVERRIDE;
-	VstInt32 getChunk (void** data, bool isPreset = false) SMTG_OVERRIDE;
-	VstInt32 setChunk (void* data, VstInt32 byteSize, bool isPreset = false) SMTG_OVERRIDE;
 
-	using Vst2Wrapper::processMidiEvent;
+	Steinberg::int32 _getChunk (void** data, bool isPreset) SMTG_OVERRIDE;
+	Steinberg::int32 _setChunk (void* data, Steinberg::int32 byteSize, bool isPreset) SMTG_OVERRIDE;
+	void setupProcessTimeInfo () SMTG_OVERRIDE;
 
 //------------------------------------------------------------------------
 private:
@@ -148,7 +145,7 @@ private:
 
 	AAXWrapper_Parameters* aaxParams = nullptr;
 	AAXWrapper_GUI* aaxGUI = nullptr;
-	VstTimeInfo timeInfo;
+
 	Steinberg::int32 aaxOutputs = 0;
 
 	Steinberg::Base::Thread::FLock syncCalls; // synchronize calls expected in the same thread in VST3
