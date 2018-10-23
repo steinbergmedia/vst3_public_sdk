@@ -492,7 +492,7 @@ bool PresetFile::restoreComponentState (IComponent* component)
 	const Entry* e = getEntry (kComponentState);
 	if (e)
 	{
-		ReadOnlyBStream* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
+		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
 		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
 		return verify (component->setState (readOnlyBStream));
 	}
@@ -505,7 +505,7 @@ bool PresetFile::restoreComponentState (IEditController* editController)
 	const Entry* e = getEntry (kComponentState);
 	if (e)
 	{
-		ReadOnlyBStream* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
+		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
 		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
 		return verify (editController->setComponentState (readOnlyBStream));
 	}
@@ -546,7 +546,7 @@ bool PresetFile::restoreControllerState (IEditController* editController)
 	const Entry* e = getEntry (kControllerState);
 	if (e)
 	{
-		ReadOnlyBStream* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
+		auto* readOnlyBStream = new ReadOnlyBStream (stream, e->offset, e->size);
 		FReleaser readOnlyBStreamReleaser (readOnlyBStream);
 		return verify (editController->setState (readOnlyBStream));
 	}
@@ -603,7 +603,7 @@ bool PresetFile::restoreProgramData (IProgramListData* programListData,
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			ReadOnlyBStream* readOnlyBStream =
+			auto* readOnlyBStream =
 			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
 			FReleaser readOnlyBStreamReleaser (readOnlyBStream);
 			return programListData && verify (programListData->setProgramData (
@@ -639,7 +639,7 @@ bool PresetFile::restoreProgramData (IUnitData* unitData, UnitID* unitId)
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			ReadOnlyBStream* readOnlyBStream =
+			auto* readOnlyBStream =
 			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
 			FReleaser readOnlyStreamReleaser (readOnlyBStream);
 			return (unitData && verify (unitData->setUnitData (savedUnitID, readOnlyBStream)));
@@ -662,7 +662,7 @@ bool PresetFile::restoreProgramData (IUnitInfo* unitInfo, int32 unitProgramListI
 				return false;
 
 			int32 alreadyRead = sizeof (int32);
-			ReadOnlyBStream* readOnlyBStream =
+			auto* readOnlyBStream =
 			    new ReadOnlyBStream (stream, e->offset + alreadyRead, e->size - alreadyRead);
 			FReleaser readOnlyStreamReleaser (readOnlyBStream);
 			return (unitInfo && unitInfo->setUnitProgramData (unitProgramListID, programIndex,

@@ -263,8 +263,8 @@ StringListParameter::StringListParameter (const TChar* title, ParamID tag, const
 //------------------------------------------------------------------------
 StringListParameter::~StringListParameter ()
 {
-	for (StringVector::iterator it = strings.begin (), end = strings.end (); it != end; ++it)
-		std::free (*it);
+	for (auto& string : strings)
+		std::free (string);
 }
 
 //------------------------------------------------------------------------
@@ -317,8 +317,7 @@ void StringListParameter::toString (ParamValue _valueNormalized, String128 strin
 bool StringListParameter::fromString (const TChar* string, ParamValue& _valueNormalized) const
 {
 	int32 index = 0;
-	for (StringVector::const_iterator it = strings.begin (), end = strings.end (); it != end;
-	     ++it, ++index)
+	for (auto it = strings.begin (), end = strings.end (); it != end; ++it, ++index)
 	{
 		if (strcmp16 (*it, string) == 0)
 		{
@@ -348,7 +347,7 @@ ParamValue StringListParameter::toNormalized (ParamValue plainValue) const
 //------------------------------------------------------------------------
 // ParameterContainer Implementation
 //------------------------------------------------------------------------
-ParameterContainer::ParameterContainer () : params (0)
+ParameterContainer::ParameterContainer () : params (nullptr)
 {
 }
 
@@ -385,7 +384,7 @@ Parameter* ParameterContainer::addParameter (const ParameterInfo& info)
 {
 	if (!params)
 		init ();
-	Parameter* p = new Parameter (info);
+	auto* p = new Parameter (info);
 	if (addParameter (p))
 		return p;
 	p->release ();

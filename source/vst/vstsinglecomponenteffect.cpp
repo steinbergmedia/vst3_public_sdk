@@ -214,7 +214,10 @@ tresult PLUGIN_API SingleComponentEffect::getBusArrangement (BusDirection dir, i
                                                              SpeakerArrangement& arr)
 {
 	BusList* busList = getBusList (kAudio, dir);
-	AudioBus* audioBus = busList ? FCast<Vst::AudioBus> (busList->at (busIndex)) : nullptr;
+	if (busList == nullptr || busIndex >= static_cast<int32> (busList->size ()))
+		return kInvalidArgument;
+
+	AudioBus* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex));
 	if (audioBus)
 	{
 		arr = audioBus->getArrangement ();

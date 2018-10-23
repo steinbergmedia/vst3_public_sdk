@@ -166,6 +166,21 @@ tresult NoteExpressionType::getValueByString (const TChar* string /*in*/,
 }
 
 //-----------------------------------------------------------------------------
+tresult NoteExpressionType::getPhysicalUIType (PhysicalUITypeID& _physicalUITypeID /*out*/) const
+{
+	_physicalUITypeID = physicalUITypeID;
+	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
+tresult NoteExpressionType::setPhysicalUITypeID (PhysicalUITypeID _physicalUITypeID /*in*/)
+{
+	physicalUITypeID = _physicalUITypeID;
+	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 RangeNoteExpressionType::RangeNoteExpressionType (
     NoteExpressionTypeID _typeId, const TChar* _title, const TChar* _shortTitle,
     const TChar* _units, int32 _unitId, NoteExpressionValue _defaultPlainValue,
@@ -299,6 +314,26 @@ tresult NoteExpressionTypeContainer::getNoteExpressionValueByString (
 		return noteExpType->getValueByString (string, valueNormalized);
 	}
 	return kResultFalse;
+}
+
+//-----------------------------------------------------------------------------
+tresult NoteExpressionTypeContainer::getMappedNoteExpression (
+    const PhysicalUITypeID physicalUITypeID, NoteExpressionTypeID& id /*out*/)
+{
+	id = kInvalidTypeID;
+	for (auto& item : noteExps)
+	{
+		PhysicalUITypeID tmp;
+		if (item->getPhysicalUIType (tmp) == kResultTrue)
+		{
+			if (tmp == physicalUITypeID)
+			{
+				id = item->getInfo ().typeId;
+				break;
+			}
+		}
+	}
+	return kResultTrue;
 }
 
 //------------------------------------------------------------------------

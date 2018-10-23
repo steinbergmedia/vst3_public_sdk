@@ -47,7 +47,7 @@ namespace Vst {
 // AGainUIMessageController
 //------------------------------------------------------------------------
 template <typename ControllerType>
-class AGainUIMessageController : public VSTGUI::IController, public VSTGUI::IViewListenerAdapter
+class AGainUIMessageController : public VSTGUI::IController, public VSTGUI::ViewListenerAdapter
 {
 public:
 	enum Tags
@@ -60,7 +60,8 @@ public:
 	}
 	~AGainUIMessageController ()
 	{
-		viewWillDelete (textEdit);
+		if (textEdit)
+			viewWillDelete (textEdit);
 		againController->removeUIMessageController (this);
 	}
 

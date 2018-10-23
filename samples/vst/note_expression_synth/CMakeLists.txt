@@ -21,7 +21,7 @@ if(SMTG_ADD_VSTGUI)
 
     set(target noteexpressionsynth)
 
-    smtg_add_vst3plugin(${target} ${SDK_ROOT} ${noteexpressionsynth_sources})
+    smtg_add_vst3plugin(${target} ${noteexpressionsynth_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
     target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
     target_link_libraries(${target} PRIVATE base sdk vstgui_support)

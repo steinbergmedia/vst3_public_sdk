@@ -149,7 +149,7 @@ private:
 
 //------------------------------------------------------------------------
 class KeyboardController : public DelegationController,
-                           public IViewListenerAdapter,
+                           public ViewListenerAdapter,
                            public IKeyboardViewKeyRangeChangedListener,
                            public KeyboardViewPlayerDelegate
 {

@@ -148,7 +148,7 @@ bool RunLoop::handleEvents ()
 //------------------------------------------------------------------------
 TimerID RunLoop::registerTimer (TimerInterval interval, const TimerCallback& callback)
 {
-	timerProcessor.registerTimer (interval, callback);
+	return timerProcessor.registerTimer (interval, callback);
 }
 
 //------------------------------------------------------------------------

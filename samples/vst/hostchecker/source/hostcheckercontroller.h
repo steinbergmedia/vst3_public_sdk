@@ -47,6 +47,7 @@
 #include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
 
@@ -55,10 +56,15 @@ namespace Vst {
 
 enum
 {
+	// for Parameters
 	kParam1Tag = 1000,
 	kGeneratePeaksTag,
 	kLatencyTag,
-	kBypassTag
+	kBypassTag,
+	kCanResizeTag,
+
+	// for Units
+	kUnitId = 1234
 };
 
 class EditorSizeController;
@@ -69,7 +75,8 @@ class HostCheckerController : public EditControllerEx1,
                               public ChannelContext::IInfoListener,
                               public IXmlRepresentationController,
                               public IMidiMapping,
-                              public INoteExpressionController
+                              public INoteExpressionController,
+                              public INoteExpressionPhysicalUIMapping
 {
 public:
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
@@ -126,6 +133,10 @@ public:
 	tresult PLUGIN_API getNoteExpressionValueByString (
 	    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
 	    NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
+
+	//---INoteExpressionPhysicalUIMapping----------------------
+	tresult PLUGIN_API getPhysicalUIMapping (int32 busIndex, int16 channel,
+	                                         PhysicalUIMapList& list) SMTG_OVERRIDE;
 
 	//--- --------------------------------------------------------------------------
 	void editorAttached (EditorView* editor) SMTG_OVERRIDE;

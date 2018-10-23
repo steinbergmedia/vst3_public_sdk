@@ -37,8 +37,9 @@
 #pragma once
 
 #include "public.sdk/source/vst/vsteditcontroller.h"
-#include "pluginterfaces/vst/ivstnoteexpression.h"
 #include "public.sdk/source/vst/vstnoteexpressiontypes.h"
+#include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstphysicalui.h"
 
 #define MAX_VOICES				64
 #define MAX_RELEASE_TIME_SEC	5.0
@@ -52,7 +53,8 @@ namespace NoteExpressionSynth {
 //-----------------------------------------------------------------------------
 // Global Parameters
 //-----------------------------------------------------------------------------
-enum {
+enum
+{
 	kParamReleaseTime,
 	kParamNoiseVolume,
 	kParamSinusVolume,
@@ -81,27 +83,29 @@ enum {
 \sa Steinberg::Vst::NoteExpressionTypeContainer
 \sa Steinberg::Vst::NoteExpressionType
 */
-class Controller: public EditController, public INoteExpressionController, public IMidiMapping
+class Controller : public EditController,
+                   public INoteExpressionController,
+                   public IMidiMapping,
+                   public INoteExpressionPhysicalUIMapping
 {
 public:
-	
-	// EditController
+	//--- EditController -----------------------------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setComponentState (IBStream* state) SMTG_OVERRIDE;
-
 	tresult PLUGIN_API setParamNormalized (ParamID tag, ParamValue value) SMTG_OVERRIDE;
 
-	// IMidiMapping
+	//--- IMidiMapping -------------------------------
 	tresult PLUGIN_API getMidiControllerAssignment (int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id/*out*/) SMTG_OVERRIDE;
 
-	// INoteExpressionController
+	//--- INoteExpressionController ------------------
 	int32 PLUGIN_API getNoteExpressionCount (int32 busIndex, int16 channel) SMTG_OVERRIDE;
 	tresult PLUGIN_API getNoteExpressionInfo (int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/) SMTG_OVERRIDE;
 	tresult PLUGIN_API getNoteExpressionStringByValue (int32 busIndex, int16 channel, NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/) SMTG_OVERRIDE;
 	tresult PLUGIN_API getNoteExpressionValueByString (int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
-	
-	enum NoteExpressionTypeIds {
+
+	enum NoteExpressionTypeIds
+	{
 		kNoiseVolumeTypeID = kCustomStart,
 		kFilterFreqModTypeID,
 		kFilterQModTypeID,
@@ -114,7 +118,12 @@ public:
 		kTextInputTypeID,
 		kSquareVolumeTypeID,
 	};
-	
+
+	//--- INoteExpressionPhysicalUIMapping ------------
+	tresult PLUGIN_API getPhysicalUIMapping (int32 busIndex, int16 channel,
+	                                         PhysicalUIMapList& list) SMTG_OVERRIDE;
+
+	//--- ---------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new Controller (); }
 
 	static FUID cid;
@@ -123,11 +132,13 @@ public:
 	DEFINE_INTERFACES
 		DEF_INTERFACE (INoteExpressionController)
 		DEF_INTERFACE (IMidiMapping)
+		DEF_INTERFACE (INoteExpressionPhysicalUIMapping)
 	END_DEFINE_INTERFACES (EditController)
-	REFCOUNT_METHODS(EditController)
+	REFCOUNT_METHODS (EditController)
 
 protected:
 	NoteExpressionTypeContainer noteExpressionTypes;
 };
-
-}}} // namespaces
+}
+}
+} // namespaces

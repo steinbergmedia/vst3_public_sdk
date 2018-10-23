@@ -143,7 +143,7 @@ inline void HostProcessData::setChannelBuffers (BusDirection dir, int32 busIndex
 	AudioBusBuffers& busBuffers = dir == kInput ? inputs[busIndex] : outputs[busIndex];
 	int32 count = bufferCount < busBuffers.numChannels ? bufferCount : busBuffers.numChannels;
 	for (int32 i = 0; i < count; i++)
-		busBuffers.channelBuffers32[i] = sampleBuffers ? sampleBuffers[i] : 0;
+		busBuffers.channelBuffers32[i] = sampleBuffers ? sampleBuffers[i] : nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -160,7 +160,7 @@ inline void HostProcessData::setChannelBuffers64 (BusDirection dir, int32 busInd
 	AudioBusBuffers& busBuffers = dir == kInput ? inputs[busIndex] : outputs[busIndex];
 	int32 count = bufferCount < busBuffers.numChannels ? bufferCount : busBuffers.numChannels;
 	for (int32 i = 0; i < count; i++)
-		busBuffers.channelBuffers64[i] = sampleBuffers ? sampleBuffers[i] : 0;
+		busBuffers.channelBuffers64[i] = sampleBuffers ? sampleBuffers[i] : nullptr;
 }
 
 //------------------------------------------------------------------------

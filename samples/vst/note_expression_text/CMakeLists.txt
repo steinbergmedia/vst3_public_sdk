@@ -13,7 +13,7 @@ if(SMTG_ADD_VSTGUI)
     )
 
     set(target noteexpressiontext)
-    smtg_add_vst3plugin(${target} ${SDK_ROOT} ${noteexpressiontext_sources})
+    smtg_add_vst3plugin(${target} ${noteexpressiontext_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
     target_include_directories(${target} PRIVATE ${VSTGUI_ROOT}/vstgui4)
     target_link_libraries(${target} PRIVATE base sdk vstgui_support)

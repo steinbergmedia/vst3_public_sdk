@@ -43,7 +43,7 @@
 namespace VSTGUI {
 
 //-----------------------------------------------------------------------------
-class EventLogDataBrowserSource : public CBaseObject, public IDataBrowserDelegate
+class EventLogDataBrowserSource : public CBaseObject, public DataBrowserDelegateAdapter
 {
 public:
 	EventLogDataBrowserSource (Steinberg::Vst::EditControllerEx1* editController);

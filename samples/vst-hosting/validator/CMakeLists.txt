@@ -7,6 +7,7 @@ set(validator_sources
 	${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
 	${SDK_ROOT}/public.sdk/source/vst/testsuite/vsttestsuite.cpp
 	${SDK_ROOT}/public.sdk/source/vst/testsuite/vsttestsuite.h
+	${SDK_ROOT}/public.sdk/source/vst/testsuite/vststructsizecheck.h
 	${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
 	${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
 	${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
@@ -42,6 +43,7 @@ set(target validator)
 add_executable(${target} ${validator_sources})
 set_target_properties(${target} PROPERTIES ${SDK_IDE_HOSTING_EXAMPLES_FOLDER})
 target_link_libraries(${target} PRIVATE base sdk)
+smtg_setup_universal_binary(${target})
 if(APPLE AND NOT XCODE)
 	find_library(COCOA_FRAMEWORK Cocoa)
 	target_link_libraries(${target} PRIVATE ${COCOA_FRAMEWORK})

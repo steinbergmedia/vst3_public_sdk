@@ -46,6 +46,7 @@
 #include "pluginterfaces/vst/ivstinterappaudio.h"
 #include "pluginterfaces/vst/ivstmessage.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstplugview.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
@@ -114,5 +115,8 @@ DEF_CLASS_IID (IAutomationState)
 //----VST 3.6.8--------------------------------
 DEF_CLASS_IID (IComponentHandlerBusActivation)
 DEF_CLASS_IID (IVst3ToAAXWrapper)
+
+//----VST 3.6.11--------------------------------
+DEF_CLASS_IID (INoteExpressionPhysicalUIMapping)
 }
 }

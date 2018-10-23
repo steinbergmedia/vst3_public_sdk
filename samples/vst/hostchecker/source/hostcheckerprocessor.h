@@ -61,12 +61,22 @@ public:
 	tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
-	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return mLatency; }
+	uint32 PLUGIN_API getLatencySamples () SMTG_OVERRIDE;
+	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE;
 	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
+
+	tresult PLUGIN_API getRoutingInfo (RoutingInfo& inInfo, RoutingInfo& outInfo) SMTG_OVERRIDE;
+	tresult PLUGIN_API activateBus (MediaType type, BusDirection dir, int32 index,
+	                                TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
+	                                       SpeakerArrangement* outputs,
+	                                       int32 numOuts) SMTG_OVERRIDE;
+	tresult PLUGIN_API getBusArrangement (BusDirection dir, int32 busIndex,
+	                                      SpeakerArrangement& arr) SMTG_OVERRIDE;
 
 	static FUnknown* createInstance (void*)
 	{

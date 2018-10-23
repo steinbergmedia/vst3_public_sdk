@@ -35,6 +35,7 @@
 //-----------------------------------------------------------------------------
 
 #include "module.h"
+#include "optional.h"
 #include "stringconvert.h"
 #include <ShlObj.h>
 #include <Windows.h>
@@ -67,6 +68,25 @@ constexpr auto architectureString = "x86_64-win";
 #elif defined(_M_IX86)
 constexpr auto architectureString = "x86-win";
 #endif
+
+//------------------------------------------------------------------------
+struct Ole
+{
+	static Ole& instance ()
+	{
+		static Ole gInstance;
+		return gInstance;
+	}
+private:
+	Ole ()
+	{
+		OleInitialize (nullptr);
+	}
+	~Ole ()
+	{
+		OleUninitialize ();
+	}
+};
 
 //------------------------------------------------------------------------
 class Win32Module : public Module
@@ -147,18 +167,77 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 }
 
 //------------------------------------------------------------------------
+VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
+{
+	Ole::instance ();
+
+	IShellLink* shellLink = nullptr;
+	if (!SUCCEEDED (CoCreateInstance (CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
+	                                  IID_IShellLink, reinterpret_cast<LPVOID*> (&shellLink))))
+		return {};
+
+	IPersistFile* persistFile = nullptr;
+	if (!SUCCEEDED (
+	        shellLink->QueryInterface (IID_IPersistFile, reinterpret_cast<void**> (&persistFile))))
+		return {};
+
+	if (!SUCCEEDED (persistFile->Load (p.native ().data (), STGM_READ)))
+		return {};
+
+	if (!SUCCEEDED (shellLink->Resolve (0, MAKELONG (SLR_NO_UI, 500))))
+		return {};
+
+	WCHAR resolvedPath[MAX_PATH];
+	if (!SUCCEEDED (shellLink->GetPath (resolvedPath, MAX_PATH, nullptr, SLGP_SHORTPATH)))
+		return {};
+
+	std::wstring longPath;
+	longPath.resize (MAX_PATH);
+	auto numChars =
+	    GetLongPathNameW (resolvedPath, const_cast<wchar_t*> (longPath.data ()), MAX_PATH);
+	if (!numChars)
+		return {};
+	longPath.resize (numChars);
+
+	persistFile->Release ();
+	shellLink->Release ();
+
+	return {filesystem::path (longPath)};
+}
+
+//------------------------------------------------------------------------
 void findFilesWithExt (const filesystem::path& path, const std::string& ext,
                        Module::PathList& pathList, bool recursive = true)
 {
 	for (auto& p : filesystem::directory_iterator (path))
 	{
-		if (p.path ().extension () == ext)
+		const auto& cp = p.path ();
+		const auto& cpExt = cp.extension ();
+		if (cpExt == ext)
 		{
-			pathList.push_back (p.path ().generic_u8string ());
+			pathList.push_back (cp.generic_u8string ());
 		}
-		else if (recursive && p.status ().type () == filesystem::file_type::directory)
+		else if (recursive)
 		{
-			findFilesWithExt (p.path (), ext, pathList, recursive);
+			if (p.status ().type () == filesystem::file_type::directory)
+			{
+				findFilesWithExt (cp, ext, pathList, recursive);
+			}
+			else if (cpExt == ".lnk")
+			{
+				if (auto resolvedLink = resolveShellLink (cp))
+				{
+					if (resolvedLink->extension () == ext)
+						pathList.push_back (resolvedLink->generic_u8string ());
+					else if (filesystem::is_directory (*resolvedLink))
+					{
+						const auto& str = resolvedLink->generic_u8string ();
+						if (cp.generic_u8string ().compare (0, str.size (), str.data (),
+						                                    str.size ()) != 0)
+							findFilesWithExt (*resolvedLink, ext, pathList, recursive);
+					}
+				}
+			}
 		}
 	}
 }

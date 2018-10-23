@@ -403,7 +403,7 @@ bool EditControllerEx1::addProgramList (ProgramList* list)
 //------------------------------------------------------------------------
 ProgramList* EditControllerEx1::getProgramList (ProgramListID listId) const
 {
-	ProgramIndexMap::const_iterator it = programIndexMap.find (listId);
+	auto it = programIndexMap.find (listId);
 	return it == programIndexMap.end () ? nullptr : programLists[it->second];
 }
 
@@ -497,7 +497,7 @@ tresult PLUGIN_API EditControllerEx1::getProgramPitchName (ProgramListID listId,
 //------------------------------------------------------------------------
 void PLUGIN_API EditControllerEx1::update (FUnknown* changedUnknown, int32 /*message*/)
 {
-	ProgramList* programList = FCast<ProgramList> (changedUnknown);
+	auto* programList = FCast<ProgramList> (changedUnknown);
 	if (programList)
 	{
 		FUnknownPtr<IUnitHandler> unitHandler (componentHandler);
@@ -624,8 +624,8 @@ Parameter* ProgramList::getParameter ()
 {
 	if (parameter == nullptr)
 	{
-		StringListParameter* listParameter = new StringListParameter (
-		    info.name, info.id, 0,
+		auto* listParameter = new StringListParameter (
+		    info.name, info.id, nullptr,
 		    ParameterInfo::kCanAutomate | ParameterInfo::kIsList | ParameterInfo::kIsProgramChange,
 		    unitId);
 		for (StringVector::const_iterator it = programNames.begin (), end = programNames.end ();

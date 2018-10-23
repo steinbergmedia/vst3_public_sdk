@@ -1,6 +1,6 @@
 
 if(SMTG_ADD_VSTGUI)
-    if (SMTG_CREATE_VST2_VERSION)
+    if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
         set(again_vst2_sources
             ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
@@ -43,7 +43,7 @@ if(SMTG_ADD_VSTGUI)
 
     # VST2 is only defined for macOS and Windows
     if(MAC OR WIN)
-        if (SMTG_CREATE_VST2_VERSION)
+        if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
             set(again_sources ${again_sources} ${again_vst2_sources})
         else()
             set(again_sources ${again_sources})
@@ -51,7 +51,7 @@ if(SMTG_ADD_VSTGUI)
     endif()
 
     set(target again)
-    smtg_add_vst3plugin(${target} ${SDK_ROOT} ${again_sources})
+    smtg_add_vst3plugin(${target} ${again_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
     target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
     target_link_libraries(${target} PRIVATE base sdk vstgui_support)
@@ -75,7 +75,7 @@ if(SMTG_ADD_VSTGUI)
 
 
     set(targetsimple againsimple)
-    smtg_add_vst3plugin(${targetsimple} ${SDK_ROOT} ${again_simple_sources})
+    smtg_add_vst3plugin(${targetsimple} ${again_simple_sources})
     set_target_properties(${targetsimple} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
     target_include_directories(${targetsimple} PUBLIC ${VSTGUI_ROOT}/vstgui4)
     target_link_libraries(${targetsimple} PRIVATE base sdk vstgui_support)
@@ -94,8 +94,8 @@ if(SMTG_ADD_VSTGUI)
     	target_sources(${targetsimple} PRIVATE resource/again.rc)
     endif()
 
-    if (SMTG_CREATE_VST2_VERSION)
-        message(STATUS "SMTG_CREATE_VST2_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
+    if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
+        message(STATUS "SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
         if(XCODE)
             # fix missing VSTPluginMain symbol when also building VST 2 version
             set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")

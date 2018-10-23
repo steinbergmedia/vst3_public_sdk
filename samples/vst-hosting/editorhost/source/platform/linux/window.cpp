@@ -239,8 +239,8 @@ struct X11Window::Impl : public Linux::IRunLoop
 											 Linux::FileDescriptor fd) override;
 	tresult PLUGIN_API unregisterEventHandler (Linux::IEventHandler* handler) override;
 	tresult PLUGIN_API registerTimer (Linux::ITimerHandler* handler,
-									  Linux::TimerInterval milliseconds);
-	tresult PLUGIN_API unregisterTimer (Linux::ITimerHandler* handler);
+									  Linux::TimerInterval milliseconds) override;
+	tresult PLUGIN_API unregisterTimer (Linux::ITimerHandler* handler) override;
 
 	uint32 PLUGIN_API addRef () override { return 1000; }
 	uint32 PLUGIN_API release () override { return 1000; }
@@ -992,7 +992,7 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 			RunLoop::instance ().registerWindow (
 				plugWindow, [this] (const XEvent& e) { return handlePlugEvent (e); });
 
-			//			XSelectInput (xDisplay, plugWindow, PropertyChangeMask);
+			// XSelectInput (xDisplay, plugWindow, PropertyChangeMask);
 
 			if (xEmbedAtom == None)
 				xEmbedAtom = XInternAtom (xDisplay, "_XEMBED", true);
@@ -1002,7 +1002,7 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 			                     plugParentWindow, xembedInfo->version);
 			XMapWindow (xDisplay, plugWindow);
 			XResizeWindow (xDisplay, plugWindow, mCurrentSize.width, mCurrentSize.height);
-			XSetInputFocus (xDisplay, plugWindow, RevertToParent, CurrentTime);
+			// XSetInputFocus (xDisplay, plugWindow, RevertToParent, CurrentTime);
 			send_xembed_message (xDisplay, plugWindow, xEmbedAtom, XEMBED_WINDOW_ACTIVATE, 0,
 								 plugParentWindow, xembedInfo->version);
 			send_xembed_message (xDisplay, plugWindow, xEmbedAtom, XEMBED_FOCUS_IN, 0,

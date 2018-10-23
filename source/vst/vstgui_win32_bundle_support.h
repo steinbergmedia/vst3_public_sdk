@@ -1,10 +1,10 @@
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/auv3wrapper/docAUv3.h
-// Created by  : Steinberg, 07/2017.
-// Description : VST 3 AUv3Wrapper
+// Filename    : public.sdk/source/vst/vstgui_win32_bundle_support.h
+// Created by  : Steinberg, 10/2018
+// Description : VSTGUI Win32 Bundle Support
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -34,48 +34,15 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-/**
-*******************************************
-\page AUv3Wrapper VST 3 - Audio Unit v3 Wrapper
-*******************************************
+#pragma once
 
-Helper Class wrapping a VST 3 Plug-in to a Audio Unit v3 Plug-in
+//-----------------------------------------------------------------------------
+namespace Steinberg {
+namespace Vst {
 
-***************************
-\section AUv3Introduction Introduction
-***************************
-The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
-a AUv3 Plug-in.
-\n\n
+//-----------------------------------------------------------------------------
+void setupVSTGUIBundleSupport (void* hInstance);
 
-***************************
-\section howtoAUv3 How does it work?
-***************************
-- it works with VSTGUI on iOS
-
-- Structure:
-	- App          (container app which initializes the AU through small Playback Engine)
-	- Extension    (extension which is loaded by hosts, also initializes the AU)
-	- Library      (main wrapper library)
- 
-- How-To use the VST3->AUv3 Wrapper with the sample code:
- 
- 	- make sure you have correct code signing set up
- 
- 	- build & run targets
-
-- How-To use the VST3->AUv3 Wrapper with your own VST Plugin:
-    
-	- remove the AGain Source files from this project and include/link all your necessary VST3
-		 Plugin source files (add to AUv3WrappermacOSLib and AUv3WrapperiOSLib target) and resource files
-		 (add to AUv3WrappermacOS, AUv3WrappermacOSExtension, AUv3WrapperiOS, AUv3WrapperiOSExtension
-		 targets)
-
-	- edit the audiounitconfig.h file (see comment "AUWRAPPER_CHANGE" there)
-
-	- rename the targets and bundle identifiers according to your needs
-
-	- make sure you have correct code signing set up
- 
- 	- build & run targets
-*/
+//-----------------------------------------------------------------------------
+} // Vst
+} // Steinberg

@@ -100,7 +100,8 @@ public:
 	DEFINE_INTERFACES
 	END_DEFINE_INTERFACES (EditorView)
 	REFCOUNT_METHODS (EditorView)
-private:
+
+protected:
 	//---from IPlugView-------
 	tresult PLUGIN_API attached (void* parent, FIDString type) SMTG_OVERRIDE;
 	tresult PLUGIN_API removed () SMTG_OVERRIDE;
@@ -109,6 +110,7 @@ private:
 	tresult PLUGIN_API onWheel (float distance) SMTG_OVERRIDE;
 	tresult PLUGIN_API setFrame (IPlugFrame* frame) SMTG_OVERRIDE;
 
+private:
 	CVSTGUITimer* timer;
 };
 

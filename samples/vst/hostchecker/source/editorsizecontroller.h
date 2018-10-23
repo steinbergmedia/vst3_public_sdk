@@ -59,7 +59,7 @@ public:
 	EditorSizeController (EditController* editController, const SizeFunc& sizeFunc, double currentSizeFactor);
 	virtual ~EditorSizeController ();
 
-	static const int32_t kSizeParamTag = 1004;
+	static const int32_t kSizeParamTag = 2000;
 
 	void PLUGIN_API update (FUnknown* changedUnknown, int32 message) override;
 	VSTGUI::CView* verifyView (VSTGUI::CView* view, const VSTGUI::UIAttributes& attributes,

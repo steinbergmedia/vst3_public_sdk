@@ -688,7 +688,7 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				PClassInfo::kManyInstances,					// cardinality  
 				kVstAudioEffectClass,						// the component category (do not changed this)
 				"AGainSimple VST3",							// here the Plug-in name (to be changed)
-				0,											// single component effects can not be destributed so this is zero
+				0,											// single component effects can not be distributed so this is zero
 				"Fx",										// Subcategory for this Plug-in (to be changed)
 				FULL_VERSION_STR,							// Plug-in version (to be changed)
 				kVstVersionString,							// the VST 3 SDK version (do not changed this, use always this define)

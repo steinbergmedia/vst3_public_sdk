@@ -38,22 +38,21 @@
 #include "public.sdk/source/vst/hosting/plugprovider.h"
 
 #include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/testsuite/vststructsizecheck.h"
 
-#include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
-#include "pluginterfaces/vst/ivsthostapplication.h"
+#include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
+#include "pluginterfaces/vst/ivsthostapplication.h"
 #include "pluginterfaces/vst/ivstunits.h"
 
 #include "base/source/fcommandline.h"
 
-namespace Steinberg {
-FUnknown* gStandardPluginContext = nullptr;
-}
+namespace Steinberg { FUnknown* gStandardPluginContext = nullptr; }
 
 #if SMTG_OS_WINDOWS
-#include <windows.h>
 #include <conio.h>
+#include <windows.h>
 #endif
 
 #include <cstdio>
@@ -113,33 +112,32 @@ public:
 
 	ITestSuite* getTestSuite (FIDString _name) const
 	{
-		for (TestSuiteVector::const_iterator it = testSuites.cbegin (), end = testSuites.cend ();
-		     it != end; ++it)
+		for (const auto& testSuite : testSuites)
 		{
-			if (it->first == _name)
-				return it->second;
+			if (testSuite.first == _name)
+				return testSuite.second;
 		}
 		return nullptr;
 	}
 
 	const std::string& getName () const { return name; }
-	OBJ_METHODS(TestSuite, FObject)
-	REFCOUNT_METHODS(FObject)
-	DEF_INTERFACES_1(ITestSuite, FObject)
+	OBJ_METHODS (TestSuite, FObject)
+	REFCOUNT_METHODS (FObject)
+	DEF_INTERFACES_1 (ITestSuite, FObject)
 protected:
 	class Test : public FObject
 	{
 	public:
 		Test (FIDString _name, ITest* _test) : name (_name), test (_test) {}
-		
+
 		std::string name;
 		IPtr<ITest> test;
 	};
 	std::string name;
-	std::vector<IPtr<Test> > tests;
+	std::vector<IPtr<Test>> tests;
 
-	typedef std::pair<std::string, IPtr<ITestSuite> > TestSuitePair;
-	typedef std::vector<TestSuitePair> TestSuiteVector;
+	using TestSuitePair = std::pair<std::string, IPtr<ITestSuite>>;
+	using TestSuiteVector = std::vector<TestSuitePair>;
 	TestSuiteVector testSuites;
 };
 
@@ -191,21 +189,16 @@ void printAllSnapshots ()
 			}
 		}
 	}
-
 }
 
 //------------------------------------------------------------------------
 // Validator
 //------------------------------------------------------------------------
 Validator::Validator (int argc, char* argv[])
-: argc (argc)
-, argv (argv)
-, testSuite (nullptr)
-, numTestsFailed (0)
-, numTestsPassed (0)
-{ 
+: argc (argc), argv (argv), testSuite (nullptr), numTestsFailed (0), numTestsPassed (0)
+{
 	testSuite = new TestSuite ("Tests");
-	
+
 	gStandardPluginContext = this->unknownCast ();
 	setStandardPluginContext (gStandardPluginContext);
 }
@@ -213,9 +206,9 @@ Validator::Validator (int argc, char* argv[])
 //------------------------------------------------------------------------
 Validator::~Validator ()
 {
-    testSuite = nullptr;
-    testModule = nullptr;
-    module = nullptr;
+	testSuite = nullptr;
+	testModule = nullptr;
+	module = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -260,12 +253,12 @@ tresult PLUGIN_API Validator::createInstance (TUID cid, TUID iid, void** obj)
 		*obj = new HostAttributeList;
 		return kResultTrue;
 	}
-    *obj = nullptr;
+	*obj = nullptr;
 	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
-#define kHelpOption	"help"
+#define kHelpOption "help"
 #define kVersionOption "version"
 #define kLocalInstanceOption "l"
 #define kSuiteNameOption "suite"
@@ -285,17 +278,19 @@ int Validator::run ()
 	CommandLine::Descriptions desc;
 	CommandLine::VariablesMap valueMap;
 	CommandLine::FilesVector files;
-	
-	desc.addOptions (kVstVersionString " Plug-in Validator")
-		(kHelpOption, CommandLine::Description::kBool, "Print help")
-		(kVersionOption, CommandLine::Description::kBool, "Print version")
-		(kLocalInstanceOption, CommandLine::Description::kBool, "Use local instance per test")
-		(kSuiteNameOption, CommandLine::Description::kString, "[name] Only run a special test suite")
-		(kQuietOption, CommandLine::Description::kBool, "Only print errors")
-		(kTestComponentPath, CommandLine::Description::kString, "[path] Path to an additional component which includes custom tests")
-		(kLookupInstalledPlugIns, CommandLine::Description::kBool, "Show all installed Plug-Ins")
-		(kLookupPlugInSnapshots, CommandLine::Description::kBool, "List snapshots from all installed Plug-Ins")
-	;
+
+	desc.addOptions (kVstVersionString " Plug-in Validator") (
+	    kHelpOption, CommandLine::Description::kBool,
+	    "Print help") (kVersionOption, CommandLine::Description::kBool, "Print version") (
+	    kLocalInstanceOption, CommandLine::Description::kBool, "Use local instance per test") (
+	    kSuiteNameOption, CommandLine::Description::kString,
+	    "[name] Only run a special test suite") (kQuietOption, CommandLine::Description::kBool,
+	                                             "Only print errors") (
+	    kTestComponentPath, CommandLine::Description::kString,
+	    "[path] Path to an additional component which includes custom tests") (
+	    kLookupInstalledPlugIns, CommandLine::Description::kBool,
+	    "Show all installed Plug-Ins") (kLookupPlugInSnapshots, CommandLine::Description::kBool,
+	                                    "List snapshots from all installed Plug-Ins");
 	CommandLine::parse (argc, argv, desc, valueMap, &files);
 	if (valueMap.count (kVersionOption))
 	{
@@ -318,11 +313,11 @@ int Validator::run ()
 		std::cout << "Usage: vstvalidator [options] vst3module\n\n";
 		return 1;
 	}
-	
+
 	if (valueMap.count (kLocalInstanceOption))
 		useGlobalInstance = false;
 	if (valueMap.count (kQuietOption))
-        infoStream = nullptr;
+		infoStream = nullptr;
 	if (valueMap.count (kSuiteNameOption))
 		testSuiteName = valueMap[kSuiteNameOption];
 
@@ -333,7 +328,7 @@ int Validator::run ()
 	const char* path = files.front ().c_str ();
 
 #if SMTG_OS_WINDOWS
-	// TODO: Impl
+// TODO: Impl
 #else
 	std::string absPath;
 	// if path is not absolute, create one
@@ -355,7 +350,6 @@ int Validator::run ()
 			customTestComponentPath.assign (realPath);
 			free (realPath);
 		}
-		
 	}
 #endif
 
@@ -368,7 +362,7 @@ int Validator::run ()
 	if (!module)
 	{
 		*errorStream << "Invalid Module!\n";
-		if (!error.empty())
+		if (!error.empty ())
 			*errorStream << error << "\n";
 		return -1;
 	}
@@ -382,19 +376,23 @@ int Validator::run ()
 
 		auto factoryInfo = factory.info ();
 
-		*infoStream << "  Factory Info:\n\tvendor = " << factoryInfo.vendor () << "\n\turl = " << factoryInfo.url () << "\n\temail = " << factoryInfo.email () << "\n\n";
+		*infoStream << "  Factory Info:\n\tvendor = " << factoryInfo.vendor ()
+		            << "\n\turl = " << factoryInfo.url () << "\n\temail = " << factoryInfo.email ()
+		            << "\n\n";
 
 		//---print all included Plug-ins---------------
 		uint32 i = 0;
 		for (auto& classInfo : factory.classInfos ())
 		{
-			*infoStream << "  Class Info " << i << ":\n\tname = " << classInfo.name () << "\n\tcategory = " << classInfo.category () << "\n\tcid = " << classInfo.ID ().toString() << "\n\n";
+			*infoStream << "  Class Info " << i << ":\n\tname = " << classInfo.name ()
+			            << "\n\tcategory = " << classInfo.category ()
+			            << "\n\tcid = " << classInfo.ID ().toString () << "\n\n";
 			++i;
 		}
 	}
 
-	typedef std::map<std::string, IPtr<ITestFactory> > TestFactoryMap;
-	typedef std::vector<IPtr<PlugProvider> > PlugProviderVector;
+	using TestFactoryMap = std::map<std::string, IPtr<ITestFactory>>;
+	using PlugProviderVector = std::vector<IPtr<PlugProvider>>;
 	PlugProviderVector plugProviders;
 	TestFactoryMap testFactories;
 
@@ -414,8 +412,8 @@ int Validator::run ()
 			}
 		}
 		else if (filterClassCategory (kTestClass, classInfo.category ().data ()))
-		{	// gather test factories supplied by the Plug-in
-			if (auto testFactory = factory.createInstance<ITestFactory>(classInfo.ID ()))
+		{ // gather test factories supplied by the Plug-in
+			if (auto testFactory = factory.createInstance<ITestFactory> (classInfo.ID ()))
 			{
 				testFactories.insert (std::make_pair (classInfo.name ().data (), testFactory));
 			}
@@ -432,10 +430,11 @@ int Validator::run ()
 			for (const auto& classInfo : _factory.classInfos ())
 			{
 				if (filterClassCategory (kTestClass, classInfo.category ().data ()))
-				{	// gather test factories supplied by the Plug-in
-					if (auto testFactory = _factory.createInstance<ITestFactory>(classInfo.ID ()))
+				{ // gather test factories supplied by the Plug-in
+					if (auto testFactory = _factory.createInstance<ITestFactory> (classInfo.ID ()))
 					{
-						testFactories.insert (std::make_pair (classInfo.name ().data (), testFactory));
+						testFactories.insert (
+						    std::make_pair (classInfo.name ().data (), testFactory));
 					}
 				}
 			}
@@ -444,15 +443,13 @@ int Validator::run ()
 	if (infoStream && !testFactories.empty ())
 		*infoStream << "* Creating Plug-in supplied tests...\n\n";
 	// create Plug-in supplied tests
-	for (TestFactoryMap::const_iterator it = testFactories.cbegin (), end = testFactories.cend ();
-	     it != end; ++it)
+	for (const auto& item : testFactories)
 	{
-		for (PlugProviderVector::const_iterator it2 = plugProviders.cbegin (),
-		                                        end2 = plugProviders.cend ();
-		     it2 != end2; ++it2)
+		for (const auto& plugProvider : plugProviders)
 		{
-			IPtr<TestSuite> plugTestSuite = owned (new TestSuite (it->first.data ()));
-			if (it->second->createTests ((*it2)->unknownCast (), plugTestSuite) == kResultTrue)
+			IPtr<TestSuite> plugTestSuite = owned (new TestSuite (item.first.data ()));
+			if (item.second->createTests (plugProvider->unknownCast (), plugTestSuite) ==
+			    kResultTrue)
 			{
 				testSuite->addTestSuite (plugTestSuite->getName ().data (), plugTestSuite);
 			}
@@ -486,7 +483,8 @@ int Validator::run ()
 					{
 						*infoStream << "Found snapshots for '" << classInfo.name () << "'\n";
 						for (auto& image : snapshot.images)
-							*infoStream << " - " << image.path << " [" << image.scaleFactor << "x]\n";
+							*infoStream << " - " << image.path << " [" << image.scaleFactor
+							            << "x]\n";
 						*infoStream << "\n";
 					}
 					break;
@@ -507,19 +505,20 @@ int Validator::run ()
 	if (infoStream)
 		*infoStream << "* Running tests...\n\n";
 
-	runTestSuite (testSuite, testSuiteName.empty () ? 0 : testSuiteName.data ());
+	runTestSuite (testSuite, testSuiteName.empty () ? nullptr : testSuiteName.data ());
 
 	if (infoStream)
 	{
 		*infoStream << SEPARATOR;
-		*infoStream << "Result: " << numTestsPassed << " tests passed, " << numTestsFailed << " tests failed\n";
+		*infoStream << "Result: " << numTestsPassed << " tests passed, " << numTestsFailed
+		            << " tests failed\n";
 		*infoStream << SEPARATOR;
 
-	#if 0 // SMTG_OS_WINDOWS && _DEBUG
+#if 0 // SMTG_OS_WINDOWS && _DEBUG
 		// TODO: running the validator as post build step makes the build hang
 		*infoStream << "Press any key to continue...";
 		getch ();
-	#endif
+#endif
 	}
 	return numTestsFailed == 0 ? 0 : -1;
 }
@@ -542,7 +541,8 @@ void createTest (ITestSuite* parent, IPlugProvider* plugProvider, Args&&... argu
 }
 
 //------------------------------------------------------------------------
-void createPrecisionTests (ITestSuite* parent, IPlugProvider* plugProvider, SymbolicSampleSizes sampleSize)
+void createPrecisionTests (ITestSuite* parent, IPlugProvider* plugProvider,
+                           SymbolicSampleSizes sampleSize)
 {
 	createTest<VstProcessTest> (parent, plugProvider, sampleSize);
 	createTest<VstSilenceFlagsTest> (parent, plugProvider, sampleSize);
@@ -561,7 +561,7 @@ void createPrecisionTests (ITestSuite* parent, IPlugProvider* plugProvider, Symb
 	outSpArr = SpeakerArr::kMono;
 	createTest<VstSpeakerArrangementTest> (parent, plugProvider, sampleSize, inSpArr, outSpArr);
 
-	//int32 everyNSamples, int32 numParams, bool sampleAccuracy;
+	// int32 everyNSamples, int32 numParams, bool sampleAccuracy;
 	createTest<VstAutomationTest> (parent, plugProvider, sampleSize, 100, 1, false);
 	createTest<VstAutomationTest> (parent, plugProvider, sampleSize, 100, 1, true);
 }
@@ -573,7 +573,7 @@ void createPrecisionTests (ITestSuite* parent, IPlugProvider* plugProvider, Symb
 void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plugName)
 {
 	IPtr<TestSuite> plugTestSuite = owned (new TestSuite (plugName));
-	
+
 	IPtr<TestSuite> generalTests = owned (new TestSuite ("General Tests"));
 	// todo: add tests here!
 	createTest<VstEditorClassesTest> (generalTests, plugProvider);
@@ -585,27 +585,29 @@ void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plu
 	createTest<VstTerminateInitializeTest> (generalTests, plugProvider);
 	createTest<VstUnitStructureTest> (generalTests, plugProvider);
 	createTest<VstValidStateTransitionTest> (generalTests, plugProvider);
-//	createTest<VstInvalidStateTransitionTest> (generalTests, plugProvider);
-//	createTest<VstRepeatIdenticalStateTransitionTest> (generalTests, plugProvider);
+	//	createTest<VstInvalidStateTransitionTest> (generalTests, plugProvider);
+	//	createTest<VstRepeatIdenticalStateTransitionTest> (generalTests, plugProvider);
 
 	createTest<VstBusConsistencyTest> (generalTests, plugProvider);
-//	createTest<VstBusInvalidIndexTest> (generalTests, plugProvider);
+	//	createTest<VstBusInvalidIndexTest> (generalTests, plugProvider);
 	createTest<VstBusActivationTest> (generalTests, plugProvider);
-	
+
 	createTest<VstCheckAudioBusArrangementTest> (generalTests, plugProvider);
 
 	createTest<VstSuspendResumeTest> (generalTests, plugProvider, kSample32);
 
 	createTest<VstNoteExpressionTest> (generalTests, plugProvider);
 	createTest<VstKeyswitchTest> (generalTests, plugProvider);
-	
+
 	plugTestSuite->addTestSuite (generalTests->getName ().data (), generalTests);
 
-	IPtr<TestSuite> singlePrecisionTests = owned (new TestSuite ("Single Precision (32 bit) Tests"));
+	IPtr<TestSuite> singlePrecisionTests =
+	    owned (new TestSuite ("Single Precision (32 bit) Tests"));
 	createPrecisionTests (singlePrecisionTests, plugProvider, kSample32);
 	plugTestSuite->addTestSuite (singlePrecisionTests->getName ().data (), singlePrecisionTests);
 
-	IPtr<TestSuite> doublePrecisionTests = owned (new TestSuite ("Double Precision (64 bit) Tests"));
+	IPtr<TestSuite> doublePrecisionTests =
+	    owned (new TestSuite ("Double Precision (64 bit) Tests"));
 	createPrecisionTests (doublePrecisionTests, plugProvider, kSample64);
 	plugTestSuite->addTestSuite (doublePrecisionTests->getName ().data (), doublePrecisionTests);
 
@@ -623,10 +625,10 @@ void Validator::addTest (ITestSuite* _testSuite, VstTestBase* testItem)
 void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 {
 	std::string name;
-    if (nameFilter == nullptr || suite->getName () == nameFilter)
+	if (nameFilter == nullptr || suite->getName () == nameFilter)
 	{
-        nameFilter = nullptr; // make sure if suiteName is the namefilter that sub suite will run
-        ITest* testItem = nullptr;
+		nameFilter = nullptr; // make sure if suiteName is the namefilter that sub suite will run
+		ITest* testItem = nullptr;
 		// first run all tests in the suite
 		for (int32 i = 0; i < suite->getTestCount (); i++)
 		{
@@ -669,7 +671,7 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 				}
 				else
 				{
-					testItem->teardown();
+					testItem->teardown ();
 					if (infoStream)
 						*infoStream << "Failed to setup test!\n";
 					if (errorStream && errorStream != infoStream)
@@ -685,10 +687,10 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 	}
 	// next run sub suites
 	int32 subTestSuiteIndex = 0;
-    ITestSuite* subSuite = nullptr;
+	ITestSuite* subSuite = nullptr;
 	while (suite->getTestSuite (subTestSuiteIndex++, subSuite, name) == kResultTrue)
 	{
-		TestSuite* ts = FCast<TestSuite> (subSuite);
+		auto* ts = FCast<TestSuite> (subSuite);
 		if (ts)
 		{
 			if (infoStream)
@@ -701,6 +703,5 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 		}
 	}
 }
-
-
-}} // namespaces
+}
+} // namespaces

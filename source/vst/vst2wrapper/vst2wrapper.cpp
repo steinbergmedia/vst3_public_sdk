@@ -327,6 +327,9 @@ Vst2Wrapper::~Vst2Wrapper ()
 //------------------------------------------------------------------------
 bool Vst2Wrapper::init ()
 {
+	if (strstr (mSubCategories, "Instrument"))
+		isSynth (true);
+
 	bool res = BaseWrapper::init ();
 
 	numPrograms = cEffect.numPrograms = mNumPrograms;
@@ -1798,12 +1801,6 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 		config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
 
 		auto* wrapper = new Vst2Wrapper (config, audioMaster, vst2ID);
-		if (wrapper->init () == false)
-		{
-			wrapper->release ();
-			return nullptr;
-		}
-
 		FUnknownPtr<IPluginFactory2> factory2 (factory);
 		if (factory2)
 		{
@@ -1830,7 +1827,13 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 				}
 			}
 		}
-
+		
+		if (wrapper->init () == false)
+		{
+			wrapper->release ();
+			return nullptr;
+		}
+		
 		return wrapper;
 	}
 

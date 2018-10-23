@@ -65,6 +65,8 @@ public:
 	MyVST3Editor (HostCheckerController* controller, UTF8StringPtr templateName,
 	              UTF8StringPtr xmlFile);
 
+	void canResize (bool val) { mCanResize = val; }
+
 protected:
 	~MyVST3Editor ();
 
@@ -76,6 +78,14 @@ protected:
 	Steinberg::tresult PLUGIN_API onSize (Steinberg::ViewRect* newSize) override;
 	Steinberg::tresult PLUGIN_API canResize () override;
 	Steinberg::tresult PLUGIN_API checkSizeConstraint (Steinberg::ViewRect* rect) override;
+	Steinberg::tresult PLUGIN_API onKeyDown (char16 key, int16 keyMsg, int16 modifiers) override;
+	Steinberg::tresult PLUGIN_API onKeyUp (char16 key, int16 keyMsg, int16 modifiers) override;
+	Steinberg::tresult PLUGIN_API onWheel (float distance) override;
+	Steinberg::tresult PLUGIN_API setFrame (IPlugFrame* frame) override;
+	Steinberg::tresult PLUGIN_API attached (void* parent, FIDString type) override;
+	Steinberg::tresult PLUGIN_API removed () override;
+
+	Steinberg::tresult PLUGIN_API setContentScaleFactor (ScaleFactor factor) override;
 
 	// IParameterFinder
 	Steinberg::tresult PLUGIN_API findParameter (Steinberg::int32 xPos, Steinberg::int32 yPos,
@@ -87,10 +97,14 @@ protected:
 private:
 	CVSTGUITimer* checkTimer = nullptr;
 	HostCheckerController* hostController = nullptr;
+
+	uint32 openCount = 0;
 	bool wasAlreadyClosed = false;
 	bool onSizeWanted = false;
 	bool inOpen = false;
 	bool inOnsize = false;
+	bool mCanResize = true;
+	bool mAttached = false;
 };
 
 //-----------------------------------------------------------------------------
@@ -111,6 +125,9 @@ MyVST3Editor::~MyVST3Editor ()
 bool PLUGIN_API MyVST3Editor::open (void* parent, const PlatformType& type)
 {
 	inOpen = true;
+
+	openCount++;
+
 	if (wasAlreadyClosed)
 		hostController->addFeatureLog (kLogIdIPlugViewmultipleAttachSupported);
 
@@ -123,6 +140,7 @@ bool PLUGIN_API MyVST3Editor::open (void* parent, const PlatformType& type)
 			onSize (&rect);
 	}
 	inOpen = false;
+
 	return res;
 }
 
@@ -130,6 +148,8 @@ bool PLUGIN_API MyVST3Editor::open (void* parent, const PlatformType& type)
 void PLUGIN_API MyVST3Editor::close ()
 {
 	wasAlreadyClosed = true;
+
+	openCount--;
 	return VST3Editor::close ();
 }
 
@@ -180,6 +200,9 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize
 		hostController->addFeatureLog (kLogIdIPlugViewonSizeSupported);
 	}
 
+	if (openCount == 0)
+		hostController->addFeatureLog (kLogIdIPlugViewCalledBeforeOpen);
+
 	auto res = VST3Editor::onSize (newSize);
 	inOnsize = false;
 
@@ -190,7 +213,7 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize
 Steinberg::tresult PLUGIN_API MyVST3Editor::canResize ()
 {
 	hostController->addFeatureLog (kLogIdIPlugViewcanResizeSupported);
-	return VST3Editor::canResize ();
+	return mCanResize ? kResultTrue : kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
@@ -198,6 +221,67 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::checkSizeConstraint (Steinberg::View
 {
 	hostController->addFeatureLog (kLogIdIPlugViewcheckSizeConstraintSupported);
 	return VST3Editor::checkSizeConstraint (rect);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API MyVST3Editor::onKeyDown (char16 key, int16 keyMsg, int16 modifiers)
+{
+	if (!mAttached)
+		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
+	
+	return VSTGUIEditor::onKeyDown (key, keyMsg, modifiers);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API MyVST3Editor::onKeyUp (char16 key, int16 keyMsg, int16 modifiers)
+{
+	if (!mAttached)
+		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
+	
+	return VSTGUIEditor::onKeyUp (key, keyMsg, modifiers);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API MyVST3Editor::onWheel (float distance)
+{
+	if (!mAttached)
+		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
+	
+	return VSTGUIEditor::onWheel (distance);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API MyVST3Editor::setFrame (IPlugFrame* frame)
+{
+	hostController->addFeatureLog (kLogIdIPlugViewsetFrameSupported);
+	return VSTGUIEditor::setFrame (frame);
+}
+
+//-----------------------------------------------------------------------------
+Steinberg::tresult PLUGIN_API MyVST3Editor::attached (void* parent, FIDString type)
+{
+	if (mAttached)
+		hostController->addFeatureLog (kLogIdIPlugViewattachedWithoutRemoved);
+	
+	mAttached = true;
+	return VSTGUIEditor::attached (parent, type);
+}
+
+//-----------------------------------------------------------------------------
+Steinberg::tresult PLUGIN_API MyVST3Editor::removed ()
+{
+	if (!mAttached)
+		hostController->addFeatureLog (kLogIdIPlugViewremovedWithoutAttached);
+
+	mAttached = false;
+	return VSTGUIEditor::removed ();
+}
+
+//-----------------------------------------------------------------------------
+Steinberg::tresult PLUGIN_API MyVST3Editor::setContentScaleFactor (ScaleFactor factor)
+{
+	hostController->addFeatureLog (kLogIdIPlugViewsetContentScaleFactorSupported);
+	return VST3Editor::setContentScaleFactor (factor);
 }
 
 //-----------------------------------------------------------------------------
@@ -235,7 +319,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 	{
 		// create a unit Latency parameter
 		UnitInfo unitInfo;
-		unitInfo.id = 1234;
+		unitInfo.id = kUnitId;
 		unitInfo.parentUnitId = kRootUnitId; // attached to the root unit
 		Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Setup"));
 		unitInfo.programListId = kNoProgramListId;
@@ -243,10 +327,11 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		Unit* unit = new Unit (unitInfo);
 		addUnit (unit);
 
-		parameters.addParameter (STR16 ("Param1"), STR16 (""), 1, 0, ParameterInfo::kCanAutomate,
+		parameters.addParameter (STR16 ("Param1"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
 		                         kParam1Tag);
 		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0, 0, kGeneratePeaksTag);
-		parameters.addParameter (STR16 ("Latency"), STR16 (""), 0, 0, 0, kLatencyTag, 1234);
+		parameters.addParameter (STR16 ("Latency"), STR16 (""), 0, 0, 0, kLatencyTag, kUnitId);
+		parameters.addParameter (STR16 ("CanResize"), STR16 (""), 1, 1, 0, kCanResizeTag);
 
 		parameters.addParameter (STR16 ("Bypass"), STR16 (""), 1, 0,
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
@@ -400,6 +485,8 @@ IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 			view->setRect (rect);
 			view->setZoomFactor (sizeFactor);
 		}
+		view->canResize (parameters.getParameter (kCanResizeTag)->getNormalized () > 0);
+
 		return view;
 	}
 	return nullptr;
@@ -659,6 +746,14 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, int16 channel,
+                                                                PhysicalUIMapList& list)
+{
+	addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
 void HostCheckerController::extractCurrentInfo (EditorView* editor)
 {
 	auto rect = editor->getRect ();
@@ -671,11 +766,11 @@ void HostCheckerController::extractCurrentInfo (EditorView* editor)
 }
 
 //------------------------------------------------------------------------
-void HostCheckerController::editorRemoved (EditorView* editor) 
+void HostCheckerController::editorRemoved (EditorView* editor)
 {
 	extractCurrentInfo (editor);
 	editors.erase (std::find (editors.begin (), editors.end (), editor));
-	
+
 	editorsSubCtlerMap.erase (editor);
 }
 
@@ -708,7 +803,7 @@ VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr n
 			}
 		};
 		auto subController = new EditorSizeController (this, sizeFunc, sizeFactor);
-		editorsSubCtlerMap.insert ({ editor, subController });
+		editorsSubCtlerMap.insert ({editor, subController});
 		return subController;
 	}
 	return nullptr;
@@ -738,6 +833,14 @@ tresult PLUGIN_API HostCheckerController::setState (IBStream* state)
 		item.second->setSizeFactor (sizeFactor);
 	}
 
+	// since version 2
+	if (version > 1)
+	{
+		bool canResize = true;
+		streamer.readBool (canResize);
+		parameters.getParameter (kCanResizeTag)->setNormalized (canResize ? 1 : 0);
+	}
+
 	return kResultOk;
 }
 
@@ -749,11 +852,15 @@ tresult PLUGIN_API HostCheckerController::getState (IBStream* state)
 
 	IBStreamer streamer (state, kLittleEndian);
 
-	uint32 version = 1;
+	uint32 version = 2;
 	streamer.writeInt32u (version);
 	streamer.writeInt32u (height);
 	streamer.writeInt32u (width);
 	streamer.writeDouble (sizeFactor);
+
+	// since version 2
+	bool canResize = parameters.getParameter (kCanResizeTag)->getNormalized () > 0;
+	streamer.writeBool (canResize);
 
 	return kResultOk;
 }

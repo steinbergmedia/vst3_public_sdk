@@ -36,10 +36,10 @@
 
 #include "note_expression_synth_controller.h"
 #include "note_expression_synth_voice.h" // only needed for setComponentState
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/base/futils.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "base/source/fstring.h"
+#include "pluginterfaces/base/futils.h"
+#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -54,7 +54,9 @@ class PanNoteExpressionType : public RangeNoteExpressionType
 {
 public:
 	PanNoteExpressionType ()
-	: RangeNoteExpressionType (kPanTypeID, String ("Pan"), String ("Pan"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar|NoteExpressionTypeInfo::kIsAbsolute, 0)
+	: RangeNoteExpressionType (
+	      kPanTypeID, String ("Pan"), String ("Pan"), nullptr, -1, 0, -100, 100,
+	      NoteExpressionTypeInfo::kIsBipolar | NoteExpressionTypeInfo::kIsAbsolute, 0)
 	{
 	}
 
@@ -177,7 +179,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param->setPrecision (0);
 		parameters.addParameter (param);
 		
-		StringListParameter* filterTypeParam = new StringListParameter (USTRING("Filter Type"), kParamFilterType);
+		auto* filterTypeParam = new StringListParameter (USTRING("Filter Type"), kParamFilterType);
 		filterTypeParam->appendString (USTRING("Lowpass"));
 		filterTypeParam->appendString (USTRING("Highpass"));
 		filterTypeParam->appendString (USTRING("Bandpass"));
@@ -198,7 +200,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 
 		parameters.addParameter (new RangeParameter (USTRING("Active Voices"), kParamActiveVoices, nullptr, 0, MAX_VOICES, 0, MAX_VOICES, ParameterInfo::kIsReadOnly));
 
-		StringListParameter* tuningRangeParam = new StringListParameter (USTRING("Tuning Range"), kParamTuningRange, nullptr, ParameterInfo::kIsList);
+		auto* tuningRangeParam = new StringListParameter (USTRING("Tuning Range"), kParamTuningRange, nullptr, ParameterInfo::kIsList);
 		tuningRangeParam->appendString (USTRING("[-1, +1] Octave"));
 		tuningRangeParam->appendString (USTRING("[-3, +2] Tunes"));
 		parameters.addParameter (tuningRangeParam);
@@ -210,12 +212,19 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		panNoteExpression->getInfo ().valueDesc.minimum = 0.5 - VoiceStatics::kNormTuningOneOctave;
 		panNoteExpression->getInfo ().valueDesc.maximum = 0.5 + VoiceStatics::kNormTuningOneOctave;
 		noteExpressionTypes.addNoteExpressionType (panNoteExpression);
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute));
+		
+		auto noteExp = new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute);
+		noteExpressionTypes.addNoteExpressionType (noteExp);
+
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSinusDetuneTypeID, String ("Sinus Detune"), String ("Sin Detune"), String ("Cent"), -1, getParameterObject (kParamSinusDetune), NoteExpressionTypeInfo::kIsAbsolute|NoteExpressionTypeInfo::kIsBipolar));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleVolumeTypeID, String ("Triangle Volume"), String ("Tri Vol"), String ("%"), -1, getParameterObject (kParamTriangleVolume), NoteExpressionTypeInfo::kIsAbsolute));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kSquareVolumeTypeID, String ("Square Volume"), String ("Square Vol"), String ("%"), -1, getParameterObject (kParamSquareVolume), NoteExpressionTypeInfo::kIsAbsolute));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kNoiseVolumeTypeID, String ("Noise Volume"), String ("Noise Vol"), String ("%"), -1, getParameterObject (kParamNoiseVolume), NoteExpressionTypeInfo::kIsAbsolute));
-		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
+		
+		auto rNoteExp = new RangeNoteExpressionType (kFilterFreqModTypeID, String ("Filter Frequency Modulation"), String ("Freq Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0);
+		rNoteExp->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIYMovement);
+		noteExpressionTypes.addNoteExpressionType (rNoteExp);
+
 		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterQModTypeID, String ("Filter Q Modulation"), String ("Q Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterTypeTypeID, String ("Filter Type"), String ("Flt Type"), nullptr, -1, getParameterObject (kParamFilterType), NoteExpressionTypeInfo::kIsBipolar));
 		noteExpressionTypes.addNoteExpressionType (new ReleaseTimeModNoteExpressionType ());
@@ -250,15 +259,16 @@ tresult PLUGIN_API Controller::setComponentState (IBStream* state)
 
 		setParamNormalized (kParamSinusDetune, (gps.sinusDetune + 1) / 2.);
 		setParamNormalized (kParamTriangleSlop, gps.triangleSlop);
-		
-		setParamNormalized (kParamFilterType, plainParamToNormalized (kParamFilterType, gps.filterType));
+
+		setParamNormalized (kParamFilterType,
+		                    plainParamToNormalized (kParamFilterType, gps.filterType));
 		setParamNormalized (kParamFilterFreq, gps.filterFreq);
 		setParamNormalized (kParamFilterQ, gps.filterQ);
-	
+
 		setParamNormalized (kParamBypassSNA, gps.bypassSNA);
 
-		setParamNormalized (kParamTuningRange, plainParamToNormalized (kParamTuningRange, gps.tuningRange));
-
+		setParamNormalized (kParamTuningRange,
+		                    plainParamToNormalized (kParamTuningRange, gps.tuningRange));
 	}
 	return result;
 }
@@ -273,7 +283,9 @@ tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value
 		NoteExpressionType* net = noteExpressionTypes.getNoteExpressionType (kTuningTypeID);
 		if (value > 0)
 		{
-			noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kTriangleSlopeTypeID, String ("Triangle Slope"), String ("Tri Slope"), String ("%"), -1, getParameterObject (kParamTriangleSlop), NoteExpressionTypeInfo::kIsAbsolute));
+			noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (
+			    kTriangleSlopeTypeID, String ("Triangle Slope"), String ("Tri Slope"), String ("%"),
+			    -1, getParameterObject (kParamTriangleSlop), NoteExpressionTypeInfo::kIsAbsolute));
 			if (net)
 			{
 				net->getInfo ().valueDesc.minimum = 0.5 - 3 * VoiceStatics::kNormTuningOneTune;
@@ -300,7 +312,9 @@ tresult PLUGIN_API Controller::setParamNormalized (ParamID tag, ParamValue value
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Controller::getMidiControllerAssignment (int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id/*out*/)
+tresult PLUGIN_API Controller::getMidiControllerAssignment (int32 busIndex, int16 channel,
+                                                            CtrlNumber midiControllerNumber,
+                                                            ParamID& id /*out*/)
 {
 	if (busIndex == 0 && channel == 0)
 	{
@@ -328,7 +342,9 @@ int32 PLUGIN_API Controller::getNoteExpressionCount (int32 busIndex, int16 chann
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Controller::getNoteExpressionInfo (int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
+tresult PLUGIN_API Controller::getNoteExpressionInfo (int32 busIndex, int16 channel,
+                                                      int32 noteExpressionIndex,
+                                                      NoteExpressionTypeInfo& info /*out*/)
 {
 	if (busIndex == 0 && channel == 0)
 	{
@@ -338,7 +354,9 @@ tresult PLUGIN_API Controller::getNoteExpressionInfo (int32 busIndex, int16 chan
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Controller::getNoteExpressionStringByValue (int32 busIndex, int16 channel, NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+tresult PLUGIN_API Controller::getNoteExpressionStringByValue (
+    int32 busIndex, int16 channel, NoteExpressionTypeID id,
+    NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
 {
 	if (busIndex == 0 && channel == 0)
 	{
@@ -348,14 +366,34 @@ tresult PLUGIN_API Controller::getNoteExpressionStringByValue (int32 busIndex, i
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Controller::getNoteExpressionValueByString (int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+tresult PLUGIN_API Controller::getNoteExpressionValueByString (
+    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
+    NoteExpressionValue& valueNormalized /*out*/)
 {
 	if (busIndex == 0 && channel == 0)
 	{
 		return noteExpressionTypes.getNoteExpressionValueByString (id, string, valueNormalized);
-
 	}
 	return kResultFalse;
 }
 
-}}} // namespaces
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API Controller::getPhysicalUIMapping (int32 busIndex, int16 channel,
+                                                     PhysicalUIMapList& list)
+{
+	if (busIndex == 0 && channel == 0)
+	{
+		for (uint32 i = 0; i < list.count; ++i)
+		{
+			NoteExpressionTypeID type = kInvalidTypeID;
+			if (noteExpressionTypes.getMappedNoteExpression (list.map[i].physicalUITypeID,
+			                                                 type) == kResultTrue)
+				list.map[i].noteExpressionTypeID = type;
+		}
+		return kResultTrue;
+	}
+	return kResultFalse;
+}
+}
+}
+} // namespaces

@@ -64,7 +64,7 @@ tresult PLUGIN_API HostApplication::createInstance (TUID cid, TUID _iid, void** 
 		*obj = new HostAttributeList;
 		return kResultTrue;
 	}
-	*obj = 0;
+	*obj = nullptr;
 	return kResultFalse;
 }
 
@@ -73,7 +73,7 @@ tresult PLUGIN_API HostApplication::queryInterface (const char* _iid, void** obj
 {
 	QUERY_INTERFACE (_iid, obj, FUnknown::iid, IHostApplication)
 	QUERY_INTERFACE (_iid, obj, IHostApplication::iid, IHostApplication)
-	*obj = 0;
+	*obj = nullptr;
 	return kResultFalse;
 }
 
@@ -94,7 +94,7 @@ uint32 PLUGIN_API HostApplication::release ()
 //-----------------------------------------------------------------------------
 IMPLEMENT_FUNKNOWN_METHODS (HostMessage, IMessage, IMessage::iid)
 //-----------------------------------------------------------------------------
-HostMessage::HostMessage () : messageId (0), attributeList (0)
+HostMessage::HostMessage () : messageId (nullptr), attributeList (nullptr)
 {
 	FUNKNOWN_CTOR
 }
@@ -102,7 +102,7 @@ HostMessage::HostMessage () : messageId (0), attributeList (0)
 //-----------------------------------------------------------------------------
 HostMessage::~HostMessage ()
 {
-	setMessageID (0);
+	setMessageID (nullptr);
 	if (attributeList)
 		attributeList->release ();
 	FUNKNOWN_DTOR
@@ -119,7 +119,7 @@ void PLUGIN_API HostMessage::setMessageID (const char* mid)
 {
 	if (messageId)
 		delete[] messageId;
-	messageId = 0;
+	messageId = nullptr;
 	if (mid)
 	{
 		size_t len = strlen (mid) + 1;
@@ -195,7 +195,7 @@ protected:
 	Type type;
 };
 
-typedef std::map<String, HostAttribute*>::iterator mapIterator;
+using mapIterator = std::map<String, HostAttribute*>::iterator;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------

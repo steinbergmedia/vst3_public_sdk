@@ -95,7 +95,7 @@ BaseEditorWrapper::~BaseEditorWrapper ()
 //------------------------------------------------------------------------
 tresult PLUGIN_API BaseEditorWrapper::queryInterface (const char* _iid, void** obj)
 {
-	QUERY_INTERFACE (_iid, obj, FUnknown::iid, FUnknown)
+	QUERY_INTERFACE (_iid, obj, FUnknown::iid, IPlugFrame)
 	QUERY_INTERFACE (_iid, obj, IPlugFrame::iid, IPlugFrame)
 
 	*obj = nullptr;

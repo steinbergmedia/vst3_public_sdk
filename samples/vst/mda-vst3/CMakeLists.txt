@@ -150,7 +150,7 @@ set(mda-vst3_sources
 )
 
 set(target mda-vst3)
-smtg_add_vst3plugin(${target} ${SDK_ROOT} ${mda-vst3_sources})
+smtg_add_vst3plugin(${target} ${mda-vst3_sources})
 set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
 target_link_libraries(${target} PRIVATE base sdk)
 if(MAC)

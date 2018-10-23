@@ -81,7 +81,7 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-typedef char ChunkID[4];
+using ChunkID = char[4];
 
 //------------------------------------------------------------------------
 enum ChunkType

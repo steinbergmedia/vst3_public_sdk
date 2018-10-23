@@ -42,7 +42,7 @@
 namespace VSTGUI {
 
 //-----------------------------------------------------------------------------
-class PitchNamesDataBrowserSource : public CBaseObject, public IDataBrowserDelegate
+class PitchNamesDataBrowserSource : public CBaseObject, public DataBrowserDelegateAdapter
 {
 public:
 	PitchNamesDataBrowserSource (Steinberg::Vst::EditControllerEx1* editController,

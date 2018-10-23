@@ -40,8 +40,6 @@
 #include "aaxwrapper.h"
 #include "aaxwrapper_parameters.h"
 
-#include "public.sdk/source/vst2.x/aeffeditor.h"
-
 using namespace Steinberg;
 using namespace Steinberg::Vst;
 using namespace Steinberg::Base::Thread;

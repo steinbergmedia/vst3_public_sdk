@@ -75,6 +75,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		mCurrentState = State::kInitialized;
 
 		addAudioInput (USTRING ("Audio Input"), SpeakerArr::kStereo);
+		addAudioInput (USTRING ("Aux Input"), SpeakerArr::kStereo, kAux, 0);
 		addAudioOutput (USTRING ("Audio Output"), SpeakerArr::kStereo);
 		addEventInput (USTRING ("Event Input"), 1);
 
@@ -302,6 +303,56 @@ tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSam
 		addLogEvent (kLogIdCanProcessSampleSize64);
 
 	return AudioEffect::canProcessSampleSize (symbolicSampleSize);
+}
+
+
+//-----------------------------------------------------------------------------
+uint32 PLUGIN_API HostCheckerProcessor::getLatencySamples ()
+{
+	addLogEvent (kLogIdGetLatencySamples);
+	return 0;
+}
+
+//-----------------------------------------------------------------------------
+uint32 PLUGIN_API HostCheckerProcessor::getTailSamples ()
+{
+	addLogEvent (kLogIdGetTailSamples);
+	return mLatency;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::getRoutingInfo (RoutingInfo& inInfo, RoutingInfo& outInfo)
+{
+	addLogEvent (kLogIdGetRoutingInfo);
+	return AudioEffect::getRoutingInfo (inInfo, outInfo);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::activateBus (MediaType type, BusDirection dir, int32 index,
+                                                      TBool state)
+{
+	if (type == kAudio && dir == kInput && index == 1)
+		addLogEvent (kLogIdActivateAuxBus);
+
+	return AudioEffect::activateBus (type, dir, index, state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::setBusArrangements (SpeakerArrangement* inputs,
+                                                             int32 numIns,
+                                                             SpeakerArrangement* outputs,
+                                                             int32 numOuts)
+{
+	addLogEvent (kLogIdSetBusArrangements);
+	return AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::getBusArrangement (BusDirection dir, int32 busIndex,
+                                                            SpeakerArrangement& arr)
+{
+	addLogEvent (kLogIdGetBusArrangements);
+	return AudioEffect::getBusArrangement (dir, busIndex, arr);
 }
 
 //-----------------------------------------------------------------------------

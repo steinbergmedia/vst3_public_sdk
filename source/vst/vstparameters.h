@@ -61,18 +61,18 @@ public:
 	           ParamValue defaultValueNormalized = 0., int32 stepCount = 0,
 	           int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId,
                const TChar* shortTitle = nullptr);
-	virtual ~Parameter ();
+	~Parameter () override;
 
 	/** Returns its read only info. */
-	const ParameterInfo& getInfo () const { return info; }
+	virtual const ParameterInfo& getInfo () const { return info; }
 
 	/** Returns its writable info. */
-	ParameterInfo& getInfo () { return info; }
+	virtual ParameterInfo& getInfo () { return info; }
 
 	/** Sets its associated UnitId. */
-	void setUnitID (UnitID id) { info.unitId = id; }
+	virtual void setUnitID (UnitID id) { info.unitId = id; }
 	/** Gets its associated UnitId. */
-	UnitID getUnitID () { return info.unitId; }
+	virtual UnitID getUnitID () { return info.unitId; }
 
 	/** Gets its normalized value [0.0, 1.0]. */
 	ParamValue getNormalized () const { return valueNormalized; }
@@ -90,10 +90,10 @@ public:
 	virtual ParamValue toNormalized (ParamValue plainValue) const;
 
 	/** Gets the current precision (used for string representation of float). */
-	int32 getPrecision () const { return precision; }
+	virtual int32 getPrecision () const { return precision; }
 	/** Sets the precision for string representation of float value (for example 4.34 with 2 as
 	 * precision). */
-	void setPrecision (int32 val) { precision = val; }
+	virtual void setPrecision (int32 val) { precision = val; }
 
 	OBJ_METHODS (Parameter, FObject)
 //------------------------------------------------------------------------
@@ -158,7 +158,7 @@ public:
 	StringListParameter (const TChar* title, ParamID tag, const TChar* units = nullptr,
 	                     int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsList,
 	                     UnitID unitID = kRootUnitId, const TChar* shortTitle= nullptr);
-	virtual ~StringListParameter ();
+	~StringListParameter () override;
 
 	/** Appends a string and increases the stepCount. */
 	virtual void appendString (const String128 string);
@@ -178,7 +178,7 @@ public:
 	OBJ_METHODS (StringListParameter, Parameter)
 //------------------------------------------------------------------------
 protected:
-	typedef std::vector<TChar*> StringVector;
+	using StringVector = std::vector<TChar*>;
 	StringVector strings;
 };
 
@@ -227,8 +227,8 @@ public:
 
 //------------------------------------------------------------------------
 protected:
-	typedef std::vector<IPtr<Parameter>> ParameterPtrVector;
-	typedef std::map<ParamID, ParameterPtrVector::size_type> IndexMap;
+	using ParameterPtrVector = std::vector<IPtr<Parameter>>;
+	using IndexMap = std::map<ParamID, ParameterPtrVector::size_type>;
 	ParameterPtrVector* params;
 	IndexMap id2index;
 };

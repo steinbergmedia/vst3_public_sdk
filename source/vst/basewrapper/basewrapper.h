@@ -62,7 +62,8 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-class BaseEditorWrapper : public IPlugFrame
+class BaseEditorWrapper : public IPlugFrame, 
+                          public FObject
 {
 public:
 //------------------------------------------------------------------------
@@ -82,8 +83,7 @@ public:
 
 	// FUnknown
 	tresult PLUGIN_API queryInterface (const char* _iid, void** obj) SMTG_OVERRIDE;
-	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
-	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
+	REFCOUNT_METHODS (FObject);
 //------------------------------------------------------------------------
 protected:
 	void createView ();
@@ -101,7 +101,8 @@ const int32 kMaxEvents = 2048;
 class BaseWrapper : public IHostApplication,
                     public IComponentHandler,
                     public IUnitHandler,
-                    public ITimerCallback
+                    public ITimerCallback,
+                    public FObject
 {
 public:
 	struct SVST3Config
@@ -141,8 +142,7 @@ public:
 	// VST 3 Interfaces  ------------------------------------------------------
 	// FUnknown
 	tresult PLUGIN_API queryInterface (const char* iid, void** obj) SMTG_OVERRIDE;
-	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 1; }
-	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 1; }
+	REFCOUNT_METHODS (FObject);
 
 	// IHostApplication
 	tresult PLUGIN_API createInstance (TUID cid, TUID iid, void** obj) SMTG_OVERRIDE;

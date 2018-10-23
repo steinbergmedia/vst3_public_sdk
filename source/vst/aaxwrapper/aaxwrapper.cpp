@@ -85,12 +85,41 @@ using namespace Steinberg::Vst;
 using namespace Steinberg::Base::Thread;
 
 //------------------------------------------------------------------------
+class AAXEditorWrapper : public BaseEditorWrapper
+{
+public:
+	AAXEditorWrapper (AAXWrapper* wrapper, IEditController* controller)
+	: BaseEditorWrapper (controller), mAAXWrapper (wrapper) {}
+
+	virtual tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* newSize) SMTG_OVERRIDE;
+
+private:
+	AAXWrapper* mAAXWrapper;
+};
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API AAXEditorWrapper::resizeView (IPlugView* view, ViewRect* newSize)
+{
+	tresult result = kResultFalse;
+	if (view && newSize)
+	{
+		if (mAAXWrapper->_sizeWindow (newSize->getWidth (), newSize->getHeight ()))
+		{
+			result = view->onSize (newSize);
+		}
+	}
+
+	return result;
+}
+
+//------------------------------------------------------------------------
 //------------------------------------------------------------------------
 AAXWrapper::AAXWrapper (BaseWrapper::SVST3Config& config, AAXWrapper_Parameters* p, AAX_Plugin_Desc* desc)
 : BaseWrapper (config), aaxParams (p), pluginDesc (desc)
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
+	mBlockSize = 1024; // never explicitly changed by Protools, so assume the maximum
 	mUseExportedBypass = true; 
 	mUseIncIndex = false;
 
@@ -234,7 +263,7 @@ bool AAXWrapper::init ()
 	bool res = BaseWrapper::init ();
 
 	if (mController && BaseEditorWrapper::hasEditor (mController))
-		_setEditor (new BaseEditorWrapper (mController));
+		_setEditor (new AAXEditorWrapper (this, mController));
 
 	return res;
 }
@@ -271,6 +300,35 @@ void AAXWrapper::setupProcessTimeInfo ()
 			if (looping)
 				mProcessContext.state |= ProcessContext::kCycleActive;
 		}
+
+		if (transport->IsTransportPlaying (&playing) == AAX_SUCCESS)
+		{
+			mProcessContext.state |= (playing ? ProcessContext::kPlaying : 0);
+		}
+
+		// workaround ppqPos not updating for every 2nd audio blocks @ 96 kHz (and more for higher frequencies)
+		//  and while the UI is frozen, e.g. during save
+		static const int32 playflags = ProcessContext::kPlaying | ProcessContext::kProjectTimeMusicValid | ProcessContext::kTempoValid;
+		if ((playflags & mProcessContext.state) == playflags && mSampleRate != 0)
+		{
+			TQuarterNotes ppq = mProcessContext.projectTimeMusic;
+			if (ppq == mLastPpqPos && mLastPpqPos != 0 && mNextPpqPos != 0)
+			{
+				TQuarterNotes nextppq = mNextPpqPos;
+				if (mProcessContext.state & ProcessContext::kCycleActive)
+					if (nextppq >= mProcessContext.cycleEndMusic)
+						nextppq += mProcessContext.cycleStartMusic - mProcessContext.cycleEndMusic;
+
+				mProcessContext.projectTimeMusic = nextppq;
+			}
+			mLastPpqPos = ppq;
+			mNextPpqPos = mProcessContext.projectTimeMusic + mProcessContext.tempo / 60 * mProcessData.numSamples / mSampleRate;
+		}
+		else
+		{
+			mLastPpqPos = mNextPpqPos = 0;
+		}
+
 		int32_t num, den;
 		if (transport->GetCurrentMeter (&num, &den) == AAX_SUCCESS)
 		{
@@ -281,10 +339,6 @@ void AAXWrapper::setupProcessTimeInfo ()
 		else
 			mProcessContext.timeSigNumerator = mProcessContext.timeSigDenominator = 4;
 
-		if (transport->IsTransportPlaying (&playing) == AAX_SUCCESS)
-		{
-			mProcessContext.state |= (playing ? ProcessContext::kPlaying : 0);
-		}
 		mProcessData.processContext = &mProcessContext;
 	}
 	else
@@ -363,11 +417,13 @@ void AAXWrapper::onTimer (Timer* timer)
 
 	AAX_ASSERT (mainThread == getCurrentThread ());
 
-	if (wantsSetChunk)
+	if (wantsSetChunk && !settingChunk)
 	{
+		settingChunk = true;
 		FGuard guard (msgQueueLock);
 		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), false);
 		wantsSetChunk = false;
+		settingChunk = false;
 	}
 
 	updateActiveOutputState ();

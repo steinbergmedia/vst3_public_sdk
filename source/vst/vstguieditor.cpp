@@ -53,6 +53,9 @@ static void ReleaseVSTGUIBundleRef ();
 #elif SMTG_OS_WINDOWS
 void* hInstance = nullptr; // VSTGUI hInstance
 extern void* moduleHandle;
+#if SMTG_MODULE_IS_BUNDLE
+#include "vstgui_win32_bundle_support.h"
+#endif // SMTG_MODULE_IS_BUNDLE
 #elif SMTG_OS_LINUX
 extern void* moduleHandle;
 namespace VSTGUI {
@@ -70,7 +73,13 @@ VSTGUIEditor::VSTGUIEditor (void* controller, ViewRect* size)
 #if SMTG_OS_MACOS
 	CreateVSTGUIBundleRef ();
 #elif SMTG_OS_WINDOWS
-	hInstance = moduleHandle;
+	if (hInstance == nullptr)
+	{
+		hInstance = moduleHandle;
+#if SMTG_MODULE_IS_BUNDLE
+		setupVSTGUIBundleSupport (hInstance);
+#endif
+	}
 #elif SMTG_OS_LINUX
 	VSTGUI::soHandle = moduleHandle;
 #endif

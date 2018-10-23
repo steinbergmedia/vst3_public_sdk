@@ -35,18 +35,20 @@
 //-----------------------------------------------------------------------------
 
 #include "vsttestsuite.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
 
+#include "public.sdk/source/vst/hosting/stringconvert.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivstmessage.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
 
+#include "base/source/fdebug.h"
 #include "base/source/fstring.h"
 
 #include <cstdio>
@@ -720,7 +722,23 @@ bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
 		return true;
 	}
 
+	FUnknownPtr<INoteExpressionPhysicalUIMapping> noteExpressionPUIMapping (controller);
+	if (!noteExpressionPUIMapping)
+	{
+		addMessage (testResult, STR ("No Note Expression PhysicalUIMapping interface supplied!"));
+	}
+
 	int32 eventBusCount = vstPlug->getBusCount (kEvent, kInput);
+
+	const uint32 maxPUI = kPUITypeCount;
+	PhysicalUIMap puiArray[maxPUI];
+	PhysicalUIMapList puiMap;
+	puiMap.count = maxPUI;
+	puiMap.map = puiArray;
+	for (uint32 i = 0; i < maxPUI; i++)
+	{
+		puiMap.map[i].physicalUITypeID = static_cast<PhysicalUITypeID> (i);
+	}
 
 	for (int32 bus = 0; bus < eventBusCount; bus++)
 	{
@@ -770,11 +788,37 @@ bool PLUGIN_API VstNoteExpressionTest::run (ITestResult* testResult)
 				else
 				{
 					addErrorMessage (
-					    testResult,
-					    printf (
-					        "Note Expression getNoteExpressionInfo (%d, %d, %d) return kResultFalse!",
-					        bus, channel, i));
+						testResult,
+						printf (
+							"Note Expression getNoteExpressionInfo (%d, %d, %d) return kResultFalse!",
+							bus, channel, i));
 					return false;
+				}
+			}
+
+			if (noteExpressionPUIMapping)
+			{
+				for (uint32 i = 0; i < maxPUI; i++)
+				{
+					puiMap.map[i].noteExpressionTypeID = kInvalidTypeID;
+				}
+
+				if (noteExpressionPUIMapping->getPhysicalUIMapping (bus, channel, puiMap) ==
+				    kResultFalse)
+				{
+					addMessage (testResult, printf (
+					        "Note Expression getPhysicalUIMapping (%d, %d, ...) return kResultFalse!",
+					        bus, channel));
+				}
+				else
+				{
+					for (int32 i = 0; i < maxPUI; i++)
+					{
+						addMessage (testResult,
+						            printf ("Note Expression PhysicalUIMapping: %d => %d",
+						                    puiMap.map[i].noteExpressionTypeID,
+						                    puiMap.map[i].physicalUITypeID));
+					}
 				}
 			}
 		}
@@ -1893,12 +1937,12 @@ bool VstSpeakerArrangementTest::prepareProcessing ()
 
 	bool ret = true;
 	int32 is = vstPlug->getBusCount (kAudio, kInput);
-	SpeakerArrangement* inSpArrs = new SpeakerArrangement[is];
+	auto* inSpArrs = new SpeakerArrangement[is];
 	for (int32 i = 0; i < is; ++i)
 		inSpArrs[i] = inSpArr;
 
 	int32 os = vstPlug->getBusCount (kAudio, kOutput);
-	SpeakerArrangement* outSpArrs = new SpeakerArrangement[os];
+	auto* outSpArrs = new SpeakerArrangement[os];
 	for (int32 o = 0; o < os; o++)
 		outSpArrs[o] = outSpArr;
 
@@ -2111,7 +2155,7 @@ bool VstAutomationTest::teardown ()
 	if (paramChanges)
 	{
 		delete[] paramChanges;
-		paramChanges = 0;
+		paramChanges = nullptr;
 	}
 	return VstProcessTest::teardown ();
 }
@@ -2309,7 +2353,7 @@ bool PLUGIN_API VstSilenceFlagsTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	if (processData.inputs != 0)
+	if (processData.inputs != nullptr)
 	{
 		audioEffect->setProcessing (true);
 
@@ -2397,7 +2441,7 @@ bool PLUGIN_API VstSilenceProcessingTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	if (processData.inputs != 0)
+	if (processData.inputs != nullptr)
 	{
 		audioEffect->setProcessing (true);
 

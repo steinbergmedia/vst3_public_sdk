@@ -2895,7 +2895,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "AUv3WrapperiOS/AUv3WrapperiOS-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -2917,7 +2917,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "AUv3WrapperiOS/AUv3WrapperiOS-Bridging-Header.h";
 				SWIFT_VERSION = 3.0;
@@ -2941,7 +2941,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3.AGainv3Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app.audiounitv3extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -2964,7 +2964,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @executable_path/../../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3.AGainv3Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app.audiounitv3extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -3050,7 +3050,7 @@
 				INFOPLIST_PREPROCESS = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3.AGainv3Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app.audiounitv3extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
@@ -3075,7 +3075,7 @@
 				INFOPLIST_PREPROCESS = YES;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
 				OTHER_LDFLAGS = "-lc++";
-				PRODUCT_BUNDLE_IDENTIFIER = Stgb.AGainv3.AGainv3Extension;
+				PRODUCT_BUNDLE_IDENTIFIER = com.steinberg.audiounitv3app.audiounitv3extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;

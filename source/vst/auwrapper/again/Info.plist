@@ -109,7 +109,7 @@
 			<key>type</key>
 			<string>kAUPluginType</string>
 			<key>version</key>
-			<string>kAudioUnitVersion</string>
+			<integer>kAudioUnitVersion</integer>
 		</dict>
 	</array>
 

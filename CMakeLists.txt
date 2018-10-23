@@ -1,19 +1,31 @@
 
 set(sdk_sources
     source/common/pluginview.cpp
+    source/common/pluginview.h
     source/main/pluginfactoryvst3.cpp
+    source/main/pluginfactoryvst3.h
     source/vst/utility/ringbuffer.h
     source/vst/vstaudioeffect.cpp
+    source/vst/vstaudioeffect.h
     source/vst/vstbus.cpp
+    source/vst/vstbus.h
     source/vst/vstbypassprocessor.cpp
+    source/vst/vstbypassprocessor.h
     source/vst/vstcomponent.cpp
+    source/vst/vstcomponent.h
     source/vst/vstcomponentbase.cpp
+    source/vst/vstcomponentbase.h
     source/vst/vsteditcontroller.cpp
+    source/vst/vsteditcontroller.h
     source/vst/vstinitiids.cpp
     source/vst/vstnoteexpressiontypes.cpp
+    source/vst/vstnoteexpressiontypes.h
     source/vst/vstparameters.cpp
+    source/vst/vstparameters.h
     source/vst/vstpresetfile.cpp
+    source/vst/vstpresetfile.h
     source/vst/vstrepresentation.cpp
+    source/vst/vstrepresentation.h
 )
 
 set(pluginterfaces_sources
@@ -62,6 +74,7 @@ set(vst_includes
     ${SDK_ROOT}/pluginterfaces/vst/ivstmidicontrollers.h
     ${SDK_ROOT}/pluginterfaces/vst/ivstnoteexpression.h	
     ${SDK_ROOT}/pluginterfaces/vst/ivstparameterchanges.h
+    ${SDK_ROOT}/pluginterfaces/vst/ivstphysicalui.h
     ${SDK_ROOT}/pluginterfaces/vst/ivstplugview.h
     ${SDK_ROOT}/pluginterfaces/vst/ivstprefetchablesupport.h
     ${SDK_ROOT}/pluginterfaces/vst/ivstprocesscontext.h	
@@ -84,6 +97,6 @@ if(MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     target_link_libraries(sdk_ios PRIVATE base_ios)
 endif()
 
-source_group("public.sdk"	FILES ${sdk_sources})
-source_group("vst"			FILES ${vst_includes})
-source_group("base"			FILES ${pluginterfaces_sources})
+source_group("public.sdk"   FILES ${sdk_sources})
+source_group("vst"          FILES ${vst_includes})
+source_group("base"         FILES ${pluginterfaces_sources})

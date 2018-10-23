@@ -11,7 +11,7 @@ set(prefetchable_sources
 )
 
 set(target prefetchablesupport)
-smtg_add_vst3plugin(${target} ${SDK_ROOT} ${prefetchable_sources})
+smtg_add_vst3plugin(${target} ${prefetchable_sources})
 set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
 target_link_libraries(${target} PRIVATE base sdk)
 if(MAC)

@@ -4,14 +4,6 @@
 
 #define APSTUDIO_READONLY_SYMBOLS
 
-note_expression_synth.uidesc DATA "../resource/note_expression_synth.uidesc"
-knob.png PNG "../resource/knob.png"
-knob2.png PNG "../resource/knob2.png"
-groupframe.png PNG "../resource/groupframe.png"
-background.png PNG "../resource/background.png"
-vst3_logo_small.png PNG "../resource/vst3_logo_small.png"
-about.png PNG "../resource/about.png"
-
 /////////////////////////////////////////////////////////////////////////////
 // Version
 /////////////////////////////////////////////////////////////////////////////

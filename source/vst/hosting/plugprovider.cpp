@@ -306,7 +306,7 @@ void PlugProvider::terminatePlugin ()
 	bool controllerIsComponent = false;
 	if (component)
 	{
-		controllerIsComponent = FUnknownPtr<IEditController> (component).getInterface () != 0;
+		controllerIsComponent = FUnknownPtr<IEditController> (component).getInterface () != nullptr;
 		component->terminate ();
 	}
 
