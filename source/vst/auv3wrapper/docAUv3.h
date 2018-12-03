@@ -46,36 +46,37 @@ Helper Class wrapping a VST 3 Plug-in to a Audio Unit v3 Plug-in
 ***************************
 The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
 a AUv3 Plug-in.
+
+The wrapped AudioUnit does support MPE when the VST3 Plug-in has Note Expression support. You need
+to implement \ref Steinberg::Vst::INoteExpressionPhysicalUIMapping to map your Note Expression to
+the limited three expressions defined by MPE.
+
 \n\n
 
 ***************************
 \section howtoAUv3 How does it work?
 ***************************
-- it works with VSTGUI on iOS
-
 - Structure:
-	- App          (container app which initializes the AU through small Playback Engine)
-	- Extension    (extension which is loaded by hosts, also initializes the AU)
-	- Library      (main wrapper library)
- 
+    - App          (container app which initializes the AU through small Playback Engine)
+    - Extension    (extension which is loaded by hosts, also initializes the AU)
+
 - How-To use the VST3->AUv3 Wrapper with the sample code:
- 
- 	- make sure you have correct code signing set up
- 
- 	- build & run targets
+
+    - make sure you have correct code signing set up
+
+    - build & run targets
 
 - How-To use the VST3->AUv3 Wrapper with your own VST Plugin:
-    
-	- remove the AGain Source files from this project and include/link all your necessary VST3
-		 Plugin source files (add to AUv3WrappermacOSLib and AUv3WrapperiOSLib target) and resource files
-		 (add to AUv3WrappermacOS, AUv3WrappermacOSExtension, AUv3WrapperiOS, AUv3WrapperiOSExtension
-		 targets)
 
-	- edit the audiounitconfig.h file (see comment "AUWRAPPER_CHANGE" there)
+    - duplicate either the folder again_auv3 or note_expression_synth_auv3 in public.sdk/samples/vst,
+      rename it as you like and edit the CMakelist.txt to add your sources, resources and modify target
+      names etc.
 
-	- rename the targets and bundle identifiers according to your needs
+    - take special attention to the stuff in audiounitconfig.h and change the definitions in
+      there.
 
-	- make sure you have correct code signing set up
- 
- 	- build & run targets
+    - also change the other files in that folder to your needs. -Code signing is required, but you
+      can build and test with a developer only identity.
+
+    - build & run targets
 */

@@ -61,14 +61,19 @@ namespace {
 
 #if defined(_M_ARM64)
 constexpr auto architectureString = "arm_64-win";
+#define USE_OLE 0
 #elif defined(_M_ARM)
 constexpr auto architectureString = "arm-win";
+#define USE_OLE 0
 #elif defined(_M_X64)
 constexpr auto architectureString = "x86_64-win";
+#define USE_OLE 1
 #elif defined(_M_IX86)
 constexpr auto architectureString = "x86-win";
+#define USE_OLE 1
 #endif
 
+#if USE_OLE
 //------------------------------------------------------------------------
 struct Ole
 {
@@ -77,16 +82,12 @@ struct Ole
 		static Ole gInstance;
 		return gInstance;
 	}
+
 private:
-	Ole ()
-	{
-		OleInitialize (nullptr);
-	}
-	~Ole ()
-	{
-		OleUninitialize ();
-	}
+	Ole () { OleInitialize (nullptr); }
+	~Ole () { OleUninitialize (); }
 };
+#endif // USE_OLE
 
 //------------------------------------------------------------------------
 class Win32Module : public Module
@@ -98,7 +99,7 @@ public:
 		return reinterpret_cast<T> (GetProcAddress (module, name));
 	}
 
-	~Win32Module ()
+	~Win32Module () override
 	{
 		factory = PluginFactory (nullptr);
 
@@ -169,6 +170,7 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 //------------------------------------------------------------------------
 VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 {
+#if USE_OLE
 	Ole::instance ();
 
 	IShellLink* shellLink = nullptr;
@@ -184,7 +186,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	if (!SUCCEEDED (persistFile->Load (p.native ().data (), STGM_READ)))
 		return {};
 
-	if (!SUCCEEDED (shellLink->Resolve (0, MAKELONG (SLR_NO_UI, 500))))
+	if (!SUCCEEDED (shellLink->Resolve (nullptr, MAKELONG (SLR_NO_UI, 500))))
 		return {};
 
 	WCHAR resolvedPath[MAX_PATH];
@@ -203,6 +205,10 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	shellLink->Release ();
 
 	return {filesystem::path (longPath)};
+#else
+	// TODO for ARM
+	return {};
+#endif
 }
 
 //------------------------------------------------------------------------

@@ -45,6 +45,11 @@
 #define stringPluginName "AGain VST3"
 #define stringPluginSideChainName "AGain SideChain VST3"
 
+#if TARGET_OS_IPHONE
+#include "public.sdk/source/vst/vstguieditor.h"
+extern void* moduleHandle;
+#endif
+
 //------------------------------------------------------------------------
 //  Module init/exit
 //------------------------------------------------------------------------
@@ -53,6 +58,9 @@
 // called after library was loaded
 bool InitModule ()
 {
+#if TARGET_OS_IPHONE
+	Steinberg::Vst::VSTGUIEditor::setBundleRef (moduleHandle);
+#endif
 	return true;
 }
 

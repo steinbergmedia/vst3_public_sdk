@@ -333,6 +333,22 @@ public:
 };
 
 
+//------------------------------------------------------------------------
+/** Test MIDI Learn.
+\ingroup TestClass */
+//------------------------------------------------------------------------
+class VstMidiLearnTest : public VstTestBase
+{
+public:
+	//------------------------------------------------------------------------
+	VstMidiLearnTest (IPlugProvider* plugProvider);
+
+	DECLARE_VSTTEST ("MIDI Learn")
+
+	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
+	//------------------------------------------------------------------------
+};
+
 
 //------------------------------------------------------------------------
 /** Test Note Expression.

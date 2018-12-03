@@ -50,10 +50,15 @@ class AGainUIMessageController;
 //------------------------------------------------------------------------
 // AGainController
 //------------------------------------------------------------------------
-class AGainController : public EditControllerEx1, public IMidiMapping, public VST3EditorDelegate
+class AGainController : public EditControllerEx1, public IMidiMapping, public VSTGUI::VST3EditorDelegate
 {
 public:
-	typedef AGainUIMessageController<AGainController> UIMessageController;
+	using UIMessageController = AGainUIMessageController<AGainController>;
+	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
+	using IUIDescription = VSTGUI::IUIDescription;
+	using IController = VSTGUI::IController;
+	using VST3Editor = VSTGUI::VST3Editor;
+	
 	//--- ---------------------------------------------------------------------
 	// create function required for Plug-in factory,
 	// it will be called to create new instances of this controller
@@ -102,7 +107,7 @@ public:
 //------------------------------------------------------------------------
 
 private:
-	typedef std::vector<UIMessageController*> UIMessageControllerList;
+	using UIMessageControllerList = std::vector<UIMessageController*>;
 	UIMessageControllerList uiMessageControllers;
 
 	String128 defaultMessageText;

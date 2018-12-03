@@ -63,6 +63,7 @@ struct LogEvent
 #define PROCESS_DATA "ProcessData"
 #define PROCESS_CONTEXT "ProcessContext"
 #define FEATURE_SUPPORT "FeatureSupport"
+#define HOST_FEATURE_SUPPORT "HostFeatureSupport"
 #define FEATURE_PROCESSOR_SUPPORT "FeatureProcessSupport"
 
 #define PROCESS true
@@ -112,6 +113,13 @@ struct LogEvent
 	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null, although index is valid."),\
 	LOG_DEF(kLogIdParametersAreNotSortedBySampleOffset, PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter changes (for a ID) are not sorted by sample offset."),\
 	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than one time the same sample offset."),\
+	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
+	LOG_DEF(kLogIdIComponentHandler2Supported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
+	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
+	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
+	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
+	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
+	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
 	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
 	LOG_DEF(kLogIdCanProcessSampleSize32,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample32 supported!"), \
@@ -122,20 +130,16 @@ struct LogEvent
 	LOG_DEF(kLogIdSetBusArrangements,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::setBusArrangements supported!"), \
 	LOG_DEF(kLogIdGetRoutingInfo,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::getRoutingInfo supported!"), \
 	LOG_DEF(kLogIdActivateAuxBus,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::activateBus for SideChain supported!"), \
-	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
 	LOG_DEF(kLogIdIEditController2Supported,        CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
-	LOG_DEF(kLogIdIComponentHandler2Supported,      CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
-	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
-	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
-	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
 	LOG_DEF(kLogIdIMidiMappingSupported,            CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
 	LOG_DEF(kLogIdUnitSupported,                    CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
 	LOG_DEF(kLogIdGetUnitByBusSupported,            CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
 	LOG_DEF(kLogIdChannelContextSupported,          CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
 	LOG_DEF(kLogIdINoteExpressionControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
 	LOG_DEF(kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
+	LOG_DEF(kLogIdIMidiLearnSupported,              CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
+	LOG_DEF(kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
 	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
-	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPlugViewonSizeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize supported!"), \
 	LOG_DEF(kLogIdIPlugViewcanResizeSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::canResize supported!"), \
 	LOG_DEF(kLogIdIPlugViewcheckSizeConstraintSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::checkSizeConstraint supported!"), \

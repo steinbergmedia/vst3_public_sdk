@@ -1,4 +1,8 @@
 
+cmake_minimum_required (VERSION 3.4.3)
+
+project(PublicSDK)
+
 set(sdk_sources
     source/common/pluginview.cpp
     source/common/pluginview.h
@@ -17,6 +21,7 @@ set(sdk_sources
     source/vst/vstcomponentbase.h
     source/vst/vsteditcontroller.cpp
     source/vst/vsteditcontroller.h
+    source/vst/vsteventshelper.h
     source/vst/vstinitiids.cpp
     source/vst/vstnoteexpressiontypes.cpp
     source/vst/vstnoteexpressiontypes.h
@@ -29,69 +34,80 @@ set(sdk_sources
 )
 
 set(pluginterfaces_sources
-    ${SDK_ROOT}/pluginterfaces/base/conststringtable.cpp
-    ${SDK_ROOT}/pluginterfaces/base/conststringtable.h
-    ${SDK_ROOT}/pluginterfaces/base/coreiids.cpp
-    ${SDK_ROOT}/pluginterfaces/base/falignpop.h
-    ${SDK_ROOT}/pluginterfaces/base/falignpush.h
-    ${SDK_ROOT}/pluginterfaces/base/fplatform.h
-    ${SDK_ROOT}/pluginterfaces/base/fstrdefs.h
-    ${SDK_ROOT}/pluginterfaces/base/ftypes.h
-    ${SDK_ROOT}/pluginterfaces/base/funknown.cpp
-    ${SDK_ROOT}/pluginterfaces/base/funknown.h
-    ${SDK_ROOT}/pluginterfaces/base/futils.h
-    ${SDK_ROOT}/pluginterfaces/base/fvariant.h
-    ${SDK_ROOT}/pluginterfaces/base/geoconstants.h
-    ${SDK_ROOT}/pluginterfaces/base/ibstream.h
-    ${SDK_ROOT}/pluginterfaces/base/icloneable.h
-    ${SDK_ROOT}/pluginterfaces/base/ierrorcontext.h
-    ${SDK_ROOT}/pluginterfaces/base/ipersistent.h
-    ${SDK_ROOT}/pluginterfaces/base/ipluginbase.h
-    ${SDK_ROOT}/pluginterfaces/base/istringresult.h
-    ${SDK_ROOT}/pluginterfaces/base/iupdatehandler.h
-    ${SDK_ROOT}/pluginterfaces/base/keycodes.h
-    ${SDK_ROOT}/pluginterfaces/base/pluginbasefwd.h
-    ${SDK_ROOT}/pluginterfaces/base/smartpointer.h
-    ${SDK_ROOT}/pluginterfaces/base/ucolorspec.h
-    ${SDK_ROOT}/pluginterfaces/base/ustring.cpp
-    ${SDK_ROOT}/pluginterfaces/base/ustring.h
+    ${pluginterfaces_SOURCE_DIR}/base/conststringtable.cpp
+    ${pluginterfaces_SOURCE_DIR}/base/conststringtable.h
+    ${pluginterfaces_SOURCE_DIR}/base/coreiids.cpp
+    ${pluginterfaces_SOURCE_DIR}/base/falignpop.h
+    ${pluginterfaces_SOURCE_DIR}/base/falignpush.h
+    ${pluginterfaces_SOURCE_DIR}/base/fplatform.h
+    ${pluginterfaces_SOURCE_DIR}/base/fstrdefs.h
+    ${pluginterfaces_SOURCE_DIR}/base/ftypes.h
+    ${pluginterfaces_SOURCE_DIR}/base/funknown.cpp
+    ${pluginterfaces_SOURCE_DIR}/base/funknown.h
+    ${pluginterfaces_SOURCE_DIR}/base/futils.h
+    ${pluginterfaces_SOURCE_DIR}/base/fvariant.h
+    ${pluginterfaces_SOURCE_DIR}/base/geoconstants.h
+    ${pluginterfaces_SOURCE_DIR}/base/ibstream.h
+    ${pluginterfaces_SOURCE_DIR}/base/icloneable.h
+    ${pluginterfaces_SOURCE_DIR}/base/ierrorcontext.h
+    ${pluginterfaces_SOURCE_DIR}/base/ipersistent.h
+    ${pluginterfaces_SOURCE_DIR}/base/ipluginbase.h
+    ${pluginterfaces_SOURCE_DIR}/base/istringresult.h
+    ${pluginterfaces_SOURCE_DIR}/base/iupdatehandler.h
+    ${pluginterfaces_SOURCE_DIR}/base/keycodes.h
+    ${pluginterfaces_SOURCE_DIR}/base/pluginbasefwd.h
+    ${pluginterfaces_SOURCE_DIR}/base/smartpointer.h
+	${pluginterfaces_SOURCE_DIR}/base/typesizecheck.h
+    ${pluginterfaces_SOURCE_DIR}/base/ucolorspec.h
+    ${pluginterfaces_SOURCE_DIR}/base/ustring.cpp
+    ${pluginterfaces_SOURCE_DIR}/base/ustring.h
 )
 
 set(vst_includes
-    ${SDK_ROOT}/pluginterfaces/gui/iplugview.h
-    ${SDK_ROOT}/pluginterfaces/gui/iplugviewcontentscalesupport.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstattributes.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstaudioprocessor.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstautomationstate.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstchannelcontextinfo.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstcomponent.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstcontextmenu.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivsteditcontroller.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstevents.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivsthostapplication.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstinterappaudio.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstmessage.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstmidicontrollers.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstnoteexpression.h	
-    ${SDK_ROOT}/pluginterfaces/vst/ivstparameterchanges.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstphysicalui.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstplugview.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstprefetchablesupport.h
-    ${SDK_ROOT}/pluginterfaces/vst/ivstprocesscontext.h	
-    ${SDK_ROOT}/pluginterfaces/vst/ivstrepresentation.h	
-    ${SDK_ROOT}/pluginterfaces/vst/ivstunits.h
-    ${SDK_ROOT}/pluginterfaces/vst/vstpresetkeys.h
-    ${SDK_ROOT}/pluginterfaces/vst/vstpshpack4.h
-    ${SDK_ROOT}/pluginterfaces/vst/vsttypes.h
+    ${pluginterfaces_SOURCE_DIR}/gui/iplugview.h
+    ${pluginterfaces_SOURCE_DIR}/gui/iplugviewcontentscalesupport.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstattributes.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstaudioprocessor.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstautomationstate.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstchannelcontextinfo.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstcomponent.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstcontextmenu.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivsteditcontroller.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstevents.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivsthostapplication.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstinterappaudio.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstmessage.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstmidicontrollers.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstmidilearn.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstnoteexpression.h	
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstparameterchanges.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstphysicalui.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstplugview.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstprefetchablesupport.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstprocesscontext.h	
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstpluginterfacesupport.h
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstrepresentation.h	
+    ${pluginterfaces_SOURCE_DIR}/vst/ivstunits.h
+    ${pluginterfaces_SOURCE_DIR}/vst/vstpresetkeys.h
+    ${pluginterfaces_SOURCE_DIR}/vst/vstpshpack4.h
+    ${pluginterfaces_SOURCE_DIR}/vst/vsttypes.h
 )
 
-add_library(sdk STATIC ${sdk_sources} ${pluginterfaces_sources} ${vst_includes})
+add_library(sdk STATIC 
+    ${sdk_sources}
+    ${pluginterfaces_sources}
+    ${vst_includes}
+)
 target_link_libraries(sdk PRIVATE base)
 smtg_setup_universal_binary(sdk)
 
 # iOS target
-if(MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
-    add_library(sdk_ios STATIC ${sdk_sources} ${pluginterfaces_sources} ${vst_includes})
+if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+    add_library(sdk_ios STATIC 
+        ${sdk_sources}
+        ${pluginterfaces_sources}
+        ${vst_includes}
+    )
     smtg_set_platform_ios(sdk_ios)
     set_target_properties(sdk_ios PROPERTIES ${SDK_IDE_LIBS_FOLDER})
     target_link_libraries(sdk_ios PRIVATE base_ios)

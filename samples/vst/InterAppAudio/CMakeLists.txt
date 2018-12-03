@@ -1,8 +1,8 @@
 
 # iOS target
-if(MAC)
+if(SMTG_MAC)
     if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
-        set(target noteexpressionsynth_ios)
+        set(target noteexpressionsynth_iaa_ios)
         set(${target}_xib_resources
             ${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/InterAppAudio/Images.xcassets
             ${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/InterAppAudio/LaunchScreen.storyboard
@@ -32,6 +32,7 @@ if(MAC)
             ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
+            ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
             ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
             ${VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.cpp

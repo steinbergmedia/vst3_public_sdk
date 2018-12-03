@@ -37,7 +37,6 @@
 
 #include "public.sdk/samples/vst-hosting/editorhost/source/editorhost.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/appinit.h"
-#include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "base/source/fcommandline.h"
 #include "pluginterfaces/base/funknown.h"
 #include "pluginterfaces/gui/iplugview.h"
@@ -50,7 +49,7 @@
 
 //------------------------------------------------------------------------
 namespace Steinberg {
-FUnknown* gStandardPluginContext = new Vst::HostApplication ();
+FUnknown* gStandardPluginContext = nullptr;
 
 //------------------------------------------------------------------------
 inline bool operator== (const ViewRect& r1, const ViewRect& r2)
@@ -133,6 +132,9 @@ static ComponentHandler gComponentHandler;
 //------------------------------------------------------------------------
 App::~App () noexcept
 {
+	plugProvider.reset ();
+	module.reset ();
+	gStandardPluginContext = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -258,6 +260,8 @@ options:
 				IPlatform::instance ().kill (-1, "wrong argument to --uid");
 		}
 	}
+
+	gStandardPluginContext = &pluginContext;
 
 	openEditor (cmdArgs.back (), std::move (uid), flags);
 }

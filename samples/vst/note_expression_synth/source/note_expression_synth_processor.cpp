@@ -35,8 +35,8 @@
 //-----------------------------------------------------------------------------
 
 #include "note_expression_synth_processor.h"
-#include "note_expression_synth_controller.h"
 #include "../../common/voiceprocessor.h"
+#include "note_expression_synth_controller.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include <algorithm>
@@ -49,8 +49,7 @@ namespace NoteExpressionSynth {
 FUID Processor::cid (0x6EE65CD1, 0xB83A4AF4, 0x80AA7929, 0xAEA6B8A0);
 
 //-----------------------------------------------------------------------------
-Processor::Processor ()
-: voiceProcessor (nullptr)
+Processor::Processor () : voiceProcessor (nullptr)
 {
 	setControllerClass (Controller::cid);
 
@@ -98,8 +97,8 @@ tresult PLUGIN_API Processor::getState (IBStream* state)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API Processor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns, 
-															SpeakerArrangement* outputs, int32 numOuts)
+tresult PLUGIN_API Processor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
+                                                  SpeakerArrangement* outputs, int32 numOuts)
 {
 	// we only support one stereo output bus
 	if (numIns == 0 && numOuts == 1 && outputs[0] == SpeakerArr::kStereo)
@@ -125,16 +124,23 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 	if (state)
 	{
 		if (paramState.noiseBuffer == nullptr)
-			paramState.noiseBuffer = new BrownNoise<float> ((int32)processSetup.sampleRate, (float)processSetup.sampleRate);
+			paramState.noiseBuffer = new BrownNoise<float> ((int32)processSetup.sampleRate,
+			                                                (float)processSetup.sampleRate);
 		if (voiceProcessor == nullptr)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
 			{
-				voiceProcessor = new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES, GlobalParameterState> ((float)processSetup.sampleRate, &paramState);
+				voiceProcessor =
+				    new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES,
+				                                     GlobalParameterState> (
+				        (float)processSetup.sampleRate, &paramState);
 			}
 			else if (processSetup.symbolicSampleSize == kSample64)
 			{
-				voiceProcessor = new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES, GlobalParameterState> ((float)processSetup.sampleRate, &paramState);
+				voiceProcessor =
+				    new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES,
+				                                     GlobalParameterState> (
+				        (float)processSetup.sampleRate, &paramState);
 			}
 			else
 			{
@@ -173,7 +179,8 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 				int32 sampleOffset;
 				ParamValue value;
 				ParamID pid = queue->getParameterId ();
-				if (queue->getPoint (queue->getPointCount () - 1, sampleOffset, value) == kResultTrue)
+				if (queue->getPoint (queue->getPointCount () - 1, sampleOffset, value) ==
+				    kResultTrue)
 				{
 					switch (pid)
 					{
@@ -228,7 +235,7 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 							paramState.sinusDetune = 2 * (value - 0.5);
 							break;
 						}
-						
+
 						case kParamTriangleSlop:
 						{
 							paramState.triangleSlop = value;
@@ -236,7 +243,8 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 						}
 						case kParamFilterType:
 						{
-							paramState.filterType = std::min<int8> ((int8)(NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
+							paramState.filterType = std::min<int8> (
+							    (int8) (NUM_FILTER_TYPE * value), NUM_FILTER_TYPE - 1);
 							break;
 						}
 						case kParamFilterFreq:
@@ -256,10 +264,10 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 						}
 						case kParamTuningRange:
 						{
-							paramState.tuningRange = std::min<int8> ((int8)(NUM_TUNING_RANGE * value), NUM_TUNING_RANGE - 1);
+							paramState.tuningRange = std::min<int8> (
+							    (int8) (NUM_TUNING_RANGE * value), NUM_TUNING_RANGE - 1);
 							break;
 						}
-						
 					}
 				}
 			}
@@ -277,10 +285,13 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 		if (data.outputParameterChanges)
 		{
 			int32 index;
-			IParamValueQueue* queue = data.outputParameterChanges->addParameterData (kParamActiveVoices, index);
+			IParamValueQueue* queue =
+			    data.outputParameterChanges->addParameterData (kParamActiveVoices, index);
 			if (queue)
 			{
-				queue->addPoint (0, (ParamValue)voiceProcessor->getActiveVoices () / (ParamValue)MAX_VOICES, index);
+				queue->addPoint (
+				    0, (ParamValue)voiceProcessor->getActiveVoices () / (ParamValue)MAX_VOICES,
+				    index);
 			}
 		}
 		if (voiceProcessor->getActiveVoices () == 0 && data.numOutputs > 0)
@@ -290,5 +301,6 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 	}
 	return result;
 }
-
-}}} // namespaces
+} // NoteExpressionSynth
+} // Vst
+} // Steinberg

@@ -251,6 +251,8 @@ protected:
 //------------------------------------------------------------------------
 BaseWrapper::BaseWrapper (SVST3Config& config)
 {
+	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
+
 	mProcessor = owned (config.processor);
 	mController = owned (config.controller);
 	mFactory = config.factory;	// share it
@@ -259,7 +261,7 @@ BaseWrapper::BaseWrapper (SVST3Config& config)
 	memset (mName, 0, sizeof (mName));
 	memset (mVendor, 0, sizeof (mVendor));
 	memset (mSubCategories, 0, sizeof (mSubCategories));
-	
+
 	memset (&mProcessContext, 0, sizeof (ProcessContext));
 	mProcessContext.sampleRate = 44100;
 	mProcessContext.tempo = 120;
@@ -328,6 +330,7 @@ BaseWrapper::~BaseWrapper ()
 	mProcessor = nullptr;
 	mComponent = nullptr;
 	mFactory = nullptr;
+	mPlugInterfaceSupport = nullptr;
 
 	DeinitModule ();
 }
@@ -1304,6 +1307,9 @@ tresult PLUGIN_API BaseWrapper::queryInterface (const char* iid, void** obj)
 	QUERY_INTERFACE (iid, obj, Vst::IHostApplication::iid, Vst::IHostApplication)
 	QUERY_INTERFACE (iid, obj, Vst::IComponentHandler::iid, Vst::IComponentHandler)
 	QUERY_INTERFACE (iid, obj, Vst::IUnitHandler::iid, Vst::IUnitHandler)
+
+	if (mPlugInterfaceSupport && mPlugInterfaceSupport->queryInterface (iid, obj) == kResultTrue)
+		return ::Steinberg::kResultOk;
 
 	*obj = nullptr;
 	return kNoInterface;

@@ -199,6 +199,8 @@ Validator::Validator (int argc, char* argv[])
 {
 	testSuite = new TestSuite ("Tests");
 
+	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
+
 	gStandardPluginContext = this->unknownCast ();
 	setStandardPluginContext (gStandardPluginContext);
 }
@@ -209,6 +211,18 @@ Validator::~Validator ()
 	testSuite = nullptr;
 	testModule = nullptr;
 	module = nullptr;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API Validator::queryInterface (const char* _iid, void** obj)
+{
+	QUERY_INTERFACE (_iid, obj, IHostApplication::iid, IHostApplication)
+	QUERY_INTERFACE (_iid, obj, ITestResult::iid, ITestResult)
+
+	if (mPlugInterfaceSupport && mPlugInterfaceSupport->queryInterface (_iid, obj) == kResultTrue)
+		return ::Steinberg::kResultOk; 
+
+	return FObject::queryInterface (_iid, obj);
 }
 
 //------------------------------------------------------------------------
@@ -580,6 +594,7 @@ void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plu
 	createTest<VstScanBussesTest> (generalTests, plugProvider);
 	createTest<VstScanParametersTest> (generalTests, plugProvider);
 	createTest<VstMidiMappingTest> (generalTests, plugProvider);
+	createTest<VstMidiLearnTest> (generalTests, plugProvider);
 	createTest<VstUnitInfoTest> (generalTests, plugProvider);
 	createTest<VstProgramInfoTest> (generalTests, plugProvider);
 	createTest<VstTerminateInitializeTest> (generalTests, plugProvider);

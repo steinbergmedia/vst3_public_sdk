@@ -104,9 +104,7 @@ static bool CopyProcessPath (Steinberg::String& name)
 
 namespace Steinberg {
 
-//------------------------------------------------------------------------
 DEF_CLASS_IID (IPluginBase)
-DEF_CLASS_IID (IPlugView)
 DEF_CLASS_IID (IPluginFactory2)
 
 //------------------------------------------------------------------------
@@ -198,24 +196,6 @@ protected:
 VST3DynLibrary* VST3DynLibrary::gInstance = 0;
 
 namespace Vst {
-
-//------------------------------------------------------------------------
-DEF_CLASS_IID (IAttributeList)
-DEF_CLASS_IID (IAudioProcessor)
-DEF_CLASS_IID (IComponent)
-DEF_CLASS_IID (IComponentHandler)
-DEF_CLASS_IID (IConnectionPoint)
-DEF_CLASS_IID (IEditController)
-DEF_CLASS_IID (IEventList)
-DEF_CLASS_IID (IHostApplication)
-DEF_CLASS_IID (IMessage)
-DEF_CLASS_IID (IMidiMapping)
-DEF_CLASS_IID (IParamValueQueue)
-DEF_CLASS_IID (IParameterChanges)
-DEF_CLASS_IID (IStreamAttributes) // VST 3.6
-DEF_CLASS_IID (IUnitInfo)
-DEF_CLASS_IID (IVst3ToAUWrapper)
-DEF_CLASS_IID (IVst3ToVst2Wrapper)
 
 //--------------------------------------------------------------------------------------------
 class SpeakerArrangementBase

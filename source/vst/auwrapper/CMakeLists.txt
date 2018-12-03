@@ -1,4 +1,4 @@
-if(MAC)
+if(SMTG_MAC)
     if (XCODE AND SMTG_COREAUDIO_SDK_PATH)
         set(target auwrapper)
         set(${target}_sources
@@ -20,8 +20,11 @@ if(MAC)
             ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.h
             ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.h
+            ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
+            ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h
             ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
             ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
+            ${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
         )
         add_library(${target} STATIC ${${target}_sources})
         smtg_setup_universal_binary(${target})

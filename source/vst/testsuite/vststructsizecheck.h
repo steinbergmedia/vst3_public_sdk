@@ -33,39 +33,40 @@ namespace Steinberg {
 namespace Vst {
 
 // ivstaudioprocessor.h
-SMTG_TYPE_SIZE_CHECK (ProcessSetup, 24, 20, 24)
-SMTG_TYPE_SIZE_CHECK (AudioBusBuffers, 24, 16, 24)
-SMTG_TYPE_SIZE_CHECK (ProcessData, 80, 48, 48)
+SMTG_TYPE_SIZE_CHECK (ProcessSetup, 24, 20, 24, 24)
+SMTG_TYPE_SIZE_CHECK (AudioBusBuffers, 24, 16, 24, 24)
+SMTG_TYPE_SIZE_CHECK (ProcessData, 80, 48, 48, 48)
 // ivstcomponent.h
-SMTG_TYPE_SIZE_CHECK (BusInfo, 276, 276, 276)
-SMTG_TYPE_SIZE_CHECK (RoutingInfo, 12, 12, 12)
+SMTG_TYPE_SIZE_CHECK (BusInfo, 276, 276, 276, 276)
+SMTG_TYPE_SIZE_CHECK (RoutingInfo, 12, 12, 12, 12)
 // ivstcontextmenu.h
-SMTG_TYPE_SIZE_CHECK (IContextMenuItem, 264, 264, 264)
+SMTG_TYPE_SIZE_CHECK (IContextMenuItem, 264, 264, 264, 264)
 // ivsteditcontroller.h
-SMTG_TYPE_SIZE_CHECK (ParameterInfo, 792, 792, 792)
+SMTG_TYPE_SIZE_CHECK (ParameterInfo, 792, 792, 792, 792)
 // ivstevents.h
-SMTG_TYPE_SIZE_CHECK (NoteOnEvent, 20, 20, 20)
-SMTG_TYPE_SIZE_CHECK (NoteOffEvent, 16, 16, 16)
-SMTG_TYPE_SIZE_CHECK (DataEvent, 16, 12, 12)
-SMTG_TYPE_SIZE_CHECK (PolyPressureEvent, 12, 12, 12)
-SMTG_TYPE_SIZE_CHECK (ScaleEvent, 16, 10, 12)
-SMTG_TYPE_SIZE_CHECK (ChordEvent, 16, 12, 12)
-SMTG_TYPE_SIZE_CHECK (Event, 48, 40, 40)
+SMTG_TYPE_SIZE_CHECK (NoteOnEvent, 20, 20, 20, 20)
+SMTG_TYPE_SIZE_CHECK (NoteOffEvent, 16, 16, 16, 16)
+SMTG_TYPE_SIZE_CHECK (DataEvent, 16, 12, 12, 12)
+SMTG_TYPE_SIZE_CHECK (PolyPressureEvent, 12, 12, 12, 12)
+SMTG_TYPE_SIZE_CHECK (ChordEvent, 16, 12, 12, 12)
+SMTG_TYPE_SIZE_CHECK (ScaleEvent, 16, 10, 12, 12)
+SMTG_TYPE_SIZE_CHECK (LegacyMIDICCOutEvent, 4, 4, 4, 4)
+SMTG_TYPE_SIZE_CHECK (Event, 48, 40, 40, 48)
 // ivstnoteexpression.h
-SMTG_TYPE_SIZE_CHECK (NoteExpressionValueDescription, 32, 28, 32)
-SMTG_TYPE_SIZE_CHECK (NoteExpressionValueEvent, 16, 16, 16)
-SMTG_TYPE_SIZE_CHECK (NoteExpressionTextEvent, 24, 16, 16)
-SMTG_TYPE_SIZE_CHECK (NoteExpressionTypeInfo, 816, 812, 816)
-SMTG_TYPE_SIZE_CHECK (KeyswitchInfo, 536, 536, 536)
+SMTG_TYPE_SIZE_CHECK (NoteExpressionValueDescription, 32, 28, 32, 32)
+SMTG_TYPE_SIZE_CHECK (NoteExpressionValueEvent, 16, 16, 16, 16)
+SMTG_TYPE_SIZE_CHECK (NoteExpressionTextEvent, 24, 16, 16, 16)
+SMTG_TYPE_SIZE_CHECK (NoteExpressionTypeInfo, 816, 812, 816, 816)
+SMTG_TYPE_SIZE_CHECK (KeyswitchInfo, 536, 536, 536, 536)
 // ivstprocesscontext.h
-SMTG_TYPE_SIZE_CHECK (FrameRate, 8, 8, 8)
-SMTG_TYPE_SIZE_CHECK (Chord, 4, 4, 4)
-SMTG_TYPE_SIZE_CHECK (ProcessContext, 112, 104, 112)
+SMTG_TYPE_SIZE_CHECK (FrameRate, 8, 8, 8, 8)
+SMTG_TYPE_SIZE_CHECK (Chord, 4, 4, 4, 4)
+SMTG_TYPE_SIZE_CHECK (ProcessContext, 112, 104, 112, 112)
 // ivstrepresentation.h
-SMTG_TYPE_SIZE_CHECK (RepresentationInfo, 256, 256, 256)
+SMTG_TYPE_SIZE_CHECK (RepresentationInfo, 256, 256, 256, 256)
 // ivstunits.h
-SMTG_TYPE_SIZE_CHECK (UnitInfo, 268, 268, 268)
-SMTG_TYPE_SIZE_CHECK (ProgramListInfo, 264, 264, 264)
+SMTG_TYPE_SIZE_CHECK (UnitInfo, 268, 268, 268, 268)
+SMTG_TYPE_SIZE_CHECK (ProgramListInfo, 264, 264, 264, 264)
 
 //------------------------------------------------------------------------
 inline void printStructSizes ()

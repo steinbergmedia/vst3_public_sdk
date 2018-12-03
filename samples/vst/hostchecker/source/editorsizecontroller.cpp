@@ -48,7 +48,7 @@ EditorSizeController::EditorSizeController (EditController* /*editController*/,
 {
 	const auto kMaxValue = static_cast<ParamValue> (kSizeFactors.size () - 1);
 	sizeParameter =
-	    new RangeParameter (STR ("EditorSize"), kSizeParamTag, 0, 0, kMaxValue, 1, kMaxValue);
+	    new RangeParameter (STR ("EditorSize"), kSizeParamTag, nullptr, 0, kMaxValue, 1, kMaxValue);
 	sizeParameter->setMin (0);
 	sizeParameter->setMax (kSizeFactors.size () - 1);
 
@@ -67,7 +67,7 @@ EditorSizeController::~EditorSizeController ()
 //------------------------------------------------------------------------
 void PLUGIN_API EditorSizeController::update (FUnknown* changedUnknown, int32 /*message*/)
 {
-	Parameter* param = FCast<Parameter> (changedUnknown);
+	auto* param = FCast<Parameter> (changedUnknown);
 	if (param && param->getInfo ().id == kSizeParamTag)
 	{
 		size_t index = static_cast<size_t> (param->toPlain (param->getNormalized ()));
@@ -81,7 +81,7 @@ VSTGUI::CView* EditorSizeController::verifyView (VSTGUI::CView* view,
                                                  const VSTGUI::UIAttributes& /*attributes*/,
                                                  const VSTGUI::IUIDescription* /*description*/)
 {
-	VSTGUI::CControl* control = dynamic_cast<VSTGUI::CControl*> (view);
+	auto* control = dynamic_cast<VSTGUI::CControl*> (view);
 	if (control)
 	{
 		sizeControl = control;
@@ -98,7 +98,7 @@ void EditorSizeController::valueChanged (VSTGUI::CControl* pControl)
 	if (!pControl)
 		return;
 
-	ParamValue normValue = static_cast<ParamValue> (pControl->getValue ());
+	auto normValue = static_cast<ParamValue> (pControl->getValue ());
 	sizeParameter->setNormalized (normValue);
 }
 

@@ -55,6 +55,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include "pluginterfaces/vst/ivstmidilearn.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -150,7 +151,7 @@ VstTestBase::~VstTestBase () {FUNKNOWN_DTOR}
 IMPLEMENT_FUNKNOWN_METHODS (VstTestBase, ITest, ITest::iid)
 
 //------------------------------------------------------------------------
-    bool VstTestBase::setup ()
+bool VstTestBase::setup ()
 {
 	if (plugProvider)
 	{
@@ -475,6 +476,13 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		auto paramTitle = VST3::StringConvert::convert (paramInfo.title);
 		auto paramUnits = VST3::StringConvert::convert (paramInfo.units);
 
+		addMessage (
+			testResult,
+			printf (
+				"   Param %03d (ID = %d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
+				i, paramId, paramTitle.data (), paramUnits.data (), paramType,
+				paramInfo.defaultNormalizedValue, paramInfo.unitId));
+
 		if (paramTitle.empty ())
 		{
 			addErrorMessage (testResult, printf ("Param %03d: has no title!!!", i));
@@ -482,7 +490,7 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 		}
 
 		if (paramInfo.defaultNormalizedValue != -1.f &&
-		    (paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))
+			(paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))
 		{
 			addErrorMessage (testResult,
 			                 printf ("Param %03d: defaultValue is not normalized!!!", i));
@@ -550,13 +558,6 @@ bool PLUGIN_API VstScanParametersTest::run (ITestResult* testResult)
 				return false;
 			}
 		}
-
-		addMessage (
-		    testResult,
-		    printf (
-		        "   Param %03d (ID = %d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
-		        i, paramId, paramTitle.data (), paramUnits.data (), paramType,
-		        paramInfo.defaultNormalizedValue, unitId));
 	}
 
 	if (foundBypass == false)
@@ -689,6 +690,44 @@ bool PLUGIN_API VstMidiMappingTest::run (ITestResult* testResult)
 			}
 		}
 	}
+
+	return true;
+}
+
+
+//------------------------------------------------------------------------
+// VstMidiLearnTest
+//------------------------------------------------------------------------
+VstMidiLearnTest::VstMidiLearnTest (IPlugProvider* plugProvider) : VstTestBase (plugProvider)
+{
+}
+
+//------------------------------------------------------------------------
+bool PLUGIN_API VstMidiLearnTest::run (ITestResult* testResult)
+{
+	if (!testResult || !vstPlug)
+		return false;
+
+	printTestHeader (testResult);
+
+	if (!controller)
+	{
+		addMessage (testResult, STR ("No Edit Controller supplied!"));
+		return true;
+	}
+
+	FUnknownPtr<IMidiLearn> midiLearn (controller);
+	if (!midiLearn)
+	{
+		addMessage (testResult, STR ("No MIDI Learn interface supplied!"));
+		return true;
+	}
+
+	if (midiLearn->onLiveMIDIControllerInput (0, 0, ControllerNumbers::kCtrlPan) != kResultTrue)
+		addMessage (testResult, STR ("onLiveMIDIControllerInput do not return kResultTrue!"));
+	if (midiLearn->onLiveMIDIControllerInput (0, 0, ControllerNumbers::kCtrlVibratoDelay) !=
+	    kResultTrue)
+		addMessage (testResult, STR ("onLiveMIDIControllerInput do not return kResultTrue!"));
 
 	return true;
 }

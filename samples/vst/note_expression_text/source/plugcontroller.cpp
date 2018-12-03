@@ -42,6 +42,7 @@
 #include "vstgui/lib/cstring.h"
 #include "base/source/fstreamer.h"
 
+using namespace VSTGUI;
 
 namespace Steinberg {
 namespace Vst {

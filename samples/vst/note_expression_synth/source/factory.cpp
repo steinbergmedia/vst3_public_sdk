@@ -40,6 +40,11 @@
 #include "note_expression_synth_ui.h"
 #include "version.h"	// for versioning
 
+#if TARGET_OS_IPHONE
+#include "public.sdk/source/vst/vstguieditor.h"
+extern void* moduleHandle;
+#endif
+
 #define stringPluginName "Note Expression Synth"
 
 
@@ -89,5 +94,12 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 
 END_FACTORY
 
-bool InitModule () { return true; }
+bool InitModule ()
+{
+#if TARGET_OS_IPHONE
+	Steinberg::Vst::VSTGUIEditor::setBundleRef (moduleHandle);
+#endif
+	return true;
+}
+
 bool DeinitModule () { return true; }

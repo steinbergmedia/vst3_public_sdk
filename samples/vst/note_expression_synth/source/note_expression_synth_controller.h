@@ -38,8 +38,12 @@
 
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "public.sdk/source/vst/vstnoteexpressiontypes.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
+#include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
+#include <array>
+#include <limits>
 
 #define MAX_VOICES				64
 #define MAX_RELEASE_TIME_SEC	5.0
@@ -138,7 +142,13 @@ public:
 
 protected:
 	NoteExpressionTypeContainer noteExpressionTypes;
+
+	static constexpr ParamID InvalidParamID = std::numeric_limits<ParamID>::max ();
+
+	std::array<ParamID, ControllerNumbers::kCountCtrlNumber> midiCCMapping;
 };
-}
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // NoteExpressionSynth
+} // Vst
+} // Steinberg

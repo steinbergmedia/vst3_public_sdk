@@ -40,15 +40,15 @@
 \page AUWrapper VST 3 - Audio Unit Wrapper
 *******************************************
 
-Helper Class wrapping a VST 3 Plug-in to a Audio Unit v2 Plug-in
+Helper Class wrapping a <b>VST 3 Plug-in</b> to a Audio Unit v2 Plug-in
 
 ***************************
 \section AUIntroduction Introduction
 ***************************
 The VST 3 SDK comes with an AudioUnit wrapper, which can wrap one VST 3 Audio Processor and Edit Controller as an AudioUnit effect/instrument.
 
-The wrapper is a small dynamic library which loads the VST 3 Plug-in.
-As AudioUnits store some important information in their resource fork, this library must be compiled for every VST 3 Plug-in.
+The wrapper is a small dynamic library which loads the <b>VST 3 Plug-in</b>.
+As AudioUnits store some important information in their resource fork, this library must be compiled for every <b>VST 3 Plug-in</b>.
 \n\n
 
 ***************************
@@ -60,7 +60,7 @@ As AudioUnits store some important information in their resource fork, this libr
 - edit the target settings of the project and change
 	- Product Name
 	- Library search path so that it points to the directory where libauwrapper.a exists
-	- architecture setting so that it only includes architectures the VST 3 Plug-in supports
+	- architecture setting so that it only includes architectures the <b>VST 3 Plug-in</b> supports
 
 - search in the project for AUWRAPPER_CHANGE and change the settings to your needs, especially in :
 	- edit audiounitconfig.h see comments there
@@ -69,6 +69,6 @@ As AudioUnits store some important information in their resource fork, this libr
 - build your project
 - done... that is all!
 
-For the release version, you must place a copy or an alias of your VST 3 Plug-in in the resource folder of the bundle named "plugin.vst3"
+For the release version, you must place a copy or an alias of your <b>VST 3 Plug-in</b> in the resource folder of the bundle named "plugin.vst3"
 
 */

@@ -82,6 +82,15 @@ AAX_Result AAXWrapper_GUI::GetViewSize (AAX_Point* oEffectViewSize) const
 }
 
 //------------------------------------------------------------------------
+AAX_Result AAXWrapper_GUI::SetControlHighlightInfo (AAX_CParamID iParameterID,
+                                                    AAX_CBoolean iIsHighlighted,
+                                                    AAX_EHighlightColor iColor)
+{
+	// TODO
+	return AAX_SUCCESS;
+}
+
+//------------------------------------------------------------------------
 void AAXWrapper_GUI::DeleteViewContainer ()
 {
 	AAXWrapper* wrapper =

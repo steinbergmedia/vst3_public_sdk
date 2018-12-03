@@ -46,6 +46,7 @@
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
+#include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
@@ -62,6 +63,7 @@ enum
 	kLatencyTag,
 	kBypassTag,
 	kCanResizeTag,
+	kScoreTag,
 
 	// for Units
 	kUnitId = 1234
@@ -75,10 +77,16 @@ class HostCheckerController : public EditControllerEx1,
                               public ChannelContext::IInfoListener,
                               public IXmlRepresentationController,
                               public IMidiMapping,
+                              public IMidiLearn,
                               public INoteExpressionController,
                               public INoteExpressionPhysicalUIMapping
 {
 public:
+	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
+	using IController = VSTGUI::IController;
+	using IUIDescription = VSTGUI::IUIDescription;
+	using VST3Editor = VSTGUI::VST3Editor;
+
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
@@ -121,6 +129,10 @@ public:
 	                                                CtrlNumber midiControllerNumber,
 	                                                ParamID& id /*out*/) SMTG_OVERRIDE;
 
+	//---IMidiLearn-----------------------------
+	tresult PLUGIN_API onLiveMIDIControllerInput (int32 busIndex, int16 channel,
+	                                           CtrlNumber midiCC) SMTG_OVERRIDE;
+
 	//---INoteExpressionController----------------------
 	int32 PLUGIN_API getNoteExpressionCount (int32 busIndex, int16 channel) SMTG_OVERRIDE;
 	tresult PLUGIN_API getNoteExpressionInfo (int32 busIndex, int16 channel,
@@ -146,12 +158,8 @@ public:
 	IController* createSubController (UTF8StringPtr name, const IUIDescription* description,
 	                                  VST3Editor* editor) override;
 
-	DEFINE_INTERFACES
-		DEF_INTERFACE (IMidiMapping)
-		DEF_INTERFACE (IXmlRepresentationController)
-		DEF_INTERFACE (ChannelContext::IInfoListener)
-		DEF_INTERFACE (INoteExpressionController)
-	END_DEFINE_INTERFACES (EditControllerEx1)
+	tresult PLUGIN_API queryInterface (const Steinberg::TUID iid, void** obj) override;
+
 	REFCOUNT_METHODS (EditControllerEx1)
 
 	static FUnknown* createInstance (void*)
@@ -173,8 +181,8 @@ public:
 protected:
 	void extractCurrentInfo (EditorView* editor);
 
-	SharedPointer<CDataBrowser> mDataBrowser;
-	SharedPointer<EventLogDataBrowserSource> mDataSource;
+	VSTGUI::SharedPointer<VSTGUI::CDataBrowser> mDataBrowser;
+	VSTGUI::SharedPointer<VSTGUI::EventLogDataBrowserSource> mDataSource;
 
 	bool mLatencyInEdit = false;
 	ParamValue mWantedLatency = 0.0;

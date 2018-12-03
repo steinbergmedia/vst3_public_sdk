@@ -424,6 +424,28 @@ void AAXWrapper::onTimer (Timer* timer)
 		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), false);
 		wantsSetChunk = false;
 		settingChunk = false;
+
+		if (mPresetChanged)
+		{
+			int32_t numParams;
+			if (aaxParams->GetNumberOfParameters (&numParams) == AAX_SUCCESS)
+			{
+				for (auto i = 0; i < numParams; i++)
+				{
+					AAX_CString id;
+					if (aaxParams->GetParameterIDFromIndex (i, &id) == AAX_SUCCESS)
+					{
+						double value;
+						if (aaxParams->GetParameterNormalizedValue (id.CString (), &value) ==
+						    AAX_SUCCESS)
+						{
+							aaxParams->SetParameterNormalizedValue (id.CString (), value);
+						}
+					}
+				}
+			}
+			mPresetChanged = false;
+		}
 	}
 
 	updateActiveOutputState ();

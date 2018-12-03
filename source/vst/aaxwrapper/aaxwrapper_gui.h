@@ -56,6 +56,10 @@ public:
 
 	AAX_Result GetViewSize (AAX_Point* oEffectViewSize) const SMTG_OVERRIDE;
 
+	AAX_Result SetControlHighlightInfo (AAX_CParamID /* iParameterID */,
+	                                    AAX_CBoolean /* iIsHighlighted */,
+	                                    AAX_EHighlightColor /* iColor */) SMTG_OVERRIDE;
+
 private:
 	void* mHWND;
 };

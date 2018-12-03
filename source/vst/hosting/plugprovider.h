@@ -36,9 +36,9 @@
 
 #pragma once
 
-#include "base/source/fobject.h"
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h" // for IPlugProvider
+#include "base/source/fobject.h"
 
 namespace Steinberg {
 namespace Vst {

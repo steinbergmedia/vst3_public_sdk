@@ -45,13 +45,16 @@
 #include "pluginterfaces/vst/ivsthostapplication.h"
 #include "pluginterfaces/vst/ivstinterappaudio.h"
 #include "pluginterfaces/vst/ivstmessage.h"
+#include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
+#include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 #include "pluginterfaces/vst/ivstplugview.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
 #include "pluginterfaces/vst/ivstunits.h"
 
+//------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
@@ -118,5 +121,12 @@ DEF_CLASS_IID (IVst3ToAAXWrapper)
 
 //----VST 3.6.11--------------------------------
 DEF_CLASS_IID (INoteExpressionPhysicalUIMapping)
-}
-}
+
+//----VST 3.6.12--------------------------------
+DEF_CLASS_IID (IMidiLearn)
+DEF_CLASS_IID (IPlugInterfaceSupport)
+DEF_CLASS_IID (IVst3WrapperMPESupport)
+
+//------------------------------------------------------------------------
+} // Vst
+} // Steinberg

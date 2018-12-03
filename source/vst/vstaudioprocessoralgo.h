@@ -47,7 +47,7 @@ namespace Steinberg {
 namespace Vst {
 
 //---helpers---------
-/** Return the current channelBuffers used (depending of symbolicSampleSize). */
+/** Returns the current channelBuffers used (depending of symbolicSampleSize). */
 inline void** getChannelBuffersPointer (const ProcessSetup& processSetup,
                                  const AudioBusBuffers& bufs)
 {
@@ -56,7 +56,7 @@ inline void** getChannelBuffersPointer (const ProcessSetup& processSetup,
 	return (void**)bufs.channelBuffers64;
 }
 
-/** Return the size in bytes of numSamples for one channel depending of symbolicSampleSize.*/
+/** Returns the size in bytes of numSamples for one channel depending of symbolicSampleSize.*/
 inline uint32 getSampleFramesSizeInBytes (const ProcessSetup& processSetup, int32 numSamples)
 {
 	if (processSetup.symbolicSampleSize == kSample32)

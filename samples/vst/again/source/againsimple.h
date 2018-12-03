@@ -55,11 +55,15 @@ class AGainUIMessageController;
 //------------------------------------------------------------------------
 // AGain as combined processor and controller
 //------------------------------------------------------------------------
-class AGainSimple : public SingleComponentEffect, public VST3EditorDelegate
+class AGainSimple : public SingleComponentEffect, public VSTGUI::VST3EditorDelegate
 {
 public:
 //------------------------------------------------------------------------
-	typedef AGainUIMessageController<AGainSimple> UIMessageController;
+	using UIMessageController = AGainUIMessageController<AGainSimple>;
+	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
+	using IUIDescription = VSTGUI::IUIDescription;
+	using IController = VSTGUI::IController;
+	using VST3Editor = VSTGUI::VST3Editor;
 
 	AGainSimple ();
 
@@ -108,8 +112,8 @@ public:
 		for (int32 i = 0; i < numChannels; i++)
 		{
 			int32 samples = sampleFrames;
-			SampleType* ptrIn = (SampleType*)in[i];
-			SampleType* ptrOut = (SampleType*)out[i];
+			auto* ptrIn = (SampleType*)in[i];
+			auto* ptrOut = (SampleType*)out[i];
 			SampleType tmp;
 			while (--samples >= 0)
 			{
@@ -139,7 +143,7 @@ private:
 	bool bHalfGain;
 	bool bBypass;
 
-	typedef std::vector<UIMessageController*> UIMessageControllerList;
+	using UIMessageControllerList = std::vector<UIMessageController*>;
 	UIMessageControllerList uiMessageControllers;
 
 	String128 defaultMessageText;

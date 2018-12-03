@@ -45,14 +45,8 @@ namespace VSTGUI {
 
 //-----------------------------------------------------------------------------
 NoteTouchController::NoteTouchController (int32_t pitch, Steinberg::Vst::IInterAppAudioHost* host)
-: host (host)
-, pad (nullptr)
-, pitch (pitch)
-, noteID (-1)
-, xNEType (-1)
-, yNEType (-1)
+: host (host), pad (nullptr), pitch (pitch), noteID (-1), xNEType (-1), yNEType (-1)
 {
-	
 }
 
 //-----------------------------------------------------------------------------
@@ -67,7 +61,6 @@ void NoteTouchController::startNote (float velocity)
 		noteID = e.noteOn.noteId;
 		pad->setBackColor (kGreyCColor);
 	}
-	
 }
 
 //-----------------------------------------------------------------------------
@@ -113,7 +106,6 @@ void NoteTouchController::controlBeginEdit (CControl* pControl)
 {
 	if (pControl == pad)
 	{
-		
 	}
 }
 
@@ -149,16 +141,16 @@ void NoteTouchController::valueChanged (CControl* pControl)
 }
 
 //-----------------------------------------------------------------------------
-CView* NoteTouchController::verifyView (CView* view, const UIAttributes& attributes, const IUIDescription* description)
+CView* NoteTouchController::verifyView (CView* view, const UIAttributes& attributes,
+                                        const IUIDescription* description)
 {
 	if (pad == nullptr)
 	{
-		pad = dynamic_cast<CXYPad*>(view);
+		pad = dynamic_cast<CXYPad*> (view);
 		pad->setListener (this);
 		pad->setStopTrackingOnMouseExit (true);
 		originalPadBackgroundColor = pad->getBackColor ();
 	}
 	return view;
 }
-
 }

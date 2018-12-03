@@ -1,6 +1,6 @@
 
 if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
-	include(AddAAXLibrary)
+    include(AddAAXLibrary)
     set(base_sources
         ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp
     )
@@ -37,9 +37,9 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "../again/resource/vu_on.png")
     smtg_add_vst3_resource(${target} "../again/resource/vu_off.png")
 
-    if(MAC)
+    if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../again/mac/Info.plist" PREPROCESS)
-    elseif(WIN)
+    elseif(SMTG_WIN)
         target_sources(${target} PRIVATE ../again/resource/again.rc)
         # remove warnings from VST2
         add_definitions(-D_CRT_SECURE_NO_WARNINGS)

@@ -49,6 +49,7 @@
 #include "public.sdk/source/common/memorystream.h"
 #include "public.sdk/source/vst/hosting/eventlist.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
+#include "public.sdk/source/vst/hosting/pluginterfacesupport.h"
 #include "public.sdk/source/vst/hosting/processdata.h"
 
 #include "base/source/fstring.h"
@@ -223,6 +224,8 @@ protected:
 	IPtr<IMidiMapping> mMidiMapping;
 
 	IPtr<BaseEditorWrapper> mEditor;
+	
+	IPtr<PlugInterfaceSupport> mPlugInterfaceSupport;
 
 	int32 mVst3SampleSize = kSample32;
 	int32 mVst3processMode = kRealtime;

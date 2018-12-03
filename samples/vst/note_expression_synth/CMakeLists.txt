@@ -35,9 +35,47 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "resource/knob big.png")
     smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
 
-    if(MAC)
+    if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
-    elseif(WIN)
+    elseif(SMTG_WIN)
         target_sources(${target} PRIVATE resource/note_expression_synth.rc)
     endif()
+
+    if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+        set(target noteexpressionsynth_ios)
+        smtg_add_ios_vst3plugin("iPhone Developer" ${target} "${noteexpressionsynth_sources}")
+
+        set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
+        target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
+        target_link_libraries(${target} PRIVATE
+            base_ios 
+            sdk_ios
+            "-framework UIKit"
+            "-framework CoreGraphics" 
+            "-framework QuartzCore" 
+            "-framework CoreText" 
+            "-framework Accelerate" 
+            "-framework ImageIO" 
+            "-framework MobileCoreServices" 
+        )
+
+        smtg_add_vst3_resource(${target} "resource/note_expression_synth.uidesc")
+        smtg_add_vst3_resource(${target} "resource/about.png")
+        smtg_add_vst3_resource(${target} "resource/background.png")
+        smtg_add_vst3_resource(${target} "resource/groupframe.png")
+        smtg_add_vst3_resource(${target} "resource/knob.png")
+        smtg_add_vst3_resource(${target} "resource/knob2.png")
+        smtg_add_vst3_resource(${target} "resource/knob big.png")
+        smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
+        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
+        target_sources(${target} PRIVATE 
+            "${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp"
+            "${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm"
+            "${VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp"
+            "${VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3groupcontroller.cpp"
+            "${VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3padcontroller.cpp"
+            "${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp"
+        )
+    endif()
+
 endif(SMTG_ADD_VSTGUI)

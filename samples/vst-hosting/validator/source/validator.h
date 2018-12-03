@@ -41,6 +41,7 @@
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/module.h"
+#include "public.sdk/source/vst/hosting/pluginterfacesupport.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -84,10 +85,8 @@ public:
 //------------------------------------------------------------------------
 	OBJ_METHODS (Validator, FObject)
 	REFCOUNT_METHODS (FObject)
-	DEFINE_INTERFACES
-		DEF_INTERFACE (ITestResult)
-		DEF_INTERFACE (IHostApplication)
-	END_DEFINE_INTERFACES (FObject)
+
+	tresult PLUGIN_API queryInterface (const char* _iid, void** obj) override;
 //------------------------------------------------------------------------
 protected:
 	// ITestResult
@@ -107,6 +106,8 @@ protected:
 	char** argv;
 	
 	using Module = VST3::Hosting::Module;
+
+	IPtr<PlugInterfaceSupport> mPlugInterfaceSupport;
 
 	Module::Ptr module;
 	Module::Ptr testModule;

@@ -63,6 +63,8 @@ void* soHandle = nullptr;
 } // VSTGUI
 #endif // SMTG_OS_MACOS
 
+using namespace VSTGUI;
+
 namespace Steinberg {
 namespace Vst {
 
@@ -345,16 +347,17 @@ static int openCount = 0;
 //------------------------------------------------------------------------
 void CreateVSTGUIBundleRef ()
 {
+#if TARGET_OS_IPHONE
+	(void)openCount;
+	if (gBundleRef == nullptr)
+		gBundleRef = CFBundleGetMainBundle ();
+#else
 	openCount++;
 	if (gBundleRef)
 	{
 		CFRetain (gBundleRef);
 		return;
 	}
-#if TARGET_OS_IPHONE
-	gBundleRef = CFBundleGetMainBundle ();
-	CFRetain (gBundleRef);
-#else
 	Dl_info info;
 	if (dladdr ((const void*)CreateVSTGUIBundleRef, &info))
 	{
@@ -387,14 +390,31 @@ void CreateVSTGUIBundleRef ()
 //------------------------------------------------------------------------
 void ReleaseVSTGUIBundleRef ()
 {
+#if !TARGET_OS_IPHONE
 	openCount--;
 	if (gBundleRef)
 		CFRelease (gBundleRef);
 	if (openCount == 0)
 		gBundleRef = nullptr;
+#endif
 }
 
 //------------------------------------------------------------------------
 } // namespace VSTGUI
+
+#if TARGET_OS_IPHONE
+//------------------------------------------------------------------------
+namespace Steinberg {
+namespace Vst {
+
+//------------------------------------------------------------------------
+void VSTGUIEditor::setBundleRef (void* bundle)
+{
+	VSTGUI::gBundleRef = bundle;
+}
+
+}
+}
+#endif
 
 #endif // SMTG_OS_MACOS

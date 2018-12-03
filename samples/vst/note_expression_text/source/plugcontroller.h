@@ -46,7 +46,9 @@ namespace Vst {
 //------------------------------------------------------------------------
 // PlugController
 //------------------------------------------------------------------------
-class PlugController: public EditControllerEx1, public VST3EditorDelegate, public INoteExpressionController
+class PlugController : public EditControllerEx1,
+                       public VSTGUI::VST3EditorDelegate,
+                       public INoteExpressionController
 {
 public:
 //------------------------------------------------------------------------
@@ -58,6 +60,14 @@ public:
 		return (IEditController*)new PlugController;
 	}
 
+	using CView = VSTGUI::CView;
+	using CTextEdit = VSTGUI::CTextEdit;
+	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
+	using UIAttributes = VSTGUI::UIAttributes;
+	using IUIDescription = VSTGUI::IUIDescription;
+	using VST3Editor = VSTGUI::VST3Editor;
+	using CTextLabel = VSTGUI::CTextLabel;
+
 	//---from IPluginBase--------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	
@@ -67,7 +77,8 @@ public:
 	IPlugView* PLUGIN_API createView (const char* name) SMTG_OVERRIDE;
 
 	//---from VST3EditorDelegate----
-	CView* createCustomView (UTF8StringPtr name, const UIAttributes& attributes, const IUIDescription* description, VST3Editor* editor) SMTG_OVERRIDE;
+	CView* createCustomView (UTF8StringPtr name, const UIAttributes& attributes,
+	                         const IUIDescription* description, VST3Editor* editor) SMTG_OVERRIDE;
 	void willClose (VST3Editor* editor) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;

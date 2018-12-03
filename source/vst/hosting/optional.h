@@ -36,8 +36,8 @@
 
 #pragma once
 
-#include <memory>
 #include <cassert>
+#include <memory>
 #include <utility>
 
 //------------------------------------------------------------------------

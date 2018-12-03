@@ -311,7 +311,6 @@ Vst2Wrapper::~Vst2Wrapper ()
 	if (mEditor)
 	{
 		setEditor (nullptr);
-		mEditor->release ();
 		mEditor = nullptr;
 	}
 

@@ -20,9 +20,9 @@ if(SMTG_ADD_VSTGUI)
 
     smtg_add_vst3_resource(${target} "resource/plug.uidesc")
 
-    if(MAC)
+    if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
-    elseif(WIN)
+    elseif(SMTG_WIN)
         target_sources(${target} PRIVATE resource/plug.rc)
     endif()
 endif(SMTG_ADD_VSTGUI)

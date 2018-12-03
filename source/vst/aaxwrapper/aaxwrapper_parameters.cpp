@@ -751,17 +751,20 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 {
 	switch (iNotificationType)
 	{
+		//--- Tell the plug-in about connection of the sidechain input
 		case AAX_eNotificationEvent_SideChainBeingConnected:
 			mWrapper->setSideChainEnable (true);
 			break;
+		//--- Tell the plug-in about disconnection of the sidechain
 		case AAX_eNotificationEvent_SideChainBeingDisconnected:
 			mWrapper->setSideChainEnable (false);
 			break;
+		//--- The host has changed its latency compensation for this plug-in instance.
 		case AAX_eNotificationEvent_SignalLatencyChanged:
 		{
 			int32_t outSample;
 			Controller ()->GetSignalLatency (&outSample);
-			
+
 			if (mPluginDesc)
 				mPluginDesc->mLatency = outSample;
 
@@ -772,8 +775,14 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 			}
 			break;
 		}
+		//--- Tell the plug-in that chunk data is coming from a TFX
+		case AAX_eNotificationEvent_PresetOpened:
+		{
+			mWrapper->mPresetChanged = true;
+			break;
+		}
 	}
 
-	return AAX_CEffectParameters::NotificationReceived (
-	    iNotificationType, iNotificationData, iNotificationDataSize);
+	return AAX_CEffectParameters::NotificationReceived (iNotificationType, iNotificationData,
+	                                                    iNotificationDataSize);
 }

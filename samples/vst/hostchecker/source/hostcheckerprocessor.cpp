@@ -37,11 +37,12 @@
 #include "hostcheckerprocessor.h"
 #include "hostcheckercontroller.h"
 
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "base/source/fstreamer.h"
+#include "pluginterfaces/base/ibstream.h"
+#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
+#include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -81,6 +82,18 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 
 		mHostCheck.setComponent (this);
 	}
+
+	FUnknownPtr<IPlugInterfaceSupport> plugInterfaceSupport (context);
+	if (plugInterfaceSupport)
+	{
+		addLogEvent (kLogIdIPlugInterfaceSupportSupported);
+		
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IAudioPresentationLatency::iid) == kResultTrue)
+			addLogEvent (kLogIdAudioPresentationLatencySamplesSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IPrefetchableSupport::iid) == kResultTrue)
+			addLogEvent (kLogIdIPrefetchableSupportSupported);
+	}
+
 	return result;
 }
 

@@ -36,10 +36,11 @@
 
 #include "public.sdk/source/vst/basewrapper/basewrapper.cpp"
 
-#include "public.sdk/source/vst/hosting/processdata.cpp"
 #include "public.sdk/source/vst/hosting/eventlist.cpp"
 #include "public.sdk/source/vst/hosting/hostclasses.cpp"
 #include "public.sdk/source/vst/hosting/parameterchanges.cpp"
+#include "public.sdk/source/vst/hosting/pluginterfacesupport.cpp"
+#include "public.sdk/source/vst/hosting/processdata.cpp"
 
 #include "public.sdk/source/common/memorystream.cpp"
 

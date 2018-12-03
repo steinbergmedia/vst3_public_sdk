@@ -1,5 +1,5 @@
 
-if(MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     set(target interappaudio)
     
     set(${target}_sources

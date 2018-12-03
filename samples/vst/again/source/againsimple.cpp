@@ -57,6 +57,8 @@
 // this allows to enable the communication example between again and its controller
 #define AGAIN_TEST 1
 
+using namespace VSTGUI;
+
 namespace Steinberg {
 namespace Vst {
 

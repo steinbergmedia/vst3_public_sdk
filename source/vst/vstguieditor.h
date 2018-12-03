@@ -53,7 +53,7 @@ namespace Vst {
 /** Base class for an edit view using VSTGUI.
 \ingroup vstClasses  */
 //------------------------------------------------------------------------
-class VSTGUIEditor : public EditorView, public VSTGUIEditorInterface, public CBaseObject
+class VSTGUIEditor : public EditorView, public VSTGUI::VSTGUIEditorInterface, public VSTGUI::CBaseObject
 {
 public:
 	/** Constructor. */
@@ -66,7 +66,7 @@ public:
 /** Called when the editor will be opened. */
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
 	virtual bool PLUGIN_API open (void* parent,
-	                              const PlatformType& platformType = kDefaultNative) = 0;
+	                              const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative) = 0;
 #else
 	virtual bool PLUGIN_API open (void* parent) = 0;
 #endif
@@ -77,7 +77,7 @@ public:
 	void setIdleRate (int32 millisec);
 
 	//---from CBaseObject---------------
-	CMessageResult notify (CBaseObject* sender, const char* message) SMTG_OVERRIDE;
+	VSTGUI::CMessageResult notify (VSTGUI::CBaseObject* sender, const char* message) SMTG_OVERRIDE;
 	void forget () SMTG_OVERRIDE { EditorView::release (); }
 	void remember () SMTG_OVERRIDE { EditorView::addRef (); }
 	VSTGUI_INT32 getNbReference () const SMTG_OVERRIDE { return refCount; }
@@ -101,6 +101,10 @@ public:
 	END_DEFINE_INTERFACES (EditorView)
 	REFCOUNT_METHODS (EditorView)
 
+#if TARGET_OS_IPHONE
+	static void setBundleRef (/*CFBundleRef*/ void* bundle);
+#endif
+
 protected:
 	//---from IPlugView-------
 	tresult PLUGIN_API attached (void* parent, FIDString type) SMTG_OVERRIDE;
@@ -111,7 +115,7 @@ protected:
 	tresult PLUGIN_API setFrame (IPlugFrame* frame) SMTG_OVERRIDE;
 
 private:
-	CVSTGUITimer* timer;
+	VSTGUI::CVSTGUITimer* timer;
 };
 
 //------------------------------------------------------------------------

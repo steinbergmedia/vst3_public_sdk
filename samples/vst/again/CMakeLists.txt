@@ -42,7 +42,7 @@ if(SMTG_ADD_VSTGUI)
     )
 
     # VST2 is only defined for macOS and Windows
-    if(MAC OR WIN)
+    if(SMTG_MAC OR SMTG_WIN)
         if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
             set(again_sources ${again_sources} ${again_vst2_sources})
         else()
@@ -67,12 +67,45 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot.png")
     smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot_2.0x.png")
 
-    if(MAC)
+    if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
-    elseif(WIN)
+    elseif(SMTG_WIN)
         target_sources(${target} PRIVATE resource/again.rc)
     endif()
 
+    if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+        set(target again_ios)
+        smtg_add_ios_vst3plugin("iPhone Developer" ${target} "${again_sources}")
+        set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
+        target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
+        target_link_libraries(${target} PRIVATE
+            base_ios
+            sdk_ios
+            "-framework UIKit"
+            "-framework CoreGraphics" 
+            "-framework QuartzCore" 
+            "-framework CoreText" 
+            "-framework Accelerate" 
+            "-framework ImageIO" 
+            "-framework MobileCoreServices" 
+        )
+
+        smtg_add_vst3_resource(${target} "resource/again.uidesc")
+        smtg_add_vst3_resource(${target} "resource/background.png")
+        smtg_add_vst3_resource(${target} "resource/slider_background.png")
+        smtg_add_vst3_resource(${target} "resource/slider_handle.png")
+        smtg_add_vst3_resource(${target} "resource/slider_handle_2.0x.png")
+        smtg_add_vst3_resource(${target} "resource/vu_on.png")
+        smtg_add_vst3_resource(${target} "resource/vu_off.png")
+
+        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
+        target_sources(${target} PRIVATE 
+            ${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
+            ${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
+            ${VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
+            ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
+        )
+    endif()
 
     set(targetsimple againsimple)
     smtg_add_vst3plugin(${targetsimple} ${again_simple_sources})
@@ -88,10 +121,10 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${targetsimple} "resource/vu_on.png")
     smtg_add_vst3_resource(${targetsimple} "resource/vu_off.png")
 
-    if(MAC)
-    	smtg_set_bundle(${targetsimple} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
-    elseif(WIN)
-    	target_sources(${targetsimple} PRIVATE resource/again.rc)
+    if(SMTG_MAC)
+        smtg_set_bundle(${targetsimple} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
+    elseif(SMTG_WIN)
+        target_sources(${targetsimple} PRIVATE resource/again.rc)
     endif()
 
     if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
@@ -100,7 +133,7 @@ if(SMTG_ADD_VSTGUI)
             # fix missing VSTPluginMain symbol when also building VST 2 version
             set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")
         endif()
-        if (WIN)
+        if (SMTG_WIN)
             add_definitions(-D_CRT_SECURE_NO_WARNINGS)
         endif()
     endif()

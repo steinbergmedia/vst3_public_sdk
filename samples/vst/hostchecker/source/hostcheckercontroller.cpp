@@ -43,6 +43,7 @@
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
+#include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
 #include "editorsizecontroller.h"
 #include "hostcheckerprocessor.h"
@@ -68,7 +69,7 @@ public:
 	void canResize (bool val) { mCanResize = val; }
 
 protected:
-	~MyVST3Editor ();
+	~MyVST3Editor () override;
 
 	bool PLUGIN_API open (void* parent, const PlatformType& type) override;
 	void PLUGIN_API close () override;
@@ -324,7 +325,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Setup"));
 		unitInfo.programListId = kNoProgramListId;
 
-		Unit* unit = new Unit (unitInfo);
+		auto* unit = new Unit (unitInfo);
 		addUnit (unit);
 
 		parameters.addParameter (STR16 ("Param1"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
@@ -333,6 +334,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("Latency"), STR16 (""), 0, 0, 0, kLatencyTag, kUnitId);
 		parameters.addParameter (STR16 ("CanResize"), STR16 (""), 1, 1, 0, kCanResizeTag);
 
+		parameters.addParameter (STR16 ("Scoring"), STR16 (""), 10, 0, 0, kScoreTag);
 		parameters.addParameter (STR16 ("Bypass"), STR16 (""), 1, 0,
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
 		                         kBypassTag);
@@ -349,6 +351,26 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 			    CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
 			        CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
 	}
+
+	FUnknownPtr<IPlugInterfaceSupport> plugInterfaceSupport (context);
+	if (plugInterfaceSupport)
+	{
+		addFeatureLog (kLogIdIPlugInterfaceSupportSupported);
+
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IMidiMapping::iid) == kResultTrue)
+			addFeatureLog (kLogIdIMidiMappingSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IMidiLearn::iid) == kResultTrue)
+			addFeatureLog (kLogIdIMidiLearnSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (ChannelContext::IInfoListener::iid) == kResultTrue)
+			addFeatureLog (kLogIdChannelContextSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (INoteExpressionController::iid) == kResultTrue)
+			addFeatureLog (kLogIdINoteExpressionControllerSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (INoteExpressionPhysicalUIMapping::iid) == kResultTrue)
+			addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IXmlRepresentationController::iid) == kResultTrue)
+			addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
+	}
+
 	return result;
 }
 
@@ -716,6 +738,13 @@ tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
 }
 
 //-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIndex, int16 channel, CtrlNumber midiCC)
+{
+	addFeatureLog (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported);
+	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, int16 channel)
 {
 	addFeatureLog (kLogIdINoteExpressionControllerSupported);
@@ -760,7 +789,7 @@ void HostCheckerController::extractCurrentInfo (EditorView* editor)
 	height = rect.getHeight ();
 	width = rect.getWidth ();
 
-	VST3Editor* vst3editor = dynamic_cast<VST3Editor*> (editor);
+	auto* vst3editor = dynamic_cast<VST3Editor*> (editor);
 	if (vst3editor)
 		sizeFactor = vst3editor->getZoomFactor ();
 }
@@ -797,7 +826,7 @@ VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr n
 			sizeFactor = _sizeFactor;
 			for (auto& editor : editors)
 			{
-				VST3Editor* vst3editor = dynamic_cast<VST3Editor*> (editor);
+				auto* vst3editor = dynamic_cast<VST3Editor*> (editor);
 				if (vst3editor)
 					vst3editor->setZoomFactor (sizeFactor);
 			}
@@ -807,6 +836,55 @@ VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr n
 		return subController;
 	}
 	return nullptr;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::queryInterface (const Steinberg::TUID iid, void** obj)
+{
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IMidiMapping::iid))
+	{
+		addRef ();
+		*obj = static_cast<IMidiMapping*> (this);
+		addFeatureLog (kLogIdIMidiMappingSupported);
+		return ::Steinberg::kResultOk;
+	}
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
+	{
+		addRef ();
+		*obj = static_cast<IXmlRepresentationController*> (this);
+		addFeatureLog (kLogIdIXmlRepresentationControllerSupported); 
+		return ::Steinberg::kResultOk;
+	}
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
+	{
+		addRef ();
+		*obj = static_cast<ChannelContext::IInfoListener*> (this);
+		addFeatureLog (kLogIdChannelContextSupported); 
+		return ::Steinberg::kResultOk;
+	}
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
+	{
+		addRef ();
+		*obj = static_cast<INoteExpressionController*> (this);
+		addFeatureLog (kLogIdINoteExpressionControllerSupported); 
+		return ::Steinberg::kResultOk;
+	}
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
+	{
+		addRef ();
+		*obj = static_cast<INoteExpressionPhysicalUIMapping*> (this);
+		addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
+		return ::Steinberg::kResultOk;
+	}
+	
+	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
+	{
+		addRef ();
+		*obj = static_cast<IMidiLearn*> (this);
+		addFeatureLog (kLogIdIMidiLearnSupported);
+		return ::Steinberg::kResultOk;
+	}
+	return EditControllerEx1::queryInterface (iid, obj);
 }
 
 //-----------------------------------------------------------------------------

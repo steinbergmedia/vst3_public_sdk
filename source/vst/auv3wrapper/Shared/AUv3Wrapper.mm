@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    :
+// Filename    : AUv3Wrapper.mm
 // Created by  : Steinberg, 07/2017.
 // Description : VST 3 AUv3Wrapper
 //
@@ -12,24 +12,24 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -38,25 +38,113 @@
 
 #import <AVFoundation/AVFoundation.h>
 
-#include "NSDataIBStream.h"
-#include "public.sdk/source/vst/hosting/eventlist.h"
-#include "public.sdk/source/vst/hosting/parameterchanges.h"
-#include "public.sdk/source/vst/hosting/processdata.h"
-#include "public.sdk/source/vst/vsteditcontroller.h"
-#include "base/source/timer.h"
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/gui/iplugview.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
-#include "pluginterfaces/vst/vstpresetkeys.h"
-#include "pluginterfaces/vst/vsttypes.h"
+#import "public.sdk/source/vst/auwrapper/NSDataIBStream.h"
+#import "public.sdk/source/vst/hosting/eventlist.h"
+#import "public.sdk/source/vst/hosting/parameterchanges.h"
+#import "public.sdk/source/vst/hosting/processdata.h"
+#import "public.sdk/source/vst/utility/mpeprocessor.h"
+#import "public.sdk/source/vst/vsteditcontroller.h"
+#import "base/source/timer.h"
+#import "pluginterfaces/base/ustring.h"
+#import "pluginterfaces/gui/iplugview.h"
+#import "pluginterfaces/vst/ivstmidicontrollers.h"
+#import "pluginterfaces/vst/ivstphysicalui.h"
+#import "pluginterfaces/vst/ivstpluginterfacesupport.h"
+#import "pluginterfaces/vst/vstpresetkeys.h"
+#import "pluginterfaces/vst/vsttypes.h"
+
+#import <array>
+#import <atomic>
 
 #if TARGET_OS_IPHONE
-#define STGB_IOS_MAC_PLATFORMTYPE kPlatformTypeUIView
-#define STGB_IOS_MAC_VIEW UIView
+#define SMTG_IOS_MAC_PLATFORMTYPE kPlatformTypeUIView
+#define SMTG_IOS_MAC_VIEW UIView
 #else
-#define STGB_IOS_MAC_VIEW NSView
-#define STGB_IOS_MAC_PLATFORMTYPE kPlatformTypeNSView
+#define SMTG_IOS_MAC_VIEW NSView
+#define SMTG_IOS_MAC_PLATFORMTYPE kPlatformTypeNSView
 #endif
+
+extern "C" {
+
+//------------------------------------------------------------------------
+struct VSTBundle
+{
+	using EntryPtr = bool (*) (CFBundleRef);
+	using ExitPtr = bool (*) (void);
+
+	VSTBundle ()
+	{
+		initialized = init ();
+	}
+	
+	bool loadBundle (CFURLRef bundleUrl)
+	{
+		bundle = CFBundleCreate (kCFAllocatorDefault, bundleUrl);
+		if (!bundle)
+			return false;
+		if (!CFBundleLoadExecutable (bundle))
+			return false;
+		bundleEntry = (EntryPtr)CFBundleGetFunctionPointerForName (bundle, CFSTR ("bundleEntry"));
+		if (!bundleEntry)
+			return false;
+		bundleExit = (ExitPtr)CFBundleGetFunctionPointerForName (bundle, CFSTR ("bundleExit"));
+		if (!bundleExit)
+			return false;
+		getFactory =
+			(GetFactoryProc)CFBundleGetFunctionPointerForName (bundle, CFSTR ("GetPluginFactory"));
+		if (!bundleExit)
+			return false;
+
+		if (!bundleEntry (bundle))
+			return false;
+		return true;
+	}
+	
+	bool init ()
+	{
+		NSURL* url = NSBundle.mainBundle.builtInPlugInsURL;
+		url = [url URLByAppendingPathComponent:@"plugin.vst3"];
+		if (!url)
+			return false;
+		CFURLRef bundleUrl = (__bridge CFURLRef)url;
+		if (!loadBundle (bundleUrl))
+		{
+			url = NSBundle.mainBundle.builtInPlugInsURL;
+			url = [url URLByAppendingPathComponent:@"auv3.appex"];
+			NSBundle* appexBundle = [NSBundle bundleWithURL:url];
+			if (!appexBundle)
+				return false;
+			url = appexBundle.builtInPlugInsURL;
+			url = [url URLByAppendingPathComponent:@"plugin.vst3"];
+			if (!url)
+				return false;
+			bundleUrl = (__bridge CFURLRef)url;
+			if (!loadBundle (bundleUrl))
+				return false;
+		}
+
+		return true;
+	}
+
+	bool initialized {false};
+	CFBundleRef bundle {nullptr};
+	EntryPtr bundleEntry {nullptr};
+	ExitPtr bundleExit {nullptr};
+	GetFactoryProc getFactory {nullptr};
+};
+
+//------------------------------------------------------------------------
+Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ()
+{
+	static VSTBundle vstBundle;
+	if (vstBundle.initialized)
+	{
+		return vstBundle.getFactory ();
+	}
+	return nullptr;
+}
+
+} // extern "C"
 
 #pragma mark - Helpers from AUv2Wrapper / aucocoaview
 //------------------------------------------------------------------------
@@ -65,7 +153,7 @@ namespace Steinberg {
 class AUPlugFrame : public FObject, public IPlugFrame
 {
 public:
-	AUPlugFrame (STGB_IOS_MAC_VIEW* parent) : parent (parent) {}
+	AUPlugFrame (SMTG_IOS_MAC_VIEW* parent) : parent (parent) {}
 	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* vr) SMTG_OVERRIDE
 	{
 		CGRect newSize = CGRectMake ([parent frame].origin.x, [parent frame].origin.y,
@@ -79,7 +167,7 @@ public:
 	REFCOUNT_METHODS (FObject)
 
 protected:
-	STGB_IOS_MAC_VIEW* parent;
+	SMTG_IOS_MAC_VIEW* parent;
 };
 
 namespace Vst {
@@ -104,18 +192,50 @@ static SpeakerArrangement numChannelsToSpeakerArrangement (UInt32 numChannels)
 }
 
 //------------------------------------------------------------------------
-class AUHostApplication : public FObject, public HostApplication, public IVst3ToAUWrapper
+class AUHostApplication : public FObject,
+                          public HostApplication,
+                          public IVst3ToAUWrapper,
+                          public IVst3WrapperMPESupport
 {
 public:
-	virtual tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE
+	__weak AUv3Wrapper* wrapper {nil};
+
+	AUHostApplication ()
+	{
+		auto pis = getPlugInterfaceSupport ();
+		pis->addPlugInterfaceSupported (INoteExpressionController::iid);
+		pis->addPlugInterfaceSupported (INoteExpressionPhysicalUIMapping::iid);
+	}
+
+	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE
 	{
 		String str ("VST3-AU Wrapper");
 		str.copyTo (name, 0, 127);
 		return kResultTrue;
 	}
 
+	tresult PLUGIN_API enableMPEInputProcessing (TBool state) SMTG_OVERRIDE
+	{
+		if (!wrapper)
+			return kInternalError;
+		return [wrapper enableMPESupport:state != 0 ? YES : NO] ? kResultTrue : kResultFalse;
+	}
+
+	tresult PLUGIN_API setMPEInputDeviceSettings (int32 masterChannel, int32 memberBeginChannel,
+	                                              int32 memberEndChannel) SMTG_OVERRIDE
+	{
+		if (!wrapper)
+			return kInternalError;
+		return [wrapper setMPEInputDeviceMasterChannel:masterChannel
+		                            memberBeginChannel:memberBeginChannel
+		                              memberEndChannel:memberEndChannel] ?
+		           kResultTrue :
+		           kResultFalse;
+	}
+
 	DEFINE_INTERFACES
-		DEF_INTERFACE (Vst::IVst3ToAUWrapper)
+		DEF_INTERFACE (IVst3ToAUWrapper)
+		DEF_INTERFACE (IVst3WrapperMPESupport)
 	END_DEFINE_INTERFACES (HostApplication)
 	REFCOUNT_METHODS (HostApplication)
 };
@@ -138,8 +258,6 @@ static void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units)
 		}
 	}
 }
-
-static AUHostApplication gHostApp;
 
 //------------------------------------------------------------------------
 struct BufferedAudioBus
@@ -314,6 +432,11 @@ tresult PLUGIN_API ComponentHelper::restartComponent (int32 flags)
 		result = kResultTrue;
 	}
 
+	if (flags & kNoteExpressionChanged)
+	{
+		[auv3Wrapper onNoteExpressionChanged];
+	}
+
 	if (flags & kLatencyChanged)
 	{
 		result = kResultTrue;
@@ -362,182 +485,269 @@ void TimerHelper::onTimer (Timer* timer)
 }
 
 #pragma mark - Render Helper structs
-struct RenderMidiEventContext
+//------------------------------------------------------------------------
+struct MPEHandler : public MPE::Handler
 {
-	RenderMidiEventContext (EventList& inputEvents, ParameterChanges& outputParamChanges,
-	                        ComponentHelper& editPerformer)
-	: inputEvents (inputEvents)
-	, outputParamChanges (outputParamChanges)
-	, editPerformer (editPerformer)
+	struct Context
 	{
-	}
-	const AURenderEvent* event;
-	const AudioTimeStamp* timestamp;
-	EventList& inputEvents;
-	IMidiMapping* midiMapping;
-	IEditController* editcontroller;
-	ParamID programChangeParameters[16];
-	ParameterChanges& outputParamChanges;
-	ComponentHelper& editPerformer;
+		IEventList* inputEvents {nullptr};
+		IMidiMapping* midiMapping {nullptr};
+		IParameterChanges* outputParamChanges {nullptr};
+		IComponentHandler* editPerformer {nullptr};
+		MPE::Processor* mpeProcessor {nullptr};
+		std::atomic_bool enableMPEProcessing {true};
+		std::array<ParamID, 16> programChangeParameters {{kNoParamId}};
+		std::array<ParamID, 16> programChangeParameterStepCount {{0}};
+		std::array<NoteExpressionTypeID, 3> mpeMap {{kInvalidTypeID}};
+	};
 
-	void renderMidiEvent (const RenderMidiEventContext& renderContext)
+	void process (Context& c, const AUMIDIEvent* event, const AudioTimeStamp* timeStamp)
 	{
-		if (!event)
-			return;
-
-		constexpr uint8 kNoteOff = 0x80; ///< note, off velocity
-		constexpr uint8 kNoteOn = 0x90; ///< note, on velocity
-
-		AUMIDIEvent midiEvent = event->MIDI;
-		AUEventSampleTime startTime = event->MIDI.eventSampleTime - timestamp->mSampleTime;
-
-		if (midiEvent.length != 3)
-			return;
-
-		uint8_t status = midiEvent.data[0] & 0xF0;
-		if (status == 0)
-			return;
-
-		switch (status)
+		context = &c;
+		currentSampleOffset = event->eventSampleTime - timeStamp->mSampleTime;
+		if (c.enableMPEProcessing.load ())
 		{
-			case kNoteOn: // kMidiMessage_NoteOn
+			mpeProcssingEnabled = true;
+			c.mpeProcessor->processMIDIInput (event->data, event->length);
+		}
+		else
+		{
+			if (mpeProcssingEnabled)
 			{
-				int16 note = (int16)midiEvent.data[1];
-				float veloc = (float)midiEvent.data[2];
-				if (note > 127 || veloc > 127)
-					break;
-				Event e = {0};
-
-				e.type = Event::kNoteOnEvent;
-				e.noteOn.pitch = note;
-				e.noteOn.velocity = veloc / 127.0f;
-				e.noteOn.noteId = -1;
-				e.sampleOffset = (int32)midiEvent.eventSampleTime;
-				e.noteOff.channel = midiEvent.cable;
-				e.sampleOffset = (int32)startTime;
-				inputEvents.addEvent (e);
-				break;
+				mpeProcssingEnabled = false;
+				c.mpeProcessor->reset ();
 			}
-
-			case kNoteOff: // kMidiMessage_NoteOff
-			{
-				int16 note = (int16)midiEvent.data[1];
-				if (note > 127)
-					break;
-
-				UInt32 pitch = note & 0xFF;
-				Event e = {0};
-				e.type = Event::kNoteOffEvent;
-				e.noteOff.pitch = pitch;
-				e.noteOff.velocity = 0;
-				e.noteOff.noteId = -1;
-				e.sampleOffset = (int32)midiEvent.eventSampleTime;
-				e.noteOff.channel = midiEvent.cable;
-				e.sampleOffset = (int32)startTime;
-				inputEvents.addEvent (e);
-				break;
-			}
+			onOtherInput (event->data, event->length);
 		}
 
-		renderNonNoteEvent (renderContext);
+		context = nullptr;
 	}
 
-	void renderNonNoteEvent (const RenderMidiEventContext& renderContext)
+private:
+	Context* context {nullptr};
+	int32 currentSampleOffset {0};
+	MPE::NoteID noteIDCounter {0};
+	bool mpeProcssingEnabled {false};
+	using Pitch2ParamID = std::array<ParamID, 128>;
+	std::array<Pitch2ParamID, 16> pitchToParamIDMap {{{0}}};
+
+	bool generateNewNoteID (MPE::NoteID& outNoteID) override
 	{
-		constexpr uint8 kPolyPressure = 0xA0; ///< note, pressure
-		constexpr uint8 kController = 0xB0; ///< controller, value
-		constexpr uint8 kProgramChangeStatus = 0xC0; ///< program change
-		constexpr uint8 kAfterTouchStatus = 0xD0; ///< channel pressure
-		constexpr uint8 kPitchBendStatus = 0xE0; ///< lsb, msb
+		if (!context)
+			return false;
+		outNoteID = ++noteIDCounter;
+		return true;
+	}
+	void releaseNoteID (MPE::NoteID noteID) override {}
 
-		if (!event)
+	void onMPENoteOn (MPE::NoteID noteID, MPE::Pitch pitch, MPE::Velocity velocity) override
+	{
+		if (!context)
 			return;
+		sendNoteOn (noteID, pitch, velocity);
+	}
 
-		AUMIDIEvent midiEvent = event->MIDI;
-		AUEventSampleTime startTime = event->MIDI.eventSampleTime - timestamp->mSampleTime;
-
-		if (midiEvent.length != 3)
+	void onMPENoteOff (MPE::NoteID noteID, MPE::Pitch pitch, MPE::Velocity velocity) override
+	{
+		if (!context)
 			return;
+		sendNoteOff (noteID, pitch, velocity);
+	}
 
-		uint8_t status = midiEvent.data[0] & 0xF0;
-		if (status == 0)
+	void onMPEControllerChange (MPE::NoteID noteID, MPE::Controller cc,
+	                            MPE::NormalizedValue value) override
+	{
+		if (!context || cc > MPE::Controller::Y)
 			return;
-
-		if (status == kPolyPressure) // kMidiMessage_PolyPressure
+		if (context->mpeMap[static_cast<size_t> (cc)] != kInvalidTypeID)
 		{
-			Event e = {0};
-			e.type = Event::kPolyPressureEvent;
-			e.polyPressure.channel = midiEvent.cable;
-			e.polyPressure.pitch = midiEvent.data[1];
-			e.polyPressure.pressure = midiEvent.data[2] / 127.0f;
-			e.sampleOffset = (int32)midiEvent.eventSampleTime;
-			e.sampleOffset = (int32)startTime;
-			inputEvents.addEvent (e);
-			return;
+			Event e {};
+			e.type = Event::kNoteExpressionValueEvent;
+			e.noteExpressionValue.noteId = noteID;
+			e.noteExpressionValue.typeId = context->mpeMap[static_cast<size_t> (cc)];
+			e.noteExpressionValue.value = value;
+			e.sampleOffset = currentSampleOffset;
+			context->inputEvents->addEvent (e);
 		}
+	}
 
-		if (!midiMapping)
+	void sendNoteOn (MPE::NoteID noteID, MPE::Pitch pitch, MPE::Velocity velocity,
+	                 int16 channel = 0)
+	{
+		if (!context->inputEvents)
+			return;
+		Event e {};
+		e.type = Event::kNoteOnEvent;
+		e.noteOn.pitch = pitch;
+		e.noteOn.velocity = velocity;
+		e.noteOn.noteId = noteID;
+		e.noteOn.channel = channel;
+		e.sampleOffset = currentSampleOffset;
+		context->inputEvents->addEvent (e);
+	}
+
+	void sendNoteOff (MPE::NoteID noteID, MPE::Pitch pitch, MPE::Velocity velocity,
+	                  int16 channel = 0)
+	{
+		if (!context->inputEvents)
+			return;
+		Event e {};
+		e.type = Event::kNoteOffEvent;
+		e.noteOff.pitch = pitch;
+		e.noteOff.velocity = velocity;
+		e.noteOff.noteId = noteID;
+		e.noteOff.channel = channel;
+		e.sampleOffset = currentSampleOffset;
+		context->inputEvents->addEvent (e);
+	}
+
+	void sendPolyPressure (MPE::NoteID noteID, MPE::Pitch pitch, MPE::NormalizedValue pressure,
+	                       int16 channel)
+	{
+		if (!context->inputEvents)
+			return;
+		Event e = {0};
+		e.type = Event::kPolyPressureEvent;
+		e.polyPressure.channel = channel;
+		e.polyPressure.pitch = pitch;
+		e.polyPressure.pressure = pressure;
+		e.polyPressure.noteId = noteID;
+		e.sampleOffset = currentSampleOffset;
+		context->inputEvents->addEvent (e);
+	}
+
+	void sendControllerChange (CtrlNumber controller, MPE::NormalizedValue value, int16 channel)
+	{
+		if (!context->midiMapping)
+			return;
+		ParamID outParamID;
+		if (context->midiMapping->getMidiControllerAssignment (0, channel, controller,
+		                                                       outParamID) != kResultTrue)
+			return;
+		context->editPerformer->performEdit (outParamID, value);
+		int32 index;
+		if (auto vq = context->outputParamChanges->addParameterData (outParamID, index))
+			vq->addPoint (currentSampleOffset, value, index);
+	}
+
+	void sendProgramChange (int16 channel, uint8 midiValue)
+	{
+		auto prgChangeParamID = context->programChangeParameters[channel];
+		if (prgChangeParamID == kNoParamId)
+			return;
+		auto value = -1.;
+		auto stepCount = context->programChangeParameterStepCount[channel];
+		if (stepCount = 0)
+			value = static_cast<double> (midiValue) / 127.;
+		else if (midiValue <= stepCount)
+			value = static_cast<double> (midiValue) / static_cast<double> (stepCount);
+		if (value == -1.)
 			return;
 
-		ParamID pid = 0;
-		ParamValue value = 0;
-		CtrlNumber cn = -1;
-		bool prgChange = false;
+		context->editPerformer->performEdit (prgChangeParamID, value);
+		int32 index;
+		if (auto vq = context->outputParamChanges->addParameterData (prgChangeParamID, index))
+		{
+			vq->addPoint (currentSampleOffset, value, index);
+		}
+	}
 
+	void onOtherInput (const uint8_t* data, size_t dataSize) override
+	{
+		if (!context || dataSize < 2)
+			return;
+
+		constexpr auto NoteOff = 0x80;
+		constexpr auto NoteOn = 0x90;
+		constexpr auto Aftertouch = 0xa0;
+		constexpr auto Controller = 0xb0;
+		constexpr auto ProgramChange = 0xc0;
+		constexpr auto ChannelPressure = 0xd0;
+		constexpr auto PitchWheel = 0xe0;
+
+		auto status = data[0] & 0xF0;
+		auto channel = data[0] & 0x0F;
 		switch (status)
 		{
-			case kPitchBendStatus: // kMidiMessage_PitchWheel
+			case NoteOn:
 			{
-				cn = kPitchBend;
-				unsigned short _14bit;
-				_14bit = (unsigned short)midiEvent.data[2];
-				_14bit <<= 7;
-				_14bit |= (unsigned short)midiEvent.data[1];
-				value = (double)_14bit / (double)0x3FFF;
-				break;
-			}
-			case kAfterTouchStatus: // kMidiMessage_ChannelPressure
-			{
-				cn = kAfterTouch;
-				value = midiEvent.data[1] / 127.f;
-				break;
-			}
-			case kController: // kMidiMessage_ControlChange
-			{
-				cn = midiEvent.data[1];
-				value = midiEvent.data[2] / 127.f;
-				break;
-			}
-			case kProgramChangeStatus: // kMidiMessage_ProgramChange
-			{
-				pid = programChangeParameters[midiEvent.cable];
-				if (pid != kNoParamId)
+				auto pitch = data[1];
+				if (data[2] != 0)
 				{
-					ParameterInfo paramInfo = {0};
-					if (editcontroller->getParameterInfo (pid, paramInfo) == kResultTrue)
+					auto velocity = static_cast<float> (data[2]) / 127.;
+					if (pitchToParamIDMap[channel][pitch] != 0)
+						sendNoteOff (pitchToParamIDMap[channel][pitch], pitch, velocity);
+					MPE::NoteID noteID;
+					if (generateNewNoteID (noteID))
 					{
-						if (paramInfo.stepCount > 0 && midiEvent.data[1] <= paramInfo.stepCount)
-						{
-							value = (ParamValue)midiEvent.data[1] / (ParamValue)paramInfo.stepCount;
-							prgChange = true;
-						}
+						pitchToParamIDMap[channel][pitch] = noteID;
+						sendNoteOn (noteID, pitch, velocity, channel);
 					}
 				}
+				else
+				{
+					if (pitchToParamIDMap[channel][pitch] != 0)
+					{
+						sendNoteOff (pitchToParamIDMap[channel][pitch], pitch, 0, channel);
+						pitchToParamIDMap[channel][pitch] = 0;
+					}
+				}
+				break;
+			}
+			case NoteOff:
+			{
+				auto pitch = data[1];
+				if (pitchToParamIDMap[channel][pitch] != 0)
+				{
+					auto velocity = static_cast<float> (data[2]) / 127.;
+					sendNoteOff (pitchToParamIDMap[channel][pitch], pitch, velocity, channel);
+					pitchToParamIDMap[channel][pitch] = 0;
+				}
+				break;
+			}
+			case Aftertouch:
+			{
+				auto value = static_cast<MPE::NormalizedValue> (data[1]) / 127.;
+				sendControllerChange (ControllerNumbers::kAfterTouch, value, channel);
+				break;
+			}
+			case Controller:
+			{
+				auto value = static_cast<MPE::NormalizedValue> (data[2]) / 127.;
+				sendControllerChange (data[1], value, channel);
+				break;
+			}
+			case ProgramChange:
+			{
+				sendProgramChange (channel, data[1]);
+				break;
+			}
+			case ChannelPressure:
+			{
+				sendPolyPressure (-1, data[1], static_cast<double> (data[2]) / 127., channel);
+				break;
+			}
+			case PitchWheel:
+			{
+				auto value =
+				    static_cast<MPE::NormalizedValue> ((data[1] & 0x7F) + ((data[2] & 0x7F) << 7)) /
+				    16383.;
+				sendControllerChange (ControllerNumbers::kPitchBend, value, channel);
+				break;
 			}
 		}
-		if (prgChange || (cn >= 0 && (midiMapping->getMidiControllerAssignment (
-		                                  0, midiEvent.cable, cn, pid) == kResultTrue)))
-		{
-			SMTG_ASSERT (false);
-			editPerformer.performEdit (pid, value);
-
-			// make sure that our edit controller get the changes
-			int32 index;
-			IParamValueQueue* vq = outputParamChanges.addParameterData (pid, index);
-			if (vq)
-				vq->addPoint ((int32)midiEvent.eventSampleTime, value, index);
-		}
 	}
+
+	void onSysexInput (const uint8_t* data, size_t dataSize) override
+	{
+		// no sysex handling
+	}
+
+	// error handling
+	void errorNoteDroppedBecauseNoNoteID (MPE::Pitch pitch) override {}
+	void errorNoteDroppedBecauseNoteStackFull (MPE::Channel channel, MPE::Pitch pitch) override {}
+	void errorNoteForNoteOffNotFound (MPE::Channel channel, MPE::Pitch pitch) override {}
+	void errorProgramChangeReceivedInMPEZone () override {}
 };
 
 struct RenderProcessContext
@@ -654,6 +864,10 @@ using namespace Vst;
 	ProcessContext processContext;
 	EventList inputEvents;
 	EventList outputEvents;
+	AUHostApplication hostAppContext;
+	MPEHandler mpeHandler;
+	MPEHandler::Context mpeHandlerContext;
+	std::unique_ptr<MPE::Processor> mpeProcessor;
 
 	UnitInfoMap unitInfos;
 	ParameterGroupVector parameterGroups;
@@ -671,10 +885,6 @@ using namespace Vst;
 	bool renderingOfflineValue;
 
 	// Midi Stuff
-	int32 kMaxProgramChangeParameters;
-	ParamID
-	    programChangeParameters[16]; // for each midi channel, value = kMaxProgramChangeParameters
-
 	int32 midiOutCount; // currently only 0 or 1 supported
 
 	NSMutableArray<NSNumber*>* overviewParams;
@@ -705,8 +915,6 @@ using namespace Vst;
 	factoryProgramChangedID = -1;
 	isInstrument = false;
 	isBypassed = false;
-	kMaxProgramChangeParameters = 16;
-	programChangeParameters[kMaxProgramChangeParameters];
 	outputParamTransfer.setMaxParameters (500);
 	transferParamChanges.setMaxParameters (500);
 
@@ -723,6 +931,7 @@ using namespace Vst;
 	outputEvents.setMaxSize (128);
 	processData.inputEvents = &inputEvents;
 	processData.outputEvents = &outputEvents;
+	hostAppContext.wrapper = self;
 
 	// create the channel capabilities
 	NSBundle* mainBundle = [NSBundle mainBundle];
@@ -749,7 +958,67 @@ using namespace Vst;
 	// initialize presets
 	[self loadPresetList];
 
+	// MPE Support
+	mpeProcessor = std::unique_ptr<MPE::Processor> (new MPE::Processor (&mpeHandler));
+	mpeHandlerContext.mpeProcessor = mpeProcessor.get ();
+	mpeHandlerContext.midiMapping = midiMapping;
+	mpeHandlerContext.inputEvents = &inputEvents;
+	mpeHandlerContext.outputParamChanges = &outputParamChanges;
+	mpeHandlerContext.editPerformer = componentHelper.get ();
+
+	[self onNoteExpressionChanged];
+
 	return self;
+}
+
+//------------------------------------------------------------------------
+- (void)onNoteExpressionChanged
+{
+	if (!self.supportsMPE)
+		return;
+
+	FUnknownPtr<INoteExpressionPhysicalUIMapping> puiMapping (_editcontroller);
+	if (puiMapping)
+	{
+		PhysicalUIMap map[3];
+		map[0].physicalUITypeID = kPUIXMovement;
+		map[1].physicalUITypeID = kPUIYMovement;
+		map[2].physicalUITypeID = kPUIPressure;
+		PhysicalUIMapList mapList {3, map};
+
+		// We can only map one bus and one channel with MPE in AUv3
+		if (puiMapping->getPhysicalUIMapping (0, 0, mapList) == kResultTrue)
+		{
+			mpeHandlerContext.mpeMap[0] = map[2].noteExpressionTypeID;
+			mpeHandlerContext.mpeMap[1] = map[0].noteExpressionTypeID;
+			mpeHandlerContext.mpeMap[2] = map[1].noteExpressionTypeID;
+		}
+	}
+}
+
+//------------------------------------------------------------------------
+- (BOOL)enableMPESupport:(BOOL)state
+{
+	if (!mpeProcessor)
+		return NO;
+
+	mpeHandlerContext.enableMPEProcessing.store (state);
+	return YES;
+}
+
+//------------------------------------------------------------------------
+- (BOOL)setMPEInputDeviceMasterChannel:(NSInteger)masterChannel
+                    memberBeginChannel:(NSInteger)memberBeginChannel
+                      memberEndChannel:(NSInteger)memberEndChannel
+{
+	if (!mpeProcessor)
+		return NO;
+	auto setup = mpeProcessor->getSetup ();
+	setup.masterChannel = static_cast<MPE::Channel> (masterChannel);
+	setup.memberChannelBegin = static_cast<MPE::Channel> (memberBeginChannel);
+	setup.memberChannelEnd = static_cast<MPE::Channel> (memberEndChannel);
+	mpeProcessor->changeSetup (setup);
+	return YES;
 }
 
 //------------------------------------------------------------------------
@@ -868,7 +1137,7 @@ using namespace Vst;
 
 	if (audioProcessor)
 	{
-		if (FUnknownPtr<IPluginBase> (audioProcessor)->initialize ((HostApplication*)&gHostApp) !=
+		if (FUnknownPtr<IPluginBase> (audioProcessor)->initialize (hostAppContext.unknownCast ()) !=
 		    kResultTrue)
 			return;
 
@@ -884,7 +1153,7 @@ using namespace Vst;
 					if (factory->createInstance (ccid, IEditController::iid,
 					                             (void**)&_editcontroller) == kResultTrue)
 					{
-						if (_editcontroller->initialize ((HostApplication*)&gHostApp) !=
+						if (_editcontroller->initialize (hostAppContext.unknownCast ()) !=
 						    kResultTrue)
 						{
 							_editcontroller->release ();
@@ -1077,12 +1346,12 @@ using namespace Vst;
 	    };
 
 	parameterObserverToken = [parameterTreeVar
-		tokenByAddingParameterObserver:^(AUParameterAddress address, AUValue value) {
-			dispatch_async(dispatch_get_main_queue(), ^{
-				__strong AUv3Wrapper *strongSelf = weakSelf;
-				[strongSelf setControllerParameter:(int)address value:value];
-			});
-		}];
+	    tokenByAddingParameterObserver:^(AUParameterAddress address, AUValue value) {
+		  dispatch_async (dispatch_get_main_queue (), ^{
+			__strong AUv3Wrapper* strongSelf = weakSelf;
+			[strongSelf setControllerParameter:(int)address value:value];
+		  });
+	    }];
 
 	// A function to provide the parameter values of string representations.
 	parameterTreeVar.implementorValueFromStringCallback = ^(AUParameter* param, NSString* string) {
@@ -1312,21 +1581,22 @@ using namespace Vst;
 		return;
 
 	// assign programChanges
-	for (int32 midiChannel = 0; midiChannel < kMaxProgramChangeParameters; midiChannel++)
+	for (int32 midiChannel = 0; midiChannel < 16; ++midiChannel)
 	{
-		programChangeParameters[midiChannel] = kNoParamId;
+		mpeHandlerContext.programChangeParameters[midiChannel] = kNoParamId;
 		UnitID unitId;
 		ProgramListID programListId;
-		if ([self getProgramListAndUnit:midiChannel unitId:unitId programListId:programListId])
+		if (![self getProgramListAndUnit:midiChannel unitId:unitId programListId:programListId])
+			continue;
+		for (int32 i = 0; i < (int32)programParameters.size (); i++)
 		{
-			for (int32 i = 0; i < (int32)programParameters.size (); i++)
+			const ParameterInfo& paramInfo = programParameters.at (i);
+			if (paramInfo.unitId == unitId)
 			{
-				const ParameterInfo& paramInfo = programParameters.at (i);
-				if (paramInfo.unitId == unitId)
-				{
-					programChangeParameters[midiChannel] = paramInfo.id;
-					break;
-				}
+				mpeHandlerContext.programChangeParameters[midiChannel] = paramInfo.id;
+				mpeHandlerContext.programChangeParameterStepCount[midiChannel] =
+				    paramInfo.stepCount;
+				break;
 			}
 		}
 	}
@@ -1708,6 +1978,18 @@ using namespace Vst;
 }
 
 //------------------------------------------------------------------------
+- (BOOL)supportsMPE
+{
+	if (_editcontroller)
+	{
+		FUnknownPtr<INoteExpressionController> nec (_editcontroller);
+		if (nec)
+			return YES;
+	}
+	return NO;
+}
+
+//------------------------------------------------------------------------
 - (void)setRenderingOffline:(BOOL)renderingOffline
 {
 	// set offline rendering of vst3 to true
@@ -1972,24 +2254,16 @@ using namespace Vst;
 	    const AURenderEvent* realtimeEventListHead, AURenderPullInputBlock pullInputBlock) {
 
 	  // process events/params
-	  RenderMidiEventContext renderMidiContext =
-		  RenderMidiEventContext (inputEvents, outputParamChanges, *componentHelper);
-	  renderMidiContext.editcontroller = _editcontroller;
-
 	  for (const AURenderEvent* event = realtimeEventListHead; event != nullptr;
 		   event = event->head.next)
 	  {
-		  renderMidiContext.event = event;
-		  renderMidiContext.timestamp = timestamp;
-		  renderMidiContext.midiMapping = midiMapping;
-		  memcpy (renderMidiContext.programChangeParameters, programChangeParameters,
-			      sizeof (renderMidiContext.programChangeParameters));
-
 		  switch (event->head.eventType)
 		  {
-			  case AURenderEventMIDI: { renderMidiContext.renderMidiEvent (renderMidiContext);
+			  case AURenderEventMIDI:
+			  {
+				  mpeHandler.process (mpeHandlerContext, &event->MIDI, timestamp);
+				  break;
 			  }
-			  break;
 
 			  case AURenderEventParameter:
 			  case AURenderEventParameterRamp:
@@ -2138,7 +2412,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)loadView
 {
-	STGB_IOS_MAC_VIEW* view = [[STGB_IOS_MAC_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
+	SMTG_IOS_MAC_VIEW* view = [[SMTG_IOS_MAC_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
 	[self setView:view];
 }
 
@@ -2182,12 +2456,12 @@ using namespace Vst;
 	  plugView = editController->createView (ViewType::kEditor);
 	  if (plugView)
 	  {
-		  if (plugView->isPlatformTypeSupported (STGB_IOS_MAC_PLATFORMTYPE) == kResultTrue)
+		  if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
 		  {
 			  plugFrame = NEW AUPlugFrame (self.view);
 			  plugView->setFrame (plugFrame);
 
-			  if (plugView->attached ((__bridge void*)self.view, STGB_IOS_MAC_PLATFORMTYPE) ==
+			  if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) ==
 				  kResultTrue)
 			  {
 				  ViewRect vr;

@@ -42,6 +42,14 @@ namespace Steinberg {
 namespace Vst {
 
 //-----------------------------------------------------------------------------
+HostApplication::HostApplication ()
+{
+	FUNKNOWN_CTOR
+
+	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
+}
+
+//-----------------------------------------------------------------------------
 tresult PLUGIN_API HostApplication::getName (String128 name)
 {
 	String str ("My VST3 HostApplication");
@@ -73,6 +81,10 @@ tresult PLUGIN_API HostApplication::queryInterface (const char* _iid, void** obj
 {
 	QUERY_INTERFACE (_iid, obj, FUnknown::iid, IHostApplication)
 	QUERY_INTERFACE (_iid, obj, IHostApplication::iid, IHostApplication)
+
+	if (mPlugInterfaceSupport && mPlugInterfaceSupport->queryInterface (iid, obj) == kResultTrue)
+		return kResultOk;
+
 	*obj = nullptr;
 	return kResultFalse;
 }

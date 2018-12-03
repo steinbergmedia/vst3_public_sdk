@@ -176,16 +176,20 @@ private:
 	void* mainThread = nullptr;
 	Steinberg::Base::Thread::FLock msgQueueLock;
 	std::list<GetChunkMessage*> msgQueue;
+
 	bool wantsSetChunk = false;
 	bool settingChunk = false;
-	
+
 	bool mSimulateBypass = false;
 	bool mBypass = false;
+
 	float mBypassGain = 1.0;
 	float* mMetersTmp = nullptr;
 
 	Steinberg::Vst::TQuarterNotes mLastPpqPos = 0;
 	Steinberg::Vst::TQuarterNotes mNextPpqPos = 0;
+
+	bool mPresetChanged = false;
 
 	friend class AAXWrapper_Parameters;
 	friend class AAXWrapper_GUI;

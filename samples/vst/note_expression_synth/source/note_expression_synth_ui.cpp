@@ -42,11 +42,36 @@
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstinterappaudio.h"
+#include "pluginterfaces/vst/ivstpluginterfacesupport.h"
+
+using namespace VSTGUI;
 
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 namespace NoteExpressionSynth {
+
+//------------------------------------------------------------------------
+class ConditionalRemoveViewController : public DelegationController
+{
+public:
+	ConditionalRemoveViewController (IController* controller, bool needed)
+	: DelegationController (controller), needed (needed)
+	{
+	}
+
+	CView* verifyView (CView* view, const UIAttributes& attributes,
+	                   const IUIDescription* description) override
+	{
+		if (!needed)
+		{
+			view->forget ();
+			return nullptr;
+		}
+		return controller->verifyView (view, attributes, description);
+	}
+	bool needed;
+};
 
 //------------------------------------------------------------------------
 class InterAppAudioControlsController : public IController
@@ -89,7 +114,7 @@ public:
 private:
 	IInterAppAudioPresetManager* getPresetManager ()
 	{
-		if (presetManager == 0)
+		if (presetManager == nullptr)
 		{
 			TUID uid;
 			ProcessorWithUIController::cid.toTUID (uid);
@@ -275,6 +300,35 @@ private:
 FUID ControllerWithUI::cid (0x1AA302B3, 0xE8384785, 0xB9C3FE3E, 0x08B056F5);
 FUID ProcessorWithUIController::cid (0x41466D9B, 0xB0654576, 0xB641098F, 0x686371B3);
 
+enum
+{
+	kParamMIDILearn = kNumGlobalParameters,
+	kParamEnableMPE
+};
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API ControllerWithUI::initialize (FUnknown* context)
+{
+	auto result = Controller::initialize (context);
+	if (result == kResultTrue)
+	{
+		parameters.addParameter (USTRING ("MIDI Learn"), nullptr, 1, 0, ParameterInfo::kCanAutomate,
+		                         kParamMIDILearn);
+		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (context);
+		bool addEnableMPE = mpeSupport;
+#if DEVELOPMENT
+		addEnableMPE = true;
+#endif
+		if (addEnableMPE)
+
+		{
+			parameters.addParameter (USTRING ("Enable MPE"), nullptr, 1, 0,
+			                         ParameterInfo::kCanAutomate, kParamEnableMPE);
+		}
+	}
+	return result;
+}
+
 //------------------------------------------------------------------------
 tresult PLUGIN_API ControllerWithUI::terminate ()
 {
@@ -312,9 +366,13 @@ IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 				}
 			}
 		}
+		FUnknownPtr<IVst3ToAUWrapper> auWrapper (getHostContext ());
+		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
+		if (auWrapper && mpeSupport)
+			return new VST3Editor (this, "EditorIPad_AUv3", "note_expression_synth.uidesc");
 		return new VST3Editor (this, "Editor", "note_expression_synth.uidesc");
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -327,13 +385,12 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 	{
 		Parameter* freqParam = getParameterObject (kParamFilterFreq);
 		Parameter* resoParam = getParameterObject (kParamFilterQ);
-		PadController* padController = new PadController (editor, this, freqParam, resoParam);
+		auto* padController = new PadController (editor, this, freqParam, resoParam);
 		return padController;
 	}
 	else if (name == "FilterTypeController")
 	{
-		GroupController* controller =
-		    new GroupController (getParameterObject (kParamFilterType), this);
+		auto* controller = new GroupController (getParameterObject (kParamFilterType), this);
 		return controller;
 	}
 	else if (name == "InterAppAudioControlsController")
@@ -356,7 +413,31 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 		}
 		return new KeyboardController (editor, playerDelegate, keyboardRange);
 	}
-	return 0;
+	else if (name == "MPEController")
+	{
+#if DEVELOPMENT
+		// make sure in DEVELOPMENT mode not to remove the UI
+		bool mpeSupportNeeded = true;
+#else
+		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
+		bool mpeSupportNeeded = mpeSupport ? true : false;
+#endif
+		return new ConditionalRemoveViewController (editor, mpeSupportNeeded);
+	}
+	else if (name == "MidiLearnController")
+	{
+#if DEVELOPMENT
+		// make sure in DEVELOPMENT mode not to remove the UI
+		bool midiLearnSupported = true;
+#else
+		bool midiLearnSupported = false;
+		FUnknownPtr<IPlugInterfaceSupport> pis (getHostContext ());
+		if (pis)
+			midiLearnSupported = pis->isPlugInterfaceSupported (IMidiLearn::iid) == kResultTrue;
+#endif
+		return new ConditionalRemoveViewController (editor, midiLearnSupported);
+	}
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -380,6 +461,78 @@ tresult PLUGIN_API ControllerWithUI::getState (IBStream* state)
 	if (!stream.writeInt8u (keyboardRange.length))
 		return kInternalError;
 	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+tresult ControllerWithUI::beginEdit (ParamID tag)
+{
+	if (tag >= kParamMIDILearn)
+	{
+		return kResultTrue;
+	}
+	if (doMIDILearn)
+		midiLearnParamID = tag;
+	return Controller::beginEdit (tag);
+}
+
+//------------------------------------------------------------------------
+tresult ControllerWithUI::performEdit (ParamID tag, ParamValue valueNormalized)
+{
+	if (tag == kParamMIDILearn)
+	{
+		doMIDILearn = valueNormalized > 0.5;
+		if (doMIDILearn)
+			midiLearnParamID = InvalidParamID;
+		return kResultTrue;
+	}
+	else if (tag == kParamEnableMPE)
+	{
+		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
+		if (mpeSupport)
+		{
+			mpeSupport->enableMPEInputProcessing (valueNormalized < 0.5);
+		}
+		return kResultTrue;
+	}
+	return Controller::performEdit (tag, valueNormalized);
+}
+
+//------------------------------------------------------------------------
+tresult ControllerWithUI::endEdit (ParamID tag)
+{
+	if (tag >= kParamMIDILearn)
+	{
+		return kResultTrue;
+	}
+	return Controller::endEdit (tag);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API ControllerWithUI::onLiveMIDIControllerInput (int32 busIndex, int16 channel,
+                                                                CtrlNumber midiCC)
+{
+	if (!doMIDILearn || busIndex != 0 || channel != 0 || midiLearnParamID == InvalidParamID)
+		return kResultFalse;
+	if (midiCCMapping[midiCC] != midiLearnParamID)
+	{
+		for (auto&& pid : midiCCMapping)
+		{
+			if (pid == midiLearnParamID)
+				pid = InvalidParamID;
+		}
+		midiCCMapping[midiCC] = midiLearnParamID;
+		if (auto componentHandler = getComponentHandler ())
+		{
+			componentHandler->restartComponent (kMidiCCAssignmentChanged);
+		}
+	}
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+bool ControllerWithUI::isPrivateParameter (const ParamID paramID)
+{
+	return paramID >= kParamMIDILearn;
 }
 
 //------------------------------------------------------------------------

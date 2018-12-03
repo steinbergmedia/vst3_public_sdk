@@ -39,7 +39,6 @@
 #include "base/source/fstring.h"
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/vst/ivstmidicontrollers.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -206,12 +205,15 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		parameters.addParameter (tuningRangeParam);
 
 	// Init Note Expression Types
-		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), nullptr, -1, 1., 0., 1., 0, 0));
+		auto volumeNoteExp = new NoteExpressionType (kVolumeTypeID, String ("Volume"), String ("Vol"), nullptr, -1, 1., 0., 1., 0, 0);
+		volumeNoteExp->setPhysicalUITypeID(PhysicalUITypeIDs::kPUIPressure);
+		noteExpressionTypes.addNoteExpressionType (volumeNoteExp);
 		noteExpressionTypes.addNoteExpressionType (new PanNoteExpressionType ());
-		NoteExpressionType* panNoteExpression = new RangeNoteExpressionType (kTuningTypeID, String ("Tuning"), String ("Tun"), String ("Half Tone"), -1, 0, 120, -120, NoteExpressionTypeInfo::kIsBipolar);
-		panNoteExpression->getInfo ().valueDesc.minimum = 0.5 - VoiceStatics::kNormTuningOneOctave;
-		panNoteExpression->getInfo ().valueDesc.maximum = 0.5 + VoiceStatics::kNormTuningOneOctave;
-		noteExpressionTypes.addNoteExpressionType (panNoteExpression);
+		NoteExpressionType* tuningNoteExpression = new RangeNoteExpressionType (kTuningTypeID, String ("Tuning"), String ("Tun"), String ("Half Tone"), -1, 0, 120, -120, NoteExpressionTypeInfo::kIsBipolar);
+		tuningNoteExpression->getInfo ().valueDesc.minimum = 0.5 - VoiceStatics::kNormTuningOneOctave;
+		tuningNoteExpression->getInfo ().valueDesc.maximum = 0.5 + VoiceStatics::kNormTuningOneOctave;
+		tuningNoteExpression->setPhysicalUITypeID (PhysicalUITypeIDs::kPUIXMovement);
+		noteExpressionTypes.addNoteExpressionType (tuningNoteExpression);
 		
 		auto noteExp = new NoteExpressionType (kSinusVolumeTypeID, String ("Sinus Volume"), String ("Sin Vol"), String ("%"), -1, getParameterObject (kParamSinusVolume), NoteExpressionTypeInfo::kIsAbsolute);
 		noteExpressionTypes.addNoteExpressionType (noteExp);
@@ -228,6 +230,14 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		noteExpressionTypes.addNoteExpressionType (new RangeNoteExpressionType (kFilterQModTypeID, String ("Filter Q Modulation"), String ("Q Mod"), nullptr, -1, 0, -100, 100, NoteExpressionTypeInfo::kIsBipolar, 0));
 		noteExpressionTypes.addNoteExpressionType (new NoteExpressionType (kFilterTypeTypeID, String ("Filter Type"), String ("Flt Type"), nullptr, -1, getParameterObject (kParamFilterType), NoteExpressionTypeInfo::kIsBipolar));
 		noteExpressionTypes.addNoteExpressionType (new ReleaseTimeModNoteExpressionType ());
+
+	// Init Default MIDI-CC Map
+		std::for_each (midiCCMapping.begin (), midiCCMapping.end (), [] (ParamID& pid) { pid = InvalidParamID; });
+		midiCCMapping[ControllerNumbers::kPitchBend] = kParamMasterTuning;
+		midiCCMapping[ControllerNumbers::kCtrlVolume] = kParamMasterVolume;
+		midiCCMapping[ControllerNumbers::kCtrlModWheel] = kParamFilterFreqModDepth;
+		midiCCMapping[ControllerNumbers::kCtrlFilterCutoff] = kParamFilterFreq;
+		midiCCMapping[ControllerNumbers::kCtrlFilterResonance] = kParamFilterQ;
 	}
 	return kResultTrue;
 }
@@ -316,17 +326,13 @@ tresult PLUGIN_API Controller::getMidiControllerAssignment (int32 busIndex, int1
                                                             CtrlNumber midiControllerNumber,
                                                             ParamID& id /*out*/)
 {
-	if (busIndex == 0 && channel == 0)
+	if (busIndex == 0 && channel == 0 && midiControllerNumber < kCountCtrlNumber)
 	{
-		id = 0;
-		switch (midiControllerNumber)
+		if (midiCCMapping[midiControllerNumber] != InvalidParamID)
 		{
-			case kPitchBend: id = kParamMasterTuning; break;
-			case kCtrlVolume: id = kParamMasterVolume; break;
-			case kCtrlFilterCutoff: id = kParamFilterFreq; break;
-			case kCtrlFilterResonance: id = kParamFilterQ; break;
+			id = midiCCMapping[midiControllerNumber];
+			return kResultTrue;
 		}
-		return id != 0 ? kResultTrue : kResultFalse;
 	}
 	return kResultFalse;
 }
@@ -394,6 +400,8 @@ tresult PLUGIN_API Controller::getPhysicalUIMapping (int32 busIndex, int16 chann
 	}
 	return kResultFalse;
 }
-}
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // NoteExpressionSynth
+} // Vst
+} // Steinberg
