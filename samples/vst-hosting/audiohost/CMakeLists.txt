@@ -20,6 +20,8 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
                 ${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
