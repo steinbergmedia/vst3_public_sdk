@@ -81,8 +81,13 @@ tresult PLUGIN_API ComponentBase::terminate ()
 	if (peerConnection)
 	{
 		peerConnection->disconnect (this);
-		peerConnection->release ();
-		peerConnection = nullptr;
+		
+		// peerConection might become null during the disconnect() above
+		if (peerConnection)
+		{
+			peerConnection->release ();
+			peerConnection = nullptr;
+		}
 	}
 
 	return kResultOk;
