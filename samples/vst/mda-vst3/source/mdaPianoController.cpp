@@ -40,7 +40,9 @@ tresult PLUGIN_API PianoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* presetParam = new IndexedParameter (USTRING("Factory Presets"), USTRING("%"), 4, 0.15, ParameterInfo::kIsProgramChange | ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kPresetParam);
+		IndexedParameter* presetParam = new IndexedParameter (
+		    USTRING ("Factory Presets"), USTRING ("%"), 4, 0.15,
+		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		presetParam->setIndexString (0, UString128("mda Piano"));
 		presetParam->setIndexString (1, UString128("Plain Piano"));
 		presetParam->setIndexString (2, UString128("Compressed Piano"));

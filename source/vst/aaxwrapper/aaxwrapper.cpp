@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -430,16 +430,24 @@ void AAXWrapper::onTimer (Timer* timer)
 			int32_t numParams;
 			if (aaxParams->GetNumberOfParameters (&numParams) == AAX_SUCCESS)
 			{
+				AAX_CID bypassId (mBypassParameterID);
 				for (auto i = 0; i < numParams; i++)
 				{
 					AAX_CString id;
 					if (aaxParams->GetParameterIDFromIndex (i, &id) == AAX_SUCCESS)
 					{
-						double value;
-						if (aaxParams->GetParameterNormalizedValue (id.CString (), &value) ==
-						    AAX_SUCCESS)
+						if (id == (const char*)bypassId)
 						{
-							aaxParams->SetParameterNormalizedValue (id.CString (), value);
+							aaxParams->SetParameterNormalizedValue (id.CString (), mBypassBeforePresetChanged);
+						}
+						else
+						{
+							double value;
+							if (aaxParams->GetParameterNormalizedValue (id.CString (), &value) ==
+								AAX_SUCCESS)
+							{
+								aaxParams->SetParameterNormalizedValue (id.CString (), value);
+							}
 						}
 					}
 				}

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -202,7 +202,7 @@ Validator::Validator (int argc, char* argv[])
 	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
 
 	gStandardPluginContext = this->unknownCast ();
-	setStandardPluginContext (gStandardPluginContext);
+	TestingPluginContext::set (gStandardPluginContext);
 }
 
 //------------------------------------------------------------------------
@@ -548,71 +548,71 @@ namespace { // anonymous
 
 //------------------------------------------------------------------------
 template <typename T, typename... Args>
-void createTest (ITestSuite* parent, IPlugProvider* plugProvider, Args&&... arguments)
+void createTest (ITestSuite* parent, ITestPlugProvider* plugProvider, Args&&... arguments)
 {
 	auto test = owned (new T (plugProvider, std::forward<Args> (arguments)...));
 	parent->addTest (test->getName (), test);
 }
 
 //------------------------------------------------------------------------
-void createPrecisionTests (ITestSuite* parent, IPlugProvider* plugProvider,
+void createPrecisionTests (ITestSuite* parent, ITestPlugProvider* plugProvider,
                            SymbolicSampleSizes sampleSize)
 {
-	createTest<VstProcessTest> (parent, plugProvider, sampleSize);
-	createTest<VstSilenceFlagsTest> (parent, plugProvider, sampleSize);
-	createTest<VstSilenceProcessingTest> (parent, plugProvider, sampleSize);
-	createTest<VstFlushParamTest> (parent, plugProvider, sampleSize);
-	createTest<VstFlushParamTest2> (parent, plugProvider, sampleSize);
-	createTest<VstFlushParamTest3> (parent, plugProvider, sampleSize);
-	createTest<VstVariableBlockSizeTest> (parent, plugProvider, sampleSize);
-	createTest<VstProcessFormatTest> (parent, plugProvider, sampleSize);
+	createTest<ProcessTest> (parent, plugProvider, sampleSize);
+	createTest<SilenceFlagsTest> (parent, plugProvider, sampleSize);
+	createTest<SilenceProcessingTest> (parent, plugProvider, sampleSize);
+	createTest<FlushParamTest> (parent, plugProvider, sampleSize);
+	createTest<FlushParamTest2> (parent, plugProvider, sampleSize);
+	createTest<FlushParamTest3> (parent, plugProvider, sampleSize);
+	createTest<VariableBlockSizeTest> (parent, plugProvider, sampleSize);
+	createTest<ProcessFormatTest> (parent, plugProvider, sampleSize);
 
 	SpeakerArrangement inSpArr = SpeakerArr::kStereo;
 	SpeakerArrangement outSpArr = SpeakerArr::kStereo;
-	createTest<VstSpeakerArrangementTest> (parent, plugProvider, sampleSize, inSpArr, outSpArr);
+	createTest<SpeakerArrangementTest> (parent, plugProvider, sampleSize, inSpArr, outSpArr);
 
 	inSpArr = SpeakerArr::kMono;
 	outSpArr = SpeakerArr::kMono;
-	createTest<VstSpeakerArrangementTest> (parent, plugProvider, sampleSize, inSpArr, outSpArr);
+	createTest<SpeakerArrangementTest> (parent, plugProvider, sampleSize, inSpArr, outSpArr);
 
 	// int32 everyNSamples, int32 numParams, bool sampleAccuracy;
-	createTest<VstAutomationTest> (parent, plugProvider, sampleSize, 100, 1, false);
-	createTest<VstAutomationTest> (parent, plugProvider, sampleSize, 100, 1, true);
+	createTest<AutomationTest> (parent, plugProvider, sampleSize, 100, 1, false);
+	createTest<AutomationTest> (parent, plugProvider, sampleSize, 100, 1, true);
 }
 
 //------------------------------------------------------------------------
 } // anonymous
 
 //------------------------------------------------------------------------
-void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plugName)
+void Validator::createTests (ITestPlugProvider* plugProvider, const ConstString& plugName)
 {
 	IPtr<TestSuite> plugTestSuite = owned (new TestSuite (plugName));
 
 	IPtr<TestSuite> generalTests = owned (new TestSuite ("General Tests"));
 	// todo: add tests here!
-	createTest<VstEditorClassesTest> (generalTests, plugProvider);
-	createTest<VstScanBussesTest> (generalTests, plugProvider);
-	createTest<VstScanParametersTest> (generalTests, plugProvider);
-	createTest<VstMidiMappingTest> (generalTests, plugProvider);
-	createTest<VstMidiLearnTest> (generalTests, plugProvider);
-	createTest<VstUnitInfoTest> (generalTests, plugProvider);
-	createTest<VstProgramInfoTest> (generalTests, plugProvider);
-	createTest<VstTerminateInitializeTest> (generalTests, plugProvider);
-	createTest<VstUnitStructureTest> (generalTests, plugProvider);
-	createTest<VstValidStateTransitionTest> (generalTests, plugProvider);
-	//	createTest<VstInvalidStateTransitionTest> (generalTests, plugProvider);
-	//	createTest<VstRepeatIdenticalStateTransitionTest> (generalTests, plugProvider);
+	createTest<EditorClassesTest> (generalTests, plugProvider);
+	createTest<ScanBussesTest> (generalTests, plugProvider);
+	createTest<ScanParametersTest> (generalTests, plugProvider);
+	createTest<MidiMappingTest> (generalTests, plugProvider);
+	createTest<MidiLearnTest> (generalTests, plugProvider);
+	createTest<UnitInfoTest> (generalTests, plugProvider);
+	createTest<ProgramInfoTest> (generalTests, plugProvider);
+	createTest<TerminateInitializeTest> (generalTests, plugProvider);
+	createTest<UnitStructureTest> (generalTests, plugProvider);
+	createTest<ValidStateTransitionTest> (generalTests, plugProvider);
+	//	createTest<InvalidStateTransitionTest> (generalTests, plugProvider);
+	//	createTest<RepeatIdenticalStateTransitionTest> (generalTests, plugProvider);
 
-	createTest<VstBusConsistencyTest> (generalTests, plugProvider);
-	//	createTest<VstBusInvalidIndexTest> (generalTests, plugProvider);
-	createTest<VstBusActivationTest> (generalTests, plugProvider);
+	createTest<BusConsistencyTest> (generalTests, plugProvider);
+	//	createTest<BusInvalidIndexTest> (generalTests, plugProvider);
+	createTest<BusActivationTest> (generalTests, plugProvider);
 
-	createTest<VstCheckAudioBusArrangementTest> (generalTests, plugProvider);
+	createTest<CheckAudioBusArrangementTest> (generalTests, plugProvider);
 
-	createTest<VstSuspendResumeTest> (generalTests, plugProvider, kSample32);
+	createTest<SuspendResumeTest> (generalTests, plugProvider, kSample32);
 
-	createTest<VstNoteExpressionTest> (generalTests, plugProvider);
-	createTest<VstKeyswitchTest> (generalTests, plugProvider);
+	createTest<NoteExpressionTest> (generalTests, plugProvider);
+	createTest<KeyswitchTest> (generalTests, plugProvider);
 
 	plugTestSuite->addTestSuite (generalTests->getName ().data (), generalTests);
 
@@ -630,7 +630,7 @@ void Validator::createTests (IPlugProvider* plugProvider, const ConstString& plu
 }
 
 //------------------------------------------------------------------------
-void Validator::addTest (ITestSuite* _testSuite, VstTestBase* testItem)
+void Validator::addTest (ITestSuite* _testSuite, TestBase* testItem)
 {
 	_testSuite->addTest (testItem->getName (), testItem);
 	testItem->release ();

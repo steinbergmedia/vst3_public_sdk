@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -58,7 +58,7 @@ FUID HostCheckerProcessor::cid (0x23FC190E, 0x02DD4499, 0xA8D2230E, 0x50617DA3);
 HostCheckerProcessor::HostCheckerProcessor ()
 {
 	mCurrentState = State::kUninitialized;
-	
+
 	mLatency = 256;
 
 	setControllerClass (HostCheckerController::cid);
@@ -79,6 +79,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		addAudioInput (USTRING ("Aux Input"), SpeakerArr::kStereo, kAux, 0);
 		addAudioOutput (USTRING ("Audio Output"), SpeakerArr::kStereo);
 		addEventInput (USTRING ("Event Input"), 1);
+		addEventOutput (USTRING ("Event Output"), 1);
 
 		mHostCheck.setComponent (this);
 	}
@@ -87,10 +88,12 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 	if (plugInterfaceSupport)
 	{
 		addLogEvent (kLogIdIPlugInterfaceSupportSupported);
-		
-		if (plugInterfaceSupport->isPlugInterfaceSupported (IAudioPresentationLatency::iid) == kResultTrue)
+
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IAudioPresentationLatency::iid) ==
+		    kResultTrue)
 			addLogEvent (kLogIdAudioPresentationLatencySamplesSupported);
-		if (plugInterfaceSupport->isPlugInterfaceSupported (IPrefetchableSupport::iid) == kResultTrue)
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IPrefetchableSupport::iid) ==
+		    kResultTrue)
 			addLogEvent (kLogIdIPrefetchableSupportSupported);
 	}
 
@@ -98,7 +101,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerProcessor::terminate () 
+tresult PLUGIN_API HostCheckerProcessor::terminate ()
 {
 	mCurrentState = kUninitialized;
 
@@ -167,7 +170,7 @@ void HostCheckerProcessor::informLatencyChanged ()
 tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 {
 	mHostCheck.validate (data);
-	
+
 	if (mCurrentState != State::kProcessing)
 	{
 		addLogEvent (kLogIdInvalidStateProcessingMissing);
@@ -200,14 +203,27 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 	}
 	else if (data.numSamples && data.numOutputs)
 	{
-		Algo::clear32 (data.outputs, data.numSamples);
+		if (data.symbolicSampleSize == kSample32)
+			Algo::clear32 (data.outputs, data.numSamples);
+		else
+			Algo::clear64 (data.outputs, data.numSamples);
 
 		if (mGeneratePeaks > 0)
 		{
 			float coef = mGeneratePeaks * mLastBlockMarkerValue;
-			for (int32 i = 0; i < data.outputs[0].numChannels; i++)
+			if (data.symbolicSampleSize == kSample32)
 			{
-				data.outputs[0].channelBuffers32[i][0] = coef;
+				for (int32 i = 0; i < data.outputs[0].numChannels; i++)
+				{
+					data.outputs[0].channelBuffers32[i][0] = coef;
+				}
+			}
+			else
+			{
+				for (int32 i = 0; i < data.outputs[0].numChannels; i++)
+				{
+					data.outputs[0].channelBuffers64[i][0] = coef;
+				}
 			}
 			mLastBlockMarkerValue = -mLastBlockMarkerValue;
 
@@ -221,12 +237,24 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 				{
 					case Event::kNoteOnEvent:
 						mNumNoteOns++;
-						data.outputs[0].channelBuffers32[0][event.sampleOffset] =
-						    mNumNoteOns / kMaxNotesToDisplay;
+						if (data.symbolicSampleSize == kSample32)
+							data.outputs[0].channelBuffers32[0][event.sampleOffset] =
+							    mNumNoteOns / kMaxNotesToDisplay;
+						else
+							data.outputs[0].channelBuffers64[0][event.sampleOffset] =
+							    mNumNoteOns / kMaxNotesToDisplay;
+						if (data.outputEvents)
+							data.outputEvents->addEvent (event);
 						break;
 					case Event::kNoteOffEvent:
-						data.outputs[0].channelBuffers32[1][event.sampleOffset] =
-						    -mNumNoteOns / kMaxNotesToDisplay;
+						if (data.symbolicSampleSize == kSample32)
+							data.outputs[0].channelBuffers32[1][event.sampleOffset] =
+							    -mNumNoteOns / kMaxNotesToDisplay;
+						else
+							data.outputs[0].channelBuffers64[1][event.sampleOffset] =
+							    -mNumNoteOns / kMaxNotesToDisplay;
+						if (data.outputEvents)
+							data.outputEvents->addEvent (event);
 						mNumNoteOns--;
 						break;
 					default: break;
@@ -251,11 +279,11 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setupProcessing (ProcessSetup& setup)
 {
-	if (mCurrentState != State::kInitialized)
+	if (mCurrentState != State::kInitialized && mCurrentState != State::kSetupDone)
 	{
 		addLogEvent (kLogIdInvalidStateInitializedMissing);
 	}
-	
+
 	mCurrentState = State::kSetupDone;
 
 	mHostCheck.setProcessSetup (setup);
@@ -311,13 +339,17 @@ tresult PLUGIN_API HostCheckerProcessor::notify (IMessage* message)
 tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSampleSize)
 {
 	if (symbolicSampleSize == kSample32)
+	{
 		addLogEvent (kLogIdCanProcessSampleSize32);
+		return kResultTrue;
+	}
 	else if (symbolicSampleSize == kSample64)
+	{
 		addLogEvent (kLogIdCanProcessSampleSize64);
-
-	return AudioEffect::canProcessSampleSize (symbolicSampleSize);
+		return kResultTrue;
+	}
+	return kResultFalse;
 }
-
 
 //-----------------------------------------------------------------------------
 uint32 PLUGIN_API HostCheckerProcessor::getLatencySamples ()

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ public:
 
 	int32_t dbOnKeyDown (const VstKeyCode& key, CDataBrowser* browser) SMTG_OVERRIDE;
 
-	bool updateLog (const LogEvent& logEvent);
+	bool updateLog (const LogEvent& logEvent, bool incrementCount = false);
 
 protected:
 	LogEvents mLogEvents;

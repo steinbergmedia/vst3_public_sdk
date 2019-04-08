@@ -1,5 +1,5 @@
 //-----------------------------------------------------------------------------
-// Flags       : clang-format on
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,8 +43,10 @@
 
 #include "hostcheck.h"
 #include "logevents.h"
+#include "threadchecker.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "base/source/fstring.h"
+#include "pluginterfaces/vst/ivstautomationstate.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
@@ -76,10 +78,13 @@ class HostCheckerController : public EditControllerEx1,
                               public VSTGUI::VST3EditorDelegate,
                               public ChannelContext::IInfoListener,
                               public IXmlRepresentationController,
+                              public IAutomationState,
+                              public IEditControllerHostEditing,
                               public IMidiMapping,
                               public IMidiLearn,
                               public INoteExpressionController,
-                              public INoteExpressionPhysicalUIMapping
+                              public INoteExpressionPhysicalUIMapping,
+                              public IKeyswitchController
 {
 public:
 	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
@@ -104,10 +109,12 @@ public:
 	tresult PLUGIN_API notify (IMessage* message) SMTG_OVERRIDE;
 	tresult PLUGIN_API connect (IConnectionPoint* other) SMTG_OVERRIDE;
 
+	//---from VST3EditorDelegate --------------------
 	VSTGUI::CView* createCustomView (VSTGUI::UTF8StringPtr name,
 	                                 const VSTGUI::UIAttributes& attributes,
 	                                 const VSTGUI::IUIDescription* description,
 	                                 VSTGUI::VST3Editor* editor) SMTG_OVERRIDE;
+	void willClose (VSTGUI::VST3Editor* editor) SMTG_OVERRIDE;
 
 	//---from IEditController2-------
 	tresult PLUGIN_API setKnobMode (KnobMode mode) SMTG_OVERRIDE;
@@ -131,7 +138,7 @@ public:
 
 	//---IMidiLearn-----------------------------
 	tresult PLUGIN_API onLiveMIDIControllerInput (int32 busIndex, int16 channel,
-	                                           CtrlNumber midiCC) SMTG_OVERRIDE;
+	                                              CtrlNumber midiCC) SMTG_OVERRIDE;
 
 	//---INoteExpressionController----------------------
 	int32 PLUGIN_API getNoteExpressionCount (int32 busIndex, int16 channel) SMTG_OVERRIDE;
@@ -146,9 +153,21 @@ public:
 	    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
 	    NoteExpressionValue& valueNormalized /*out*/) SMTG_OVERRIDE;
 
-	//---INoteExpressionPhysicalUIMapping----------------------
+	//---INoteExpressionPhysicalUIMapping-----------------
 	tresult PLUGIN_API getPhysicalUIMapping (int32 busIndex, int16 channel,
 	                                         PhysicalUIMapList& list) SMTG_OVERRIDE;
+
+	//--- IKeyswitchController ---------------------------
+	int32 PLUGIN_API getKeyswitchCount (int32 busIndex, int16 channel) SMTG_OVERRIDE;
+	tresult PLUGIN_API getKeyswitchInfo (int32 busIndex, int16 channel, int32 keySwitchIndex,
+	                                     KeyswitchInfo& info /*out*/) SMTG_OVERRIDE;
+
+	//---IAutomationState---------------------------------
+	tresult PLUGIN_API setAutomationState (int32 state) SMTG_OVERRIDE;
+
+	//---IEditControllerHostEditing-----------------------
+	tresult PLUGIN_API beginEditFromHost (ParamID paramID) SMTG_OVERRIDE;
+	tresult PLUGIN_API endEditFromHost (ParamID paramID) SMTG_OVERRIDE;
 
 	//--- --------------------------------------------------------------------------
 	void editorAttached (EditorView* editor) SMTG_OVERRIDE;
@@ -181,7 +200,7 @@ public:
 protected:
 	void extractCurrentInfo (EditorView* editor);
 
-	VSTGUI::SharedPointer<VSTGUI::CDataBrowser> mDataBrowser;
+	std::map<VSTGUI::VST3Editor*, VSTGUI::SharedPointer<VSTGUI::CDataBrowser>> mDataBrowserMap;
 	VSTGUI::SharedPointer<VSTGUI::EventLogDataBrowserSource> mDataSource;
 
 	bool mLatencyInEdit = false;
@@ -196,6 +215,9 @@ protected:
 	uint32 width = 0;
 	uint32 height = 0;
 	double sizeFactor = 0;
+	int32 inEditFromHost {0};
+
+	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
 };
 
 //------------------------------------------------------------------------

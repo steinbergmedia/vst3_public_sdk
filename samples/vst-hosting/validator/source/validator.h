@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,7 +50,7 @@ class IComponent;
 class IEditController;
 
 class VstModule;
-class VstTestBase;
+class TestBase;
 class TestSuite;
 
 //------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class Validator : public FObject, public ITestResult, public IHostApplication
 public:
 //------------------------------------------------------------------------
 	Validator (int argc, char* argv[]);
-	~Validator ();
+	~Validator () override;
 
 	int run ();
 
@@ -98,9 +98,9 @@ protected:
 	tresult PLUGIN_API createInstance (TUID cid, TUID iid, void** obj) override;
 
 	bool filterClassCategory (FIDString category, FIDString classCategory) const;
-	void createTests (IPlugProvider* plugProvider, const ConstString& plugName);
-	void addTest (ITestSuite* testSuite, VstTestBase* test);
-	void runTestSuite (TestSuite* suite, FIDString nameFilter = 0);
+	void createTests (ITestPlugProvider* plugProvider, const ConstString& plugName);
+	void addTest (ITestSuite* testSuite, TestBase* test);
+	void runTestSuite (TestSuite* suite, FIDString nameFilter = nullptr);
 
 	int argc;
 	char** argv;
@@ -125,7 +125,7 @@ class VstModule : public FObject
 public:
 //------------------------------------------------------------------------
 	VstModule (const char* path);
-	~VstModule ();
+	~VstModule () override;
 
 	bool isValid () const;
 	IPluginFactory* getFactory () { return factory; }

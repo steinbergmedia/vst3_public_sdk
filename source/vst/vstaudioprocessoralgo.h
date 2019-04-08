@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -169,8 +169,7 @@ inline void clear32 (AudioBusBuffers* audioBusBuffers, int32 sampleCount, int32 
 	foreach (audioBusBuffers, busCount, [&] (AudioBusBuffers& audioBuffer) {
 		foreach32 (audioBuffer,
 		           [&] (Sample32* channelBuffer) { memset (channelBuffer, 0, numBytes); });
-	})
-		;
+	});
 }
 
 //------------------------------------------------------------------------
@@ -183,8 +182,7 @@ inline void clear64 (AudioBusBuffers* audioBusBuffers, int32 sampleCount, int32 
 	foreach (audioBusBuffers, busCount, [&] (AudioBusBuffers& audioBuffer) {
 		foreach64 (audioBuffer,
 		           [&] (Sample64* channelBuffer) { memset (channelBuffer, 0, numBytes); });
-	})
-		;
+	});
 }
 
 //------------------------------------------------------------------------

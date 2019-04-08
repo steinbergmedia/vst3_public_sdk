@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -59,18 +59,20 @@ namespace Hosting {
 //------------------------------------------------------------------------
 namespace {
 
-#if defined(_M_ARM64)
+#if SMTG_OS_WINDOWS_ARM
+#define USE_OLE 0
+#if SMTG_PLATFORM_64
 constexpr auto architectureString = "arm_64-win";
-#define USE_OLE 0
-#elif defined(_M_ARM)
+#else
 constexpr auto architectureString = "arm-win";
-#define USE_OLE 0
-#elif defined(_M_X64)
+#endif
+#else
+#define USE_OLE 1
+#if SMTG_PLATFORM_64
 constexpr auto architectureString = "x86_64-win";
-#define USE_OLE 1
-#elif defined(_M_IX86)
+#else
 constexpr auto architectureString = "x86-win";
-#define USE_OLE 1
+#endif
 #endif
 
 #if USE_OLE
@@ -145,7 +147,7 @@ public:
 			errorDescription = "Calling 'InitDll' failed";
 			return false;
 		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (factoryProc ());
+		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
 		if (!f)
 		{
 			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
@@ -157,6 +159,40 @@ public:
 
 	HINSTANCE module {nullptr};
 };
+
+//------------------------------------------------------------------------
+bool checkVST3Package (filesystem::path& p)
+{
+	auto filename = p.filename ();
+	p /= "Contents";
+	p /= architectureString;
+	p /= filename;
+	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (p.c_str ()), GENERIC_READ, FILE_SHARE_READ,
+	                          NULL, OPEN_EXISTING, 0, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		CloseHandle (hFile);
+		return true;
+	}
+	return false;
+}
+
+//------------------------------------------------------------------------
+bool isFolderSymbolicLink (const filesystem::path& p)
+{
+	std::wstring wString = p.generic_wstring ();
+	auto attrib = GetFileAttributesW (reinterpret_cast<LPCWSTR> (wString.c_str ()));
+	if (attrib & FILE_ATTRIBUTE_REPARSE_POINT)
+	{
+		auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (wString.c_str ()), GENERIC_READ,
+		                          FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		if (hFile == INVALID_HANDLE_VALUE)
+			return true;
+		else
+			CloseHandle (hFile);
+	}
+	return false;
+}
 
 //------------------------------------------------------------------------
 Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
@@ -221,7 +257,19 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 		const auto& cpExt = cp.extension ();
 		if (cpExt == ext)
 		{
-			pathList.push_back (cp.generic_u8string ());
+			if ((p.status ().type () == filesystem::file_type::directory) ||
+			    isFolderSymbolicLink (p))
+			{
+				filesystem::path finalPath (p);
+				if (checkVST3Package (finalPath))
+				{
+					pathList.push_back (finalPath.generic_u8string ());
+					continue;
+				}
+				findFilesWithExt (cp, ext, pathList, recursive);
+			}
+			else
+				pathList.push_back (cp.generic_u8string ());
 		}
 		else if (recursive)
 		{
@@ -234,7 +282,20 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 				if (auto resolvedLink = resolveShellLink (cp))
 				{
 					if (resolvedLink->extension () == ext)
-						pathList.push_back (resolvedLink->generic_u8string ());
+					{
+						if (filesystem::is_directory (*resolvedLink) || isFolderSymbolicLink (*resolvedLink))
+						{
+							filesystem::path finalPath (*resolvedLink);
+							if (checkVST3Package (finalPath))
+							{
+								pathList.push_back (finalPath.generic_u8string ());
+								continue;
+							}
+							findFilesWithExt (*resolvedLink, ext, pathList, recursive);
+						}
+						else
+							pathList.push_back (resolvedLink->generic_u8string ());
+					}
 					else if (filesystem::is_directory (*resolvedLink))
 					{
 						const auto& str = resolvedLink->generic_u8string ();
@@ -252,6 +313,20 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 void findModules (const filesystem::path& path, Module::PathList& pathList)
 {
 	findFilesWithExt (path, ".vst3", pathList);
+}
+
+//------------------------------------------------------------------------
+Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (const std::string& modulePath)
+{
+	filesystem::path path (modulePath);
+	path = path.parent_path ();
+	if (path.filename () != architectureString)
+		return {};
+	path = path.parent_path ();
+	if (path.filename () != "Contents")
+		return {};
+
+	return Optional<filesystem::path> {std::move (path)};
 }
 
 //------------------------------------------------------------------------
@@ -301,12 +376,15 @@ Module::PathList Module::getModulePaths ()
 Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 {
 	SnapshotList result;
-	filesystem::path path (modulePath);
-	path /= "Contents";
-	path /= "Resources";
-	path /= "Snapshots";
+	auto path = getContentsDirectoryFromModuleExecutablePath (modulePath);
+	if (!path)
+		return result;
+
+	*path /= "Resources";
+	*path /= "Snapshots";
+
 	PathList pngList;
-	findFilesWithExt (path, ".png", pngList, false);
+	findFilesWithExt (*path, ".png", pngList, false);
 	for (auto& png : pngList)
 	{
 		filesystem::path p (png);

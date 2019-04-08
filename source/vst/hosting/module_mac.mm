@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -154,7 +154,7 @@ public:
 			errorDescription = "Calling 'bundleEntry' failed";
 			return false;
 		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (factoryProc ());
+		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
 		if (!f)
 		{
 			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
@@ -180,7 +180,7 @@ public:
 		return loadInternal (path, errorDescription);
 	}
 
-	~MacModule ()
+	~MacModule () override
 	{
 		factory = PluginFactory (nullptr);
 
@@ -202,8 +202,11 @@ public:
 //------------------------------------------------------------------------
 void findModulesInDirectory (NSURL* dirUrl, Module::PathList& result)
 {
+	dirUrl = [dirUrl URLByResolvingSymlinksInPath];
+	if (!dirUrl)
+		return;
 	NSDirectoryEnumerator* enumerator = [[NSFileManager defaultManager]
-	               enumeratorAtURL:[dirUrl URLByResolvingSymlinksInPath]
+	               enumeratorAtURL: dirUrl
 	    includingPropertiesForKeys:nil
 	                       options:NSDirectoryEnumerationSkipsPackageDescendants
 	                  errorHandler:nil];
@@ -274,7 +277,10 @@ void getApplicationModules (Module::PathList& result)
 //------------------------------------------------------------------------
 void getModuleSnapshots (const std::string& path, Module::SnapshotList& result)
 {
-	auto bundleUrl = [NSURL fileURLWithPath:[NSString stringWithUTF8String:path.data ()]];
+	auto nsString = [NSString stringWithUTF8String:path.data ()];
+	if (!nsString)
+		return;
+	auto bundleUrl = [NSURL fileURLWithPath:nsString];
 	if (!bundleUrl)
 		return;
 	auto urls = [NSBundle URLsForResourcesWithExtension:@"png"

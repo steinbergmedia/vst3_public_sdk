@@ -48,7 +48,6 @@ DEF_CLASS_IID(ITestSuite)
 DEF_CLASS_IID(ITestFactory)
 
 namespace Vst {
-DEF_CLASS_IID(IPlugProvider)
 
 //-----------------------------------------------------------------------------
 FUID ADelayTestFactory::cid (0x60277237, 0x74CC4303, 0xB6737CA6, 0xEDD0F811);
@@ -56,7 +55,7 @@ FUID ADelayTestFactory::cid (0x60277237, 0x74CC4303, 0xB6737CA6, 0xEDD0F811);
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ADelayTestFactory::createTests (FUnknown* context, ITestSuite* parentSuite)
 {
-	FUnknownPtr<IPlugProvider> plugProvider (context);
+	FUnknownPtr<ITestPlugProvider> plugProvider (context);
 	if (plugProvider)
 	{
 		parentSuite->addTest ("ExampleTest", owned (new ADelayTest (plugProvider)));
@@ -68,7 +67,7 @@ tresult PLUGIN_API ADelayTestFactory::createTests (FUnknown* context, ITestSuite
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-ADelayTest::ADelayTest (IPlugProvider* plugProvider)
+ADelayTest::ADelayTest (ITestPlugProvider* plugProvider)
 : plugProvider (plugProvider)
 {
 }

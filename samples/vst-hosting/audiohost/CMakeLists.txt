@@ -6,36 +6,37 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
 
         if(${LIBJACK_FOUND})
             set(audiohost_sources
-                source/audiohost.cpp
-                source/audiohost.h
-                source/usediids.cpp
-                source/platform/appinit.h
-                source/platform/iapplication.h
-                source/media/audioclient.h
-                source/media/audioclient.cpp
-                source/media/imediaserver.h
-                source/media/iparameterclient.h
-                source/media/miditovst.h
-                source/media/jack/jackclient.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/module.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/optional.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.h 
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/stringconvert.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/stringconvert.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/uid.h
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.h
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
-                ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.h )
+                ${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
+                source/audiohost.cpp
+                source/audiohost.h
+                source/media/audioclient.cpp
+                source/media/audioclient.h
+                source/media/imediaserver.h
+                source/media/iparameterclient.h
+                source/media/jack/jackclient.cpp
+                source/media/miditovst.h
+                source/platform/appinit.h
+                source/platform/iapplication.h
+                source/usediids.cpp
+                )
 
             if(SMTG_MAC)
                 set(audiohost_sources 

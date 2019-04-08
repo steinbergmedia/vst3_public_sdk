@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -274,13 +274,18 @@ int32_t EventLogDataBrowserSource::dbOnKeyDown (const VstKeyCode& key, CDataBrow
 }
 
 //-----------------------------------------------------------------------------
-bool EventLogDataBrowserSource::updateLog (const LogEvent& logEvent)
+bool EventLogDataBrowserSource::updateLog (const LogEvent& logEvent, bool incrementCount)
 {
 	bool bResult = mLogEvents[logEvent.id].count != logEvent.count;
 
 	LogEvent& tmpEvent = mLogEvents.at (logEvent.id);
-	tmpEvent.count = logEvent.count;
-
+	if (incrementCount)
+	{
+		tmpEvent.count += logEvent.count;
+		return true;
+	}
+	else
+		tmpEvent.count = logEvent.count;
 	return bResult;
 }
 

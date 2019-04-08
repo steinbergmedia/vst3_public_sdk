@@ -75,7 +75,7 @@ if(SMTG_ADD_VSTGUI)
 
     if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target again_ios)
-        smtg_add_ios_vst3plugin("iPhone Developer" ${target} "${again_sources}")
+        smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${again_sources}")
         set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
         target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
         target_link_libraries(${target} PRIVATE

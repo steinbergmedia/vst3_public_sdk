@@ -42,13 +42,13 @@
 
 namespace Steinberg {
 namespace Vst {
-class IPlugProvider;
+class ITestPlugProvider;
 
 //-----------------------------------------------------------------------------
 class ADelayTest : public ITest, public FObject
 {
 public:
-	ADelayTest (IPlugProvider* plugProvider);
+	ADelayTest (ITestPlugProvider* plugProvider);
 
 	//--ITest
 	bool PLUGIN_API setup () SMTG_OVERRIDE;
@@ -60,7 +60,7 @@ public:
 	DEF_INTERFACES_1(ITest, FObject)
 	REFCOUNT_METHODS(FObject)
 protected:
-	IPlugProvider* plugProvider;
+	ITestPlugProvider* plugProvider;
 };
 
 //-----------------------------------------------------------------------------

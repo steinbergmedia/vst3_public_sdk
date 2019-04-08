@@ -42,8 +42,7 @@ tresult PLUGIN_API JX10Controller::initialize (FUnknown* context)
 	{
 		IndexedParameter* presetParam = new IndexedParameter (
 		    USTRING ("Factory Presets"), USTRING ("%"), JX10Processor::kNumPrograms - 1, 0,
-		    ParameterInfo::kIsProgramChange | ParameterInfo::kCanAutomate | ParameterInfo::kIsList,
-		    kPresetParam);
+		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		parameters.addParameter (presetParam);
 
 		ParamID pid = 0;

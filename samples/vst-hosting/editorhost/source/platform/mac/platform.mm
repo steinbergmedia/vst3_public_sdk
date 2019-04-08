@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -204,6 +204,12 @@ IPlatform& IPlatform::instance ()
 	[self setupMenubar];
 	Steinberg::Vst::EditorHost::Platform::instance ().application->init (cmdArgs);
 	cmdArgs.clear ();
+}
+
+//------------------------------------------------------------------------
+- (void)applicationWillTerminate:(NSNotification*)notification
+{
+	Steinberg::Vst::EditorHost::Platform::instance ().application->terminate ();
 }
 
 @end

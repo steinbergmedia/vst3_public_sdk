@@ -24,8 +24,18 @@ if(SMTG_ADD_VSTGUI)
         source/processsetupcheck.h
         source/editorsizecontroller.cpp
         source/editorsizecontroller.h
+        source/threadchecker_win32.cpp
+        source/threadchecker_linux.cpp
+        source/threadchecker.h
         source/version.h
     )
+
+    if(SMTG_MAC)
+        set(hostchecker_sources
+            ${hostchecker_sources}
+            source/threadchecker_mac.mm
+        )
+    endif()
 
     set(target hostchecker)
     smtg_add_vst3plugin(${target} ${hostchecker_sources})

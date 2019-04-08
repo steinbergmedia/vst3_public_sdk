@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,7 +51,15 @@
 #include "vstgui/lib/cvstguitimer.h"
 #include "base/source/fstreamer.h"
 
+#define THREAD_CHECK_MSG(msg) "The host called '" msg "' in the wrong thread context.\n"
+
 using namespace VSTGUI;
+
+#if DEBUG
+bool THREAD_CHECK_EXIT = false;
+#else
+bool THREAD_CHECK_EXIT = true;
+#endif
 
 namespace Steinberg {
 namespace Vst {
@@ -82,6 +90,7 @@ protected:
 	Steinberg::tresult PLUGIN_API onKeyDown (char16 key, int16 keyMsg, int16 modifiers) override;
 	Steinberg::tresult PLUGIN_API onKeyUp (char16 key, int16 keyMsg, int16 modifiers) override;
 	Steinberg::tresult PLUGIN_API onWheel (float distance) override;
+	Steinberg::tresult PLUGIN_API onFocus (TBool /*state*/) override;
 	Steinberg::tresult PLUGIN_API setFrame (IPlugFrame* frame) override;
 	Steinberg::tresult PLUGIN_API attached (void* parent, FIDString type) override;
 	Steinberg::tresult PLUGIN_API removed () override;
@@ -89,8 +98,8 @@ protected:
 	Steinberg::tresult PLUGIN_API setContentScaleFactor (ScaleFactor factor) override;
 
 	// IParameterFinder
-	Steinberg::tresult PLUGIN_API findParameter (Steinberg::int32 xPos, Steinberg::int32 yPos,
-	                                             Steinberg::Vst::ParamID& resultTag) override;
+	Steinberg::tresult PLUGIN_API findParameter (int32 xPos, int32 yPos,
+	                                             ParamID& resultTag) override;
 
 	//---from CBaseObject---------------
 	CMessageResult notify (CBaseObject* sender, const char* message) SMTG_OVERRIDE;
@@ -229,7 +238,9 @@ tresult PLUGIN_API MyVST3Editor::onKeyDown (char16 key, int16 keyMsg, int16 modi
 {
 	if (!mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
-	
+
+	hostController->addFeatureLog (kLogIdIPlugViewOnKeyDownSupported);
+
 	return VSTGUIEditor::onKeyDown (key, keyMsg, modifiers);
 }
 
@@ -238,7 +249,9 @@ tresult PLUGIN_API MyVST3Editor::onKeyUp (char16 key, int16 keyMsg, int16 modifi
 {
 	if (!mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
-	
+
+	hostController->addFeatureLog (kLogIdIPlugViewOnKeyUpSupported);
+
 	return VSTGUIEditor::onKeyUp (key, keyMsg, modifiers);
 }
 
@@ -247,8 +260,18 @@ tresult PLUGIN_API MyVST3Editor::onWheel (float distance)
 {
 	if (!mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewKeyCalledBeforeAttach);
-	
+
+	hostController->addFeatureLog (kLogIdIPlugViewOnWheelCalled);
+
 	return VSTGUIEditor::onWheel (distance);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API MyVST3Editor::onFocus (TBool state)
+{
+	hostController->addFeatureLog (kLogIdIPlugViewOnFocusCalled);
+
+	return VSTGUIEditor::onFocus (state);
 }
 
 //------------------------------------------------------------------------
@@ -263,7 +286,7 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::attached (void* parent, FIDString ty
 {
 	if (mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewattachedWithoutRemoved);
-	
+
 	mAttached = true;
 	return VSTGUIEditor::attached (parent, type);
 }
@@ -286,9 +309,8 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::setContentScaleFactor (ScaleFactor f
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::findParameter (Steinberg::int32 xPos,
-                                                           Steinberg::int32 yPos,
-                                                           Steinberg::Vst::ParamID& resultTag)
+Steinberg::tresult PLUGIN_API MyVST3Editor::findParameter (int32 xPos, int32 yPos,
+                                                           ParamID& resultTag)
 {
 	hostController->addFeatureLog (kLogIdIParameterFinderSupported);
 	return VST3Editor::findParameter (xPos, yPos, resultTag);
@@ -315,6 +337,8 @@ VSTGUI::CMessageResult MyVST3Editor::notify (CBaseObject* sender, const char* me
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::initialize"), THREAD_CHECK_EXIT);
+
 	tresult result = EditControllerEx1::initialize (context);
 	if (result == kResultOk)
 	{
@@ -339,17 +363,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
 		                         kBypassTag);
 
-		mDataBrowser = nullptr;
-		mDataSource = nullptr;
-
-		if (!mDataSource)
-			mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
-
-		if (!mDataBrowser)
-			mDataBrowser = VSTGUI::owned (new CDataBrowser (
-			    CRect (0, 0, 100, 100), mDataSource,
-			    CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
-			        CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
+		mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
 	}
 
 	FUnknownPtr<IPlugInterfaceSupport> plugInterfaceSupport (context);
@@ -357,17 +371,26 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 	{
 		addFeatureLog (kLogIdIPlugInterfaceSupportSupported);
 
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IAutomationState::iid) == kResultTrue)
+			addFeatureLog (kLogIdIAutomationStateSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IEditControllerHostEditing::iid) ==
+		    kResultTrue)
+			addFeatureLog (kLogIdIEditControllerHostEditingSupported);
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IMidiMapping::iid) == kResultTrue)
 			addFeatureLog (kLogIdIMidiMappingSupported);
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IMidiLearn::iid) == kResultTrue)
 			addFeatureLog (kLogIdIMidiLearnSupported);
-		if (plugInterfaceSupport->isPlugInterfaceSupported (ChannelContext::IInfoListener::iid) == kResultTrue)
+		if (plugInterfaceSupport->isPlugInterfaceSupported (ChannelContext::IInfoListener::iid) ==
+		    kResultTrue)
 			addFeatureLog (kLogIdChannelContextSupported);
-		if (plugInterfaceSupport->isPlugInterfaceSupported (INoteExpressionController::iid) == kResultTrue)
+		if (plugInterfaceSupport->isPlugInterfaceSupported (INoteExpressionController::iid) ==
+		    kResultTrue)
 			addFeatureLog (kLogIdINoteExpressionControllerSupported);
-		if (plugInterfaceSupport->isPlugInterfaceSupported (INoteExpressionPhysicalUIMapping::iid) == kResultTrue)
+		if (plugInterfaceSupport->isPlugInterfaceSupported (
+		        INoteExpressionPhysicalUIMapping::iid) == kResultTrue)
 			addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
-		if (plugInterfaceSupport->isPlugInterfaceSupported (IXmlRepresentationController::iid) == kResultTrue)
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IXmlRepresentationController::iid) ==
+		    kResultTrue)
 			addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
 	}
 
@@ -377,11 +400,13 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::terminate ()
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::terminate"), THREAD_CHECK_EXIT);
+
 	tresult result = EditControllerEx1::terminate ();
 	if (result == kResultOk)
 	{
 		mDataSource = nullptr;
-		mDataBrowser = nullptr;
+		mDataBrowserMap.clear ();
 	}
 	return result;
 }
@@ -389,6 +414,9 @@ tresult PLUGIN_API HostCheckerController::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentState"),
+	                     THREAD_CHECK_EXIT);
+
 	if (!state)
 		return kResultFalse;
 
@@ -420,6 +448,9 @@ tresult PLUGIN_API HostCheckerController::getUnitByBus (MediaType type, BusDirec
                                                         int32 busIndex, int32 channel,
                                                         UnitID& unitId /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitByBus"),
+	                     THREAD_CHECK_EXIT);
+
 	if (type == kEvent && dir == kInput)
 	{
 		if (busIndex == 0 && channel == 0)
@@ -435,6 +466,9 @@ tresult PLUGIN_API HostCheckerController::getUnitByBus (MediaType type, BusDirec
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler* handler)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentHandler"),
+	                     THREAD_CHECK_EXIT);
+
 	tresult res = EditControllerEx1::setComponentHandler (handler);
 	if (componentHandler2)
 	{
@@ -454,6 +488,9 @@ tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler
 //-----------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getUnitCount ()
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitCount"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdUnitSupported);
 	return EditControllerEx1::getUnitCount ();
 }
@@ -461,6 +498,9 @@ int32 PLUGIN_API HostCheckerController::getUnitCount ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, ParamValue value)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setParamNormalized"),
+	                     THREAD_CHECK_EXIT);
+
 	if (tag == kLatencyTag && mLatencyInEdit)
 	{
 		mWantedLatency = value;
@@ -472,6 +512,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 //------------------------------------------------------------------------
 tresult HostCheckerController::beginEdit (ParamID tag)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEdit"), THREAD_CHECK_EXIT);
+
 	if (tag == kLatencyTag)
 		mLatencyInEdit = true;
 
@@ -481,6 +523,8 @@ tresult HostCheckerController::beginEdit (ParamID tag)
 //-----------------------------------------------------------------------------
 tresult HostCheckerController::endEdit (ParamID tag)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEdit"), THREAD_CHECK_EXIT);
+
 	if (tag == kLatencyTag && mLatencyInEdit)
 	{
 		EditControllerEx1::setParamNormalized (tag, mWantedLatency);
@@ -492,6 +536,8 @@ tresult HostCheckerController::endEdit (ParamID tag)
 //-----------------------------------------------------------------------------
 IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::createView"), THREAD_CHECK_EXIT);
+
 	if (ConstString (name) == ViewType::kEditor)
 	{
 		if (componentHandler2)
@@ -521,29 +567,51 @@ CView* HostCheckerController::createCustomView (UTF8StringPtr name, const UIAttr
 {
 	if (ConstString (name) == "HostCheckerDataBrowser")
 	{
-		if (mDataBrowser)
-			mDataBrowser->remember ();
-		return mDataBrowser;
+		auto item = mDataBrowserMap.find (editor);
+		if (item != mDataBrowserMap.end ())
+		{
+			item->second->remember ();
+			return item->second;
+		}
+		else
+		{
+			auto dataBrowser = VSTGUI::owned (new CDataBrowser (
+			    CRect (0, 0, 100, 100), mDataSource,
+			    CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
+			        CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
+
+			mDataBrowserMap.emplace (editor, dataBrowser);
+			dataBrowser->remember ();
+			return dataBrowser;
+		}
 	}
 	return nullptr;
 }
 
 //-----------------------------------------------------------------------------
+void HostCheckerController::willClose (VSTGUI::VST3Editor* editor)
+{
+	mDataBrowserMap.erase (editor);
+}
+
+//-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 {
-	Steinberg::tresult tResult = ComponentBase::connect (other);
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::connect"), THREAD_CHECK_EXIT);
+
+	tresult tResult = ComponentBase::connect (other);
 	if (peerConnection)
 	{
-		for (Steinberg::int32 paramIdx = 0; paramIdx < getParameterCount (); ++paramIdx)
+		for (int32 paramIdx = 0; paramIdx < getParameterCount (); ++paramIdx)
 		{
-			Steinberg::Vst::ParameterInfo paramInfo = {0};
-			if (getParameterInfo (paramIdx, paramInfo) == Steinberg::kResultOk)
+			ParameterInfo paramInfo = {0};
+			if (getParameterInfo (paramIdx, paramInfo) == kResultOk)
 			{
 				IPtr<IMessage> newMsg = owned (allocateMessage ());
 				if (newMsg)
 				{
 					newMsg->setMessageID ("Parameter");
-					Steinberg::Vst::IAttributeList* attr = newMsg->getAttributes ();
+					IAttributeList* attr = newMsg->getAttributes ();
 					if (attr)
 					{
 						attr->setInt ("ID", paramInfo.id);
@@ -561,7 +629,7 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 			if (newMsg)
 			{
 				newMsg->setMessageID ("LogEvent");
-				Steinberg::Vst::IAttributeList* attr = newMsg->getAttributes ();
+				IAttributeList* attr = newMsg->getAttributes ();
 				if (attr)
 				{
 					attr->setInt ("ID", kLogIdProcessorControllerConnection);
@@ -579,6 +647,8 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::notify"), THREAD_CHECK_EXIT);
+
 	if (!message)
 		return kInvalidArgument;
 
@@ -590,8 +660,11 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 		if (message->getAttributes ()->getInt ("Count", logEvt.count) != kResultOk)
 			return kResultFalse;
 
-		if (mDataSource && mDataBrowser && mDataSource->updateLog (logEvt))
-			mDataBrowser->invalidateRow (logEvt.id);
+		if (mDataSource && mDataSource->updateLog (logEvt))
+		{
+			for (auto& item : mDataBrowserMap)
+				item.second->invalidateRow (logEvt.id);
+		}
 	}
 
 	if (FIDStringsEqual (message->getMessageID (), "Latency"))
@@ -613,13 +686,19 @@ void HostCheckerController::addFeatureLog (int32 iD)
 	logEvt.id = iD;
 	logEvt.count = 1;
 
-	if (mDataSource && mDataBrowser && mDataSource->updateLog (logEvt))
-		mDataBrowser->invalidateRow (logEvt.id);
+	if (mDataSource && mDataSource->updateLog (logEvt, true))
+	{
+		for (auto& item : mDataBrowserMap)
+			item.second->invalidateRow (logEvt.id);
+	}
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setKnobMode (KnobMode mode)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setKnobMode"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIEditController2Supported);
 	return EditControllerEx1::setKnobMode (mode);
 }
@@ -627,6 +706,8 @@ tresult PLUGIN_API HostCheckerController::setKnobMode (KnobMode mode)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::openHelp (TBool onlyCheck)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openHelp"), THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIEditController2Supported);
 	return EditControllerEx1::openHelp (onlyCheck);
 }
@@ -634,6 +715,9 @@ tresult PLUGIN_API HostCheckerController::openHelp (TBool onlyCheck)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::openAboutBox (TBool onlyCheck)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openAboutBox"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIEditController2Supported);
 	return EditControllerEx1::openAboutBox (onlyCheck);
 }
@@ -641,6 +725,9 @@ tresult PLUGIN_API HostCheckerController::openAboutBox (TBool onlyCheck)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setChannelContextInfos (IAttributeList* list)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setChannelContextInfos"),
+	                     THREAD_CHECK_EXIT);
+
 	if (!list)
 		return kResultFalse;
 
@@ -683,18 +770,20 @@ tresult PLUGIN_API HostCheckerController::setChannelContextInfos (IAttributeList
 tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
     RepresentationInfo& info /*in*/, IBStream* stream /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getXmlRepresentationStream"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
 
 	String name (info.name);
 	if (name == GENERIC_8_CELLS)
 	{
-		Vst::XmlRepresentationHelper helper (info, "Steinberg Media Technologies",
-		                                     "VST3 Host Checker",
-		                                     HostCheckerProcessor::cid.toTUID (), stream);
+		XmlRepresentationHelper helper (info, "Steinberg Media Technologies", "VST3 Host Checker",
+		                                HostCheckerProcessor::cid.toTUID (), stream);
 
 		helper.startPage ("Main Page");
-		helper.startEndCellOneLayer (Vst::LayerType::kKnob, 0);
-		helper.startEndCellOneLayer (Vst::LayerType::kKnob, 1);
+		helper.startEndCellOneLayer (LayerType::kKnob, 0);
+		helper.startEndCellOneLayer (LayerType::kKnob, 1);
 		helper.startEndCell (); // empty cell
 		helper.startEndCell (); // empty cell
 		helper.startEndCell (); // empty cell
@@ -704,7 +793,7 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 		helper.endPage ();
 
 		helper.startPage ("Page 2");
-		helper.startEndCellOneLayer (Vst::LayerType::kSwitch, 2);
+		helper.startEndCellOneLayer (LayerType::kSwitch, 2);
 		helper.startEndCell (); // empty cell
 		helper.startEndCell (); // empty cell
 		helper.startEndCell (); // empty cell
@@ -723,6 +812,9 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
     int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getMidiControllerAssignment"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIMidiMappingSupported);
 
 	if (busIndex != 0)
@@ -738,8 +830,12 @@ tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIndex, int16 channel, CtrlNumber midiCC)
+tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIndex, int16 channel,
+                                                                     CtrlNumber midiCC)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::onLiveMIDIControllerInput"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported);
 	return kResultTrue;
 }
@@ -747,6 +843,9 @@ tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIn
 //-----------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, int16 channel)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionCount"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdINoteExpressionControllerSupported);
 	return 0;
 }
@@ -755,6 +854,9 @@ int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, 
 tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (
     int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionInfo"),
+	                     THREAD_CHECK_EXIT);
+
 	return kResultFalse;
 }
 
@@ -763,6 +865,9 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
     int32 busIndex, int16 channel, NoteExpressionTypeID id,
     NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionStringByValue"),
+	                     THREAD_CHECK_EXIT);
+
 	return kResultFalse;
 }
 
@@ -771,6 +876,9 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
     int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
     NoteExpressionValue& valueNormalized /*out*/)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionValueByString"),
+	                     THREAD_CHECK_EXIT);
+
 	return kResultFalse;
 }
 
@@ -778,7 +886,70 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
 tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, int16 channel,
                                                                 PhysicalUIMapList& list)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getPhysicalUIMapping"),
+	                     THREAD_CHECK_EXIT);
+
 	addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
+	return kResultTrue;
+}
+
+//--- IKeyswitchController ---------------------------
+//------------------------------------------------------------------------
+int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 busIndex, int16 channel)
+{
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchCount"),
+	                     THREAD_CHECK_EXIT);
+
+	addFeatureLog (kLogIdIKeyswitchControllerSupported);
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 busIndex, int16 channel,
+                                                            int32 keySwitchIndex,
+                                                            KeyswitchInfo& info /*out*/)
+{
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchInfo"),
+	                     THREAD_CHECK_EXIT);
+
+	addFeatureLog (kLogIdIKeyswitchControllerSupported);
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::setAutomationState (int32 state)
+{
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setAutomationState"),
+	                     THREAD_CHECK_EXIT);
+
+	addFeatureLog (kLogIdIAutomationStateSupported);
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::beginEditFromHost (ParamID paramID)
+{
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEditFromHost"),
+	                     THREAD_CHECK_EXIT);
+
+	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
+	inEditFromHost++;
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::endEditFromHost (ParamID paramID)
+{
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEditFromHost"),
+	                     THREAD_CHECK_EXIT);
+
+	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
+	inEditFromHost--;
+	if (inEditFromHost < 0)
+	{
+		addFeatureLog (kLogIdIEditControllerHostEditingMisused);
+		inEditFromHost = 0;
+	}
 	return kResultTrue;
 }
 
@@ -839,50 +1010,75 @@ VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr n
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::queryInterface (const Steinberg::TUID iid, void** obj)
+tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void** obj)
 {
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IMidiMapping::iid))
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::queryInterface"),
+	                     THREAD_CHECK_EXIT);
+
+	if (FUnknownPrivate::iidEqual (iid, IMidiMapping::iid))
 	{
 		addRef ();
 		*obj = static_cast<IMidiMapping*> (this);
 		addFeatureLog (kLogIdIMidiMappingSupported);
-		return ::Steinberg::kResultOk;
+		return kResultOk;
 	}
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
+	if (FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
 	{
 		addRef ();
 		*obj = static_cast<IXmlRepresentationController*> (this);
-		addFeatureLog (kLogIdIXmlRepresentationControllerSupported); 
-		return ::Steinberg::kResultOk;
+		addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
+		return kResultOk;
 	}
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
+	if (FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
 	{
 		addRef ();
 		*obj = static_cast<ChannelContext::IInfoListener*> (this);
-		addFeatureLog (kLogIdChannelContextSupported); 
-		return ::Steinberg::kResultOk;
+		addFeatureLog (kLogIdChannelContextSupported);
+		return kResultOk;
 	}
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
+	if (FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionController*> (this);
-		addFeatureLog (kLogIdINoteExpressionControllerSupported); 
-		return ::Steinberg::kResultOk;
+		addFeatureLog (kLogIdINoteExpressionControllerSupported);
+		return kResultOk;
 	}
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
+	if (FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionPhysicalUIMapping*> (this);
 		addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
-		return ::Steinberg::kResultOk;
+		return kResultOk;
 	}
-	
-	if (::Steinberg::FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
+
+	if (FUnknownPrivate::iidEqual (iid, IKeyswitchController::iid))
+	{
+		addRef ();
+		*obj = static_cast<IKeyswitchController*> (this);
+		addFeatureLog (kLogIdIKeyswitchControllerSupported);
+		return kResultOk;
+	}
+
+	if (FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
 	{
 		addRef ();
 		*obj = static_cast<IMidiLearn*> (this);
 		addFeatureLog (kLogIdIMidiLearnSupported);
-		return ::Steinberg::kResultOk;
+		return kResultOk;
+	}
+	if (FUnknownPrivate::iidEqual (iid, IAutomationState::iid))
+	{
+		addRef ();
+		*obj = static_cast<IAutomationState*> (this);
+		addFeatureLog (kLogIdIAutomationStateSupported);
+		return kResultOk;
+	}
+	if (FUnknownPrivate::iidEqual (iid, IEditControllerHostEditing::iid))
+	{
+		addRef ();
+		*obj = static_cast<IEditControllerHostEditing*> (this);
+		addFeatureLog (kLogIdIEditControllerHostEditingSupported);
+		return kResultOk;
 	}
 	return EditControllerEx1::queryInterface (iid, obj);
 }
@@ -925,6 +1121,8 @@ tresult PLUGIN_API HostCheckerController::setState (IBStream* state)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getState (IBStream* state)
 {
+	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getState"), THREAD_CHECK_EXIT);
+
 	if (!state)
 		return kResultFalse;
 

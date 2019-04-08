@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -85,7 +85,7 @@ WindowPtr Window::make (const std::string& name, Size size, bool resizeable,
 //------------------------------------------------------------------------
 LRESULT CALLBACK Window::WndProc (HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	Window* window = reinterpret_cast<Window*> ((LONG_PTR)GetWindowLongPtr (hWnd, GWLP_USERDATA));
+	auto* window = reinterpret_cast<Window*> ((LONG_PTR)GetWindowLongPtr (hWnd, GWLP_USERDATA));
 	if (window)
 		return window->proc (message, wParam, lParam);
 	return DefWindowProc (hWnd, message, wParam, lParam);
@@ -130,9 +130,13 @@ bool Window::init (const std::string& name, Size size, bool resizeable,
 	if (resizeable)
 		dwStyle |= WS_SIZEBOX | WS_MAXIMIZEBOX;
 	auto windowTitle = VST3::StringConvert::convert (name);
-	if (hwnd =
-	        CreateWindowEx (exStyle, gWindowClassName, (const TCHAR*)windowTitle.data (), dwStyle,
-	                        0, 0, size.width, size.height, nullptr, nullptr, instance, nullptr))
+
+	RECT rect {0, 0, size.width, size.height};
+	AdjustWindowRectEx (&rect, dwStyle, false, exStyle);
+
+	if (hwnd = CreateWindowEx (exStyle, gWindowClassName, (const TCHAR*)windowTitle.data (),
+	                           dwStyle, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
+	                           nullptr, nullptr, instance, nullptr))
 	{
 		SetWindowLongPtr (hwnd, GWLP_USERDATA, (__int3264) (LONG_PTR)this);
 		This = shared_from_this ();
@@ -148,14 +152,14 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_ERASEBKGND:
 		{
-			return 1; // don't draw background
+			return TRUE; // don't draw background
 		}
 		case WM_PAINT:
 		{
 			PAINTSTRUCT ps {};
 			BeginPaint (hwnd, &ps);
 			EndPaint (hwnd, &ps);
-			return 0;
+			return FALSE;
 		}
 		case WM_SIZE:
 		{
@@ -191,7 +195,7 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_CLOSE:
 		{
 			closeImmediately ();
-			return 1;
+			return TRUE;
 		}
 		case WM_DPICHANGED:
 		{

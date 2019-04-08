@@ -80,13 +80,12 @@ tresult PLUGIN_API DX10Controller::initialize (FUnknown* context)
 	{
 		IndexedParameter* presetParam = new IndexedParameter (
 		    USTRING ("Factory Presets"), 0, DX10Processor::kNumPrograms - 1, 0,
-		    ParameterInfo::kCanAutomate | ParameterInfo::kIsProgramChange | ParameterInfo::kIsList,
-		    kPresetParam);
+		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		for (int32 i = 0; i < DX10Processor::kNumPrograms; i++)
 			presetParam->setIndexString (i, UString128 (presetNames[i]));
 		parameters.addParameter (presetParam);
 
-		ParamID pid = 0; 
+		ParamID pid = 0;
 		parameters.addParameter (USTRING("Attack"), USTRING("%"), 0, 0.15, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Decay"), USTRING("%"), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Release"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);

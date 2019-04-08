@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,11 +35,11 @@
 //-----------------------------------------------------------------------------
 
 #include "hostcheck.h"
+#include "logevents.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstevents.h"
-#include "logevents.h"
-#include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstparameterchanges.h"
 
 //------------------------------------------------------------------------
 HostCheck::HostCheck () : mComponent (nullptr)
@@ -52,10 +52,16 @@ HostCheck::HostCheck () : mComponent (nullptr)
 }
 
 //------------------------------------------------------------------------
-void HostCheck::addParameter (Steinberg::Vst::ParamID paramId) { mParameterIds.insert (paramId); }
+void HostCheck::addParameter (Steinberg::Vst::ParamID paramId)
+{
+	mParameterIds.insert (paramId);
+}
 
 //------------------------------------------------------------------------
-void HostCheck::addLogEvent (Steinberg::int32 logId) { mEventLogger.addLogEvent (logId); }
+void HostCheck::addLogEvent (Steinberg::int32 logId)
+{
+	mEventLogger.addLogEvent (logId);
+}
 
 //------------------------------------------------------------------------
 bool HostCheck::validate (Steinberg::Vst::ProcessData& data)
@@ -108,9 +114,12 @@ void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
 
 			for (Steinberg::int32 chIdx = 0; chIdx < tmpBuffers.numChannels; ++chIdx)
 			{
-				if (!tmpBuffers.channelBuffers32[chIdx])
+				if (!tmpBuffers.channelBuffers32 || !tmpBuffers.channelBuffers32[chIdx])
 				{
-					addLogEvent (kLogIdNullPointerToChannelBuf);
+					if (busInfo.busType == Steinberg::Vst::kAux)
+						addLogEvent (kLogIdNullPointerToAuxChannelBuf);
+					else
+						addLogEvent (kLogIdNullPointerToChannelBuf);
 				}
 			}
 		}

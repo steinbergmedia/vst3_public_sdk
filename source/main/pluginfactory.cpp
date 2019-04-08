@@ -1,14 +1,14 @@
-//------------------------------------------------------------------------
-// Project     : VST SDK
+//-----------------------------------------------------------------------------
+// Project     : SDK Core
 //
 // Category    : Common Base Classes
-// Filename    : public.sdk/source/main/pluginfactoryvst3.cpp
+// Filename    : public.sdk/source/main/pluginfactory.cpp
 // Created by  : Steinberg, 01/2004
-// Description : Standard Plug-in Factory
+// Description : Standard Plug-In Factory
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -30,12 +30,11 @@
 // BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
 // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
+// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "pluginfactoryvst3.h"
-#include "pluginterfaces/gui/iplugview.h"
+#include "pluginfactory.h"
 
 #include <stdlib.h>
 
@@ -43,26 +42,11 @@ namespace Steinberg {
 
 CPluginFactory* gPluginFactory = nullptr;
 
-DEF_CLASS_IID (IPluginBase)
-DEF_CLASS_IID (IPlugView)
-DEF_CLASS_IID (IPlugFrame)
-DEF_CLASS_IID (IPluginFactory)
-DEF_CLASS_IID (IPluginFactory2)
-DEF_CLASS_IID (IPluginFactory3)
-
-#if SMTG_OS_LINUX
-DEF_CLASS_IID (Linux::IEventHandler)
-DEF_CLASS_IID (Linux::ITimerHandler)
-DEF_CLASS_IID (Linux::IRunLoop)
-#endif
-
 //------------------------------------------------------------------------
 //  CPluginFactory implementation
 //------------------------------------------------------------------------
 CPluginFactory::CPluginFactory (const PFactoryInfo& info)
-: classes (nullptr)
-, classCount (0)
-, maxClassCount (0)
+: classes (nullptr), classCount (0), maxClassCount (0)
 {
 	FUNKNOWN_CTOR
 
@@ -96,8 +80,8 @@ tresult PLUGIN_API CPluginFactory::queryInterface (FIDString _iid, void** obj)
 }
 
 //------------------------------------------------------------------------
-bool CPluginFactory::registerClass (const PClassInfo* info,
-									FUnknown* (*createFunc)(void*), void* context)
+bool CPluginFactory::registerClass (const PClassInfo* info, FUnknown* (*createFunc) (void*),
+                                    void* context)
 {
 	if (!info || !createFunc)
 		return false;
@@ -108,8 +92,8 @@ bool CPluginFactory::registerClass (const PClassInfo* info,
 }
 
 //------------------------------------------------------------------------
-bool CPluginFactory::registerClass (const PClassInfo2* info,
-									FUnknown* (*createFunc)(void*), void* context)
+bool CPluginFactory::registerClass (const PClassInfo2* info, FUnknown* (*createFunc) (void*),
+                                    void* context)
 {
 	if (!info || !createFunc)
 		return false;
@@ -132,8 +116,8 @@ bool CPluginFactory::registerClass (const PClassInfo2* info,
 }
 
 //------------------------------------------------------------------------
-bool CPluginFactory::registerClass (const PClassInfoW* info,
-								    FUnknown* (*createFunc)(void*), void* context)
+bool CPluginFactory::registerClass (const PClassInfoW* info, FUnknown* (*createFunc) (void*),
+                                    void* context)
 {
 	if (!info || !createFunc)
 		return false;
@@ -184,6 +168,12 @@ bool CPluginFactory::isClassRegistered (const FUID& cid)
 			return true;
 	}
 	return false;
+}
+
+//------------------------------------------------------------------------
+void CPluginFactory::removeAllClasses ()
+{
+	classCount = 0;
 }
 
 //------------------------------------------------------------------------

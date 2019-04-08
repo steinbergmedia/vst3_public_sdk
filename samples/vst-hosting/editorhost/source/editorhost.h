@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,10 +38,10 @@
 #pragma once
 
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iapplication.h"
+#include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/hosting/optional.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
-#include "public.sdk/source/vst/hosting/hostclasses.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -54,6 +54,7 @@ class App : public IApplication
 public:
 	~App () noexcept override;
 	void init (const std::vector<std::string>& cmdArgs) override;
+	void terminate () override;
 
 private:
 	enum OpenFlags

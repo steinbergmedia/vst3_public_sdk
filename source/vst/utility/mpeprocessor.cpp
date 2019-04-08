@@ -37,6 +37,7 @@
 #include "mpeprocessor.h"
 #include <array>
 #include <vector>
+#include <assert.h>
 
 //------------------------------------------------------------------------
 namespace Steinberg {

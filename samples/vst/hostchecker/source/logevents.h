@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -86,6 +86,7 @@ struct LogEvent
 	LOG_DEF(kLogIdProcessContextPointerNull,	PROCESS,	LOG_WARN, PROCESS_DATA, "Pointer to ProcessContext struct is null."),\
 	LOG_DEF(kLogIdInvalidProcessContextSampleRate,	PROCESS, LOG_ERR, PROCESS_CONTEXT, "The sampleRate does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdNullPointerToChannelBuf,		PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a channel buffer is null although the index is valid."),\
+	LOG_DEF(kLogIdNullPointerToAuxChannelBuf,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a SideChain channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAudioBusBuffer,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to an audio bus buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdAudioBufNotMatchComponentBusCount,PROCESS, LOG_ERR, AUDIO_BUFFER, "Number of Audio Buffers does not match the number of buses defined by IComponent."),\
 	LOG_DEF(kLogIdInvalidAudioBufNumOfChannels,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "An audio bus number of channels is different from the one specified by IComponent."),\
@@ -122,6 +123,7 @@ struct LogEvent
 	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
 	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
+	\
 	LOG_DEF(kLogIdCanProcessSampleSize32,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample32 supported!"), \
 	LOG_DEF(kLogIdCanProcessSampleSize64,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample64 supported!"), \
 	LOG_DEF(kLogIdGetTailSamples,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getTailSamples supported!"), \
@@ -130,6 +132,7 @@ struct LogEvent
 	LOG_DEF(kLogIdSetBusArrangements,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::setBusArrangements supported!"), \
 	LOG_DEF(kLogIdGetRoutingInfo,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::getRoutingInfo supported!"), \
 	LOG_DEF(kLogIdActivateAuxBus,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::activateBus for SideChain supported!"), \
+	\
 	LOG_DEF(kLogIdIEditController2Supported,        CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
 	LOG_DEF(kLogIdIMidiMappingSupported,            CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
 	LOG_DEF(kLogIdUnitSupported,                    CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
@@ -137,22 +140,35 @@ struct LogEvent
 	LOG_DEF(kLogIdChannelContextSupported,          CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
 	LOG_DEF(kLogIdINoteExpressionControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
 	LOG_DEF(kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
+	LOG_DEF(kLogIdIKeyswitchControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IKeyswitchController supported!"), \
+	\
 	LOG_DEF(kLogIdIMidiLearnSupported,              CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
 	LOG_DEF(kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
+	\
 	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
+	LOG_DEF (kLogIdIAutomationStateSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
+	LOG_DEF (kLogIdIEditControllerHostEditingSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
+	LOG_DEF(kLogIdIEditControllerHostEditingMisused,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IEditControllerHostEditing::beginEditFromHost-endEditFromHost not correctly used!"), \
+	\
 	LOG_DEF(kLogIdIPlugViewonSizeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize supported!"), \
 	LOG_DEF(kLogIdIPlugViewcanResizeSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::canResize supported!"), \
 	LOG_DEF(kLogIdIPlugViewcheckSizeConstraintSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::checkSizeConstraint supported!"), \
-	LOG_DEF(kLogIdIPlugViewsetContentScaleFactorSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugViewContentScaleSupport::setContentScaleFactor supported!"), \
 	LOG_DEF(kLogIdIPlugViewsetFrameSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::setFrame supported!"), \
+	LOG_DEF(kLogIdIPlugViewOnWheelCalled,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onWheel supported!"), \
+	LOG_DEF(kLogIdIPlugViewOnKeyDownSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onKeyDown supported!"), \
+	LOG_DEF(kLogIdIPlugViewOnKeyUpSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onKeyUp supported!"), \
+	LOG_DEF(kLogIdIPlugViewOnFocusCalled,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onFocus supported!"), \
+	LOG_DEF(kLogIdIPlugViewsetContentScaleFactorSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugViewContentScaleSupport::setContentScaleFactor supported!"), \
+	\
 	LOG_DEF(kLogIdIPlugViewmultipleAttachSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::attached-removed called multiple time."), \
 	LOG_DEF(kLogIdIPlugViewCalledSync,				CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize is called sync during a resizeView."), \
+	LOG_DEF(kLogIdIPlugViewCalledBeforeOpen,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize is called before attached."), \
 	LOG_DEF(kLogIdIPlugViewKeyCalledBeforeAttach,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onKeyUp or onKeyDown or onWheel is called before attached!"), \
 	LOG_DEF(kLogIdIPlugViewNotCalled,				CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onSize not called after a resizeView!"), \
-	LOG_DEF(kLogIdIPlugViewCalledBeforeOpen,		CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onSize is called before attached!"), \
 	LOG_DEF(kLogIdIPlugViewCalledAsync,				CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onSize is called async after a resizeView. Should be Sync!"), \
 	LOG_DEF(kLogIdIPlugViewattachedWithoutRemoved,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::attached is called without removed first!"), \
 	LOG_DEF(kLogIdIPlugViewremovedWithoutAttached,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::removed is called without attached first!"), \
+	\
 	LOG_DEF(kLogIdIParameterFinderSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IParameterFinder supported!")
 
 #define LOG_ID(a, b, c, d, e) a

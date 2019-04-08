@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -110,13 +110,26 @@ private:
 class ComponentHandler : public IComponentHandler
 {
 public:
-	tresult PLUGIN_API beginEdit (ParamID /*id*/) override { return kNotImplemented; }
-	tresult PLUGIN_API performEdit (ParamID /*id*/, ParamValue /*valueNormalized*/) override
+	tresult PLUGIN_API beginEdit (ParamID id) override
 	{
+		SMTG_DBPRT1 ("beginEdit called (%d)\n", id);
 		return kNotImplemented;
 	}
-	tresult PLUGIN_API endEdit (ParamID /*id*/) override { return kNotImplemented; }
-	tresult PLUGIN_API restartComponent (int32 /*flags*/) override { return kNotImplemented; }
+	tresult PLUGIN_API performEdit (ParamID id, ParamValue valueNormalized) override
+	{
+		SMTG_DBPRT2 ("performEdit called (%d, %f)\n", id, valueNormalized);
+		return kNotImplemented;
+	}
+	tresult PLUGIN_API endEdit (ParamID id) override
+	{
+		SMTG_DBPRT1 ("endEdit called (%d)\n", id);
+		return kNotImplemented;
+	}
+	tresult PLUGIN_API restartComponent (int32 flags) override
+	{
+		SMTG_DBPRT1 ("restartComponent called (%d)\n", flags);
+		return kNotImplemented;
+	}
 
 private:
 	tresult PLUGIN_API queryInterface (const TUID /*_iid*/, void** /*obj*/) override
@@ -132,9 +145,7 @@ static ComponentHandler gComponentHandler;
 //------------------------------------------------------------------------
 App::~App () noexcept
 {
-	plugProvider.reset ();
-	module.reset ();
-	gStandardPluginContext = nullptr;
+	terminate ();
 }
 
 //------------------------------------------------------------------------
@@ -150,6 +161,7 @@ void App::openEditor (const std::string& path, VST3::Optional<VST3::UID> effectI
 		reason += error;
 		IPlatform::instance ().kill (-1, reason);
 	}
+
 	auto factory = module->getFactory ();
 	for (auto& classInfo : factory.classInfos ())
 	{
@@ -184,12 +196,19 @@ void App::openEditor (const std::string& path, VST3::Optional<VST3::UID> effectI
 	editController->release (); // plugProvider does an addRef
 
 	if (flags & kSetComponentHandler)
+	{
+		SMTG_DBPRT0 ("setComponentHandler is used\n");
 		editController->setComponentHandler (&gComponentHandler);
+	}
 
+	SMTG_DBPRT1 ("Open Editor for %s...\n", path.c_str ());
 	createViewAndShow (editController);
 
 	if (flags & kSecondWindow)
+	{
+		SMTG_DBPRT0 ("Open 2cd Editor...\n");
 		createViewAndShow (editController);
+	}
 }
 
 //------------------------------------------------------------------------
@@ -267,6 +286,14 @@ options:
 }
 
 //------------------------------------------------------------------------
+void App::terminate ()
+{
+	plugProvider.reset ();
+	module.reset ();
+	gStandardPluginContext = nullptr;
+}
+
+//------------------------------------------------------------------------
 WindowController::WindowController (const IPtr<IPlugView>& plugView) : plugView (plugView)
 {
 }
@@ -279,6 +306,8 @@ WindowController::~WindowController () noexcept
 //------------------------------------------------------------------------
 void WindowController::onShow (IWindow& w)
 {
+	SMTG_DBPRT1 ("onShow called (%p)\n", (void*)&w);
+
 	window = &w;
 	if (!plugView)
 		return;
@@ -299,8 +328,10 @@ void WindowController::onShow (IWindow& w)
 }
 
 //------------------------------------------------------------------------
-void WindowController::onClose (IWindow& /*w*/)
+void WindowController::onClose (IWindow& w)
 {
+	SMTG_DBPRT1 ("onClose called (%p)\n", (void*)&w);
+
 	if (plugView)
 	{
 		plugView->setFrame (nullptr);
@@ -308,6 +339,7 @@ void WindowController::onClose (IWindow& /*w*/)
 		{
 			IPlatform::instance ().kill (-1, "Removing PlugView failed");
 		}
+		plugView = nullptr;
 	}
 	window = nullptr;
 
@@ -316,8 +348,10 @@ void WindowController::onClose (IWindow& /*w*/)
 }
 
 //------------------------------------------------------------------------
-void WindowController::onResize (IWindow& /*w*/, Size newSize)
+void WindowController::onResize (IWindow& w, Size newSize)
 {
+	SMTG_DBPRT1 ("onResize called (%p)\n", (void*)&w);
+
 	if (plugView)
 	{
 		ViewRect r {};
@@ -330,8 +364,10 @@ void WindowController::onResize (IWindow& /*w*/, Size newSize)
 }
 
 //------------------------------------------------------------------------
-Size WindowController::constrainSize (IWindow& /*w*/, Size requestedSize)
+Size WindowController::constrainSize (IWindow& w, Size requestedSize)
 {
+	SMTG_DBPRT1 ("constrainSize called (%p)\n", (void*)&w);
+
 	ViewRect r {};
 	r.right = requestedSize.width;
 	r.bottom = requestedSize.height;
@@ -345,8 +381,10 @@ Size WindowController::constrainSize (IWindow& /*w*/, Size requestedSize)
 }
 
 //------------------------------------------------------------------------
-void WindowController::onContentScaleFactorChanged (IWindow& /*window*/, float newScaleFactor)
+void WindowController::onContentScaleFactorChanged (IWindow& w, float newScaleFactor)
 {
+	SMTG_DBPRT1 ("onContentScaleFactorChanged called (%p)\n", (void*)&w);
+
 	FUnknownPtr<IPlugViewContentScaleSupport> css (plugView);
 	if (css)
 	{
@@ -357,6 +395,8 @@ void WindowController::onContentScaleFactorChanged (IWindow& /*window*/, float n
 //------------------------------------------------------------------------
 tresult PLUGIN_API WindowController::resizeView (IPlugView* view, ViewRect* newSize)
 {
+	SMTG_DBPRT1 ("resizeView called (%p)\n", (void*)view);
+
 	if (newSize == nullptr || view == nullptr || view != plugView)
 		return kInvalidArgument;
 	if (!window)

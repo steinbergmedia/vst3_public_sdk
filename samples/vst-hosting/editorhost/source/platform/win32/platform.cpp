@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -101,6 +101,9 @@ void Platform::quit ()
 	for (auto& window : Window::getWindows ())
 		window->closeImmediately ();
 
+	if (application)
+		application->terminate ();
+
 	PostQuitMessage (0);
 }
 
@@ -132,7 +135,7 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE hInstance)
 	application->init (cmdArgStrings);
 
 	MSG msg;
-	while (GetMessage (&msg, NULL, 0, 0))
+	while (GetMessage (&msg, nullptr, 0, 0))
 	{
 		TranslateMessage (&msg);
 		DispatchMessage (&msg);
@@ -148,11 +151,17 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE hInstance)
 int APIENTRY wWinMain (_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance,
                        _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	HRESULT hr = CoInitialize (NULL);
+#if !SMTG_OS_WINDOWS_ARM
+	HRESULT hr = CoInitialize (nullptr);
 	if (FAILED (hr))
 		return FALSE;
+#endif
 
 	Steinberg::Vst::EditorHost::Platform::instance ().run (lpCmdLine, instance);
+
+#if !SMTG_OS_WINDOWS_ARM
 	CoUninitialize ();
+#endif
+
 	return 0;
 }

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -778,6 +778,12 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 		//--- Tell the plug-in that chunk data is coming from a TFX
 		case AAX_eNotificationEvent_PresetOpened:
 		{
+			// do not wanted to overwrite the bypass state when loading preset
+			double value;
+			if (GetParameterNormalizedValue (
+			        mSimulateBypass ? kBypassId : AAX_CID (mWrapper->mBypassParameterID), &value) ==
+			    AAX_SUCCESS)
+				mWrapper->mBypassBeforePresetChanged = (value >= 0.5);
 			mWrapper->mPresetChanged = true;
 			break;
 		}

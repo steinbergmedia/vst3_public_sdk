@@ -1,14 +1,14 @@
 //------------------------------------------------------------------------
-// Project     : VST SDK
+// Project     : SDK Core
 //
 // Category    : Common Base Classes
-// Filename    : public.sdk/source/main/pluginfactoryvst3.h
+// Filename    : public.sdk/source/main/pluginfactory.h
 // Created by  : Steinberg, 01/2004
-// Description : Standard Plug-in Factory
+// Description : Standard Plug-In Factory
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -52,25 +52,24 @@ public:
 	CPluginFactory (const PFactoryInfo& info);
 	virtual ~CPluginFactory ();
 
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	/** Registers a Plug-in class with classInfo version 1, returns true for success. */
-	bool registerClass (const PClassInfo* info,
-						FUnknown* (*createFunc)(void*),
-						void* context = nullptr);
+	bool registerClass (const PClassInfo* info, FUnknown* (*createFunc) (void*),
+	                    void* context = nullptr);
 
 	/** Registers a Plug-in class with classInfo version 2, returns true for success. */
-	bool registerClass (const PClassInfo2* info,
-						FUnknown* (*createFunc)(void*),
-						void* context = nullptr);
+	bool registerClass (const PClassInfo2* info, FUnknown* (*createFunc) (void*),
+	                    void* context = nullptr);
 
 	/** Registers a Plug-in class with classInfo Unicode version, returns true for success. */
-	bool registerClass (const PClassInfoW* info,
-						FUnknown* (*createFunc)(void*),
-						void* context = nullptr);
-
+	bool registerClass (const PClassInfoW* info, FUnknown* (*createFunc) (void*),
+	                    void* context = nullptr);
 
 	/** Check if a class for a given classId is already registered. */
 	bool isClassRegistered (const FUID& cid);
+
+	/** Remove all classes (no class exported) */
+	void removeAllClasses ();
 
 //------------------------------------------------------------------------
 	DECLARE_FUNKNOWN_METHODS
@@ -97,7 +96,7 @@ protected:
 		PClassInfo2 info8;
 		PClassInfoW info16;
 
-		FUnknown* (*createFunc)(void*);
+		FUnknown* (*createFunc) (void*);
 		void* context;
 		bool isUnicode;
 	//-----------------------------------
@@ -146,6 +145,12 @@ END_FACTORY
 
 @{*/
 
+#define BEGIN_FACTORY_CLASS(FactoryClass,vendor,url,email,flags) using namespace Steinberg; \
+	EXPORT_FACTORY IPluginFactory* PLUGIN_API GetPluginFactory () { \
+	if (!gPluginFactory) \
+	{	static PFactoryInfo factoryInfo (vendor,url,email,flags); \
+	gPluginFactory = new FactoryClass (factoryInfo); \
+
 #define BEGIN_FACTORY(vendor,url,email,flags) using namespace Steinberg; \
 	EXPORT_FACTORY IPluginFactory* PLUGIN_API GetPluginFactory () { \
 	if (!gPluginFactory) \
@@ -161,13 +166,12 @@ END_FACTORY
 	gPluginFactory->registerClass (&componentClass,createMethod); }
 
 #define DEF_CLASS2(cid,cardinality,category,name,classFlags,subCategories,version,sdkVersion,createMethod) \
-	{ TUID lcid = cid; static PClassInfo2 componentClass (lcid,cardinality,category,name,classFlags,subCategories, 0 ,version,sdkVersion);\
+	{ TUID lcid = cid; static PClassInfo2 componentClass (lcid,cardinality,category,name,classFlags,subCategories,0,version,sdkVersion);\
 	gPluginFactory->registerClass (&componentClass,createMethod); }
 
 #define DEF_CLASS_W(cid,cardinality,category,name,classFlags,subCategories,version,sdkVersion,createMethod) \
-	{ TUID lcid = cid; static PClassInfoUnicode componentClass (lcid,cardinality,category,name,classFlags,subCategories, 0,version,sdkVersion);\
+	{ TUID lcid = cid; static PClassInfoW componentClass (lcid,cardinality,category,name,classFlags,subCategories,0,version,sdkVersion);\
 	gPluginFactory->registerClass (&componentClass,createMethod); }
-
 
 #define END_FACTORY	} else gPluginFactory->addRef (); \
 	return gPluginFactory; }

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -190,6 +190,7 @@ private:
 	Steinberg::Vst::TQuarterNotes mNextPpqPos = 0;
 
 	bool mPresetChanged = false;
+	bool mBypassBeforePresetChanged = false;
 
 	friend class AAXWrapper_Parameters;
 	friend class AAXWrapper_GUI;

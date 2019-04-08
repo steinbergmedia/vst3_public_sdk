@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 #pragma once
 
 #include "public.sdk/source/vst/hosting/module.h"
-#include "public.sdk/source/vst/testsuite/vsttestsuite.h" // for IPlugProvider
+#include "pluginterfaces/vst/ivsttestplugprovider.h"
 #include "base/source/fobject.h"
 
 namespace Steinberg {
@@ -51,7 +51,7 @@ class ConnectionProxy;
 /** Helper for creating and initializing component.
 \ingroup Validator */
 //------------------------------------------------------------------------
-class PlugProvider : public FObject, public IPlugProvider
+class PlugProvider : public FObject, public ITestPlugProvider
 {
 public:
 	using ClassInfo = VST3::Hosting::ClassInfo;
@@ -61,21 +61,21 @@ public:
 	PlugProvider (const PluginFactory& factory, ClassInfo info, bool plugIsGlobal = true);
 	virtual ~PlugProvider ();
 
-	//--- from IPlugProvider ------------------
-	IComponent* getComponent () SMTG_OVERRIDE;
-	IEditController* getController () SMTG_OVERRIDE;
-	tresult releasePlugIn (IComponent* component, IEditController* controller) SMTG_OVERRIDE;
-	tresult getSubCategories (IString& result) const SMTG_OVERRIDE
+	//--- from ITestPlugProvider ------------------
+	IComponent* PLUGIN_API getComponent () SMTG_OVERRIDE;
+	IEditController* PLUGIN_API getController () SMTG_OVERRIDE;
+	tresult PLUGIN_API releasePlugIn (IComponent* component, IEditController* controller) SMTG_OVERRIDE;
+	tresult PLUGIN_API getSubCategories (IStringResult& result) const SMTG_OVERRIDE
 	{
-		result.setText8 (classInfo.subCategoriesString ().data ());
+		result.setText (classInfo.subCategoriesString ().data ());
 		return kResultTrue;
 	}
-	tresult getPluginUID (FUID& uid) const SMTG_OVERRIDE;
+	tresult PLUGIN_API getComponentUID (FUID& uid) const SMTG_OVERRIDE;
 
 	//--- ---------------------------------------------------------------------
 	OBJ_METHODS (PlugProvider, FObject)
 	REFCOUNT_METHODS (FObject)
-	DEF_INTERFACES_1 (IPlugProvider, FObject)
+	DEF_INTERFACES_1(ITestPlugProvider, FObject)
 //------------------------------------------------------------------------
 protected:
 	bool setupPlugin (FUnknown* hostContext);
