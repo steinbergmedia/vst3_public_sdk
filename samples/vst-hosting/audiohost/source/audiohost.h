@@ -54,6 +54,7 @@ class App : public EditorHost::IApplication
 public:
 	~App () noexcept override;
 	void init (const std::vector<std::string>& cmdArgs) override;
+	void terminate () override;
 
 private:
 	enum OpenFlags

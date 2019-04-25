@@ -42,9 +42,3 @@
 // in only one source file!
 //------------------------------------------------------------------------
 //#define INIT_CLASS_IID
-
-#include "public.sdk/source/vst/hosting/plugprovider.h"
-
-namespace Steinberg {
-DEF_CLASS_IID (Vst::IPlugProvider)
-}

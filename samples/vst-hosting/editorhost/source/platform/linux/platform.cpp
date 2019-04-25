@@ -162,6 +162,9 @@ void Platform::quit ()
 
 	closeAllWindows ();
 
+	if (application)
+		application->terminate ();
+
 #ifndef EDITORHOST_GTK
 	RunLoop::instance ().stop ();
 #endif
