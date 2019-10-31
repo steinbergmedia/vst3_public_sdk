@@ -417,6 +417,15 @@ tresult EditControllerEx1::notifyProgramListChange (ProgramListID listId, int32 
 	return result;
 }
 
+//-----------------------------------------------------------------------------
+tresult EditControllerEx1::terminate()
+{
+    units.clear ();
+    programLists.clear ();
+
+    return EditController::terminate ();
+}
+
 //------------------------------------------------------------------------
 int32 PLUGIN_API EditControllerEx1::getProgramListCount ()
 {
