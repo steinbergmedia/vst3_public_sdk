@@ -38,6 +38,8 @@
 #include "public.sdk/source/vst/testsuite/general/midimapping.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
+#include <unordered_set>
+
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
@@ -74,7 +76,15 @@ bool PLUGIN_API MidiMappingTest::run (ITestResult* testResult)
 	int32 eventBusCount = vstPlug->getBusCount (kEvent, kInput);
 	bool interruptProcess = false;
 
-	for (int32 bus = 0; bus < eventBusCount + 1; bus++)
+    std::unordered_set<ParamID> parameterIds;
+    for (int32 i = 0; i < numParameters; ++i)
+    {
+        ParameterInfo parameterInfo;
+        if (controller->getParameterInfo (i, parameterInfo) == kResultTrue)
+        parameterIds.insert (parameterInfo.id);
+    }
+
+    for (int32 bus = 0; bus < eventBusCount + 1; bus++)
 	{
 		if (interruptProcess)
 			break;
@@ -117,21 +127,8 @@ bool PLUGIN_API MidiMappingTest::run (ITestResult* testResult)
 						        "MIDI Mapping supplied for a wrong ControllerNumbers value (bigger than the max)"));
 						break;
 					}
-
-					bool foundParameter = false;
-					for (int32 i = 0; i < numParameters; ++i)
-					{
-						ParameterInfo info2;
-						if (controller->getParameterInfo (i, info2) == kResultTrue)
-						{
-							if (info2.id == tag)
-							{
-								foundParameter = true;
-								break;
-							}
-						}
-					}
-					if (!foundParameter)
+					
+                    if (parameterIds.find (tag) == parameterIds.end ())
 					{
 						addErrorMessage (
 						    testResult,
