@@ -307,7 +307,7 @@ public:
 	tresult notifyProgramListChange (ProgramListID listId, int32 programIndex = kAllProgramInvalid);
 
     //---from EditController---------
-    tresult PLUGIN_API terminate  () SMTG_OVERRIDE;
+    tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
     //---from IUnitInfo------------------
 	int32 PLUGIN_API getUnitCount () SMTG_OVERRIDE { return static_cast<int32> (units.size ()); }
