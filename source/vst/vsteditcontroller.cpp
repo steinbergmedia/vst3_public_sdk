@@ -422,6 +422,7 @@ tresult EditControllerEx1::terminate()
 {
     units.clear ();
     programLists.clear ();
+    programIndexMap.clear ();
 
     return EditController::terminate ();
 }
