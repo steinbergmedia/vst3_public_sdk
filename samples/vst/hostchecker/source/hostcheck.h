@@ -66,13 +66,14 @@ public:
 		return instance;
 	}
 
-	typedef std::set<Steinberg::Vst::ParamID> ParamIDs;
+	using ParamIDs = std::set<Steinberg::Vst::ParamID>;
 
 	HostCheck ();
 	void addParameter (Steinberg::Vst::ParamID paramId);
 	void setProcessSetup (Steinberg::Vst::ProcessSetup& setup);
 	void setComponent (Steinberg::Vst::IComponent* component);
-	bool validate (Steinberg::Vst::ProcessData& data);
+	bool validate (Steinberg::Vst::ProcessData& data, Steinberg::int32 minInputBufferCount,
+	               Steinberg::int32 minOutputBufferCount);
 
 	const EventLogger::Codes& getEventLogs () const { return mEventLogger.getLogEvents (); }
 
@@ -84,13 +85,10 @@ public:
 private:
 	void addLogEvent (Steinberg::int32 logId);
 	void checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers, Steinberg::int32 numBuffers,
-	                        Steinberg::Vst::BusDirection dir);
-	bool checkParameterCount (Steinberg::int32 paramCount);
-	bool checkParameterId (Steinberg::Vst::ParamID paramId);
-	bool isNormalized (float normVal) const;
+	                        Steinberg::Vst::BusDirection dir, Steinberg::int32 symbolicSampleSize,
+	                        Steinberg::int32 minBufferCount);
 
-	Steinberg::Vst::ProcessSetup mSetup;
-	Steinberg::Vst::IComponent* mComponent;
+	Steinberg::Vst::IComponent* mComponent {nullptr};
 	ParamIDs mParameterIds;
 
 	ProcessSetupCheck mProcessSetupCheck;

@@ -205,10 +205,9 @@ bool ProcessTest::setupBuffers (int32 numBusses, AudioBusBuffers* audioBuffers, 
 
 			if ((busInfo.flags & BusInfo::kDefaultActive) != 0)
 			{
-				for (int32 channelIndex = 0; channelIndex < busInfo.channelCount;
-				     channelIndex++) // channels per bus
+				for (int32 chIdx = 0; chIdx < busInfo.channelCount; chIdx++) // channels per bus
 					audioBuffers[busIndex].silenceFlags |=
-					    (TestDefaults::instance ().channelIsSilent << channelIndex);
+					    (TestDefaults::instance ().channelIsSilent << chIdx);
 			}
 		}
 		else
@@ -223,16 +222,16 @@ bool ProcessTest::setupBuffers (AudioBusBuffers& audioBuffers)
 	if (processSetup.symbolicSampleSize != processData.symbolicSampleSize)
 		return false;
 	audioBuffers.silenceFlags = 0;
-	for (int32 channelIndex = 0; channelIndex < audioBuffers.numChannels; channelIndex++)
+	for (int32 chIdx = 0; chIdx < audioBuffers.numChannels; chIdx++)
 	{
 		if (processSetup.symbolicSampleSize == kSample32)
 		{
 			if (audioBuffers.channelBuffers32)
 			{
-				audioBuffers.channelBuffers32[channelIndex] =
+				audioBuffers.channelBuffers32[chIdx] =
 				    new Sample32[processSetup.maxSamplesPerBlock];
-				if (audioBuffers.channelBuffers32[channelIndex])
-					memset (audioBuffers.channelBuffers32[channelIndex], 0,
+				if (audioBuffers.channelBuffers32[chIdx])
+					memset (audioBuffers.channelBuffers32[chIdx], 0,
 					        processSetup.maxSamplesPerBlock * sizeof (Sample32));
 				else
 					return false;
@@ -244,10 +243,10 @@ bool ProcessTest::setupBuffers (AudioBusBuffers& audioBuffers)
 		{
 			if (audioBuffers.channelBuffers64)
 			{
-				audioBuffers.channelBuffers64[channelIndex] =
+				audioBuffers.channelBuffers64[chIdx] =
 				    new Sample64[processSetup.maxSamplesPerBlock];
-				if (audioBuffers.channelBuffers64[channelIndex])
-					memset (audioBuffers.channelBuffers64[channelIndex], 0,
+				if (audioBuffers.channelBuffers64[chIdx])
+					memset (audioBuffers.channelBuffers64[chIdx], 0,
 					        processSetup.maxSamplesPerBlock * sizeof (Sample64));
 				else
 					return false;
@@ -278,12 +277,12 @@ bool ProcessTest::freeBuffers (int32 numBuses, AudioBusBuffers* buses)
 		return false;
 	for (int32 busIndex = 0; busIndex < numBuses; busIndex++)
 	{
-		for (int32 channelIndex = 0; channelIndex < buses[busIndex].numChannels; channelIndex++)
+		for (int32 chIdx = 0; chIdx < buses[busIndex].numChannels; chIdx++)
 		{
 			if (processSetup.symbolicSampleSize == kSample32)
-				delete[] buses[busIndex].channelBuffers32[channelIndex];
+				delete[] buses[busIndex].channelBuffers32[chIdx];
 			else if (processSetup.symbolicSampleSize == kSample64)
-				delete[] buses[busIndex].channelBuffers64[channelIndex];
+				delete[] buses[busIndex].channelBuffers64[chIdx];
 			else
 				return false;
 		}

@@ -72,7 +72,7 @@ bool CheckAudioBusArrangementTest::run (ITestResult* testResult)
 			addMessage (testResult, printf ("   Check %s Audio Bus Arrangement (%d)",
 			                                dir == kInput ? "Input" : "Output", busIndex));
 
-			BusInfo busInfo = {0};
+			BusInfo busInfo = {};
 			if (vstPlug->getBusInfo (kAudio, dir, busIndex, busInfo) == kResultTrue)
 			{
 				SpeakerArrangement arrangement;

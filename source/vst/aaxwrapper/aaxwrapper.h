@@ -102,14 +102,14 @@ public:
 	REFCOUNT_METHODS (BaseWrapper);
 
 	// AAXWrapper_Parameters callbacks
-	void setGUI (AAXWrapper_GUI* gui) { aaxGUI = gui; }
+	void setGUI (AAXWrapper_GUI* gui) { mAAXGUI = gui; }
 	Steinberg::int32 /*AAX_Result*/ getParameterInfo (const char* aaxId,
 	                                                  Steinberg::Vst::ParameterInfo& paramInfo);
 	Steinberg::int32 /*AAX_Result*/ ResetFieldData (Steinberg::int32 index, void* inData,
 	                                                Steinberg::uint32 inDataSize);
 	Steinberg::int32 Process (AAXWrapper_Context* instance);
 
-	Steinberg::int32 getNumMIDIports () const { return countMIDIports; }
+	Steinberg::int32 getNumMIDIports () const { return mCountMIDIports; }
 
 	void setSideChainEnable (bool enable);
 	bool generatePageTables (const char* outputFile);
@@ -119,7 +119,7 @@ public:
 	                                        const AAX_Plugin_Desc* pdesc);
 
 	//--- ---------------------------------------------------------------------
-	Steinberg::int32 getNumAAXOutputs () const { return aaxOutputs; }
+	Steinberg::int32 getNumAAXOutputs () const { return mAAXOutputs; }
 
 	//------------------------------------------------------------------------
 	// BaseWrapper overrides ---------------------------------
@@ -143,14 +143,14 @@ private:
 	void guessActiveOutputs (float** out, Steinberg::int32 num);
 	void updateActiveOutputState ();
 
-	AAXWrapper_Parameters* aaxParams = nullptr;
-	AAXWrapper_GUI* aaxGUI = nullptr;
+	AAXWrapper_Parameters* mAAXParams = nullptr;
+	AAXWrapper_GUI* mAAXGUI = nullptr;
 
-	Steinberg::int32 aaxOutputs = 0;
+	Steinberg::int32 mAAXOutputs = 0;
 
-	Steinberg::Base::Thread::FLock syncCalls; // synchronize calls expected in the same thread in VST3
-	AAX_Plugin_Desc* pluginDesc = nullptr;
-	Steinberg::int32 countMIDIports = 0;
+	Steinberg::Base::Thread::FLock mSyncCalls; // synchronize calls expected in the same thread in VST3
+	AAX_Plugin_Desc* mPluginDesc = nullptr;
+	Steinberg::int32 mCountMIDIports = 0;
 
 	// as of ProTools 12 (?) the context struct does no longer allow unused slots,
 	//  so we have to generate indices into the context struct dynamically
@@ -166,19 +166,19 @@ private:
 	Steinberg::int32 numDataPointers = 0;
 
 	static const Steinberg::int32 maxActiveChannels = 128;
-	std::bitset<maxActiveChannels> activeChannels;
-	std::bitset<maxActiveChannels> propagatedChannels;
+	std::bitset<maxActiveChannels> mActiveChannels;
+	std::bitset<maxActiveChannels> mPropagatedChannels;
 
-	Steinberg::int32 cntMeters = 0;
-	std::unique_ptr<Steinberg::int32[]> meterIds;
+	Steinberg::int32 mCntMeters = 0;
+	std::unique_ptr<Steinberg::int32[]> mMeterIds;
 
 	struct GetChunkMessage;
 	void* mainThread = nullptr;
 	Steinberg::Base::Thread::FLock msgQueueLock;
 	std::list<GetChunkMessage*> msgQueue;
 
-	bool wantsSetChunk = false;
-	bool settingChunk = false;
+	bool mWantsSetChunk = false;
+	bool mSettingChunk = false;
 
 	bool mSimulateBypass = false;
 	bool mBypass = false;
@@ -191,6 +191,7 @@ private:
 
 	bool mPresetChanged = false;
 	bool mBypassBeforePresetChanged = false;
+	bool mWantsSetChunkIsPreset = false;
 
 	friend class AAXWrapper_Parameters;
 	friend class AAXWrapper_GUI;

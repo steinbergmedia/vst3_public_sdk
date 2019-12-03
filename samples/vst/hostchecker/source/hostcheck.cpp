@@ -42,7 +42,7 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
 //------------------------------------------------------------------------
-HostCheck::HostCheck () : mComponent (nullptr)
+HostCheck::HostCheck ()
 {
 	mProcessSetupCheck.setEventLogger (&mEventLogger);
 	mProcessContextCheck.setEventLogger (&mEventLogger);
@@ -64,29 +64,31 @@ void HostCheck::addLogEvent (Steinberg::int32 logId)
 }
 
 //------------------------------------------------------------------------
-bool HostCheck::validate (Steinberg::Vst::ProcessData& data)
+bool HostCheck::validate (Steinberg::Vst::ProcessData& data, Steinberg::int32 minInputBufferCount,
+                          Steinberg::int32 minOutputBufferCount)
 {
 	mProcessSetupCheck.check (data);
 	mProcessContextCheck.check (data.processContext);
 	mEventListCheck.check (data.inputEvents);
 	mParamChangesCheck.checkParameterChanges (data.inputParameterChanges);
 
-	checkAudioBuffers (data.inputs, data.numInputs, Steinberg::Vst::kInput);
-	checkAudioBuffers (data.outputs, data.numOutputs, Steinberg::Vst::kOutput);
+	checkAudioBuffers (data.inputs, data.numInputs, Steinberg::Vst::kInput, data.symbolicSampleSize, minInputBufferCount);
+	checkAudioBuffers (data.outputs, data.numOutputs, Steinberg::Vst::kOutput, data.symbolicSampleSize, minOutputBufferCount);
 
 	return mEventLogger.empty ();
 }
 
 //------------------------------------------------------------------------
 void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
-                                   Steinberg::int32 numBuffers, Steinberg::Vst::BusDirection dir)
+                                   Steinberg::int32 numBuffers, Steinberg::Vst::BusDirection dir,
+                                   Steinberg::int32 symbolicSampleSize, Steinberg::int32 minBufferCount)
 {
 	if (mComponent)
 	{
 		if (numBuffers > 0)
 		{
-			Steinberg::int32 audioBusCount = mComponent->getBusCount (Steinberg::Vst::kAudio, dir);
-			bool isValid = audioBusCount == numBuffers;
+			//Steinberg::int32 audioBusCount = mComponent->getBusCount (Steinberg::Vst::kAudio, dir);
+			bool isValid = minBufferCount <= numBuffers;
 			if (!isValid)
 			{
 				addLogEvent (kLogIdAudioBufNotMatchComponentBusCount);
@@ -104,7 +106,7 @@ void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
 
 		for (Steinberg::int32 bufferIdx = 0; bufferIdx < numBuffers; ++bufferIdx)
 		{
-			Steinberg::Vst::BusInfo busInfo = {0};
+			Steinberg::Vst::BusInfo busInfo = {};
 			mComponent->getBusInfo (Steinberg::Vst::kAudio, dir, bufferIdx, busInfo);
 			Steinberg::Vst::AudioBusBuffers& tmpBuffers = buffers[bufferIdx];
 			if (tmpBuffers.numChannels != busInfo.channelCount)
@@ -112,14 +114,30 @@ void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
 				addLogEvent (kLogIdInvalidAudioBufNumOfChannels);
 			}
 
-			for (Steinberg::int32 chIdx = 0; chIdx < tmpBuffers.numChannels; ++chIdx)
+			if (symbolicSampleSize == Steinberg::Vst::kSample32)
 			{
-				if (!tmpBuffers.channelBuffers32 || !tmpBuffers.channelBuffers32[chIdx])
+				for (Steinberg::int32 chIdx = 0; chIdx < tmpBuffers.numChannels; ++chIdx)
 				{
-					if (busInfo.busType == Steinberg::Vst::kAux)
-						addLogEvent (kLogIdNullPointerToAuxChannelBuf);
-					else
-						addLogEvent (kLogIdNullPointerToChannelBuf);
+					if (!tmpBuffers.channelBuffers32 || !tmpBuffers.channelBuffers32[chIdx])
+					{
+						if (busInfo.busType == Steinberg::Vst::kAux)
+							addLogEvent (kLogIdNullPointerToAuxChannelBuf);
+						else
+							addLogEvent (kLogIdNullPointerToChannelBuf);
+					}
+				}
+			}
+			else
+			{
+				for (Steinberg::int32 chIdx = 0; chIdx < tmpBuffers.numChannels; ++chIdx)
+				{
+					if (!tmpBuffers.channelBuffers64 || !tmpBuffers.channelBuffers64[chIdx])
+					{
+						if (busInfo.busType == Steinberg::Vst::kAux)
+							addLogEvent (kLogIdNullPointerToAuxChannelBuf);
+						else
+							addLogEvent (kLogIdNullPointerToChannelBuf);
+					}
 				}
 			}
 		}

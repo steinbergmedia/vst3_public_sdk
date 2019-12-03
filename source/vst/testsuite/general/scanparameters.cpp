@@ -37,7 +37,6 @@
 
 #include "public.sdk/source/vst/testsuite/general/scanparameters.h"
 #include "public.sdk/source/vst/hosting/stringconvert.h"
-#include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include <unordered_map>
 
@@ -89,7 +88,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 	bool foundBypass = false;
 	for (int32 i = 0; i < numParameters; ++i)
 	{
-		ParameterInfo paramInfo = {0};
+		ParameterInfo paramInfo = {};
 
 		tresult result = controller->getParameterInfo (i, paramInfo);
 		if (result != kResultOk)
@@ -177,7 +176,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 				int32 uc = iUnitInfo->getUnitCount ();
 				for (int32 ui = 0; ui < uc; ++ui)
 				{
-					UnitInfo uinfo = {0};
+					UnitInfo uinfo = {};
 					if (iUnitInfo->getUnitInfo (ui, uinfo) != kResultTrue)
 					{
 						addErrorMessage (testResult, STR ("IUnitInfo::getUnitInfo (..) failed."));
@@ -218,9 +217,9 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 
 	if (foundBypass == false)
 	{
-		StringObject subCat;
+		StringResult subCat;
 		plugProvider->getSubCategories (subCat);
-		if (subCat.findFirst ("Instrument") >= 0)
+		if (subCat.get ().find ("Instrument") >= 0)
 			addMessage (testResult, STR ("No bypass parameter found. This is an instrument."));
 		else
 			addMessage (testResult, STR ("Warning: No bypass parameter found. Is this intended ?"));

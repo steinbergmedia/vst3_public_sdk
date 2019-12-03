@@ -2,6 +2,8 @@
 if(SMTG_ADD_VST3_HOSTING_SAMPLES)
 
     set(editorhost_sources
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.cpp
+        ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.h
         ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
         ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.h
         ${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp

@@ -1,11 +1,8 @@
 
 if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     include(AddAAXLibrary)
-    set(base_sources
-        ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp
-    )
 
-    set(again_aax_sources
+    set(again_sources
         source/againaax.cpp
         ../again/source/again.cpp
         ../again/source/again.h
@@ -20,7 +17,6 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
         ../again/source/againuimessagecontroller.h
         ../again/source/version.h
     )
-    set(again_sources ${again_aax_sources} ${base_sources})
 
     set(target again_aax)
     smtg_add_aaxplugin(${target} ${again_sources})

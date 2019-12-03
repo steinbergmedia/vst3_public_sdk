@@ -36,7 +36,6 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/processing/processtail.h"
-#include "base/source/fstring.h"
 #include <cmath>
 
 //------------------------------------------------------------------------
@@ -78,9 +77,9 @@ bool PLUGIN_API ProcessTailTest::setup ()
 	{
 		mTailSamples = audioEffect->getTailSamples ();
 
-		StringObject subCat;
+		StringResult subCat;
 		plugProvider->getSubCategories (subCat);
-		if (subCat.findFirst ("Generator") >= 0 || subCat.findFirst ("Instrument") >= 0)
+		if (subCat.get ().find ("Generator") >= 0 || subCat.get ().find ("Instrument") >= 0)
 		{
 			mDontTest = true;
 		}

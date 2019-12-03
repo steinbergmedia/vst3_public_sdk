@@ -56,15 +56,15 @@ class ComponentBase: public FObject,
 public:
 //------------------------------------------------------------------------
 	ComponentBase ();
-	virtual ~ComponentBase ();
+	~ComponentBase () override;
 
 	//--- Internal Methods------
 	/** Returns the hostContext (set by the host during initialize call). */
-	FUnknown* getHostContext () { return hostContext; }
+	FUnknown* getHostContext () const { return hostContext; }
 
 	/** Returns the peer for the messaging communication (you can only use IConnectionPoint::notify
 	 * for communicate between peers, do not try to cast peerConnection. */
-	IConnectionPoint* getPeer () { return peerConnection; }
+	IConnectionPoint* getPeer () const { return peerConnection; }
 
 	/** Allocates a message instance (don't forget to release it). */
 	IMessage* allocateMessage ();
@@ -98,8 +98,8 @@ public:
 
 //------------------------------------------------------------------------
 protected:
-	FUnknown* hostContext;
-	IConnectionPoint* peerConnection;
+	IPtr<FUnknown> hostContext;
+	IPtr<IConnectionPoint> peerConnection;
 };
 
 //------------------------------------------------------------------------

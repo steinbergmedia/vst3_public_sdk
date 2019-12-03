@@ -7,6 +7,8 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
         if(${LIBJACK_FOUND})
             set(audiohost_sources
                 ${SDK_ROOT}/public.sdk/samples/vst-hosting/editorhost/source/platform/iapplication.h
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.h
                 ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp

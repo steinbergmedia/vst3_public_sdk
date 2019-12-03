@@ -164,7 +164,7 @@ bool SpeakerArrangementTest::run (ITestResult* testResult)
 	SpeakerArrangement spArr = SpeakerArr::kEmpty;
 	SpeakerArrangement compareSpArr = SpeakerArr::kEmpty;
 	BusDirections bd = kInput;
-	BusInfo busInfo = {0};
+	BusInfo busInfo = {};
 	int32 count = 0;
 	do
 	{

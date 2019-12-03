@@ -258,7 +258,7 @@ inline void foreach (IEventList* eventList, const T& func)
 	auto eventCount = eventList->getEventCount ();
 	for (int32 eventIndex = 0; eventIndex < eventCount; ++eventIndex)
 	{
-		Vst::Event event = {0};
+		Vst::Event event = {};
 		if (eventList->getEvent (eventIndex, event) != kResultOk)
 			continue;
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -34,13 +34,13 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
+#include "public.sdk/source/common/memorystream.cpp"
+
 #include "public.sdk/source/vst/basewrapper/basewrapper.cpp"
 
+#include "public.sdk/source/vst/hosting/connectionproxy.cpp"
 #include "public.sdk/source/vst/hosting/eventlist.cpp"
 #include "public.sdk/source/vst/hosting/hostclasses.cpp"
 #include "public.sdk/source/vst/hosting/parameterchanges.cpp"
 #include "public.sdk/source/vst/hosting/pluginterfacesupport.cpp"
 #include "public.sdk/source/vst/hosting/processdata.cpp"
-
-#include "public.sdk/source/common/memorystream.cpp"
-

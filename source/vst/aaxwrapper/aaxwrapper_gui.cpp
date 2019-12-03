@@ -54,7 +54,7 @@ void AAXWrapper_GUI::CreateViewContainer ()
 		AAXWrapper* wrapper =
 		    static_cast<AAXWrapper_Parameters*> (GetEffectParameters ())->getWrapper ();
 
-		FGuard guard (wrapper->syncCalls);
+		FGuard guard (wrapper->mSyncCalls);
 		wrapper->setGUI (this);
 		if (auto* editor = wrapper->getEditor ())
 			editor->_open (mHWND);
@@ -69,9 +69,8 @@ AAX_Result AAXWrapper_GUI::GetViewSize (AAX_Point* oEffectViewSize) const
 	oEffectViewSize->horz = 1024;
 	oEffectViewSize->vert = 768;
 
-	AAXWrapper_GUI* that = const_cast<AAXWrapper_GUI*> (this);
-	AAXWrapper_Parameters* params =
-	    static_cast<AAXWrapper_Parameters*> (that->GetEffectParameters ());
+	auto* that = const_cast<AAXWrapper_GUI*> (this);
+	auto* params = static_cast<AAXWrapper_Parameters*> (that->GetEffectParameters ());
 	int32 width, height;
 	if (params->getWrapper ()->getEditorSize (width, height))
 	{

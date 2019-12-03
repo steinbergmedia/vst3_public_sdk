@@ -45,6 +45,7 @@
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
+#include "cids.h"
 #include "editorsizecontroller.h"
 #include "hostcheckerprocessor.h"
 #include "logevents.h"
@@ -63,9 +64,6 @@ bool THREAD_CHECK_EXIT = true;
 
 namespace Steinberg {
 namespace Vst {
-
-//-----------------------------------------------------------------------------
-FUID HostCheckerController::cid (0x35AC5652, 0xC7D24CB1, 0xB1427D38, 0xEB690DAF);
 
 //-----------------------------------------------------------------------------
 class MyVST3Editor : public VST3Editor
@@ -100,6 +98,8 @@ protected:
 	// IParameterFinder
 	Steinberg::tresult PLUGIN_API findParameter (int32 xPos, int32 yPos,
 	                                             ParamID& resultTag) override;
+
+	void valueChanged (CControl* pControl) override;
 
 	//---from CBaseObject---------------
 	CMessageResult notify (CBaseObject* sender, const char* message) SMTG_OVERRIDE;
@@ -333,11 +333,95 @@ VSTGUI::CMessageResult MyVST3Editor::notify (CBaseObject* sender, const char* me
 }
 
 //-----------------------------------------------------------------------------
+void MyVST3Editor::valueChanged (CControl* pControl)
+{
+	if (pControl->getTag () == kBypassTag)
+	{
+	}
+	VST3Editor::valueChanged (pControl);
+}
+
 //-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+
+//-----------------------------------------------------------------------------
+HostCheckerController::HostCheckerController ()
+{
+	mScoreMap.emplace (kLogIdIComponentHandler2Supported, 2);
+	mScoreMap.emplace (kLogIdIComponentHandler2SetDirtySupported, 2);
+	mScoreMap.emplace (kLogIdIComponentHandler2RequestOpenEditorSupported, 2);
+	mScoreMap.emplace (kLogIdIComponentHandler3Supported, 2);
+	mScoreMap.emplace (kLogIdIComponentHandlerBusActivationSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugInterfaceSupportSupported, 2);
+	mScoreMap.emplace (kLogIdIPlugFrameonResizeViewSupported, 2);
+	mScoreMap.emplace (kLogIdIPrefetchableSupportSupported, 1);
+	mScoreMap.emplace (kLogIdAudioPresentationLatencySamplesSupported, 1);
+
+	mScoreMap.emplace (kLogIdProcessContextPlayingSupported, 2);
+	mScoreMap.emplace (kLogIdProcessContextRecordingSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextCycleActiveSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextSystemTimeSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextContTimeSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextTimeMusicSupported, 2);
+	mScoreMap.emplace (kLogIdProcessContextBarPositionSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextCycleSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextTempoSupported, 2);
+	mScoreMap.emplace (kLogIdProcessContextTimeSigSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextChordSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextSmpteSupported, 1);
+	mScoreMap.emplace (kLogIdProcessContextClockSupported, 1);
+	mScoreMap.emplace (kLogIdCanProcessSampleSize32, 1);
+	mScoreMap.emplace (kLogIdCanProcessSampleSize64, 1);
+	mScoreMap.emplace (kLogIdGetTailSamples, 1);
+	mScoreMap.emplace (kLogIdGetLatencySamples, 2);
+	mScoreMap.emplace (kLogIdGetBusArrangements, 1);
+	mScoreMap.emplace (kLogIdSetBusArrangements, 1);
+	mScoreMap.emplace (kLogIdGetRoutingInfo, 1);
+	mScoreMap.emplace (kLogIdActivateAuxBus, 1);
+	mScoreMap.emplace (kLogIdParametersFlushSupported, 1);
+
+	mScoreMap.emplace (kLogIdIEditController2Supported, 1);
+	mScoreMap.emplace (kLogIdsetKnobModeSupported, 1);
+	mScoreMap.emplace (kLogIdopenHelpSupported, 1);
+	mScoreMap.emplace (kLogIdopenAboutBoxSupported, 1);
+	mScoreMap.emplace (kLogIdIMidiMappingSupported, 1);
+	mScoreMap.emplace (kLogIdUnitSupported, 1);
+	mScoreMap.emplace (kLogIdGetUnitByBusSupported, 1);
+	mScoreMap.emplace (kLogIdChannelContextSupported, 1);
+	mScoreMap.emplace (kLogIdINoteExpressionControllerSupported, 1);
+	mScoreMap.emplace (kLogIdINoteExpressionPhysicalUIMappingSupported, 1);
+	mScoreMap.emplace (kLogIdIKeyswitchControllerSupported, 1);
+	mScoreMap.emplace (kLogIdIMidiLearnSupported, 1);
+	mScoreMap.emplace (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, 1);
+
+	mScoreMap.emplace (kLogIdIAttributeListInSetStateSupported, 1);
+
+	mScoreMap.emplace (kLogIdIXmlRepresentationControllerSupported, 1);
+	mScoreMap.emplace (kLogIdIAutomationStateSupported, 1);
+
+	mScoreMap.emplace (kLogIdIEditControllerHostEditingSupported, 1);
+
+	mScoreMap.emplace (kLogIdIPlugViewonSizeSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewcanResizeSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewcheckSizeConstraintSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewsetFrameSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewOnWheelCalled, 1);
+	mScoreMap.emplace (kLogIdIPlugViewOnKeyDownSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewOnKeyUpSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewOnFocusCalled, 1);
+	mScoreMap.emplace (kLogIdIPlugViewsetContentScaleFactorSupported, 1);
+
+	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1);
+}
+
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::initialize"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::initialize"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdinitializeCalledinWrongThread);
+	}
 
 	tresult result = EditControllerEx1::initialize (context);
 	if (result == kResultOk)
@@ -355,13 +439,24 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("Param1"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
 		                         kParam1Tag);
 		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0, 0, kGeneratePeaksTag);
-		parameters.addParameter (STR16 ("Latency"), STR16 (""), 0, 0, 0, kLatencyTag, kUnitId);
+		parameters.addParameter (new RangeParameter (
+		    STR16 ("Latency"), kLatencyTag, nullptr, 0, HostChecker::kMaxLatency, 0,
+		    HostChecker::kMaxLatency, 0, kUnitId, nullptr));
 		parameters.addParameter (STR16 ("CanResize"), STR16 (""), 1, 1, 0, kCanResizeTag);
 
-		parameters.addParameter (STR16 ("Scoring"), STR16 (""), 10, 0, 0, kScoreTag);
+		parameters.addParameter (new RangeParameter (STR16 ("Scoring"), kScoreTag, nullptr, 0, 100,
+		                                             0, 100, ParameterInfo::kNoFlags));
+
 		parameters.addParameter (STR16 ("Bypass"), STR16 (""), 1, 0,
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
 		                         kBypassTag);
+
+		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
+		{
+			parameters.addParameter (STR16 ("ProcessWarn"), STR16 (""),
+			                         HostChecker::kParamWarnStepCount, 0,
+			                         ParameterInfo::kIsReadOnly, kProcessWarnTag + i);
+		}
 
 		mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
 	}
@@ -400,7 +495,11 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::terminate ()
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::terminate"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::terminate"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdterminateCalledinWrongThread);
+	}
 
 	tresult result = EditControllerEx1::terminate ();
 	if (result == kResultOk)
@@ -412,10 +511,40 @@ tresult PLUGIN_API HostCheckerController::terminate ()
 }
 
 //-----------------------------------------------------------------------------
+float HostCheckerController::updateScoring (int32 iD)
+{
+	float score = 0;
+	float total = 0;
+	
+	if (iD >= 0)
+		mScoreMap[iD].use = true;
+
+	for (auto& item : mScoreMap)
+	{
+		auto scoreEntry = item.second;
+		total += scoreEntry.factor;
+		if (scoreEntry.use)
+			score += scoreEntry.factor;
+	}
+	if (total)
+		score = score / total;
+	else
+		score = 0;
+
+	if (auto val = parameters.getParameter (kScoreTag))
+		val->setNormalized (score);
+
+	return score;
+}
+
+//-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentState"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentState"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdSetComponentStateCalledinWrongThread);
+	}
 
 	if (!state)
 		return kResultFalse;
@@ -448,8 +577,11 @@ tresult PLUGIN_API HostCheckerController::getUnitByBus (MediaType type, BusDirec
                                                         int32 busIndex, int32 channel,
                                                         UnitID& unitId /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitByBus"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitByBus"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdGetUnitByBusCalledinWrongThread);
+	}
 
 	if (type == kEvent && dir == kInput)
 	{
@@ -466,8 +598,11 @@ tresult PLUGIN_API HostCheckerController::getUnitByBus (MediaType type, BusDirec
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler* handler)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentHandler"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setComponentHandler"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdSetComponentHandlerCalledinWrongThread);
+	}
 
 	tresult res = EditControllerEx1::setComponentHandler (handler);
 	if (componentHandler2)
@@ -482,14 +617,21 @@ tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler
 	if (handler3)
 		addFeatureLog (kLogIdIComponentHandler3Supported);
 
+	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (handler);
+	if (componentHandlerBusActivationSupport)
+		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
+
 	return res;
 }
 
 //-----------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getUnitCount ()
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitCount"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getUnitCount"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdGetUnitCountCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdUnitSupported);
 	return EditControllerEx1::getUnitCount ();
@@ -498,21 +640,47 @@ int32 PLUGIN_API HostCheckerController::getUnitCount ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, ParamValue value)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setParamNormalized"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setParamNormalized"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdSetParamNormalizedCalledinWrongThread);
+	}
 
 	if (tag == kLatencyTag && mLatencyInEdit)
 	{
 		mWantedLatency = value;
-		return kResultTrue;
+		// return kResultTrue;
 	}
+
+	else if (tag >= kProcessWarnTag && tag <= kProcessWarnTag + HostChecker::kParamWarnCount)
+	{
+		bool latencyRestartWanted = false;
+		int32 tagOffset = (tag - kProcessWarnTag) * HostChecker::kParamWarnBitCount;
+		uint32 idValue = value * HostChecker::kParamWarnStepCount;
+		for (uint32 i = 0; i < HostChecker::kParamWarnBitCount; i++)
+		{
+			if (idValue & (1L << i))
+			{
+				addFeatureLog (tagOffset + i);
+				if (tagOffset + i == kLogIdInformLatencyChanged && componentHandler)
+					latencyRestartWanted = true;					
+			}
+		}
+		if (latencyRestartWanted)
+			componentHandler->restartComponent (kLatencyChanged);
+	}
+
 	return EditControllerEx1::setParamNormalized (tag, value);
 }
 
 //------------------------------------------------------------------------
 tresult HostCheckerController::beginEdit (ParamID tag)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEdit"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEdit"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdBeginEditCalledinWrongThread);
+	}
 
 	if (tag == kLatencyTag)
 		mLatencyInEdit = true;
@@ -523,12 +691,16 @@ tresult HostCheckerController::beginEdit (ParamID tag)
 //-----------------------------------------------------------------------------
 tresult HostCheckerController::endEdit (ParamID tag)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEdit"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEdit"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdEndEditCalledinWrongThread);
+	}
 
 	if (tag == kLatencyTag && mLatencyInEdit)
 	{
-		EditControllerEx1::setParamNormalized (tag, mWantedLatency);
 		mLatencyInEdit = false;
+		setParamNormalized (tag, mWantedLatency);
 	}
 	return EditControllerEx1::endEdit (tag);
 }
@@ -536,7 +708,15 @@ tresult HostCheckerController::endEdit (ParamID tag)
 //-----------------------------------------------------------------------------
 IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::createView"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::createView"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdCreateViewCalledinWrongThread);
+	}
+
+	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (componentHandler);
+	if (componentHandlerBusActivationSupport)
+		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
 
 	if (ConstString (name) == ViewType::kEditor)
 	{
@@ -557,6 +737,7 @@ IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 
 		return view;
 	}
+
 	return nullptr;
 }
 
@@ -597,14 +778,18 @@ void HostCheckerController::willClose (VSTGUI::VST3Editor* editor)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::connect"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::connect"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdConnectCalledinWrongThread);
+	}
 
 	tresult tResult = ComponentBase::connect (other);
 	if (peerConnection)
 	{
 		for (int32 paramIdx = 0; paramIdx < getParameterCount (); ++paramIdx)
 		{
-			ParameterInfo paramInfo = {0};
+			ParameterInfo paramInfo = {};
 			if (getParameterInfo (paramIdx, paramInfo) == kResultOk)
 			{
 				IPtr<IMessage> newMsg = owned (allocateMessage ());
@@ -647,24 +832,24 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::notify"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::notify"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdnotifyCalledinWrongThread);
+	}
 
 	if (!message)
 		return kInvalidArgument;
 
 	if (FIDStringsEqual (message->getMessageID (), "LogEvent"))
 	{
-		LogEvent logEvt;
-		if (message->getAttributes ()->getInt ("ID", logEvt.id) != kResultOk)
+		int64 id;
+		if (message->getAttributes ()->getInt ("ID", id) != kResultOk)
 			return kResultFalse;
-		if (message->getAttributes ()->getInt ("Count", logEvt.count) != kResultOk)
+		int64 count; 
+		if (message->getAttributes ()->getInt ("Count", count) != kResultOk)
 			return kResultFalse;
-
-		if (mDataSource && mDataSource->updateLog (logEvt))
-		{
-			for (auto& item : mDataBrowserMap)
-				item.second->invalidateRow (logEvt.id);
-		}
+		addFeatureLog (id, count, false);
 	}
 
 	if (FIDStringsEqual (message->getMessageID (), "Latency"))
@@ -680,13 +865,18 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 }
 
 //-----------------------------------------------------------------------------
-void HostCheckerController::addFeatureLog (int32 iD)
+void HostCheckerController::addFeatureLog (int32 iD, int32 count, bool addToLastCount)
 {
+	updateScoring (iD);
+
+	if (!mDataSource)
+		return;
+
 	LogEvent logEvt;
 	logEvt.id = iD;
-	logEvt.count = 1;
+	logEvt.count = count;
 
-	if (mDataSource && mDataSource->updateLog (logEvt, true))
+	if (mDataSource->updateLog (logEvt, addToLastCount))
 	{
 		for (auto& item : mDataBrowserMap)
 			item.second->invalidateRow (logEvt.id);
@@ -696,37 +886,50 @@ void HostCheckerController::addFeatureLog (int32 iD)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setKnobMode (KnobMode mode)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setKnobMode"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setKnobMode"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdsetKnobModeCalledinWrongThread);
+	}
 
-	addFeatureLog (kLogIdIEditController2Supported);
+	addFeatureLog (kLogIdsetKnobModeSupported);
 	return EditControllerEx1::setKnobMode (mode);
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::openHelp (TBool onlyCheck)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openHelp"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openHelp"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdopenHelpCalledinWrongThread);
+	}
 
-	addFeatureLog (kLogIdIEditController2Supported);
+	addFeatureLog (kLogIdopenHelpSupported);
 	return EditControllerEx1::openHelp (onlyCheck);
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::openAboutBox (TBool onlyCheck)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openAboutBox"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::openAboutBox"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdopenAboutBoxCalledinWrongThread);
+	}
 
-	addFeatureLog (kLogIdIEditController2Supported);
+	addFeatureLog (kLogIdopenAboutBoxSupported);
 	return EditControllerEx1::openAboutBox (onlyCheck);
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setChannelContextInfos (IAttributeList* list)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setChannelContextInfos"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setChannelContextInfos"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdsetChannelContextInfosCalledinWrongThread);
+	}
 
 	if (!list)
 		return kResultFalse;
@@ -770,8 +973,12 @@ tresult PLUGIN_API HostCheckerController::setChannelContextInfos (IAttributeList
 tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
     RepresentationInfo& info /*in*/, IBStream* stream /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getXmlRepresentationStream"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (
+	        THREAD_CHECK_MSG ("HostCheckerController::getXmlRepresentationStream"),
+	        THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetXmlRepresentationStreamCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
 
@@ -779,7 +986,7 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 	if (name == GENERIC_8_CELLS)
 	{
 		XmlRepresentationHelper helper (info, "Steinberg Media Technologies", "VST3 Host Checker",
-		                                HostCheckerProcessor::cid.toTUID (), stream);
+		                                HostCheckerProcessorUID.toTUID (), stream);
 
 		helper.startPage ("Main Page");
 		helper.startEndCellOneLayer (LayerType::kKnob, 0);
@@ -812,8 +1019,12 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
     int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getMidiControllerAssignment"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (
+	        THREAD_CHECK_MSG ("HostCheckerController::getMidiControllerAssignment"),
+	        THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetMidiControllerAssignmentCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIMidiMappingSupported);
 
@@ -833,8 +1044,11 @@ tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
 tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIndex, int16 channel,
                                                                      CtrlNumber midiCC)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::onLiveMIDIControllerInput"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::onLiveMIDIControllerInput"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdOnLiveMIDIControllerInputCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported);
 	return kResultTrue;
@@ -843,8 +1057,11 @@ tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIn
 //-----------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, int16 channel)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionCount"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionCount"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetNoteExpressionCountCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdINoteExpressionControllerSupported);
 	return 0;
@@ -854,9 +1071,11 @@ int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, 
 tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (
     int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionInfo"),
-	                     THREAD_CHECK_EXIT);
-
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionInfo"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetNoteExpressionInfoCalledinWrongThread);
+	}
 	return kResultFalse;
 }
 
@@ -865,8 +1084,12 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
     int32 busIndex, int16 channel, NoteExpressionTypeID id,
     NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionStringByValue"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (
+	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionStringByValue"),
+	        THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetNoteExpressionStringByValueCalledinWrongThread);
+	}
 
 	return kResultFalse;
 }
@@ -876,8 +1099,12 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
     int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
     NoteExpressionValue& valueNormalized /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionValueByString"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (
+	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionValueByString"),
+	        THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetNoteExpressionValueByStringCalledinWrongThread);
+	}
 
 	return kResultFalse;
 }
@@ -886,8 +1113,11 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
 tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, int16 channel,
                                                                 PhysicalUIMapList& list)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getPhysicalUIMapping"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getPhysicalUIMapping"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetPhysicalUIMappingCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
 	return kResultTrue;
@@ -897,8 +1127,11 @@ tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, 
 //------------------------------------------------------------------------
 int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 busIndex, int16 channel)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchCount"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchCount"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetKeyswitchCountCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIKeyswitchControllerSupported);
 	return kResultTrue;
@@ -909,8 +1142,11 @@ tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 busIndex, int1
                                                             int32 keySwitchIndex,
                                                             KeyswitchInfo& info /*out*/)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchInfo"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchInfo"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetKeyswitchInfoCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIKeyswitchControllerSupported);
 	return kResultTrue;
@@ -919,8 +1155,11 @@ tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 busIndex, int1
 //------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setAutomationState (int32 state)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setAutomationState"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setAutomationState"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdsetAutomationStateCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIAutomationStateSupported);
 	return kResultTrue;
@@ -929,8 +1168,11 @@ tresult PLUGIN_API HostCheckerController::setAutomationState (int32 state)
 //------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::beginEditFromHost (ParamID paramID)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEditFromHost"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::beginEditFromHost"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdBeginEditFromHostCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
 	inEditFromHost++;
@@ -940,8 +1182,11 @@ tresult PLUGIN_API HostCheckerController::beginEditFromHost (ParamID paramID)
 //------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::endEditFromHost (ParamID paramID)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEditFromHost"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::endEditFromHost"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdEndEditFromHostCalledinWrongThread);
+	}
 
 	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
 	inEditFromHost--;
@@ -1012,8 +1257,11 @@ VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr n
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void** obj)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::queryInterface"),
-	                     THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::queryInterface"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdQueryInterfaceCalledinWrongThread);
+	}
 
 	if (FUnknownPrivate::iidEqual (iid, IMidiMapping::iid))
 	{
@@ -1022,58 +1270,63 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 		addFeatureLog (kLogIdIMidiMappingSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
+	else if (FUnknownPrivate::iidEqual (iid, IEditController2::iid))
+	{
+		addRef ();
+		*obj = static_cast<IEditController2*> (this);
+		addFeatureLog (kLogIdIEditController2Supported);
+		return kResultOk;
+	}
+	else if (FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
 	{
 		addRef ();
 		*obj = static_cast<IXmlRepresentationController*> (this);
 		addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
+	else if (FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
 	{
 		addRef ();
 		*obj = static_cast<ChannelContext::IInfoListener*> (this);
 		addFeatureLog (kLogIdChannelContextSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
+	else if (FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionController*> (this);
 		addFeatureLog (kLogIdINoteExpressionControllerSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
+	else if (FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionPhysicalUIMapping*> (this);
 		addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
 		return kResultOk;
 	}
-
-	if (FUnknownPrivate::iidEqual (iid, IKeyswitchController::iid))
+	else if (FUnknownPrivate::iidEqual (iid, IKeyswitchController::iid))
 	{
 		addRef ();
 		*obj = static_cast<IKeyswitchController*> (this);
 		addFeatureLog (kLogIdIKeyswitchControllerSupported);
 		return kResultOk;
 	}
-
-	if (FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
+	else if (FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
 	{
 		addRef ();
 		*obj = static_cast<IMidiLearn*> (this);
 		addFeatureLog (kLogIdIMidiLearnSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, IAutomationState::iid))
+	else if (FUnknownPrivate::iidEqual (iid, IAutomationState::iid))
 	{
 		addRef ();
 		*obj = static_cast<IAutomationState*> (this);
 		addFeatureLog (kLogIdIAutomationStateSupported);
 		return kResultOk;
 	}
-	if (FUnknownPrivate::iidEqual (iid, IEditControllerHostEditing::iid))
+	else if (FUnknownPrivate::iidEqual (iid, IEditControllerHostEditing::iid))
 	{
 		addRef ();
 		*obj = static_cast<IEditControllerHostEditing*> (this);
@@ -1086,6 +1339,12 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::setState (IBStream* state)
 {
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setState"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdsetStateCalledinWrongThread);
+	}
+
 	if (!state)
 		return kResultFalse;
 
@@ -1121,7 +1380,11 @@ tresult PLUGIN_API HostCheckerController::setState (IBStream* state)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getState (IBStream* state)
 {
-	threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getState"), THREAD_CHECK_EXIT);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getState"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addFeatureLog (kLogIdgetStateCalledinWrongThread);
+	}
 
 	if (!state)
 		return kResultFalse;

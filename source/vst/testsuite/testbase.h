@@ -41,6 +41,8 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivsttestplugprovider.h"
+#include <atomic>
+#include <cstdlib>
 #include <string>
 
 //------------------------------------------------------------------------
@@ -208,6 +210,36 @@ private:
 	int32 numUsedPoints = 0;
 	int32 processedFrames = 0;
 	ParamPoint* points = nullptr;
+};
+
+//------------------------------------------------------------------------
+class StringResult final : public IStringResult
+{
+public:
+	const std::string& get () const { return data; }
+	void PLUGIN_API setText (const char8* text) override { data = text; }
+
+	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override
+	{
+		QUERY_INTERFACE (_iid, obj, FUnknown::iid, IStringResult)
+		QUERY_INTERFACE (_iid, obj, IStringResult::iid, IStringResult)
+		*obj = nullptr;
+		return kNoInterface;
+	}
+	uint32 PLUGIN_API addRef () override { return ++__refCount; }
+	uint32 PLUGIN_API release () override
+	{
+		if (--__refCount == 0)
+		{
+			delete this;
+			return 0;
+		}
+		return __refCount;
+	}
+
+private:
+	std::string data;
+	std::atomic<uint32> __refCount {0};
 };
 
 //------------------------------------------------------------------------

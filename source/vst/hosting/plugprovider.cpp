@@ -36,9 +36,13 @@
 
 #include "plugprovider.h"
 
+#include "connectionproxy.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivstmessage.h"
+
+#include <cstdio>
+#include <iostream>
 
 namespace Steinberg {
 extern FUnknown* gStandardPluginContext;
@@ -49,96 +53,10 @@ FUnknown* getPluginContext ()
 }
 }
 
-#include <cstdio>
-#include <iostream>
-
 static std::ostream* errorStream = &std::cout;
 
 namespace Steinberg {
 namespace Vst {
-
-//------------------------------------------------------------------------
-class ConnectionProxy : public FObject, public IConnectionPoint
-{
-public:
-	ConnectionProxy (IConnectionPoint* srcConnection);
-	virtual ~ConnectionProxy ();
-
-	//--- from IConnectionPoint
-	tresult PLUGIN_API connect (IConnectionPoint* other) override;
-	tresult PLUGIN_API disconnect (IConnectionPoint* other) override;
-	tresult PLUGIN_API notify (IMessage* message) override;
-
-	bool disconnect ();
-
-	OBJ_METHODS (ConnectionProxy, FObject)
-	REFCOUNT_METHODS (FObject)
-	DEF_INTERFACES_1 (IConnectionPoint, FObject)
-
-protected:
-	IPtr<IConnectionPoint> srcConnection;
-	IPtr<IConnectionPoint> dstConnection;
-};
-
-//------------------------------------------------------------------------
-ConnectionProxy::ConnectionProxy (IConnectionPoint* srcConnection)
-: srcConnection (srcConnection) // share it
-{
-}
-
-//------------------------------------------------------------------------
-ConnectionProxy::~ConnectionProxy ()
-{
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API ConnectionProxy::connect (IConnectionPoint* other)
-{
-	if (other == nullptr)
-		return kInvalidArgument;
-	if (dstConnection)
-		return kResultFalse;
-
-	dstConnection = other; // share it
-	tresult res = srcConnection->connect (this);
-	if (res != kResultTrue)
-		dstConnection = nullptr;
-	return res;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API ConnectionProxy::disconnect (IConnectionPoint* other)
-{
-	if (!other)
-		return kInvalidArgument;
-
-	if (other == dstConnection)
-	{
-		if (srcConnection)
-			srcConnection->disconnect (this);
-		dstConnection = nullptr;
-		return kResultTrue;
-	}
-
-	return kInvalidArgument;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API ConnectionProxy::notify (IMessage* message)
-{
-	if (dstConnection)
-	{
-		// TODO we should test if we are in UI main thread else postpone the message
-		return dstConnection->notify (message);
-	}
-	return kResultFalse;
-}
-
-//------------------------------------------------------------------------
-bool ConnectionProxy::disconnect ()
-{
-	return disconnect (dstConnection) == kResultTrue;
-}
 
 //------------------------------------------------------------------------
 // PlugProvider

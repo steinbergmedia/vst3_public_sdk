@@ -272,7 +272,6 @@ inline Optional<UID> UID::fromString (const std::string& str, bool comFormat) no
 		}
 		return {uid};
 	}
-	return {};
 }
 
 //------------------------------------------------------------------------

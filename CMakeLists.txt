@@ -1,15 +1,23 @@
 
 cmake_minimum_required(VERSION 3.4.3)
 
-project(PublicSDK)
+project(smtg_public_sdk)
 
 add_library(sdk STATIC 
     source/common/commoniids.cpp
     source/common/pluginview.cpp
     source/common/pluginview.h
+    source/common/threadchecker_linux.cpp
+    source/common/threadchecker_win32.cpp
+    source/common/threadchecker.h
     source/main/pluginfactory.cpp
     source/main/pluginfactory.h
 )
+if(SMTG_MAC)
+    target_sources(sdk PRIVATE
+        source/common/threadchecker_mac.mm
+    )
+endif()
 
 if(NOT VST_SDK)
     target_sources(sdk PRIVATE
@@ -26,7 +34,6 @@ if(VST_SDK)
         source/vst/vstaudioeffect.h
         source/vst/vstbus.cpp
         source/vst/vstbus.h
-        source/vst/vstbypassprocessor.cpp
         source/vst/vstbypassprocessor.h
         source/vst/vstcomponent.cpp
         source/vst/vstcomponent.h
@@ -51,6 +58,7 @@ target_link_libraries(sdk PRIVATE
     base
     pluginterfaces
 )
+
 smtg_setup_universal_binary(sdk)
 
 get_target_property(sdk_SOURCES sdk SOURCES)

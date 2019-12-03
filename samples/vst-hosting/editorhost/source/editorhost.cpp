@@ -84,6 +84,8 @@ public:
 	// IPlugFrame
 	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* newSize) override;
 
+	void closePlugView ();
+
 private:
 	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override
 	{
@@ -229,9 +231,9 @@ void App::createViewAndShow (IEditController* controller)
 
 	auto viewRect = ViewRectToRect (plugViewSize);
 
-	auto window = IPlatform::instance ().createWindow ("Editor", viewRect.size,
-	                                                   view->canResize () == kResultTrue,
-	                                                   std::make_shared<WindowController> (view));
+	windowController = std::make_shared<WindowController> (view);
+	auto window = IPlatform::instance ().createWindow (
+	    "Editor", viewRect.size, view->canResize () == kResultTrue, windowController);
 	if (!window)
 	{
 		IPlatform::instance ().kill (-1, "Could not create window");
@@ -288,6 +290,9 @@ options:
 //------------------------------------------------------------------------
 void App::terminate ()
 {
+	if (windowController)
+		windowController->closePlugView ();
+	windowController.reset ();
 	plugProvider.reset ();
 	module.reset ();
 	gStandardPluginContext = nullptr;
@@ -328,10 +333,8 @@ void WindowController::onShow (IWindow& w)
 }
 
 //------------------------------------------------------------------------
-void WindowController::onClose (IWindow& w)
+void WindowController::closePlugView ()
 {
-	SMTG_DBPRT1 ("onClose called (%p)\n", (void*)&w);
-
 	if (plugView)
 	{
 		plugView->setFrame (nullptr);
@@ -342,6 +345,14 @@ void WindowController::onClose (IWindow& w)
 		plugView = nullptr;
 	}
 	window = nullptr;
+}
+
+//------------------------------------------------------------------------
+void WindowController::onClose (IWindow& w)
+{
+	SMTG_DBPRT1 ("onClose called (%p)\n", (void*)&w);
+
+	closePlugView ();
 
 	// TODO maybe quit only when the last window is closed
 	IPlatform::instance ().quit ();

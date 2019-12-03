@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/hostchecker/source/hostchecker.h
+// Filename    : public.sdk/samples/vst/hostchecker/source/hostcheckercontroller.h
 // Created by  : Steinberg, 04/2012
 // Description :
 //
@@ -38,12 +38,12 @@
 #pragma once
 
 #include "eventlogdatabrowsersource.h"
+#include "public.sdk/source/common/threadchecker.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
 #include "public.sdk/source/vst/vsteditcontroller.h"
 
 #include "hostcheck.h"
 #include "logevents.h"
-#include "threadchecker.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivstautomationstate.h"
@@ -55,6 +55,14 @@
 #include "pluginterfaces/vst/ivstrepresentation.h"
 
 namespace Steinberg {
+
+namespace HostChecker {
+const int32 kMaxLatency = 8192;
+const uint32 kParamWarnCount = 7;
+const uint32 kParamWarnBitCount = 24;
+const uint32 kParamWarnStepCount = 1 << kParamWarnBitCount;
+}
+
 namespace Vst {
 
 enum
@@ -66,6 +74,9 @@ enum
 	kBypassTag,
 	kCanResizeTag,
 	kScoreTag,
+
+	kProcessWarnTag,
+	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
 	// for Units
 	kUnitId = 1234
@@ -91,6 +102,8 @@ public:
 	using IController = VSTGUI::IController;
 	using IUIDescription = VSTGUI::IUIDescription;
 	using VST3Editor = VSTGUI::VST3Editor;
+
+	HostCheckerController ();
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
@@ -185,9 +198,8 @@ public:
 	{
 		return (IEditController*)new HostCheckerController ();
 	}
-	static FUID cid;
 
-	void addFeatureLog (int32 iD);
+	void addFeatureLog (int32 iD, int32 count = 1, bool addToLastCount = true);
 	bool getSavedSize (ViewRect& size)
 	{
 		if (sizeFactor <= 0)
@@ -199,6 +211,7 @@ public:
 
 protected:
 	void extractCurrentInfo (EditorView* editor);
+	float updateScoring (int32 iD);
 
 	std::map<VSTGUI::VST3Editor*, VSTGUI::SharedPointer<VSTGUI::CDataBrowser>> mDataBrowserMap;
 	VSTGUI::SharedPointer<VSTGUI::EventLogDataBrowserSource> mDataSource;
@@ -218,6 +231,16 @@ protected:
 	int32 inEditFromHost {0};
 
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
+
+	struct ScoreEntry
+	{
+		ScoreEntry (float factor = 1) : factor (factor) {}
+		float factor {1};
+		bool use {false};
+	};
+
+	using ScoreMap = std::map<uint32, ScoreEntry>;
+	ScoreMap mScoreMap;
 };
 
 //------------------------------------------------------------------------

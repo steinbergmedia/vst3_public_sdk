@@ -208,6 +208,7 @@ protected:
 };
 
 using mapIterator = std::map<String, HostAttribute*>::iterator;
+using mapReverse_Iterator = std::map<String, HostAttribute*>::reverse_iterator;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -222,7 +223,7 @@ HostAttributeList::HostAttributeList ()
 //-----------------------------------------------------------------------------
 HostAttributeList::~HostAttributeList ()
 {
-	std::map<String, HostAttribute*>::reverse_iterator it = list.rbegin ();
+	mapReverse_Iterator it = list.rbegin ();
 	while (it != list.rend ())
 	{
 		delete it->second;

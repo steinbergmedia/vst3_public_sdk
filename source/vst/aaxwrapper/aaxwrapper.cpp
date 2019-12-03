@@ -47,6 +47,9 @@
 #include "AAX_IMIDINode.h"
 #include "AAX_IPropertyMap.h"
 #include "AAX_IViewContainer.h"
+#include "AAX_Version.h"
+
+static_assert (AAX_SDK_CURRENT_REVISION >= AAX_SDK_2p3p2_REVISION, "VST3 SDK requires AAX SDK version 2.3.2 or higher");
 
 #include "aaxwrapper_description.h"
 #include "aaxwrapper_gui.h"
@@ -115,11 +118,11 @@ tresult PLUGIN_API AAXEditorWrapper::resizeView (IPlugView* view, ViewRect* newS
 //------------------------------------------------------------------------
 //------------------------------------------------------------------------
 AAXWrapper::AAXWrapper (BaseWrapper::SVST3Config& config, AAXWrapper_Parameters* p, AAX_Plugin_Desc* desc)
-: BaseWrapper (config), aaxParams (p), pluginDesc (desc)
+: BaseWrapper (config), mAAXParams (p), mPluginDesc (desc)
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
-	mBlockSize = 1024; // never explicitly changed by Protools, so assume the maximum
+	mBlockSize = 1024; // never explicitly changed by Pro Tools, so assume the maximum
 	mUseExportedBypass = true; 
 	mUseIncIndex = false;
 
@@ -137,21 +140,21 @@ AAXWrapper::AAXWrapper (BaseWrapper::SVST3Config& config, AAXWrapper_Parameters*
 	if (desc->mMIDIports)
 	{
 		for (AAX_MIDI_Desc* mdesc = desc->mMIDIports; mdesc->mName; mdesc++)
-			countMIDIports++;
+			mCountMIDIports++;
 
-		if (countMIDIports > 0)
+		if (mCountMIDIports > 0)
 		{
 			idxMidiPorts = idx;
-			idx += countMIDIports;
+			idx += mCountMIDIports;
 		}
 	}
 
 	int32 numAuxOutputs = 0;
-	aaxOutputs = desc->mOutputChannels;
+	mAAXOutputs = desc->mOutputChannels;
 	if (desc->mAuxOutputChannels)
 	{
 		for (AAX_Aux_Desc *adesc = desc->mAuxOutputChannels; adesc->mName; adesc++, numAuxOutputs++)
-			aaxOutputs += adesc->mChannels < 0 ? desc->mOutputChannels : adesc->mChannels;
+			mAAXOutputs += adesc->mChannels < 0 ? desc->mOutputChannels : adesc->mChannels;
 
 		if (numAuxOutputs > 0)
 		{
@@ -165,11 +168,11 @@ AAXWrapper::AAXWrapper (BaseWrapper::SVST3Config& config, AAXWrapper_Parameters*
 		idxMeters = idx++;
 
 		for (auto mdesc = desc->mMeters; mdesc->mName; mdesc++)
-			cntMeters++;
-		meterIds.reset (new Steinberg::int32 (cntMeters));
-		cntMeters = 0;
+			mCntMeters++;
+		mMeterIds.reset (NEW Steinberg::int32 (mCntMeters));
+		mCntMeters = 0;
 		for (auto mdesc = desc->mMeters; mdesc->mName; mdesc++)
-			meterIds[cntMeters++] = mdesc->mID;
+			mMeterIds[mCntMeters++] = mdesc->mID;
 	}
 	
 	numDataPointers = idx;
@@ -208,7 +211,7 @@ tresult PLUGIN_API AAXWrapper::beginEdit (ParamID tag)
 	HLOG (HAPI, "%s(tag=%x)", __FUNCTION__, tag);
 
 	AAX_CID aaxid (tag);
-	aaxParams->TouchParameter (aaxid);
+	mAAXParams->TouchParameter (aaxid);
 	return kResultTrue;
 }
 
@@ -218,7 +221,7 @@ tresult PLUGIN_API AAXWrapper::performEdit (ParamID tag, ParamValue valueNormali
 	HLOG (HAPI, "%s(tag=%x, value=%lf)", __FUNCTION__, tag, valueNormalized);
 
 	AAX_CID aaxid (tag);
-	aaxParams->SetParameterNormalizedValue (aaxid, valueNormalized);
+	mAAXParams->SetParameterNormalizedValue (aaxid, valueNormalized);
 	return kResultTrue;
 }
 
@@ -228,14 +231,14 @@ tresult PLUGIN_API AAXWrapper::endEdit (ParamID tag)
 	HLOG (HAPI, "%s(tag=%x)", __FUNCTION__, tag);
 
 	AAX_CID aaxid (tag);
-	aaxParams->ReleaseParameter (aaxid);
+	mAAXParams->ReleaseParameter (aaxid);
 	return kResultTrue;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API AAXWrapper::setDirty (TBool state)
 {
-	aaxParams->setDirty (state != 0);
+	mAAXParams->setDirty (state != 0);
 	return kResultOk;
 }
 
@@ -263,7 +266,7 @@ bool AAXWrapper::init ()
 	bool res = BaseWrapper::init ();
 
 	if (mController && BaseEditorWrapper::hasEditor (mController))
-		_setEditor (new AAXEditorWrapper (this, mController));
+		_setEditor (NEW AAXEditorWrapper (this, mController));
 
 	return res;
 }
@@ -274,7 +277,7 @@ void AAXWrapper::setupProcessTimeInfo ()
 	mProcessContext.state = 0;
 	mProcessContext.sampleRate = mSampleRate;
 
-	if (AAX_ITransport* transport = aaxParams->Transport ())
+	if (AAX_ITransport* transport = mAAXParams->Transport ())
 	{
 		int64_t splPos, ppqPos, loopStart, loopEnd;
 		bool playing, looping;
@@ -339,6 +342,39 @@ void AAXWrapper::setupProcessTimeInfo ()
 		else
 			mProcessContext.timeSigNumerator = mProcessContext.timeSigDenominator = 4;
 
+		AAX_EFrameRate frameRate;
+		int32_t offset;
+		if (transport->GetTimeCodeInfo (&frameRate, &offset) == AAX_SUCCESS)
+		{
+			mProcessContext.state |= ProcessContext::kSmpteValid;
+			mProcessContext.smpteOffsetSubframes = offset;
+			switch (frameRate)
+			{
+				case AAX_eFrameRate_24Frame: mProcessContext.frameRate.framesPerSecond = 24; break;
+				case AAX_eFrameRate_25Frame: mProcessContext.frameRate.framesPerSecond = 25; break;
+				case AAX_eFrameRate_2997NonDrop:
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				case AAX_eFrameRate_2997DropFrame:
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags = FrameRate::kDropRate|FrameRate::kPullDownRate;
+					break;
+				case AAX_eFrameRate_30NonDrop:
+					mProcessContext.frameRate.framesPerSecond = 30;
+					break;
+				case AAX_eFrameRate_30DropFrame:
+					mProcessContext.frameRate.framesPerSecond = 30;
+					mProcessContext.frameRate.flags = FrameRate::kDropRate;
+					break;
+				case AAX_eFrameRate_23976:
+					mProcessContext.frameRate.framesPerSecond = 24;
+					mProcessContext.frameRate.flags = FrameRate::kPullDownRate;
+					break;
+				default: mProcessContext.state &= ~ProcessContext::kSmpteValid;
+			}
+		}
+
 		mProcessData.processContext = &mProcessContext;
 	}
 	else
@@ -352,9 +388,9 @@ bool AAXWrapper::_sizeWindow (int32 width, int32 height)
 
 	AAX_ASSERT (mainThread == getCurrentThread ());
 
-	if (aaxGUI)
+	if (mAAXGUI)
 	{
-		if (AAX_IViewContainer* vc = aaxGUI->GetViewContainer ())
+		if (AAX_IViewContainer* vc = mAAXGUI->GetViewContainer ())
 		{
 			AAX_Point inSize (height, width);
 			if (vc->SetViewSize (inSize) == AAX_SUCCESS)
@@ -377,7 +413,7 @@ struct AAXWrapper::GetChunkMessage : public FCondition
 //------------------------------------------------------------------------
 int32 AAXWrapper::_getChunk (void** data, bool isPreset)
 {
-	if (wantsSetChunk)
+	if (mWantsSetChunk)
 	{
 		// isPreset is always false for AAX, so we can ignore it
 		*data = mChunk.getData ();
@@ -406,7 +442,8 @@ int32 AAXWrapper::_setChunk (void* data, int32 byteSize, bool isPreset)
 	FGuard guard (msgQueueLock);
 	mChunk.setSize (byteSize);
 	memcpy (mChunk.getData (), data, byteSize);
-	wantsSetChunk = true;
+	mWantsSetChunk = true;
+	mWantsSetChunkIsPreset = isPreset;
 	return 0;
 }
 
@@ -417,36 +454,37 @@ void AAXWrapper::onTimer (Timer* timer)
 
 	AAX_ASSERT (mainThread == getCurrentThread ());
 
-	if (wantsSetChunk && !settingChunk)
+	if (mWantsSetChunk && !mSettingChunk)
 	{
-		settingChunk = true;
+		mSettingChunk = true;
 		FGuard guard (msgQueueLock);
-		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), false);
-		wantsSetChunk = false;
-		settingChunk = false;
+		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), mWantsSetChunkIsPreset);
+		mWantsSetChunk = false;
+		mSettingChunk = false;
+		mWantsSetChunkIsPreset = false;
 
 		if (mPresetChanged)
 		{
 			int32_t numParams;
-			if (aaxParams->GetNumberOfParameters (&numParams) == AAX_SUCCESS)
+			if (mAAXParams->GetNumberOfParameters (&numParams) == AAX_SUCCESS)
 			{
 				AAX_CID bypassId (mBypassParameterID);
 				for (auto i = 0; i < numParams; i++)
 				{
 					AAX_CString id;
-					if (aaxParams->GetParameterIDFromIndex (i, &id) == AAX_SUCCESS)
+					if (mAAXParams->GetParameterIDFromIndex (i, &id) == AAX_SUCCESS)
 					{
 						if (id == (const char*)bypassId)
 						{
-							aaxParams->SetParameterNormalizedValue (id.CString (), mBypassBeforePresetChanged);
+							mAAXParams->SetParameterNormalizedValue (id.CString (), mBypassBeforePresetChanged);
 						}
 						else
 						{
 							double value;
-							if (aaxParams->GetParameterNormalizedValue (id.CString (), &value) ==
+							if (mAAXParams->GetParameterNormalizedValue (id.CString (), &value) ==
 								AAX_SUCCESS)
 							{
-								aaxParams->SetParameterNormalizedValue (id.CString (), value);
+								mAAXParams->SetParameterNormalizedValue (id.CString (), value);
 							}
 						}
 					}
@@ -640,7 +678,7 @@ AAXWrapper* AAXWrapper::create (IPluginFactory* factory, const TUID vst3Componen
 	}
 	config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
 
-	auto* wrapper = new AAXWrapper (config, params, desc);
+	auto* wrapper = NEW AAXWrapper (config, params, desc);
 	if (wrapper->init () == false || wrapper->setupBusArrangements (desc) != kResultOk)
 	{
 		wrapper->release ();
@@ -691,7 +729,7 @@ int32 AAXWrapper::countSidechainBusChannels (BusDirection dir, uint64& scBusBits
 	int32 busCount = mComponent->getBusCount (kAudio, dir);
 	for (int32 i = 0; i < busCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 		if (mComponent->getBusInfo (kAudio, dir, i, busInfo) == kResultTrue)
 		{
 			if (busInfo.busType == kAux)
@@ -752,23 +790,23 @@ void AAXWrapper::guessActiveOutputs (float** out, int32 num)
 		auto next = (i + 1 < num ? out[i + 1] : nullptr);
 		active[i] = (out[i] != prev && out[i] != next);
 	}
-	activeChannels = active;
+	mActiveChannels = active;
 }
 
 //------------------------------------------------------------------------
 void AAXWrapper::updateActiveOutputState ()
 {
 	// some additional copying to avoid missing updates
-	std::bitset<maxActiveChannels> channels = activeChannels;
-	if (channels == propagatedChannels)
+	std::bitset<maxActiveChannels> channels = mActiveChannels;
+	if (channels == mPropagatedChannels)
 		return;
-	propagatedChannels = channels;
+	mPropagatedChannels = channels;
 
 	int32 channelPos = 0;
 	int32 busCount = mComponent->getBusCount (kAudio, kOutput);
 	for (int32 i = 0; i < busCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 		if (mComponent->getBusInfo (kAudio, kOutput, i, busInfo) == kResultTrue)
 		{
 			bool active = false;
@@ -788,7 +826,7 @@ void AAXWrapper::setSideChainEnable (bool enable)
 	int32 busCount = mComponent->getBusCount (kAudio, kInput);
 	for (int32 i = 0; i < busCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 		if (mComponent->getBusInfo (kAudio, kInput, i, busInfo) == kResultTrue)
 		{
 			if (busInfo.busType == kAux)
@@ -812,7 +850,7 @@ struct CP
 {
 	static AAX_IEffectParameters* AAX_CALLBACK Create_Parameters ()
 	{
-		auto p = new AAXWrapper_Parameters (pluginIndex);
+		auto p = NEW AAXWrapper_Parameters (pluginIndex);
 		if (!p->getWrapper ())
 		{
 			delete p;
@@ -825,7 +863,7 @@ struct CP
 //------------------------------------------------------------------------
 AAX_IEffectGUI* AAX_CALLBACK Create_GUI ()
 {
-	return new AAXWrapper_GUI ();
+	return NEW AAXWrapper_GUI ();
 }
 
 //------------------------------------------------------------------------
@@ -872,6 +910,12 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 			AAX_CMidiPacket& buf = midiBuffer->mBuffer[i];
 			if (buf.mLength > 0)
 			{
+				// skip note-on events if bypassed to reduce processor load for instruments,
+				// but let everything else through to avoid hanging notes
+				if (mSimulateBypass && mBypass)
+					if ((buf.mData[0] & Vst::kStatusMask) == Vst::kNoteOn && buf.mData[2] != 0)
+						continue;
+
 				Event toAdd = { m, static_cast<int32>(buf.mTimestamp), 0 };
 				bool isLive = buf.mIsImmediate || buf.mTimestamp == 0;
 				processMidiEvent (toAdd, (char*)&buf.mData[0], isLive);
@@ -889,9 +933,9 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 		{
 			int32 scChannel = *static_cast<int32_t*> (psc);
 
-			int32 idx = pluginDesc->mInputChannels;
+			int32 idx = mPluginDesc->mInputChannels;
 			memcpy (inputs, pdI, idx * sizeof (inputs[0]));
-			for (int32 i = 0; i < pluginDesc->mSideChainInputChannels; i++)
+			for (int32 i = 0; i < mPluginDesc->mSideChainInputChannels; i++)
 				inputs[idx + i] = pdI[scChannel];
 			pdI = inputs;
 		}
@@ -903,7 +947,7 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 	int32 cntOut = getNumOutputs ();
 	int32 aaxOut = getNumAAXOutputs ();
 	float* outputs[maxActiveChannels];
-	int32 mainOuts = pluginDesc->mOutputChannels;
+	int32 mainOuts = mPluginDesc->mOutputChannels;
 	if (mainOuts == 6)
 	{
 		// sort Surround channels from AAX (L C R Ls Rs LFE) to VST (L R C LFE Ls Rs)
@@ -923,14 +967,14 @@ Steinberg::int32 AAXWrapper::Process (AAXWrapper_Context* instance)
 		outputs[i] = buf;
 	guessActiveOutputs (outputs, cntOut);
 
-	mMetersTmp = (cntMeters > 0) ? *static_cast<float**> (instance->ptr[idxMeters]) : nullptr;
+	mMetersTmp = (mCntMeters > 0) ? *static_cast<float**> (instance->ptr[idxMeters]) : nullptr;
 
 	_processReplacing (pdI, outputs, bufferSize);
 
 	mMetersTmp = nullptr;
 
-	// apply bypass if not supported ----------------------
-	if (mSimulateBypass)
+	// apply bypass if not supported (only without inputs for now, i.e. instruments) ----------------------
+	if (mSimulateBypass && mPluginDesc->mInputChannels == 0)
 	{
 		static const float kDiffGain = 0.001f;
 		if (mBypass)
@@ -976,9 +1020,9 @@ void AAXWrapper::processOutputParametersChanges ()
 		auto queue = mOutputChanges.getParameterData (i);
 		if (!queue)
 			break;
-		for (int32 m = 0; m < cntMeters; m++)
+		for (int32 m = 0; m < mCntMeters; m++)
 		{
-			if (meterIds[m] == queue->getParameterId ())
+			if (mMeterIds[m] == queue->getParameterId ())
 			{
 				int32 sampleOffset;
 				ParamValue value;
@@ -988,7 +1032,7 @@ void AAXWrapper::processOutputParametersChanges ()
 				break;
 			}
 		}
-		if (found == cntMeters)
+		if (found == mCntMeters)
 			break;
 	}
 }
@@ -1001,9 +1045,9 @@ Steinberg::tresult PLUGIN_API AAXWrapper::restartComponent (Steinberg::int32 fla
 	//--- ----------------------
 	if (flags & kLatencyChanged)
 	{
-		if (aaxParams && mProcessor)
+		if (mAAXParams && mProcessor)
 		{
-			AAX_IController* ctrler = aaxParams->Controller ();
+			AAX_IController* ctrler = mAAXParams->Controller ();
 			if (ctrler)
 				ctrler->SetSignalLatency (mProcessor->getLatencySamples ());
 		}
@@ -1151,7 +1195,7 @@ void AAXWrapper::DescribeAlgorithmComponent (AAX_IComponentDescriptor* outDesc,
 		for (AAX_Meter_Desc* mdesc = pdesc->mMeters; mdesc->mName; mdesc++)
 			cntMeters++;
 		std::unique_ptr<Steinberg::int32[]> meterIds; 
-		meterIds.reset (new Steinberg::int32 (cntMeters));
+		meterIds.reset (NEW Steinberg::int32 (cntMeters));
 		cntMeters = 0;
 		for (AAX_Meter_Desc* mdesc = pdesc->mMeters; mdesc->mName; mdesc++)
 			meterIds[cntMeters++] = mdesc->mID;

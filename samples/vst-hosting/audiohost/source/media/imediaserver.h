@@ -70,6 +70,8 @@ struct IAudioClient
 	virtual bool setSamplerate (SampleRate value) = 0;
 	virtual bool setBlockSize (int32 value) = 0;
 	virtual IOSetup getIOSetup () const = 0;
+
+	virtual ~IAudioClient () {}
 };
 
 //----------------------------------------------------------------------------------
@@ -94,6 +96,8 @@ struct IMidiClient
 
 	virtual bool onEvent (const Event& event, int32_t port) = 0;
 	virtual IOSetup getMidiIOSetup () const = 0;
+
+	virtual ~IMidiClient () {}
 };
 
 //----------------------------------------------------------------------------------
@@ -101,6 +105,8 @@ struct IMediaServer
 {
 	virtual bool registerAudioClient (IAudioClient* client) = 0;
 	virtual bool registerMidiClient (IMidiClient* client) = 0;
+
+	virtual ~IMediaServer () {}
 };
 
 //----------------------------------------------------------------------------------

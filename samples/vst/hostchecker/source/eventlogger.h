@@ -48,8 +48,9 @@ public:
 //------------------------------------------------------------------------
 	EventLogger ();
 
-	typedef std::vector<struct LogEvent> Codes;
+	using Codes = std::vector<struct LogEvent>;
 
+	void clearLogEvents ();
 	void resetLogEvents ();
 	const Codes& getLogEvents () const;
 	void addLogEvent (Steinberg::int32 logId);

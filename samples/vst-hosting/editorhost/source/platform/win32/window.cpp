@@ -168,7 +168,7 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		case WM_SIZING:
 		{
-			RECT* newSize = reinterpret_cast<RECT*> (lParam);
+			auto* newSize = reinterpret_cast<RECT*> (lParam);
 			RECT oldSize;
 			GetWindowRect (hwnd, &oldSize);
 			RECT clientSize;

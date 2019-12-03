@@ -39,9 +39,13 @@
 #include "hostcheck.h"
 #include "logevents.h"
 
+#include "public.sdk/source/common/threadchecker.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
 #include "public.sdk/source/vst/vstbypassprocessor.h"
+#include "base/thread/include/flock.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
+
+#include <list>
 
 namespace Steinberg {
 namespace Vst {
@@ -56,7 +60,7 @@ public:
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
-	
+
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
 	tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
@@ -82,8 +86,7 @@ public:
 	{
 		return (IAudioProcessor*)new HostCheckerProcessor ();
 	}
-	void sendLogEventMessage (const LogEvent& logEvent);
-
+	
 	//---IAudioPresentationLatency------------
 	tresult PLUGIN_API setAudioPresentationLatencySamples (BusDirection dir, int32 busIndex,
 	                                                       uint32 latencyInSamples) SMTG_OVERRIDE;
@@ -98,8 +101,6 @@ public:
 	END_DEFINE_INTERFACES (AudioEffect)
 	REFCOUNT_METHODS (AudioEffect)
 
-	static FUID cid;
-
 	enum State : uint32
 	{
 		kUninitialized = 0,
@@ -111,12 +112,20 @@ public:
 
 protected:
 	void addLogEvent (Steinberg::int32 logId);
+	
 	void informLatencyChanged ();
+	void sendLatencyChanged ();
+
+	void addLogEventMessage (const LogEvent& logEvent);
+	void sendLogEventMessage (const LogEvent& logEvent);
+	void sendNowAllLogEvents ();
 
 	HostCheck mHostCheck;
 
-	BypassProcessor mBypassProcessor;
-	float mLastBlockMarkerValue = 1.f;
+	BypassProcessor<Vst::Sample32> mBypassProcessorFloat;
+	BypassProcessor<Vst::Sample64> mBypassProcessorDouble;
+
+	float mLastBlockMarkerValue = -0.5f;
 
 	int32 mNumNoteOns = 0;
 	uint32 mLatency = 0;
@@ -124,7 +133,15 @@ protected:
 	float mGeneratePeaks = 0;
 	State mCurrentState = kUninitialized;
 
-	bool mBypass = false;
+	uint32 mMinimumOfInputBufferCount {0};
+	uint32 mMinimumOfOutputBufferCount {0};
+
+	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
+
+	Steinberg::Base::Thread::FLock msgQueueLock;
+	std::list<LogEvent*> msgQueue;
+
+	bool mBypass {false};
 };
 
 //------------------------------------------------------------------------

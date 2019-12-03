@@ -331,7 +331,7 @@ bool XmlRepresentationHelper::startLayer (Vst::ParameterInfo& info, FIDString _f
 		style = Vst::AttributesStyle::kSwitchPushIncLoopedStyle;
 	}
 
-	return startLayer (type, info.id, _function, style, ended);
+	return startLayer (type, static_cast<int32> (info.id), _function, style, ended);
 }
 
 //------------------------------------------------------------------------

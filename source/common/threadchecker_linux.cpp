@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/hostchecker/source/threadchecker_linux.cpp
+// Filename    : public.sdk/source/common/threadchecker_linux.cpp
 // Created by  : Steinberg, 01/2019
 // Description : linux thread checker
 //
@@ -48,13 +48,15 @@ namespace Vst {
 class LinuxThreadChecker : public ThreadChecker
 {
 public:
-	void test (const char* failmessage, bool exit) override
+	bool test (const char* failmessage = nullptr, bool exit = false) override
 	{
 		if (threadID == pthread_self ())
-			return;
-		fprintf (stderr, "%s", failmessage);
+			return true;
+		if (failmessage)
+			fprintf (stderr, "%s", failmessage);
 		if (exit)
 			std::terminate ();
+		return false;
 	}
 
 	pthread_t threadID {pthread_self ()};

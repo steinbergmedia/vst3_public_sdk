@@ -1,5 +1,4 @@
 //-----------------------------------------------------------------------------
-// Flags       : clang-format auto
 // Project     : VST SDK
 //
 // Category    : AudioHost
@@ -56,7 +55,7 @@
 
 //------------------------------------------------------------------------
 namespace Steinberg {
-FUnknown* gStandardPluginContext = new Vst::HostApplication ();
+FUnknown* gStandardPluginContext = NEW Vst::HostApplication ();
 
 namespace Vst {
 namespace AudioHost {
@@ -80,6 +79,7 @@ void App::startAudioClient (const std::string& path, VST3::Optional<VST3::UID> e
 		reason += "\nError: ";
 		reason += error;
 		// EditorHost::IPlatform::instance ().kill (-1, reason);
+        return;
 	}
 	auto factory = module->getFactory ();
 	for (auto& classInfo : factory.classInfos ())
@@ -91,7 +91,7 @@ void App::startAudioClient (const std::string& path, VST3::Optional<VST3::UID> e
 				if (*effectID != classInfo.ID ())
 					continue;
 			}
-			plugProvider = owned (new PlugProvider (factory, classInfo, true));
+			plugProvider = owned (NEW PlugProvider (factory, classInfo, true));
 			break;
 		}
 	}
@@ -105,6 +105,7 @@ void App::startAudioClient (const std::string& path, VST3::Optional<VST3::UID> e
 			error = "No VST3 Audio Module Class found in file ";
 		error += path;
 		// EditorHost::IPlatform::instance ().kill (-1, error);
+        return;
 	}
 
 	OPtr<IComponent> component = plugProvider->getComponent ();

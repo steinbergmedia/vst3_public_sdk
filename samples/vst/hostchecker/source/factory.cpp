@@ -37,6 +37,7 @@
 #include "public.sdk/source/main/pluginfactory.h"
 #include "hostcheckerprocessor.h"
 #include "hostcheckercontroller.h"
+#include "cids.h"
 #include "version.h"	// for versioning
 
 
@@ -47,7 +48,7 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				   "http://www.steinberg.net", 
 				   "mailto:info@steinberg.de")
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerProcessor::cid),
+	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerProcessorUID),
 				PClassInfo::kManyInstances,
 				kVstAudioEffectClass,
 				stringPluginName,
@@ -57,7 +58,7 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				kVstVersionString,
 				Steinberg::Vst::HostCheckerProcessor::createInstance)
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerController::cid),
+	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerControllerUID),
 				PClassInfo::kManyInstances,
 				kVstComponentControllerClass,
 				stringPluginName,		// controller name (could be the same than component name)

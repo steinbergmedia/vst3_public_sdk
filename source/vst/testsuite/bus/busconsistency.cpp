@@ -79,7 +79,7 @@ bool PLUGIN_API BusConsistencyTest::run (ITestResult* testResult)
 
 					// test by getting descriptions randomly and comparing with saved ones
 					int32 randIndex = 0;
-					BusInfo info = {0};
+					BusInfo info = {};
 
 					for (busIndex = 0;
 					     busIndex <= numBusses * TestDefaults::instance ().numIterations;

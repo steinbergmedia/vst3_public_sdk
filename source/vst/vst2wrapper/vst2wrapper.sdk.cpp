@@ -37,5 +37,5 @@
 #include "public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp"
 #include "public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp"
 
-#include "public.sdk/source/vst2.x/audioeffectx.cpp"
 #include "public.sdk/source/vst2.x/audioeffect.cpp"
+#include "public.sdk/source/vst2.x/audioeffectx.cpp"

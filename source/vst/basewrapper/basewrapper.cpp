@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,6 +37,7 @@
 /// \cond ignore
 
 #include "public.sdk/source/vst/basewrapper/basewrapper.h"
+#include "public.sdk/source/vst/hosting/connectionproxy.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 
 #include "pluginterfaces/base/futils.h"
@@ -294,9 +295,12 @@ BaseWrapper::~BaseWrapper ()
 		FUnknownPtr<IConnectionPoint> cp2 (mController);
 		if (cp1 && cp2)
 		{
-			cp1->disconnect (cp2);
-			cp2->disconnect (cp1);
+			if (mProcessorConnection)
+				mProcessorConnection->disconnect (cp2);
+			if (mControllerConnection)
+				mControllerConnection->disconnect (cp1);
 		}
+		mComponentsConnected = false;
 	}
 
 	//---Terminate Controller Component
@@ -331,6 +335,8 @@ BaseWrapper::~BaseWrapper ()
 	mComponent = nullptr;
 	mFactory = nullptr;
 	mPlugInterfaceSupport = nullptr;
+	mProcessorConnection = nullptr;
+	mControllerConnection = nullptr;
 
 	DeinitModule ();
 }
@@ -371,8 +377,11 @@ bool BaseWrapper::init ()
 		FUnknownPtr<IConnectionPoint> cp2 (mController);
 		if (cp1 && cp2)
 		{
-			cp1->connect (cp2);
-			cp2->connect (cp1);
+			mProcessorConnection = owned (NEW ConnectionProxy (cp1));
+			mProcessorConnection->connect (cp2);
+
+			mControllerConnection = owned (NEW ConnectionProxy (cp2));
+			mControllerConnection->connect (cp1);
 
 			mComponentsConnected = true;
 		}
@@ -425,7 +434,7 @@ bool BaseWrapper::init ()
 			ProgramListID rootUnitProgramListId = kNoProgramListId;
 			for (int32 i = 0; i < mUnitInfo->getUnitCount (); i++)
 			{
-				UnitInfo unit = {0};
+				UnitInfo unit = {};
 				if (mUnitInfo->getUnitInfo (i, unit) == kResultTrue)
 				{
 					if (unit.id == kRootUnitId)
@@ -440,7 +449,7 @@ bool BaseWrapper::init ()
 			{
 				for (int32 i = 0; i < programListCount; i++)
 				{
-					ProgramListInfo progList = {0};
+					ProgramListInfo progList = {};
 					if (mUnitInfo->getProgramListInfo (i, progList) == kResultTrue)
 					{
 						if (progList.id == rootUnitProgramListId)
@@ -467,7 +476,7 @@ void BaseWrapper::_suspend ()
 {
 	_stopProcess ();
 
-	if (mComponent)
+	if (mComponent && mActive == true)
 		mComponent->setActive (false);
 	mActive = false;
 }
@@ -475,9 +484,7 @@ void BaseWrapper::_suspend ()
 //------------------------------------------------------------------------
 void BaseWrapper::_resume ()
 {
-	mChunk.setSize (0);
-
-	if (mComponent)
+	if (mComponent && mActive == false)
 		mComponent->setActive (true);
 	mActive = true;
 }
@@ -495,7 +502,7 @@ void BaseWrapper::_startProcess ()
 //------------------------------------------------------------------------
 void BaseWrapper::_stopProcess ()
 {
-	if (mProcessor && mProcessing)
+	if (mProcessor && mProcessing == true)
 	{
 		mProcessor->setProcessing (false);
 		mProcessing = false;
@@ -563,7 +570,7 @@ float BaseWrapper::_getParameter (int32 index) const
 	if (!mController)
 		return 0.f;
 
-	if (index < (int32)mParameterMap.size ())
+	if (index < static_cast<int32> (mParameterMap.size ()))
 	{
 		ParamID id = mParameterMap.at (index).vst3ID;
 		return (float)mController->getParamNormalized (id);
@@ -622,7 +629,7 @@ void BaseWrapper::getUnitPath (UnitID unitID, String& path) const
 	//! Build the unit path up to the root unit (e.g. "Modulators.LFO 1.". Separator is a ".")
 	for (int32 unitIndex = 0; unitIndex < mUnitInfo->getUnitCount (); ++unitIndex)
 	{
-		UnitInfo info = {0};
+		UnitInfo info = {};
 		mUnitInfo->getUnitInfo (unitIndex, info);
 		if (info.id == unitID)
 		{
@@ -658,10 +665,10 @@ int32 BaseWrapper::_getChunk (void** data, bool isPreset)
 	acc.writeInt64 (componentStream.getSize ());
 	acc.writeInt64 (controllerStream.getSize ());
 
-	acc.writeRaw (componentStream.getData (), (int32)componentStream.getSize ());
-	acc.writeRaw (controllerStream.getData (), (int32)controllerStream.getSize ());
+	acc.writeRaw (componentStream.getData (), static_cast<int32> (componentStream.getSize ()));
+	acc.writeRaw (controllerStream.getData (), static_cast<int32> (controllerStream.getSize ()));
 
-	int32 chunkSize = (int32)mChunk.getSize ();
+	auto chunkSize = static_cast<int32> (mChunk.getSize ());
 	*data = mChunk.getData ();
 	return chunkSize;
 }
@@ -735,7 +742,7 @@ bool BaseWrapper::getProgramListAndUnit (int32 midiChannel, UnitID& unitId,
 	{
 		for (int32 i = 0, unitCount = mUnitInfo->getUnitCount (); i < unitCount; i++)
 		{
-			UnitInfo unitInfoStruct = {0};
+			UnitInfo unitInfoStruct = {};
 			if (mUnitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 			{
 				if (unitId == unitInfoStruct.id)
@@ -858,7 +865,7 @@ void BaseWrapper::setupParameters ()
 	int32 numParamID = 0;
 	for (int32 i = 0; i < paramCount; i++)
 	{
-		ParameterInfo paramInfo = {0};
+		ParameterInfo paramInfo = {};
 		if (mController->getParameterInfo (i, paramInfo) == kResultTrue)
 		{
 			//--- ------------------------------------------
@@ -908,7 +915,7 @@ void BaseWrapper::setupParameters ()
 		}
 	}
 
-	mNumParams = (int32)mParameterMap.size ();
+	mNumParams = static_cast<int32> (mParameterMap.size ());
 
 	mInputTransfer.setMaxParameters (paramCount);
 	mOutputTransfer.setMaxParameters (paramCount);
@@ -925,7 +932,7 @@ void BaseWrapper::setupParameters ()
 		ProgramListID programListId;
 		if (getProgramListAndUnit (midiChannel, unitId, programListId))
 		{
-			for (int32 i = 0; i < (int32)programParameterInfos.size (); i++)
+			for (int32 i = 0; i < static_cast<int32> (programParameterInfos.size ()); i++)
 			{
 				const ParameterInfo& paramInfo = programParameterInfos.at (i);
 				if (paramInfo.unitId == unitId)
@@ -997,7 +1004,7 @@ int32 BaseWrapper::countMainBusChannels (BusDirection dir, uint64& mainBusBitset
 	int32 busCount = mComponent->getBusCount (kAudio, dir);
 	for (int32 i = 0; i < busCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 		if (mComponent->getBusInfo (kAudio, dir, i, busInfo) == kResultTrue)
 		{
 			if (busInfo.busType == kMain)
@@ -1142,7 +1149,7 @@ void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, i
 			if (mProgramChangeParameterIDs[channel] != kNoParamId &&
 			    mProgramChangeParameterIdxs[channel] != -1)
 			{
-				ParameterInfo paramInfo = {0};
+				ParameterInfo paramInfo = {};
 				if (mController->getParameterInfo (mProgramChangeParameterIdxs[channel],
 				                                   paramInfo) == kResultTrue)
 				{

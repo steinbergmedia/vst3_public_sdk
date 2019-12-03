@@ -186,8 +186,28 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 		}
 	}
 	else
+	{
 		addMessage (testResult, STR ("This component does not export any programs."));
 
+		// check if not more than 1 program change parameter is defined
+		int32 numPrgChanges = 0;
+		for (int32 i = 0; i < controller->getParameterCount (); ++i)
+		{
+			ParameterInfo paramInfo = {};
+			if (controller->getParameterInfo (i, paramInfo) != kResultOk)
+			{
+				if (paramInfo.flags & ParameterInfo::kIsProgramChange)
+					numPrgChanges++;
+			}
+		}
+		if (numPrgChanges > 1)
+		{
+			addErrorMessage (
+			    testResult,
+			    printf ("More than 1 programChange Parameter (%d) without support of IUnitInfo!!!",
+			            numPrgChanges));
+		}
+	}
 	return true;
 }
 

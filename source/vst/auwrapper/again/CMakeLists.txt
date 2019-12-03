@@ -39,6 +39,7 @@ if(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
         "-is" "${CMAKE_OSX_SYSROOT}"
         "-I" "${CMAKE_OSX_SYSROOT}/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers"
         "-I" "/System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers"
+        "-I" "/System/Library/Frameworks/AudioUnit.framework/Versions/A/Headers/"
         "-I" "${SMTG_COREAUDIO_SDK_PATH}/AudioUnits/AUPublic/AUBase"
         "-I" "${CMAKE_CURRENT_LIST_DIR}"
         "-o" "${outputdir}/${target}.component/Contents/Resources/again_au.rsrc"

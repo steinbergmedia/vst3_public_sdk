@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Validator
-// Filename    : usediids.cpp
+// Filename    : public.sdk/samples/vst-hosting/validator/source/usediids.cpp
 // Created by  : Steinberg 09.2008
 // Description : Interface symbols file
 //

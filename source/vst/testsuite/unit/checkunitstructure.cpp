@@ -67,8 +67,8 @@ bool UnitStructureTest::run (ITestResult* testResult)
 			            STR ("No units found, while controller implements IUnitInfo !!!"));
 		}
 
-		UnitInfo unitInfo = {0};
-		UnitInfo tmpInfo = {0};
+		UnitInfo unitInfo = {};
+		UnitInfo tmpInfo = {};
 		bool rootFound = false;
 		for (int32 unitIndex = 0; unitIndex < unitCount; unitIndex++)
 		{

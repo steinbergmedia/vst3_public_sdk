@@ -1,10 +1,10 @@
 //-----------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    : Examples
-// Filename    : public.sdk/samples/vst/hostchecker/source/threadchecker.h
-// Created by  : Steinberg, 01/2019
-// Description : thread checker
+// Category    : Helpers
+// Filename    : public.sdk/source/vst/utility/connectionproxy.cpp
+// Created by  : Steinberg, 04/2019
+// Description : VST 3 Plug-in connection class
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -30,31 +30,74 @@
 // BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
 // DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
 // LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
-// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+// OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#pragma once
+#include "connectionproxy.h"
 
-#include "pluginterfaces/base/ftypes.h"
-#include <memory>
-
-//------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-class ThreadChecker
+ConnectionProxy::ConnectionProxy (IConnectionPoint* srcConnection)
+: srcConnection (srcConnection) // share it
 {
-public:
-	static std::unique_ptr<ThreadChecker> create ();
-	
-	virtual void test (const char* failmessage, bool exit) = 0;
-
-	virtual ~ThreadChecker () noexcept = default;
-};
+}
 
 //------------------------------------------------------------------------
-} // Vst
-} // Steinberg
+ConnectionProxy::~ConnectionProxy ()
+{
+}
 
+//------------------------------------------------------------------------
+tresult PLUGIN_API ConnectionProxy::connect (IConnectionPoint* other)
+{
+	if (other == nullptr)
+		return kInvalidArgument;
+	if (dstConnection)
+		return kResultFalse;
+
+	dstConnection = other; // share it
+	tresult res = srcConnection->connect (this);
+	if (res != kResultTrue)
+		dstConnection = nullptr;
+	return res;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API ConnectionProxy::disconnect (IConnectionPoint* other)
+{
+	if (!other)
+		return kInvalidArgument;
+
+	if (other == dstConnection)
+	{
+		if (srcConnection)
+			srcConnection->disconnect (this);
+		dstConnection = nullptr;
+		return kResultTrue;
+	}
+
+	return kInvalidArgument;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API ConnectionProxy::notify (IMessage* message)
+{
+	if (dstConnection)
+	{
+		// TODO we should test if we are in UI main thread else postpone the message
+		if (threadChecker && threadChecker->test ())
+			return dstConnection->notify (message);
+	}
+	return kResultFalse;
+}
+
+//------------------------------------------------------------------------
+bool ConnectionProxy::disconnect ()
+{
+	return disconnect (dstConnection) == kResultTrue;
+}
+}
+} // namespaces

@@ -71,7 +71,7 @@ bool PLUGIN_API BusActivationTest::run (ITestResult* testResult)
 			BusDirection busDirection = i < numInputs ? kInput : kOutput;
 			int32 busIndex = busDirection == kInput ? i : i - numInputs;
 
-			BusInfo busInfo = {0};
+			BusInfo busInfo = {};
 			if (vstPlug->getBusInfo (type, busDirection, busIndex, busInfo) != kResultTrue)
 			{
 				addErrorMessage (testResult, STR ("IComponent::getBusInfo (..) failed."));

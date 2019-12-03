@@ -35,22 +35,24 @@
 //-----------------------------------------------------------------------------
 
 #include "hostcheckerprocessor.h"
+#include "cids.h"
 #include "hostcheckercontroller.h"
 
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
+#include "public.sdk/source/vst/vsteventshelper.h"
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
 namespace Steinberg {
 namespace Vst {
 
-#define kMaxLatency 8192
+#define THREAD_CHECK_MSG(msg) "The host called '" msg "' in the wrong thread context.\n"
 
-//-----------------------------------------------------------------------------
-FUID HostCheckerProcessor::cid (0x23FC190E, 0x02DD4499, 0xA8D2230E, 0x50617DA3);
+bool THREAD_CHECK_EXIT = false;
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -61,7 +63,7 @@ HostCheckerProcessor::HostCheckerProcessor ()
 
 	mLatency = 256;
 
-	setControllerClass (HostCheckerController::cid);
+	setControllerClass (HostCheckerControllerUID);
 }
 
 //-----------------------------------------------------------------------------
@@ -76,10 +78,18 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		mCurrentState = State::kInitialized;
 
 		addAudioInput (USTRING ("Audio Input"), SpeakerArr::kStereo);
-		addAudioInput (USTRING ("Aux Input"), SpeakerArr::kStereo, kAux, 0);
+		addAudioInput (USTRING ("Aux Input 1"), SpeakerArr::kStereo, kAux, 0);
+		FUnknownPtr<IVst3ToAAXWrapper> AAXContext (context);
+		if (AAXContext == nullptr)
+			addAudioInput (USTRING ("Aux Input 2"), SpeakerArr::kMono, kAux, 0);
+
 		addAudioOutput (USTRING ("Audio Output"), SpeakerArr::kStereo);
-		addEventInput (USTRING ("Event Input"), 1);
-		addEventOutput (USTRING ("Event Output"), 1);
+
+		addEventInput (USTRING ("Event Input 1"), 1);
+		addEventInput (USTRING ("Event Input 2"), 1);
+
+		addEventOutput (USTRING ("Event Output 1"), 1);
+		addEventOutput (USTRING ("Event Output 2"), 1);
 
 		mHostCheck.setComponent (this);
 	}
@@ -96,15 +106,21 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		    kResultTrue)
 			addLogEvent (kLogIdIPrefetchableSupportSupported);
 	}
-
 	return result;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::terminate ()
 {
+	if (mCurrentState == kUninitialized)
+	{
+		// redundance
+	}
+	else if (mCurrentState != kSetupDone)
+	{
+		// wrong state
+	}
 	mCurrentState = kUninitialized;
-
 	return AudioEffect::terminate ();
 }
 
@@ -115,11 +131,35 @@ void HostCheckerProcessor::addLogEvent (Steinberg::int32 logId)
 }
 
 //-----------------------------------------------------------------------------
+void HostCheckerProcessor::addLogEventMessage (const LogEvent& logEvent)
+{
+	auto* evt = NEW LogEvent (logEvent);
+	{
+		Base::Thread::FGuard guard (msgQueueLock);
+		msgQueue.push_back (evt);
+	}
+}
+
+//-----------------------------------------------------------------------------
+void HostCheckerProcessor::sendNowAllLogEvents ()
+{
+	const EventLogger::Codes& errors = mHostCheck.getEventLogs ();
+	auto iter = errors.begin ();
+	while (iter != errors.end ())
+	{
+		if ((*iter).fromProcessor && (*iter).count > 0)
+		{
+			sendLogEventMessage ((*iter));
+		}
+		++iter;
+	}
+	mHostCheck.getEventLogger ().resetLogEvents ();
+}
+
+//-----------------------------------------------------------------------------
 void HostCheckerProcessor::sendLogEventMessage (const LogEvent& logEvent)
 {
-	IMessage* message = allocateMessage ();
-	FReleaser msgReleaser (message);
-	if (message)
+	if (auto message = owned (allocateMessage ()))
 	{
 		message->setMessageID ("LogEvent");
 		IAttributeList* attributes = message->getAttributes ();
@@ -153,15 +193,22 @@ tresult PLUGIN_API HostCheckerProcessor::getPrefetchableSupport (
 //-----------------------------------------------------------------------------
 void HostCheckerProcessor::informLatencyChanged ()
 {
-	IMessage* newMsg = allocateMessage ();
-	if (newMsg)
+	auto* evt = NEW LogEvent;
+	evt->id = kLogIdInformLatencyChanged;
+	{
+		Base::Thread::FGuard guard (msgQueueLock);
+		msgQueue.push_back (evt);
+	}
+}
+
+//-----------------------------------------------------------------------------
+void HostCheckerProcessor::sendLatencyChanged ()
+{
+	if (IMessage* newMsg = allocateMessage ())
 	{
 		newMsg->setMessageID ("Latency");
-		Steinberg::Vst::IAttributeList* attr = newMsg->getAttributes ();
-		if (attr)
-		{
+		if (auto* attr = newMsg->getAttributes ())
 			attr->setFloat ("Value", mWantedLatency);
-		}
 		sendMessage (newMsg);
 	}
 }
@@ -169,23 +216,62 @@ void HostCheckerProcessor::informLatencyChanged ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 {
-	mHostCheck.validate (data);
+	mHostCheck.validate (data, mMinimumOfInputBufferCount, mMinimumOfOutputBufferCount);
 
 	if (mCurrentState != State::kProcessing)
 	{
 		addLogEvent (kLogIdInvalidStateProcessingMissing);
 	}
 
+	// flush parameters case
+	if (data.numInputs == 0 && data.numOutputs == 0)
+	{
+		addLogEvent (kLogIdParametersFlushSupported);
+	}
+	if (data.processContext)
+	{
+		if (data.processContext->state & ProcessContext::kPlaying)
+			addLogEvent (kLogIdProcessContextPlayingSupported);
+		if (data.processContext->state & ProcessContext::kRecording)
+			addLogEvent (kLogIdProcessContextRecordingSupported);
+		if (data.processContext->state & ProcessContext::kCycleActive)
+			addLogEvent (kLogIdProcessContextCycleActiveSupported);
+
+		if (data.processContext->state & ProcessContext::kSystemTimeValid)
+			addLogEvent (kLogIdProcessContextSystemTimeSupported);
+		if (data.processContext->state & ProcessContext::kContTimeValid)
+			addLogEvent (kLogIdProcessContextContTimeSupported);
+		if (data.processContext->state & ProcessContext::kProjectTimeMusicValid)
+			addLogEvent (kLogIdProcessContextTimeMusicSupported);
+		if (data.processContext->state & ProcessContext::kBarPositionValid)
+			addLogEvent (kLogIdProcessContextBarPositionSupported);
+		if (data.processContext->state & ProcessContext::kCycleValid)
+			addLogEvent (kLogIdProcessContextCycleSupported);
+		if (data.processContext->state & ProcessContext::kTempoValid)
+			addLogEvent (kLogIdProcessContextTempoSupported);
+		if (data.processContext->state & ProcessContext::kTimeSigValid)
+			addLogEvent (kLogIdProcessContextTimeSigSupported);
+		if (data.processContext->state & ProcessContext::kChordValid)
+			addLogEvent (kLogIdProcessContextChordSupported);
+
+		if (data.processContext->state & ProcessContext::kSmpteValid)
+			addLogEvent (kLogIdProcessContextSmpteSupported);
+		if (data.processContext->state & ProcessContext::kClockValid)
+			addLogEvent (kLogIdProcessContextClockSupported);
+	}
+
 	Algo::foreach (data.inputParameterChanges, [&] (IParamValueQueue& paramQueue) {
 		Algo::foreachLast (paramQueue, [&] (ParamID id, int32 sampleOffset, ParamValue value) {
 			if (id == kBypassTag)
 			{
-				mBypassProcessor.setActive (value > 0);
+				mBypass = value > 0;
+				mBypassProcessorFloat.setActive (mBypass);
+				mBypassProcessorDouble.setActive (mBypass);
 			}
 			else if (id == kLatencyTag)
 			{
-				mWantedLatency = value * kMaxLatency;
-				informLatencyChanged ();
+				mWantedLatency = value * HostChecker::kMaxLatency;
+				addLogEvent (kLogIdInformLatencyChanged);
 			}
 			else if (id == kParam1Tag)
 			{
@@ -197,41 +283,73 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		});
 	});
 
-	if (mBypassProcessor.isActive ())
+	if (mBypassProcessorFloat.isActive ())
 	{
-		mBypassProcessor.process (data);
+		if (data.symbolicSampleSize == kSample32)
+			mBypassProcessorFloat.process (data);
+		else // kSample64
+			mBypassProcessorDouble.process (data);
 	}
 	else if (data.numSamples && data.numOutputs)
 	{
 		if (data.symbolicSampleSize == kSample32)
 			Algo::clear32 (data.outputs, data.numSamples);
-		else
+		else // kSample64
 			Algo::clear64 (data.outputs, data.numSamples);
 
-		if (mGeneratePeaks > 0)
+		if (mGeneratePeaks > 0 && data.processContext)
 		{
 			float coef = mGeneratePeaks * mLastBlockMarkerValue;
+
+			float distance2BarPosition =
+			    (data.processContext->projectTimeMusic - data.processContext->barPositionMusic) /
+			    (4. * data.processContext->timeSigNumerator) *
+			    data.processContext->timeSigDenominator / 2.;
+
+			// Normalized Tempo [0, 360] => [0, 1]
+			float tempo = data.processContext->tempo / 360.;
+
 			if (data.symbolicSampleSize == kSample32)
 			{
-				for (int32 i = 0; i < data.outputs[0].numChannels; i++)
+				for (int32 i = 0; i < data.outputs[0].numChannels && i < 1; i++)
 				{
 					data.outputs[0].channelBuffers32[i][0] = coef;
+					if (data.processContext->state & ProcessContext::kTempoValid &&
+					    data.numSamples > 3)
+						data.outputs[0].channelBuffers32[i][3] = tempo;
+				}
+				if (data.processContext->state & ProcessContext::kBarPositionValid)
+				{
+					for (int32 i = 1; i < data.outputs[0].numChannels; i++)
+					{
+						data.outputs[0].channelBuffers32[i][0] = distance2BarPosition;
+					}
 				}
 			}
-			else
+			else // kSample64
 			{
-				for (int32 i = 0; i < data.outputs[0].numChannels; i++)
+				for (int32 i = 0; i < data.outputs[0].numChannels && i < 1; i++)
 				{
 					data.outputs[0].channelBuffers64[i][0] = coef;
+					if (data.processContext->state & ProcessContext::kTempoValid &&
+					    data.numSamples > 3)
+						data.outputs[0].channelBuffers64[i][3] = tempo;
+				}
+				if (data.processContext->state & ProcessContext::kBarPositionValid)
+				{
+					for (int32 i = 1; i < data.outputs[0].numChannels; i++)
+					{
+						data.outputs[0].channelBuffers64[i][0] = distance2BarPosition;
+					}
 				}
 			}
-			mLastBlockMarkerValue = -mLastBlockMarkerValue;
+			// mLastBlockMarkerValue = -mLastBlockMarkerValue;
 
 			data.outputs[0].silenceFlags = 0x0;
 
 			const float kMaxNotesToDisplay = 5.f;
 
-			// check event
+			// check event from all input events and send them to the output event
 			Algo::foreach (data.inputEvents, [&] (Event& event) {
 				switch (event.type)
 				{
@@ -240,17 +358,25 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 						if (data.symbolicSampleSize == kSample32)
 							data.outputs[0].channelBuffers32[0][event.sampleOffset] =
 							    mNumNoteOns / kMaxNotesToDisplay;
-						else
+						else // kSample64
 							data.outputs[0].channelBuffers64[0][event.sampleOffset] =
 							    mNumNoteOns / kMaxNotesToDisplay;
 						if (data.outputEvents)
+						{
 							data.outputEvents->addEvent (event);
+
+							Event evtMIDICC;
+							Helpers::initLegacyMIDICCOutEvent (evtMIDICC, kCtrlModWheel,
+							                                   event.noteOn.channel,
+							                                   event.noteOn.velocity);
+							data.outputEvents->addEvent (evtMIDICC);
+						}
 						break;
 					case Event::kNoteOffEvent:
 						if (data.symbolicSampleSize == kSample32)
 							data.outputs[0].channelBuffers32[1][event.sampleOffset] =
 							    -mNumNoteOns / kMaxNotesToDisplay;
-						else
+						else // kSample64
 							data.outputs[0].channelBuffers64[1][event.sampleOffset] =
 							    -mNumNoteOns / kMaxNotesToDisplay;
 						if (data.outputEvents)
@@ -265,13 +391,36 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			data.outputs[0].silenceFlags = 0x3;
 	}
 
-	const EventLogger::Codes& errors = mHostCheck.getEventLogs ();
-	EventLogger::Codes::const_iterator iter = errors.begin ();
-	while (iter != errors.end ())
+	if (data.outputParameterChanges)
 	{
-		if ((*iter).fromProcessor)
-			sendLogEventMessage ((*iter));
-		++iter;
+		const EventLogger::Codes& errors = mHostCheck.getEventLogs ();
+		auto iter = errors.begin ();
+
+		uint32 warnIdValue[HostChecker::kParamWarnCount] = {0};
+		while (iter != errors.end ())
+		{
+			if ((*iter).fromProcessor && (*iter).count > 0)
+			{
+				int64 id = (*iter).id;
+				int32 offset = id / HostChecker::kParamWarnBitCount;
+				id = id % HostChecker::kParamWarnBitCount;
+				warnIdValue[offset] |= 1 << id;
+				// addLogEventMessage ((*iter));
+			}
+			++iter;
+		}
+		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
+		{
+			if (warnIdValue[i] != 0)
+			{
+				int32 idx;
+				if (auto* queue =
+				        data.outputParameterChanges->addParameterData (kProcessWarnTag + i, idx))
+					queue->addPoint (
+					    0, (double)warnIdValue[i] / double (HostChecker::kParamWarnStepCount), idx);
+			}
+		}
+		mHostCheck.getEventLogger ().resetLogEvents ();
 	}
 	return kResultOk;
 }
@@ -293,14 +442,38 @@ tresult PLUGIN_API HostCheckerProcessor::setupProcessing (ProcessSetup& setup)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 {
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerProcessor::setActive"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addLogEvent (kLogIdSetActiveCalledinWrongThread);
+	}
+
+	// we should not be in kActivated State!
+	if (mCurrentState == State::kProcessing)
+	{
+		addLogEvent (kLogIdInvalidStateSetActiveWrong);
+	}
+	
 	if (!state)
 	{
+		// only possible previous State: kActivated
+		if (mCurrentState == State::kSetupDone)
+		{
+			addLogEvent (kLogIdsetActiveFalseRedundant);
+		}
+	
 		mCurrentState = State::kSetupDone;
-		mBypassProcessor.reset ();
+		mBypassProcessorFloat.reset ();
+		mBypassProcessorDouble.reset ();
 	}
 	else
 	{
-		if (mCurrentState != State::kSetupDone)
+		// only possible previous State: kSetupDone
+		if (mCurrentState == State::kActivated)
+		{
+			addLogEvent (kLogIdsetActiveTrueRedundant);
+		}
+		else if (mCurrentState != State::kSetupDone)
 		{
 			addLogEvent (kLogIdInvalidStateSetupMissing);
 		}
@@ -309,10 +482,13 @@ tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 		mLatency = mWantedLatency;
 
 		// prepare bypass
-		mBypassProcessor.setup (*this, processSetup, mLatency);
+		mBypassProcessorFloat.setup (*this, processSetup, mLatency);
+		mBypassProcessorDouble.setup (*this, processSetup, mLatency);
 	}
-	mLastBlockMarkerValue = 0.5f;
+	mLastBlockMarkerValue = -0.5f;
 	mNumNoteOns = 0;
+
+	sendNowAllLogEvents ();
 
 	return AudioEffect::setActive (state);
 }
@@ -355,7 +531,7 @@ tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSam
 uint32 PLUGIN_API HostCheckerProcessor::getLatencySamples ()
 {
 	addLogEvent (kLogIdGetLatencySamples);
-	return 0;
+	return mLatency;
 }
 
 //-----------------------------------------------------------------------------
@@ -376,10 +552,42 @@ tresult PLUGIN_API HostCheckerProcessor::getRoutingInfo (RoutingInfo& inInfo, Ro
 tresult PLUGIN_API HostCheckerProcessor::activateBus (MediaType type, BusDirection dir, int32 index,
                                                       TBool state)
 {
-	if (type == kAudio && dir == kInput && index == 1)
-		addLogEvent (kLogIdActivateAuxBus);
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerProcessor::activateBus"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addLogEvent (kLogIdactivateBusCalledinWrongThread);
+	}
 
-	return AudioEffect::activateBus (type, dir, index, state);
+	if (type == kAudio && dir == kInput)
+	{
+		if (index < 0 || index > 2)
+			addLogEvent (kLogIdInvalidActivateAuxBus);
+		else if (index > 0)
+			addLogEvent (kLogIdActivateAuxBus);
+	}
+
+	auto result = AudioEffect::activateBus (type, dir, index, state);
+
+	if (result == kResultTrue && type == kAudio)
+	{
+		if (auto list = getBusList (type, dir))
+		{
+			int32 lastActive = -1;
+			for (int32 idx = static_cast<int32> (list->size ()) - 1; idx >= 0; --idx)
+			{
+				if (list->at (idx)->isActive ())
+				{
+					lastActive = idx;
+					break;
+				}
+			}
+			if (dir == kInput)
+				mMinimumOfInputBufferCount = lastActive + 1;
+			else
+				mMinimumOfOutputBufferCount = lastActive + 1;
+		}
+	}
+	return result;
 }
 
 //-----------------------------------------------------------------------------
@@ -404,24 +612,40 @@ tresult PLUGIN_API HostCheckerProcessor::getBusArrangement (BusDirection dir, in
 tresult PLUGIN_API HostCheckerProcessor::setProcessing (TBool state)
 {
 	if (state)
-		mCurrentState = State::kProcessing;
-	else
-		mCurrentState = State::kActivated;
+	{
+		// only possible previous State: kActivated
+		if (mCurrentState != State::kActivated)
+			addLogEvent (kLogIdInvalidStateSetProcessingWrong);
 
-	return AudioEffect::setProcessing (state);
+		if (mCurrentState == State::kProcessing)
+			addLogEvent (kLogIdsetProcessingTrueRedundant);
+		mCurrentState = State::kProcessing;
+	}
+	else
+	{
+		if (mCurrentState != State::kProcessing)
+			addLogEvent (kLogIdsetProcessingFalseRedundant);
+		mCurrentState = State::kActivated;
+	}
+
+	AudioEffect::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 {
-	FUnknownPtr<IStreamAttributes> stream (state);
-	if (stream)
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerProcessor::setState"),
+	                          THREAD_CHECK_EXIT))
 	{
-		IAttributeList* list = stream->getAttributes ();
-		if (list)
-		{
-			addLogEvent (kLogIdIAttributeListInSetStateSupported);
-		}
+		addLogEvent (kLogIdProcessorSetStateCalledinWrongThread);
+	}
+
+	FUnknownPtr<IStreamAttributes> stream (state);
+
+	if (IAttributeList* list = stream ? stream->getAttributes () : nullptr)
+	{
+		addLogEvent (kLogIdIAttributeListInSetStateSupported);
 	}
 
 	IBStreamer streamer (state, kLittleEndian);
@@ -441,12 +665,14 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 	uint32 bypass;
 	if (streamer.readInt32u (bypass) == false)
 		return kResultFalse;
-	mBypassProcessor.setActive (bypass > 0);
+	mBypass = bypass > 0;
+	mBypassProcessorFloat.setActive (mBypass);
+	mBypassProcessorDouble.setActive (mBypass);
 
 	if (latency != mLatency)
 	{
 		mLatency = latency;
-		informLatencyChanged ();
+		sendLatencyChanged ();
 	}
 
 	return kResultOk;
@@ -455,6 +681,12 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 {
+	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerProcessor::getState"),
+	                          THREAD_CHECK_EXIT))
+	{
+		addLogEvent (kLogIdProcessorGetStateCalledinWrongThread);
+	}
+
 	if (!state)
 		return kResultFalse;
 
@@ -463,7 +695,7 @@ tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 	float toSave = 12345.67f;
 	streamer.writeFloat (toSave);
 	streamer.writeInt32u (mLatency);
-	streamer.writeInt32u (mBypassProcessor.isActive () ? 1 : 0);
+	streamer.writeInt32u (mBypass ? 1 : 0);
 
 	return kResultOk;
 }

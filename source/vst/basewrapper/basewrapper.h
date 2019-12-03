@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2018, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -69,7 +69,7 @@ class BaseEditorWrapper : public IPlugFrame,
 public:
 //------------------------------------------------------------------------
 	BaseEditorWrapper (IEditController* controller);
-	~BaseEditorWrapper ();
+	~BaseEditorWrapper () override;
 
 	static bool hasEditor (IEditController* controller);
 
@@ -98,6 +98,8 @@ protected:
 //------------------------------------------------------------------------
 const int32 kMaxEvents = 2048;
 
+class ConnectionProxy;
+
 //-------------------------------------------------------------------------------------------------------
 class BaseWrapper : public IHostApplication,
                     public IComponentHandler,
@@ -115,7 +117,7 @@ public:
 	};
 
 	BaseWrapper (SVST3Config& config);
-	virtual ~BaseWrapper ();
+	~BaseWrapper () override;
 
 	virtual bool init ();
 
@@ -226,6 +228,9 @@ protected:
 	IPtr<BaseEditorWrapper> mEditor;
 	
 	IPtr<PlugInterfaceSupport> mPlugInterfaceSupport;
+
+	IPtr<ConnectionProxy> mProcessorConnection;
+	IPtr<ConnectionProxy> mControllerConnection;
 
 	int32 mVst3SampleSize = kSample32;
 	int32 mVst3processMode = kRealtime;

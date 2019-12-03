@@ -4,7 +4,7 @@
 // Category    : Validator
 // Filename    : public.sdk/source/vst/testsuite/vststructsizecheck.h
 // Created by  : Steinberg, 09/2010
-// Description : struct size test. Checks that struct sizes do not change after publicly released
+// Description : struct size test. Checks that struct sizes and alingments do not change after publicly released
 //
 
 #include "pluginterfaces/vst/ivstattributes.h"
@@ -32,17 +32,37 @@
 namespace Steinberg {
 namespace Vst {
 
+#define SMTG_VST_COMPILE_TIME_STRUCT_CHECK 1
+
+#if SMTG_VST_COMPILE_TIME_STRUCT_CHECK
+
+// ipluginbase.h
+SMTG_TYPE_SIZE_CHECK (PFactoryInfo, 452, 452, 452, 452)
+SMTG_TYPE_SIZE_CHECK (PClassInfo, 116, 116, 116, 116)
+SMTG_TYPE_SIZE_CHECK (PClassInfo2, 440, 440, 440, 440)
+SMTG_TYPE_SIZE_CHECK (PClassInfoW, 696, 696, 696, 696)
+SMTG_TYPE_ALIGN_CHECK (PFactoryInfo, 4, 4, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (PClassInfo, 4, 4, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (PClassInfo2, 4, 4, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (PClassInfoW, 4, 4, 4, 4)
 // ivstaudioprocessor.h
 SMTG_TYPE_SIZE_CHECK (ProcessSetup, 24, 20, 24, 24)
 SMTG_TYPE_SIZE_CHECK (AudioBusBuffers, 24, 16, 24, 24)
 SMTG_TYPE_SIZE_CHECK (ProcessData, 80, 48, 48, 48)
+SMTG_TYPE_ALIGN_CHECK (ProcessSetup, 8, 1, 8, 8)
+SMTG_TYPE_ALIGN_CHECK (AudioBusBuffers, 8, 1, 8, 8)
+SMTG_TYPE_ALIGN_CHECK (ProcessData, 8, 1, 4, 4)
 // ivstcomponent.h
 SMTG_TYPE_SIZE_CHECK (BusInfo, 276, 276, 276, 276)
 SMTG_TYPE_SIZE_CHECK (RoutingInfo, 12, 12, 12, 12)
+SMTG_TYPE_ALIGN_CHECK (BusInfo, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (RoutingInfo, 4, 1, 4, 4)
 // ivstcontextmenu.h
 SMTG_TYPE_SIZE_CHECK (IContextMenuItem, 264, 264, 264, 264)
+SMTG_TYPE_ALIGN_CHECK (IContextMenuItem, 4, 1, 4, 4)
 // ivsteditcontroller.h
 SMTG_TYPE_SIZE_CHECK (ParameterInfo, 792, 792, 792, 792)
+SMTG_TYPE_ALIGN_CHECK (ParameterInfo, 8, 1, 8, 8)
 // ivstevents.h
 SMTG_TYPE_SIZE_CHECK (NoteOnEvent, 20, 20, 20, 20)
 SMTG_TYPE_SIZE_CHECK (NoteOffEvent, 16, 16, 16, 16)
@@ -52,71 +72,106 @@ SMTG_TYPE_SIZE_CHECK (ChordEvent, 16, 12, 12, 12)
 SMTG_TYPE_SIZE_CHECK (ScaleEvent, 16, 10, 12, 12)
 SMTG_TYPE_SIZE_CHECK (LegacyMIDICCOutEvent, 4, 4, 4, 4)
 SMTG_TYPE_SIZE_CHECK (Event, 48, 40, 40, 48)
+SMTG_TYPE_ALIGN_CHECK (NoteOnEvent, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (NoteOffEvent, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (DataEvent, 8, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (PolyPressureEvent, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (ChordEvent, 8, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (ScaleEvent, 8, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (LegacyMIDICCOutEvent, 1, 1, 1, 1)
+SMTG_TYPE_ALIGN_CHECK (Event, 8, 1, 8, 8)
 // ivstnoteexpression.h
 SMTG_TYPE_SIZE_CHECK (NoteExpressionValueDescription, 32, 28, 32, 32)
 SMTG_TYPE_SIZE_CHECK (NoteExpressionValueEvent, 16, 16, 16, 16)
 SMTG_TYPE_SIZE_CHECK (NoteExpressionTextEvent, 24, 16, 16, 16)
 SMTG_TYPE_SIZE_CHECK (NoteExpressionTypeInfo, 816, 812, 816, 816)
 SMTG_TYPE_SIZE_CHECK (KeyswitchInfo, 536, 536, 536, 536)
+SMTG_TYPE_ALIGN_CHECK (NoteExpressionValueDescription, 8, 1, 8, 8)
+SMTG_TYPE_ALIGN_CHECK (NoteExpressionValueEvent, 8, 1, 4, 8)
+SMTG_TYPE_ALIGN_CHECK (NoteExpressionTextEvent, 8, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (NoteExpressionTypeInfo, 8, 1, 8, 8)
+SMTG_TYPE_ALIGN_CHECK (KeyswitchInfo, 4, 1, 4, 4)
 // ivstprocesscontext.h
 SMTG_TYPE_SIZE_CHECK (FrameRate, 8, 8, 8, 8)
 SMTG_TYPE_SIZE_CHECK (Chord, 4, 4, 4, 4)
 SMTG_TYPE_SIZE_CHECK (ProcessContext, 112, 104, 112, 112)
+SMTG_TYPE_ALIGN_CHECK (FrameRate, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (Chord, 2, 1, 2, 2)
+SMTG_TYPE_ALIGN_CHECK (ProcessContext, 8, 1, 8, 8)
 // ivstrepresentation.h
 SMTG_TYPE_SIZE_CHECK (RepresentationInfo, 256, 256, 256, 256)
+SMTG_TYPE_ALIGN_CHECK (RepresentationInfo, 1, 1, 1, 1)
 // ivstunits.h
 SMTG_TYPE_SIZE_CHECK (UnitInfo, 268, 268, 268, 268)
 SMTG_TYPE_SIZE_CHECK (ProgramListInfo, 264, 264, 264, 264)
+SMTG_TYPE_ALIGN_CHECK (UnitInfo, 4, 1, 4, 4)
+SMTG_TYPE_ALIGN_CHECK (ProgramListInfo, 4, 1, 4, 4)
 
+#endif // SMTG_VST_COMPILE_TIME_STRUCT_CHECK
+
+//------------------------------------------------------------------------
+//------------------------------------------------------------------------
+//------------------------------------------------------------------------
+#define SMTG_PRINT_TYPE_SIZE_ALIGN(T)                                          \
+	{                                                                          \
+		auto len = strlen (#T);                                                \
+		std::printf (#T);                                                      \
+		for (auto i = len; i < 35; ++i)                                        \
+			std::printf (" ");                                                 \
+		std::printf ("size = %3zu | align = %2zu\n", sizeof (T), alignof (T)); \
+	}
 //------------------------------------------------------------------------
 inline void printStructSizes ()
 {
-	// clang-format off
+	// ipluginbase.h
+	SMTG_PRINT_TYPE_SIZE_ALIGN (PFactoryInfo);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (PClassInfo);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (PClassInfo2);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (PClassInfoW);
 
 	// ivstaudioprocessor.h
-	std::printf ("ProcessSetup                   = %zu\n", sizeof (ProcessSetup));
-	std::printf ("AudioBusBuffers                = %zu\n", sizeof (AudioBusBuffers));
-	std::printf ("ProcessData                    = %zu\n", sizeof (ProcessData));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ProcessSetup);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (AudioBusBuffers);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ProcessData);
 
 	// ivstcomponent.h
-	std::printf ("BusInfo                        = %zu\n", sizeof (BusInfo));
-	std::printf ("RoutingInfo                    = %zu\n", sizeof (RoutingInfo));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (BusInfo);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (RoutingInfo);
 
 	// ivstcontextmenu.h
-	std::printf ("IContextMenuItem               = %zu\n", sizeof (IContextMenuItem));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (IContextMenuItem);
 
 	// ivsteditcontroller.h
-	std::printf ("ParameterInfo                  = %zu\n", sizeof (ParameterInfo));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ParameterInfo);
 
 	// ivstevents.h
-	std::printf ("NoteOnEvent                    = %zu\n", sizeof (NoteOnEvent));
-	std::printf ("NoteOffEvent                   = %zu\n", sizeof (NoteOffEvent));
-	std::printf ("DataEvent                      = %zu\n", sizeof (DataEvent));
-	std::printf ("PolyPressureEvent              = %zu\n", sizeof (PolyPressureEvent));
-	std::printf ("ChordEvent                     = %zu\n", sizeof (ChordEvent));
-	std::printf ("ScaleEvent                     = %zu\n", sizeof (ScaleEvent));
-	std::printf ("Event                          = %zu\n", sizeof (Event));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteOnEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteOffEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (DataEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (PolyPressureEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ChordEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ScaleEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (LegacyMIDICCOutEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (Event);
 
 	// ivstnoteexpression.h
-	std::printf ("NoteExpressionValueDescription = %zu\n", sizeof (NoteExpressionValueDescription));
-	std::printf ("NoteExpressionValueEvent       = %zu\n", sizeof (NoteExpressionValueEvent));
-	std::printf ("NoteExpressionTextEvent        = %zu\n", sizeof (NoteExpressionTextEvent));
-	std::printf ("NoteExpressionTypeInfo         = %zu\n", sizeof (NoteExpressionTypeInfo));
-	std::printf ("KeyswitchInfo                  = %zu\n", sizeof (KeyswitchInfo));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteExpressionValueDescription);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteExpressionValueEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteExpressionTextEvent);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (NoteExpressionTypeInfo);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (KeyswitchInfo);
 
 	// ivstprocesscontext.h
-	std::printf ("FrameRate                      = %zu\n", sizeof (FrameRate));
-	std::printf ("Chord                          = %zu\n", sizeof (Chord));
-	std::printf ("ProcessContext                 = %zu\n", sizeof (ProcessContext));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (FrameRate);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (Chord);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ProcessContext);
 
 	// ivstrepresentation.h
-	std::printf ("RepresentationInfo             = %zu\n", sizeof (RepresentationInfo));
+	SMTG_PRINT_TYPE_SIZE_ALIGN (RepresentationInfo);
 
 	// ivstunits.h
-	std::printf ("UnitInfo                       = %zu\n", sizeof (UnitInfo));
-	std::printf ("ProgramListInfo                = %zu\n", sizeof (ProgramListInfo));
-
-	// clang-format on
+	SMTG_PRINT_TYPE_SIZE_ALIGN (UnitInfo);
+	SMTG_PRINT_TYPE_SIZE_ALIGN (ProgramListInfo);
 }
 
 //------------------------------------------------------------------------

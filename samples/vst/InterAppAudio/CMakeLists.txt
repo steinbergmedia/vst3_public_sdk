@@ -1,6 +1,6 @@
 
 # iOS target
-if(SMTG_MAC)
+if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
     if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target noteexpressionsynth_iaa_ios)
         set(${target}_xib_resources

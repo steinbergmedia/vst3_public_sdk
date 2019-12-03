@@ -46,8 +46,8 @@
 
 //------------------------------------------------------------------------
 extern "C" {
-typedef bool (PLUGIN_API* ModuleEntryFunc) (void*);
-typedef bool (PLUGIN_API* ModuleExitFunc) ();
+using ModuleEntryFunc = bool (PLUGIN_API*) (void*);
+using ModuleExitFunc = bool (PLUGIN_API*) ();
 }
 
 //------------------------------------------------------------------------
@@ -104,7 +104,7 @@ public:
 		return reinterpret_cast<T> (dlsym (module, name));
 	}
 
-	~LinuxModule ()
+	~LinuxModule () override
 	{
 		factory = PluginFactory (nullptr);
 
@@ -248,7 +248,7 @@ Module::PathList Module::getModulePaths ()
 	/* VST3 component locations on linux :
 	 * User privately installed	: $HOME/.vst3/
 	 * Distribution installed	: /usr/lib/vst3/
-	 * Locally installed			: /usr/local/lib/vst3/
+	 * Locally installed		: /usr/local/lib/vst3/
 	 * Application				: /$APPFOLDER/vst3/
 	 */
 

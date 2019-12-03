@@ -48,6 +48,8 @@
 
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/base/futils.h"
+#include "pluginterfaces/vst/ivstchannelcontextinfo.h"
+#include "../hosting/hostclasses.h"
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -110,6 +112,7 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 
 	// if no VST3 Bypass found then simulate it
 	mSimulateBypass = (mWrapper->mBypassParameterID == Vst::kNoParamId);
+	mWrapper->mSimulateBypass = mSimulateBypass;
 
 	if (mParamNames.size () < (size_t)mWrapper->mNumParams)
 	{
@@ -142,13 +145,13 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 	for (int32 i = 0; i < mWrapper->mNumParams; i++)
 	{
 		AAX_CParamID iParameterID = mParamNames[i];
-		ParameterInfo paramInfo = {0};
+		ParameterInfo paramInfo = {};
 		if (AAX_Result result = mWrapper->getParameterInfo (iParameterID, paramInfo))
 			return result;
 
 		String title = paramInfo.title;
-		AAX_IParameter* param = 0;
-		param = new AAX_CParameter<double> (
+		AAX_IParameter* param = nullptr;
+		param = NEW AAX_CParameter<double> (
 		    iParameterID, AAX_CString (title), paramInfo.defaultNormalizedValue,
 		    AAX_CLinearTaperDelegate<double> (0, 1),
 		    AAX_CUnitDisplayDelegateDecorator<double> (AAX_CNumberDisplayDelegate<double> (),
@@ -160,8 +163,8 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 
 	if (mSimulateBypass)
 	{
-		AAX_IParameter* param = 0;
-		param = new AAX_CParameter<bool> (kBypassId, AAX_CString ("Bypass"), 0,
+		AAX_IParameter* param = nullptr;
+		param = NEW AAX_CParameter<bool> (kBypassId, AAX_CString ("Bypass"), false,
 		                                  AAX_CBinaryTaperDelegate<bool> (),
 		                                  AAX_CBinaryDisplayDelegate<bool> ("off", "on"), true);
 
@@ -238,7 +241,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterIsAutomatable (AAX_CParamID iParam
 {
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
@@ -252,7 +255,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterNumberOfSteps (AAX_CParamID iParam
 {
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
@@ -266,7 +269,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterName (AAX_CParamID iParameterID,
 {
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
@@ -281,7 +284,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterNameOfLength (AAX_CParamID iParame
 {
 	HLOG (HAPI, "%s(id=%s, len=%d)", __FUNCTION__, iParameterID, iNameLength);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
@@ -302,7 +305,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterDefaultNormalizedValue (AAX_CParam
 {
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
@@ -325,7 +328,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterType (AAX_CParamID iParameterID,
 {
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
-	ParameterInfo paramInfo = {0};
+	ParameterInfo paramInfo = {};
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 	*oParameterType =
@@ -681,7 +684,7 @@ AAX_Result AAXWrapper_Parameters::GetChunkSize (AAX_CTypeID chunkID, uint32_t* o
 	if (chunkID != AAXWRAPPER_CONTROLS_CHUNK_ID)
 		return AAX_ERROR_INVALID_CHUNK_ID;
 
-	FGuard guard (mWrapper->syncCalls);
+	FGuard guard (mWrapper->mSyncCalls);
 	bool isPreset = false;
 	void* data;
 	*oSize = mWrapper->_getChunk (&data, isPreset);
@@ -696,7 +699,7 @@ AAX_Result AAXWrapper_Parameters::GetChunk (AAX_CTypeID chunkID, AAX_SPlugInChun
 	if (chunkID != AAXWRAPPER_CONTROLS_CHUNK_ID)
 		return AAX_ERROR_INVALID_CHUNK_ID;
 
-	FGuard guard (mWrapper->syncCalls);
+	FGuard guard (mWrapper->mSyncCalls);
 	// assume GetChunkSize called before and size of oChunk correct
 	oChunk->fVersion = 1;
 	oChunk->fSize = mWrapper->mChunk.getSize ();
@@ -713,9 +716,10 @@ AAX_Result AAXWrapper_Parameters::SetChunk (AAX_CTypeID chunkID, const AAX_SPlug
 	if (chunkID != AAXWRAPPER_CONTROLS_CHUNK_ID)
 		return AAX_ERROR_INVALID_CHUNK_ID;
 
-	FGuard guard (mWrapper->syncCalls);
-	bool isPreset = false;
+	FGuard guard (mWrapper->mSyncCalls);
+	bool isPreset = mPresetOpened;
 	mWrapper->_setChunk (const_cast<char*> (iChunk->fData), iChunk->fSize, isPreset);
+	mPresetOpened = false;
 	return AAX_SUCCESS;
 }
 
@@ -768,7 +772,7 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 			if (mPluginDesc)
 				mPluginDesc->mLatency = outSample;
 
-			if (!mWrapper->isActive ())
+			if (mWrapper->isActive ())
 			{
 				mWrapper->_suspend ();
 				mWrapper->_resume ();
@@ -785,7 +789,68 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 			    AAX_SUCCESS)
 				mWrapper->mBypassBeforePresetChanged = (value >= 0.5);
 			mWrapper->mPresetChanged = true;
+			mPresetOpened = true;
 			break;
+		}
+		//--- Tell the plug-in that chunk data is coming from a PTX
+		case AAX_eNotificationEvent_SessionBeingOpened:
+		{
+			mPresetOpened = false;
+			break;
+		}
+		//--- Entering offline processing mode (i.e.offline bounce)
+		case AAX_eNotificationEvent_EnteringOfflineMode:
+		{
+			break;
+		}
+		//--- Exiting offline processing mode (i.e. offline bounce)
+		case AAX_eNotificationEvent_ExitingOfflineMode:
+		{
+			break;
+		}
+		//---  A string representing the path of the current session
+		case AAX_eNotificationEvent_SessionPathChanged:
+		{
+			AAX_CString str (*reinterpret_cast<const AAX_IString*> (iNotificationData));
+			mSessionPath = str.StdString ();
+			break;
+		}
+		//--- The current name of this plug-in instance's track
+		case AAX_eNotificationEvent_TrackNameChanged:
+		{
+			AAX_CString str (*reinterpret_cast<const AAX_IString*> (iNotificationData));
+			mChannelName = str.StdString ();
+
+			if (mWrapper->mController)
+			{
+				FUnknownPtr<Vst::ChannelContext::IInfoListener> iChannelContextInfoListener (
+				    mWrapper->mController);
+				if (iChannelContextInfoListener)
+				{
+					auto* list = NEW Vst::HostAttributeList ();
+					String string;
+					string.fromUTF8 (mChannelName.data ());
+
+					list->setString (Vst::ChannelContext::kChannelNameKey, string);
+					list->setInt (Vst::ChannelContext::kChannelNameLengthKey, string.length ());
+
+					iChannelContextInfoListener->setChannelContextInfos (list);
+					delete list;
+				}
+			}
+			break;
+		}
+		//--- The zero-indexed insert position of this plug-in instance within its track
+		case AAX_eNotificationEvent_InsertPositionChanged:
+		{
+		//	auto tmp = *reinterpret_cast<const int32_t*> (iNotificationData);
+			break;
+		}
+		//--- Tell the plug-in the maximum allowed GUI dimensions
+		case AAX_eNotificationEvent_MaxViewSizeChanged:
+		{
+		//	auto tmp = *reinterpret_cast<const AAX_Point*> (iNotificationData);
+			break; 
 		}
 	}
 

@@ -514,6 +514,8 @@ void Vst2Wrapper::resume ()
 {
 	AudioEffectX::resume ();
 	BaseWrapper::_resume ();
+
+	mChunk.setSize (0);
 }
 
 //------------------------------------------------------------------------

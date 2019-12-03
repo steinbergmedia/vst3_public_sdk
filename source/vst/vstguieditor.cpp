@@ -275,7 +275,7 @@ tresult PLUGIN_API VSTGUIEditor::onKeyDown (char16 key, int16 keyMsg, int16 modi
 {
 	if (frame)
 	{
-		VstKeyCode keyCode = {0};
+		VstKeyCode keyCode = {};
 		if (translateKeyMessage (keyCode, key, keyMsg, modifiers))
 		{
 			VSTGUI_INT32 result = frame->onKeyDown (keyCode);
@@ -291,7 +291,7 @@ tresult PLUGIN_API VSTGUIEditor::onKeyUp (char16 key, int16 keyMsg, int16 modifi
 {
 	if (frame)
 	{
-		VstKeyCode keyCode = {0};
+		VstKeyCode keyCode = {};
 		if (translateKeyMessage (keyCode, key, keyMsg, modifiers))
 		{
 			VSTGUI_INT32 result = frame->onKeyUp (keyCode);
@@ -309,7 +309,7 @@ tresult PLUGIN_API VSTGUIEditor::onWheel (float distance)
 	{
 		CPoint where;
 		frame->getCurrentMouseLocation (where);
-		if (frame->onWheel (where, distance, frame->getCurrentMouseButtons ()))
+		if (frame->onWheel (where, kMouseWheelAxisY, distance, frame->getCurrentMouseButtons ()))
 			return kResultTrue;
 	}
 	return kResultFalse;

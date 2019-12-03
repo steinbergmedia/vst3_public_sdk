@@ -210,7 +210,7 @@ tresult Component::renameBus (MediaType type, BusDirection dir, int32 index,
 tresult getSpeakerChannelIndex (SpeakerArrangement arrangement, uint64 speaker, int32& channel)
 {
 	channel = SpeakerArr::getSpeakerIndex (speaker, arrangement);
-	return channel < 0 ? kResultFalse : kResultTrue;
+	return (channel < 0) == true ? kResultFalse : kResultTrue;
 }
 } // namespace Vst
 } // namespace Steinberg

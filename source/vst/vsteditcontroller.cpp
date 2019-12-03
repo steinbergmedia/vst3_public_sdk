@@ -105,8 +105,7 @@ int32 PLUGIN_API EditController::getParameterCount ()
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditController::getParameterInfo (int32 paramIndex, ParameterInfo& info)
 {
-	Parameter* parameter = parameters.getParameterByIndex (paramIndex);
-	if (parameter)
+	if (Parameter* parameter = parameters.getParameterByIndex (paramIndex))
 	{
 		info = parameter->getInfo ();
 		return kResultTrue;
@@ -118,8 +117,7 @@ tresult PLUGIN_API EditController::getParameterInfo (int32 paramIndex, Parameter
 tresult PLUGIN_API EditController::getParamStringByValue (ParamID tag, ParamValue valueNormalized,
                                                           String128 string)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		parameter->toString (valueNormalized, string);
 		return kResultTrue;
@@ -131,8 +129,7 @@ tresult PLUGIN_API EditController::getParamStringByValue (ParamID tag, ParamValu
 tresult PLUGIN_API EditController::getParamValueByString (ParamID tag, TChar* string,
                                                           ParamValue& valueNormalized)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		if (parameter->fromString (string, valueNormalized))
 		{
@@ -146,8 +143,7 @@ tresult PLUGIN_API EditController::getParamValueByString (ParamID tag, TChar* st
 ParamValue PLUGIN_API EditController::normalizedParamToPlain (ParamID tag,
                                                               ParamValue valueNormalized)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		return parameter->toPlain (valueNormalized);
 	}
@@ -157,8 +153,7 @@ ParamValue PLUGIN_API EditController::normalizedParamToPlain (ParamID tag,
 //------------------------------------------------------------------------
 ParamValue PLUGIN_API EditController::plainParamToNormalized (ParamID tag, ParamValue plainValue)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		return parameter->toNormalized (plainValue);
 	}
@@ -168,8 +163,7 @@ ParamValue PLUGIN_API EditController::plainParamToNormalized (ParamID tag, Param
 //------------------------------------------------------------------------
 ParamValue PLUGIN_API EditController::getParamNormalized (ParamID tag)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		return parameter->getNormalized ();
 	}
@@ -179,8 +173,7 @@ ParamValue PLUGIN_API EditController::getParamNormalized (ParamID tag)
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditController::setParamNormalized (ParamID tag, ParamValue value)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		parameter->setNormalized (value);
 		return kResultTrue;
@@ -274,8 +267,7 @@ tresult EditController::finishGroupEdit ()
 //------------------------------------------------------------------------
 tresult EditController::getParameterInfoByTag (ParamID tag, ParameterInfo& info)
 {
-	Parameter* parameter = getParameterObject (tag);
-	if (parameter)
+	if (Parameter* parameter = getParameterObject (tag))
 	{
 		info = parameter->getInfo ();
 		return kResultTrue;
@@ -303,6 +295,7 @@ tresult EditController::requestOpenEditor (FIDString name)
 	return kNotImplemented;
 }
 
+#ifndef NO_PLUGUI
 //------------------------------------------------------------------------
 // EditorView Implementation
 //------------------------------------------------------------------------
@@ -342,6 +335,7 @@ void EditorView::removedFromParent ()
 		controller->editorRemoved (this);
 	}
 }
+#endif // NO_PLUGUI
 
 //------------------------------------------------------------------------
 // EditControllerEx1 implementation
@@ -363,17 +357,26 @@ EditControllerEx1::~EditControllerEx1 ()
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API EditControllerEx1::terminate ()
+{
+	units.clear ();
+	programLists.clear ();
+	programIndexMap.clear ();
+
+	return EditController::terminate ();
+}
+
+//------------------------------------------------------------------------
 bool EditControllerEx1::addUnit (Unit* unit)
 {
-	units.push_back (IPtr<Unit> (unit, false));
+	units.emplace_back (unit, false);
 	return true;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditControllerEx1::getUnitInfo (int32 unitIndex, UnitInfo& info /*out*/)
 {
-	Unit* unit = units.at (unitIndex);
-	if (unit)
+	if (Unit* unit = units.at (unitIndex))
 	{
 		info = unit->getInfo ();
 		return kResultTrue;
@@ -395,7 +398,7 @@ tresult EditControllerEx1::notifyUnitSelection ()
 bool EditControllerEx1::addProgramList (ProgramList* list)
 {
 	programIndexMap[list->getID ()] = programLists.size ();
-	programLists.push_back (IPtr<ProgramList> (list, false));
+	programLists.emplace_back (list, false);
 	list->addDependent (this);
 	return true;
 }
@@ -558,8 +561,8 @@ ProgramList::ProgramList (const ProgramList& programList)
 int32 ProgramList::addProgram (const String128 name)
 {
 	++info.programCount;
-	programNames.push_back (name);
-	programInfos.push_back (ProgramInfoVector::value_type ());
+	programNames.emplace_back (name);
+	programInfos.emplace_back ();
 	return static_cast<int32> (programNames.size ()) - 1;
 }
 
@@ -652,7 +655,7 @@ int32 ProgramListWithPitchNames::addProgram (const String128 name)
 {
 	int32 index = ProgramList::addProgram (name);
 	if (index >= 0)
-		pitchNames.push_back (PitchNamesVector::value_type ());
+		pitchNames.emplace_back ();
 	return index;
 }
 
@@ -696,7 +699,7 @@ bool ProgramListWithPitchNames::removePitchName (int32 programIndex, int16 pitch
 tresult ProgramListWithPitchNames::hasPitchNames (int32 programIndex)
 {
 	if (programIndex >= 0 && programIndex < getCount ())
-		return pitchNames.at (programIndex).empty () ? kResultFalse : kResultTrue;
+		return (pitchNames.at (programIndex).empty () == true) ? kResultFalse : kResultTrue;
 	return kResultFalse;
 }
 

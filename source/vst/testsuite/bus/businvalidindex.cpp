@@ -65,8 +65,8 @@ bool PLUGIN_API BusInvalidIndexTest::run (ITestResult* testResult)
 		    vstPlug->getBusCount (mediaType, kInput) + vstPlug->getBusCount (mediaType, kOutput);
 		for (BusDirection dir = kInput; dir <= kOutput; dir++)
 		{
-			BusInfo descBefore = {0};
-			BusInfo descAfter = {0};
+			BusInfo descBefore = {};
+			BusInfo descAfter = {};
 
 			int32 randIndex = 0;
 

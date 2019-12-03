@@ -99,7 +99,7 @@ private:
 	using BufferPointers = std::vector<jack_default_audio_sample_t*>;
 	BufferPointers audioOutputPointers;
 	BufferPointers audioInputPointers;
-	IAudioClient::Buffers buffers;
+	IAudioClient::Buffers buffers {0};
 };
 
 //------------------------------------------------------------------------
@@ -241,10 +241,10 @@ bool JackClient::registerAudioPorts (IAudioClient* processor)
 {
 	auto ioSetup = processor->getIOSetup ();
 
-	for (auto output : ioSetup.outputs)
+	for (const auto& output : ioSetup.outputs)
 		addAudioOutputPort (output);
 
-	for (auto input : ioSetup.inputs)
+	for (const auto& input : ioSetup.inputs)
 		addAudioInputPort (input);
 
 	buffers.inputs = audioInputPointers.data ();
@@ -259,7 +259,7 @@ bool JackClient::registerAudioPorts (IAudioClient* processor)
 bool JackClient::registerMidiPorts (IMidiClient* processor)
 {
 	const auto ioSetup = processor->getMidiIOSetup ();
-	for (auto input : ioSetup.inputs)
+	for (const auto& input : ioSetup.inputs)
 		addMidiInputPort (input);
 
 	return true;
@@ -375,7 +375,7 @@ bool JackClient::autoConnectAudioPorts (jack_client_t* client)
 	int portIndex = 0;
 
 	//! Connect Audio Outputs
-	auto ports = jack_get_ports (client, NULL, NULL, JackPortIsPhysical | JackPortIsInput);
+	auto ports = jack_get_ports (client, nullptr, nullptr, JackPortIsPhysical | JackPortIsInput);
 	for (auto& port : audioOutputPorts)
 	{
 		if (!ports[portIndex])
@@ -397,7 +397,7 @@ bool JackClient::autoConnectMidiPorts (jack_client_t* client)
 	int portIndex = 1;
 
 	//! Connect MIDI Inputs
-	auto ports = jack_get_ports (client, NULL, "midi", JackPortIsPhysical | JackPortIsOutput);
+	auto ports = jack_get_ports (client, nullptr, "midi", JackPortIsPhysical | JackPortIsOutput);
 	if (!ports)
 		return false;
 

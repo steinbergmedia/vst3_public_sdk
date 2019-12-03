@@ -54,10 +54,10 @@ public:
 	virtual ~MemoryStream ();
 
 	//---IBStream---------------------------------------
-	virtual tresult PLUGIN_API read  (void* buffer, int32 numBytes, int32* numBytesRead) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API write (void* buffer, int32 numBytes, int32* numBytesWritten) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API seek  (int64 pos, int32 mode, int64* result) SMTG_OVERRIDE;
-	virtual tresult PLUGIN_API tell  (int64* pos) SMTG_OVERRIDE;
+	tresult PLUGIN_API read  (void* buffer, int32 numBytes, int32* numBytesRead) SMTG_OVERRIDE;
+	tresult PLUGIN_API write (void* buffer, int32 numBytes, int32* numBytesWritten) SMTG_OVERRIDE;
+	tresult PLUGIN_API seek  (int64 pos, int32 mode, int64* result) SMTG_OVERRIDE;
+	tresult PLUGIN_API tell  (int64* pos) SMTG_OVERRIDE;
 
 	TSize getSize ();		///< returns the current memory size
 	void setSize (TSize size);	///< set the memory size, a realloc will occur if memory already used

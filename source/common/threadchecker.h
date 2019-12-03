@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/hostchecker/source/threadchecker_win32.mm
+// Filename    : public.sdk/source/common/threadchecker.h
 // Created by  : Steinberg, 01/2019
-// Description : win32 thread checker
+// Description : thread checker
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -34,42 +34,27 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "threadchecker.h"
+#pragma once
 
-#if SMTG_OS_WINDOWS
-
-#include <windows.h>
-
-#include <processthreadsapi.h>
+#include "pluginterfaces/base/ftypes.h"
+#include <memory>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-class Win32ThreadChecker : public ThreadChecker
+class ThreadChecker
 {
 public:
-	void test (const char* failmessage, bool exit) override
-	{
-		if (threadID == GetCurrentThreadId ())
-			return;
-		OutputDebugStringA (failmessage);
-		if (exit)
-			std::terminate ();
-	}
+	static std::unique_ptr<ThreadChecker> create ();
+	
+	virtual bool test (const char* failmessage = nullptr, bool exit = false) = 0;
 
-	DWORD threadID {GetCurrentThreadId ()};
+	virtual ~ThreadChecker () noexcept = default;
 };
-
-//------------------------------------------------------------------------
-std::unique_ptr<ThreadChecker> ThreadChecker::create ()
-{
-	return std::unique_ptr<ThreadChecker> (new Win32ThreadChecker);
-}
 
 //------------------------------------------------------------------------
 } // Vst
 } // Steinberg
 
-#endif

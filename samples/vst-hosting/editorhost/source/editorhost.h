@@ -48,6 +48,8 @@ namespace Steinberg {
 namespace Vst {
 namespace EditorHost {
 
+class WindowController;
+
 //------------------------------------------------------------------------
 class App : public IApplication
 {
@@ -68,6 +70,7 @@ private:
 	VST3::Hosting::Module::Ptr module {nullptr};
 	IPtr<PlugProvider> plugProvider {nullptr};
 	Vst::HostApplication pluginContext;
+	std::shared_ptr<WindowController> windowController;
 };
 
 //------------------------------------------------------------------------

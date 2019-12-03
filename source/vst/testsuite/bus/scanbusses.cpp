@@ -81,7 +81,7 @@ bool PLUGIN_API ScanBussesTest::run (ITestResult* testResult)
 			BusDirection busDirection = i < numInputs ? kInput : kOutput;
 			int32 busIndex = busDirection == kInput ? i : i - numInputs;
 
-			BusInfo busInfo = {0};
+			BusInfo busInfo = {};
 			if (vstPlug->getBusInfo (mediaType, busDirection, busIndex, busInfo) == kResultTrue)
 			{
 				auto busName = VST3::StringConvert::convert (busInfo.name);

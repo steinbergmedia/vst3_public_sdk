@@ -234,7 +234,7 @@ bool EventListCheck::checkEventChannelIndex (Steinberg::int32 busIndex,
 		    mComponent->getBusCount (Steinberg::Vst::kEvent, Steinberg::Vst::kInput);
 		if (busCount >= 0 && busIndex < busCount)
 		{
-			Steinberg::Vst::BusInfo busInfo = {0};
+			Steinberg::Vst::BusInfo busInfo = {};
 			Steinberg::tresult tResult = mComponent->getBusInfo (
 			    Steinberg::Vst::kEvent, Steinberg::Vst::kInput, busIndex, busInfo);
 			if (tResult == Steinberg::kResultOk)

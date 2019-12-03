@@ -48,6 +48,8 @@ namespace Vst {
 struct IParameterClient
 {
 	virtual void setParameter (ParamID id, ParamValue value, int32 sampleOffset) = 0;
+
+	virtual ~IParameterClient () {}
 };
 //----------------------------------------------------------------------------------
 using IParameterClientPtr = std::weak_ptr<IParameterClient>;

@@ -2260,6 +2260,7 @@ using namespace Vst;
 		  switch (event->head.eventType)
 		  {
 			  case AURenderEventMIDI:
+			  case AURenderEventMIDISysEx:
 			  {
 				  mpeHandler.process (mpeHandlerContext, &event->MIDI, timestamp);
 				  break;

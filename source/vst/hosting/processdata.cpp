@@ -106,7 +106,7 @@ bool HostProcessData::checkIfReallocationNeeded (IComponent& component, int32 bu
 
 	for (int32 i = 0; i < inBusCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 
 		if (component.getBusInfo (kAudio, kInput, i, busInfo) == kResultTrue)
 		{
@@ -116,7 +116,7 @@ bool HostProcessData::checkIfReallocationNeeded (IComponent& component, int32 bu
 	}
 	for (int32 i = 0; i < outBusCount; i++)
 	{
-		BusInfo busInfo = {0};
+		BusInfo busInfo = {};
 
 		if (component.getBusInfo (kAudio, kOutput, i, busInfo) == kResultTrue)
 		{
@@ -138,7 +138,7 @@ int32 HostProcessData::createBuffers (IComponent& component, AudioBusBuffers*& b
 
 		for (int32 i = 0; i < busCount; i++)
 		{
-			BusInfo busInfo = {0};
+			BusInfo busInfo = {};
 
 			if (component.getBusInfo (kAudio, dir, i, busInfo) == kResultTrue)
 			{

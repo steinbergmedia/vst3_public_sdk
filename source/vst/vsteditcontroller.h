@@ -144,10 +144,10 @@ class EditorView : public CPluginView
 public:
 //------------------------------------------------------------------------
 	EditorView (EditController* controller, ViewRect* size = nullptr);
-	virtual ~EditorView ();
+	~EditorView () override;
 
 	/** Gets its controller part. */
-	EditController* getController () { return controller; }
+	EditController* getController () const { return controller; }
 
 	//---from CPluginView-------------
 	void attachedToParent () SMTG_OVERRIDE;
@@ -292,7 +292,10 @@ class EditControllerEx1 : public EditController, public IUnitInfo
 {
 public:
 	EditControllerEx1 ();
-	virtual ~EditControllerEx1 ();
+	~EditControllerEx1 () override;
+
+	//---from ComponentBase---------
+	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
 	/** Adds a given unit. */
 	bool addUnit (Unit* unit);

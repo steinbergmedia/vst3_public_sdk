@@ -529,7 +529,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 					streamDesc.ChangeNumberChannels (SpeakerArr::getChannelCount (sa), false);
 					element->SetStreamFormat (streamDesc);
 				}
-				BusInfo info = {0};
+				BusInfo info = {};
 				if (component->getBusInfo (kAudio, kInput, inputNo, info) == kResultTrue)
 				{
 					String busName (info.name);
@@ -551,7 +551,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 					streamDesc.ChangeNumberChannels (SpeakerArr::getChannelCount (sa), false);
 					element->SetStreamFormat (streamDesc);
 				}
-				BusInfo info = {0};
+				BusInfo info = {};
 				if (component->getBusInfo (kAudio, kOutput, outputNo, info) == kResultTrue)
 				{
 					String busName (info.name);
@@ -832,7 +832,7 @@ ComponentResult AUWrapper::Initialize ()
 				// for each VST3 parameter
 				for (int32 i = 0; i < editController->getParameterCount (); i++)
 				{
-					ParameterInfo pi = {0};
+					ParameterInfo pi = {};
 					editController->getParameterInfo (i, pi);
 
 					// do not register bypass
@@ -896,7 +896,7 @@ ComponentResult AUWrapper::Initialize ()
 								int32 unitCount = unitInfo->getUnitCount ();
 								for (int32 i = 0; i < unitCount; i++)
 								{
-									UnitInfo unitInfoStruct = {0};
+									UnitInfo unitInfoStruct = {};
 									if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 									{
 										if (programListInfo.id == unitInfoStruct.programListId)
@@ -1377,7 +1377,7 @@ inline void AUWrapper::processOutputEvents (const AudioTimeStamp& inTimeStamp)
 	if (midiOutCount > 0 && outputEvents.getEventCount () > 0)
 	{
 		int32 total = outputEvents.getEventCount ();
-		Event e = {0};
+		Event e = {};
 
 		for (int32 i = 0; i < total; i++)
 		{
@@ -1830,7 +1830,7 @@ ComponentResult AUWrapper::StartNote (MusicDeviceInstrumentID inInstrument,
 {
 	NoteInstanceID noteID = ((UInt8)inParams.mPitch) | ((noteCounter++) << 8);
 
-	Event e = {0};
+	Event e = {};
 
 	e.type = Event::kNoteOnEvent;
 	e.noteOn.pitch = inParams.mPitch;
@@ -1852,7 +1852,7 @@ ComponentResult AUWrapper::StopNote (MusicDeviceGroupID inGroupID, NoteInstanceI
                                      UInt32 inOffsetSampleFrame)
 {
 	UInt32 pitch = inNoteInstanceID & 0xFF;
-	Event e = {0};
+	Event e = {};
 	e.type = Event::kNoteOffEvent;
 	e.noteOn.pitch = pitch;
 	e.noteOn.velocity = 0;
@@ -1883,7 +1883,7 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 
 	if (status == kPolyPressure) // kMidiMessage_PolyPressure
 	{
-		Event e = {0};
+		Event e = {};
 		e.type = Event::kPolyPressureEvent;
 		e.polyPressure.channel = channel;
 		e.polyPressure.pitch = data1;
@@ -1931,7 +1931,7 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 			pid = programChangeParameters[channel];
 			if (pid != kNoParamId)
 			{
-				ParameterInfo paramInfo = {0};
+				ParameterInfo paramInfo = {};
 				if (editController->getParameterInfo (pid, paramInfo) == kResultTrue)
 				{
 					if (paramInfo.stepCount > 0 && data1 <= paramInfo.stepCount)
@@ -2229,7 +2229,7 @@ void AUWrapper::onTimer (Timer* timer)
 	while (outputParamTransfer.getNextChange (pid, value, sampleOffset))
 	{
 		GlobalScope ().GetElement (0)->SetParameter (pid, value);
-		AudioUnitParameter auParam = {0};
+		AudioUnitParameter auParam = {};
 		auParam.mAudioUnit = GetComponentInstance ();
 		auParam.mElement = 0;
 		auParam.mScope = kAudioUnitScope_Global;
@@ -2401,7 +2401,7 @@ bool AUWrapper::getProgramListAndUnit (int32 midiChannel, UnitID& unitId,
 			int32 unitCount = unitInfo->getUnitCount ();
 			for (int32 i = 0; i < unitCount; i++)
 			{
-				UnitInfo unitInfoStruct = {0};
+				UnitInfo unitInfoStruct = {};
 				if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 				{
 					if (unitId == unitInfoStruct.id)

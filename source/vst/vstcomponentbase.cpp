@@ -43,7 +43,7 @@ namespace Vst {
 //------------------------------------------------------------------------
 // ComponentBase Implementation
 //------------------------------------------------------------------------
-ComponentBase::ComponentBase () : hostContext (nullptr), peerConnection (nullptr)
+ComponentBase::ComponentBase ()
 {
 }
 
@@ -60,8 +60,6 @@ tresult PLUGIN_API ComponentBase::initialize (FUnknown* context)
 		return kResultFalse;
 
 	hostContext = context;
-	if (hostContext)
-		hostContext->addRef ();
 
 	return kResultOk;
 }
@@ -70,18 +68,13 @@ tresult PLUGIN_API ComponentBase::initialize (FUnknown* context)
 tresult PLUGIN_API ComponentBase::terminate ()
 {
 	// release host interfaces
-	if (hostContext)
-	{
-		hostContext->release ();
-		hostContext = nullptr;
-	}
+	hostContext = nullptr;
 
 	// in case host did not disconnect us,
 	// release peer now
 	if (peerConnection)
 	{
 		peerConnection->disconnect (this);
-		peerConnection->release ();
 		peerConnection = nullptr;
 	}
 
@@ -99,7 +92,6 @@ tresult PLUGIN_API ComponentBase::connect (IConnectionPoint* other)
 		return kResultFalse;
 
 	peerConnection = other;
-	peerConnection->addRef ();
 	return kResultOk;
 }
 
@@ -108,7 +100,6 @@ tresult PLUGIN_API ComponentBase::disconnect (IConnectionPoint* other)
 {
 	if (peerConnection && other == peerConnection)
 	{
-		peerConnection->release ();
 		peerConnection = nullptr;
 		return kResultOk;
 	}
@@ -121,7 +112,7 @@ tresult PLUGIN_API ComponentBase::notify (IMessage* message)
 	if (!message)
 		return kInvalidArgument;
 
-	if (!strcmp (message->getMessageID (), "TextMessage"))
+	if (FIDStringsEqual (message->getMessageID (), "TextMessage"))
 	{
 		TChar string[256] = {0};
 		if (message->getAttributes ()->getString ("Text", string,

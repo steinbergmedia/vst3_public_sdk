@@ -51,7 +51,19 @@ EventLogger::EventLogger ()
 }
 
 //------------------------------------------------------------------------
-void EventLogger::resetLogEvents () { mLogEvents.clear (); }
+void EventLogger::clearLogEvents ()
+{
+	mLogEvents.clear ();
+}
+
+//------------------------------------------------------------------------
+void EventLogger::resetLogEvents ()
+{
+	for (auto& mLogEvent : mLogEvents)
+	{
+		mLogEvent.count = 0;
+	}
+}
 
 //------------------------------------------------------------------------
 const EventLogger::Codes& EventLogger::getLogEvents () const { return mLogEvents; }

@@ -209,7 +209,8 @@ IPlatform& IPlatform::instance ()
 //------------------------------------------------------------------------
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
-	Steinberg::Vst::EditorHost::Platform::instance ().application->terminate ();
+	if (auto& app = Steinberg::Vst::EditorHost::Platform::instance ().application)
+		app->terminate ();
 }
 
 @end

@@ -40,14 +40,19 @@
 #include <ShlObj.h>
 #include <Windows.h>
 #include <algorithm>
+
+// The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem> header.
+// You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the warning,
+// otherwise the build will fail in VS2019 16.3.0
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING 
 #include <experimental/filesystem>
 
 #pragma comment(lib, "Shell32")
 
 //------------------------------------------------------------------------
 extern "C" {
-typedef bool (PLUGIN_API* InitModuleFunc) ();
-typedef bool (PLUGIN_API* ExitModuleFunc) ();
+using InitModuleFunc = bool (PLUGIN_API*) ();
+using ExitModuleFunc = bool (PLUGIN_API*) ();
 }
 
 using namespace std::experimental;
@@ -168,7 +173,7 @@ bool checkVST3Package (filesystem::path& p)
 	p /= architectureString;
 	p /= filename;
 	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (p.c_str ()), GENERIC_READ, FILE_SHARE_READ,
-	                          NULL, OPEN_EXISTING, 0, NULL);
+	                          nullptr, OPEN_EXISTING, 0, nullptr);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFile);
@@ -185,7 +190,7 @@ bool isFolderSymbolicLink (const filesystem::path& p)
 	if (attrib & FILE_ATTRIBUTE_REPARSE_POINT)
 	{
 		auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (wString.c_str ()), GENERIC_READ,
-		                          FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+		                          FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hFile == INVALID_HANDLE_VALUE)
 			return true;
 		else

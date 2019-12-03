@@ -59,7 +59,7 @@ public:
 
 	//--- ---------------------------------------------------------------------
 	PlugProvider (const PluginFactory& factory, ClassInfo info, bool plugIsGlobal = true);
-	virtual ~PlugProvider ();
+	~PlugProvider () override;
 
 	//--- from ITestPlugProvider ------------------
 	IComponent* PLUGIN_API getComponent () SMTG_OVERRIDE;

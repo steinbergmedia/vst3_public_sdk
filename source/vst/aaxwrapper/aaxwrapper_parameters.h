@@ -50,7 +50,7 @@ struct AAX_Plugin_Desc;
 // helper to convert to/from AAX/Vst IDs
 struct AAX_CID
 {
-	char str[10];
+	char str[10] {0};
 	AAX_CID () {}
 	AAX_CID (Steinberg::Vst::ParamID id) { set (id); }
 	void set (Steinberg::Vst::ParamID id) { sprintf (str, "p%X", id); }
@@ -161,7 +161,11 @@ private:
 	std::vector<AAX_CID> mParamNames;
 
 	AAX_Plugin_Desc* mPluginDesc = nullptr;
+	std::string mChannelName;
+	std::string mSessionPath;
+
 	bool mSimulateBypass = false;
+	bool mPresetOpened = false;
 };
 
 #ifdef __clang__

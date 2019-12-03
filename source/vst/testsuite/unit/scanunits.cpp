@@ -77,7 +77,7 @@ bool UnitInfoTest::run (ITestResult* testResult)
 
 		for (int32 unitIndex = 0; unitIndex < unitCount; unitIndex++)
 		{
-			UnitInfo unitInfo = {0};
+			UnitInfo unitInfo = {};
 
 			if (iUnitInfo->getUnitInfo (unitIndex, unitInfo) == kResultOk)
 			{

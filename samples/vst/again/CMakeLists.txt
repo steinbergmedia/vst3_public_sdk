@@ -2,17 +2,7 @@
 if(SMTG_ADD_VSTGUI)
     if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
         set(again_vst2_sources
-            ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.h
-            ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.h
-            ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffect.cpp
-            ${SDK_ROOT}/public.sdk/source/vst2.x/audioeffectx.cpp
+            ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.sdk.cpp
             source/againentry_vst2.cpp
         )
     endif()

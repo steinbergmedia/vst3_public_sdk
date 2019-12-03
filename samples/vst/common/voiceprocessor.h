@@ -316,7 +316,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 	int32 i;
 
 	IEventList* inputEvents = data.inputEvents;
-	Event e = {0};
+	Event e = {};
 	Event* eventPtr = 0;
 	int32 eventIndex = 0;
 	int32 numEvents = inputEvents ? inputEvents->getEventCount () : 0;
