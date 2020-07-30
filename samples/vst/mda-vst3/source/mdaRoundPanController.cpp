@@ -20,8 +20,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID RoundPanController::uid (0x5653456D, 0x6461506D, 0x64612072, 0x6F756E64);
+#else
 //-----------------------------------------------------------------------------
 FUID RoundPanController::uid (0xDF76AF35, 0x14D243C0, 0x8F4C5B05, 0x20CA6093);
+#endif
 
 //-----------------------------------------------------------------------------
 RoundPanController::RoundPanController ()

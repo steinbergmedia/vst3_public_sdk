@@ -17,6 +17,7 @@ if(SMTG_ADD_VSTGUI)
         source/version.h
         ${VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.cpp
         ${VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.h
+        resource/note_expression_synth.uidesc
      )
 
     set(target noteexpressionsynth)
@@ -34,6 +35,9 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "resource/knob2.png")
     smtg_add_vst3_resource(${target} "resource/knob big.png")
     smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
+    
+    smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot.png")
+    smtg_add_vst3_snapshot(${target} "resource/6EE65CD1B83A4AF480AA7929AEA6B8A0_snapshot_2.0x.png")
 
     if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
@@ -43,7 +47,7 @@ if(SMTG_ADD_VSTGUI)
 
     if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target noteexpressionsynth_ios)
-        smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${noteexpressionsynth_sources}")
+        smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${target}" "${noteexpressionsynth_sources}")
 
         set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
         target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -442,7 +442,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 				}
 			}
 			SamplePrecision sample;
-			SamplePrecision osc = (SamplePrecision)sin (n * triangleFreq + trianglePhase);
+			auto osc = (SamplePrecision)sin (n * triangleFreq + trianglePhase);
 			// square osc
 			sample = (SamplePrecision)((::floor (osc) + 0.5) * currentSquareVolume);
 			// triangle osc

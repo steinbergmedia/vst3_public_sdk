@@ -3,12 +3,12 @@
 //
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/utility/connectionproxy.h
-// Created by  : Steinberg, 04/2019
+// Created by  : Steinberg, 04/2020
 // Description : VST 3 Plug-in connection class
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

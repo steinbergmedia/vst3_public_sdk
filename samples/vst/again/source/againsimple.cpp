@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,22 +37,23 @@
 #include "againsimple.h"
 #include "againparamids.h"
 #include "againuimessagecontroller.h"
-#include "version.h" // for versionning
+#include "version.h" // for versioning
 
 #include "public.sdk/source/main/pluginfactory.h"
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
+#include "base/source/fstreamer.h"
 #include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/base/ustring.h"	// for UString128
+#include "pluginterfaces/base/ustring.h" // for UString128
 #include "pluginterfaces/vst/ivstevents.h"
+#include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
-#include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
+#include "pluginterfaces/vst/vstpresetkeys.h" // for use of IStreamAttributes
 
 #include "vstgui/plugin-bindings/vst3editor.h"
 
-#include <math.h>
-#include <stdio.h>
-#include "base/source/fstreamer.h"
+#include <cmath>
+#include <cstdio>
 
 // this allows to enable the communication example between again and its controller
 #define AGAIN_TEST 1
@@ -141,12 +142,12 @@ tresult PLUGIN_API AGainSimple::initialize (FUnknown* context)
 	if (result != kResultOk)
 		return result;
 
-	//---create Audio In/Out buses------
+	//---create Audio In/Out busses------
 	// we want a stereo Input and a Stereo Output
 	addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
 	addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
 
-	//---create Event In/Out buses (1 bus with only 1 channel)------
+	//---create Event In/Out busses (1 bus with only 1 channel)------
 	addEventInput (STR16 ("Event In"), 1);
 
 	//---Create Parameters------------
@@ -299,7 +300,7 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
 		
-		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
+		// the plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
 			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
@@ -476,12 +477,16 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
-				// check if we are Mono => Mono, if not we need to recreate the buses
+				// check if we are Mono => Mono, if not we need to recreate the busses
 				if (bus->getArrangement () != inputs[0])
 				{
-					removeAudioBusses ();
-					addAudioInput  (STR16 ("Mono In"),  inputs[0]);
-					addAudioOutput (STR16 ("Mono Out"), outputs[0]);
+					bus->setArrangement (inputs[0]);
+					bus->setName (STR16 ("Mono In"));
+					if (auto* busOut = FCast<AudioBus> (audioOutputs.at (0)))
+					{
+						busOut->setArrangement (inputs[0]);
+						busOut->setName (STR16 ("Mono Out"));
+					}
 				}
 				return kResultOk;
 			}
@@ -497,17 +502,26 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 				// the host wants 2->2 (could be LsRs -> LsRs)
 				if (SpeakerArr::getChannelCount (inputs[0]) == 2 && SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
-					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  inputs[0]);
-					addAudioOutput (STR16 ("Stereo Out"), outputs[0]);
+					bus->setArrangement (inputs[0]);
+					bus->setName (STR16 ("Stereo In"));
+					if (auto* busOut = FCast<AudioBus> (audioOutputs.at (0)))
+					{
+						busOut->setArrangement (outputs[0]);
+						busOut->setName (STR16 ("Stereo Out"));
+					}
 					result = kResultTrue;
 				}
 				// the host want something different than 1->1 or 2->2 : in this case we want stereo
 				else if (bus->getArrangement () != SpeakerArr::kStereo)
 				{
-					removeAudioBusses ();
-					addAudioInput  (STR16 ("Stereo In"),  SpeakerArr::kStereo);
-					addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
+					bus->setArrangement (SpeakerArr::kStereo);
+					bus->setName (STR16 ("Stereo In"));
+					if (auto* busOut = FCast<AudioBus> (audioOutputs.at (0)))
+					{
+						busOut->setArrangement (SpeakerArr::kStereo);
+						busOut->setName (STR16 ("Stereo Out"));
+					}
+
 					result = kResultFalse;
 				}
 
@@ -535,12 +549,27 @@ tresult PLUGIN_API AGainSimple::canProcessSampleSize (int32 symbolicSampleSize)
 IPlugView* PLUGIN_API AGainSimple::createView (const char* name)
 {
 	// someone wants my editor
-	if (name && strcmp (name, ViewType::kEditor) == 0)
+	if (name && FIDStringsEqual (name, ViewType::kEditor))
 	{
 		auto* view = new VST3Editor (this, "view", "again.uidesc");
 		return view;
 	}
 	return nullptr;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API AGainSimple::getMidiControllerAssignment (int32 busIndex,
+	int16 /*midiChannel*/,
+	CtrlNumber midiControllerNumber,
+	ParamID& tag)
+{
+	// we support for the Gain parameter all MIDI Channel but only first bus (there is only one!)
+	if (busIndex == 0 && midiControllerNumber == kCtrlVolume)
+	{
+		tag = kGainId;
+		return kResultTrue;
+	}
+	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
@@ -649,6 +678,13 @@ TChar* AGainSimple::getDefaultMessageText ()
 	return defaultMessageText;
 }
 
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API AGainSimple::queryInterface (const TUID iid, void** obj)
+{
+	DEF_INTERFACE (IMidiMapping)
+	return SingleComponentEffect::queryInterface (iid, obj);
+}
+
 //------------------------------------------------------------------------
 enum
 {
@@ -684,14 +720,14 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				   "http://www.steinberg.net", 
 				   "mailto:info@steinberg.de")
 
-	//---First Plug-in included in this factory-------
+	//---First plug-in included in this factory-------
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID (0xB9F9ADE1, 0xCD9C4B6D, 0xA57E61E3, 0x123535FD),
 				PClassInfo::kManyInstances,					// cardinality  
 				kVstAudioEffectClass,						// the component category (do not changed this)
-				"AGainSimple VST3",							// here the Plug-in name (to be changed)
-				0,											// single component effects can not be distributed so this is zero
-				"Fx",										// Subcategory for this Plug-in (to be changed)
+				"AGainSimple VST3",							// here the plug-in name (to be changed)
+				0,											// single component effects cannot be distributed so this is zero
+				"Fx",										// Subcategory for this plug-in (to be changed)
 				FULL_VERSION_STR,							// Plug-in version (to be changed)
 				kVstVersionString,							// the VST 3 SDK version (do not changed this, use always this define)
 				Steinberg::Vst::AGainSimple::createInstance)// function pointer called when this component should be instantiated

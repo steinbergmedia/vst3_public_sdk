@@ -22,8 +22,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID RingModController::uid (0x5653456D, 0x6461526D, 0x64612072, 0x696E676D);
+#else
 //-----------------------------------------------------------------------------
 FUID RingModController::uid (0x3D03E713, 0xED334913, 0x8D47116B, 0x1B6045CB);
+#endif
 
 //-----------------------------------------------------------------------------
 RingModController::RingModController ()

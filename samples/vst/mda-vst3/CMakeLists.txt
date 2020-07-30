@@ -1,4 +1,6 @@
 
+option(SMTG_MDA_VST3_VST2_COMPATIBLE "Build the MDA examples as a replacement for their VST2 counterpart" ON)
+
 set(mda-vst3_sources
     source/helpers.h
     source/mdaAmbienceController.cpp
@@ -158,3 +160,8 @@ if(SMTG_MAC)
 elseif(SMTG_WIN)
     target_sources(${target} PRIVATE resource/mda-vst3.rc)
 endif()
+
+if(SMTG_MDA_VST3_VST2_COMPATIBLE)
+  target_compile_definitions(${target} PUBLIC SMTG_MDA_VST2_COMPATIBILITY)
+endif()
+

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -259,7 +259,10 @@ AAX_Result AAXWrapper_Parameters::GetParameterNumberOfSteps (AAX_CParamID iParam
 	if (AAX_Result result = getParameterInfo (iParameterID, paramInfo))
 		return result;
 
-	*oNumSteps = paramInfo.stepCount + 1;
+	if (paramInfo.stepCount == 0)
+		*oNumSteps = 1024;
+	else
+		*oNumSteps = paramInfo.stepCount + 1;
 	return AAX_SUCCESS;
 }
 
@@ -763,7 +766,7 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 		case AAX_eNotificationEvent_SideChainBeingDisconnected:
 			mWrapper->setSideChainEnable (false);
 			break;
-		//--- The host has changed its latency compensation for this plug-in instance.
+		//--- The host has changed its latency compensation for this Plug-in instance.
 		case AAX_eNotificationEvent_SignalLatencyChanged:
 		{
 			int32_t outSample;
@@ -857,3 +860,5 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 	return AAX_CEffectParameters::NotificationReceived (iNotificationType, iNotificationData,
 	                                                    iNotificationDataSize);
 }
+
+/// \endcond

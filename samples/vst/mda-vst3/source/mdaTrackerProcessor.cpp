@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID TrackerProcessor::uid (0x5653546D, 0x64614A6D, 0x64612074, 0x7261636B);
+#else
 //-----------------------------------------------------------------------------
 FUID TrackerProcessor::uid (0x61EA12BB, 0xC25447EA, 0xABD8D344, 0xB21B8B40);
+#endif
 
 //-----------------------------------------------------------------------------
 TrackerProcessor::TrackerProcessor ()

@@ -4,12 +4,12 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/mda-vst3/source/version.h
 // Created by  : Steinberg, 06/2008
-// Description : Example of handle the versionning and copyright info of mda-vst3 Plug-ins
+// Description : Example of handle the versioning and copyright info of mda-vst3 plug-ins
 //				 used for the resources (RC file for example)
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -61,5 +61,5 @@
 #define stringFileDescription	"VST3 version of MDA Plug-ins"
 #endif
 #define stringCompanyName		"mda"
-#define stringLegalCopyright	"© 2019 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

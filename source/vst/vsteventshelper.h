@@ -1,14 +1,14 @@
 //------------------------------------------------------------------------
 // Project     : VST SDK
 //
-// Category    : Interfaces
+// Category    : Helpers
 // Filename    : public.sdk/source/vst/vsteventshelper.h
 // Created by  : Steinberg, 11/2018
 // Description : common defines
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,8 +42,7 @@ namespace Steinberg {
 namespace Vst {
 namespace Helpers {
 //------------------------------------------------------------------------
-/** Helpers */
-//------------------------------------------------------------------------
+/** bound a value between a min and max */
 template<class T>inline T boundTo (T minval, T maxval, T x)
 {
 	if (x < minval)

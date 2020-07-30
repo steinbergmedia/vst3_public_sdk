@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -49,7 +49,7 @@ namespace Vst {
 //-----------------------------------------------------------------------------
 ADelayProcessor::ADelayProcessor ()
 : mDelay (1)
-, mBuffer (0)
+, mBuffer (nullptr)
 , mBufferPos (0)
 , mBypass (false)
 {
@@ -71,7 +71,7 @@ tresult PLUGIN_API ADelayProcessor::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ADelayProcessor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts)
 {
-	// we only support one in and output bus and these buses must have the same number of channels
+	// we only support one in and output bus and these busses must have the same number of channels
 	if (numIns == 1 && numOuts == 1 && inputs[0] == outputs[0])
 		return AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
 	return kResultFalse;
@@ -108,7 +108,7 @@ tresult PLUGIN_API ADelayProcessor::setActive (TBool state)
 				std::free (mBuffer[channel]);
 			}
 			std::free (mBuffer);
-			mBuffer = 0;
+			mBuffer = nullptr;
 		}
 	}
 	return AudioEffect::setActive (state);

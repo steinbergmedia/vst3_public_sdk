@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -67,6 +67,12 @@
 extern "C" {
 
 //------------------------------------------------------------------------
+#if SMTG_AUV3_WRAPPER_EXTERNAL_PLUGIN_FACTORY
+// PluginFactory will be provided externally
+Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ();
+
+#else
+// Generate our own factory wrapping the VST3 variant
 struct VSTBundle
 {
 	using EntryPtr = bool (*) (CFBundleRef);
@@ -143,6 +149,7 @@ Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ()
 	}
 	return nullptr;
 }
+#endif // SMTG_AUV3_WRAPPER_CUSTOM_PLUGIN_FACTORY
 
 } // extern "C"
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -317,7 +317,7 @@ public:
 		for (int32 outBusIndex = mMainIOBypass ? 1 : 0; outBusIndex < data.numOutputs;
 		     outBusIndex++)
 		{
-			AudioBusBuffers& outBus = data.outputs[outBusIndex];
+			outBus = data.outputs[outBusIndex];
 
 			for (int32 channel = 0; channel < outBus.numChannels; channel++)
 			{
@@ -336,8 +336,6 @@ public:
 	}
 //------------------------------------------------------------------------
 protected:
-	bool mActive;
-	bool mMainIOBypass;
 	int32 mInputPinLookup[kMaxChannelsSupported];
 
 	struct Delay
@@ -407,6 +405,9 @@ protected:
 	};
 
 	Delay* mDelays[kMaxChannelsSupported];
+	
+	bool mActive;
+	bool mMainIOBypass;
 };
 
 //------------------------------------------------------------------------

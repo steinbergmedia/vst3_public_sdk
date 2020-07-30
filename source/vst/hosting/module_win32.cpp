@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,15 +35,15 @@
 //-----------------------------------------------------------------------------
 
 #include "module.h"
-#include "optional.h"
-#include "stringconvert.h"
+#include "../utility/optional.h"
+#include "../utility/stringconvert.h"
 #include <ShlObj.h>
 #include <Windows.h>
 #include <algorithm>
 
 // The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem> header.
 // You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the warning,
-// otherwise the build will fail in VS2019 16.3.0
+// otherwise the build will fail in VS2020 16.3.0
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING 
 #include <experimental/filesystem>
 

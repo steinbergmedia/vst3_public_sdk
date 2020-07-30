@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -180,7 +180,7 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 		// mark output silence too
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
 
-		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are clear
+		// the plug-in has to be sure that if it sets the flags silence that the output buffer are clear
 		for (int32 i = 0; i < numChannels; i++)
 		{
 			// do not need to be cleared if the buffers are the same (in this case input buffer are already cleared by the host)
@@ -322,16 +322,18 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 			auto* bus = FCast<AudioBus> (audioInputs.at (0));
 			if (bus)
 			{
-				// check if we are Mono => Mono, if not we need to recreate the buses
+				// check if we are Mono => Mono, if not we need to recreate the busses
 				if (bus->getArrangement () != inputs[0])
 				{
-					removeAudioBusses ();
-					addAudioInput (STR16 ("Mono In"), inputs[0]);
-					addAudioOutput (STR16 ("Mono Out"), inputs[0]);
-
-					// recreate the Mono SideChain input bus
-					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
+					getAudioInput (0)->setArrangement (inputs[0]);
+					getAudioInput (0)->setName (STR16 ("Mono In"));
+					getAudioOutput (0)->setArrangement (inputs[0]);
+					getAudioOutput (0)->setName (STR16 ("Mono Out"));
 				}
+				// check if sidechain is mono
+				if (SpeakerArr::getChannelCount (inputs[1]) != 1)
+					return kResultFalse;
+
 				return kResultOk;
 			}
 		}
@@ -348,24 +350,24 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 				if (SpeakerArr::getChannelCount (inputs[0]) == 2 &&
 				    SpeakerArr::getChannelCount (outputs[0]) == 2)
 				{
-					removeAudioBusses ();
-					addAudioInput (STR16 ("Stereo In"), inputs[0]);
-					addAudioOutput (STR16 ("Stereo Out"), outputs[0]);
+					getAudioInput (0)->setArrangement (inputs[0]);
+					getAudioInput (0)->setName (STR16 ("Stereo In"));
+					getAudioOutput (0)->setArrangement (outputs[0]);
+					getAudioOutput (0)->setName (STR16 ("Stereo Out"));
 
-					// recreate the Mono SideChain input bus
-					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
-
-					result = kResultTrue;
+					// check if sidechain is mono
+					if (SpeakerArr::getChannelCount (inputs[1]) != 1)
+						result = kResultFalse;
+					else
+						result = kResultTrue;
 				}
 				// the host want something different than 1->1 or 2->2 : in this case we want stereo
 				else if (bus->getArrangement () != SpeakerArr::kStereo)
 				{
-					removeAudioBusses ();
-					addAudioInput (STR16 ("Stereo In"), SpeakerArr::kStereo);
-					addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);
-
-					// recreate the Mono SideChain input bus
-					addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
+					getAudioInput (0)->setArrangement (SpeakerArr::kStereo);
+					getAudioInput (0)->setName (STR16 ("Stereo In"));
+					getAudioOutput (0)->setArrangement (SpeakerArr::kStereo);
+					getAudioOutput (0)->setName (STR16 ("Stereo Out"));
 
 					result = kResultFalse;
 				}

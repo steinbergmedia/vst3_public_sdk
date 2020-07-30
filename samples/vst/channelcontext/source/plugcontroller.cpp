@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -70,8 +70,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	Steinberg::UString (undefinedStr, 128).fromAscii ("undefined");
 
 	flags = ParameterInfo::kIsReadOnly;
-	StringListParameter* strParam =
-		NEW StringListParameter (STR16 ("Ch Uid"), kChannelUIDId, nullptr, flags);
+	auto* strParam = NEW StringListParameter (STR16 ("Ch Uid"), kChannelUIDId, nullptr, flags);
 	strParam->appendString (undefinedStr);
 	parameters.addParameter (strParam);
 
@@ -147,8 +146,8 @@ tresult PLUGIN_API PlugController::setChannelContextInfos (IAttributeList* list)
 	Steinberg::UString (undefinedStr, 128).fromAscii ("undefined");
 
 	// get the channel name length (optional) where we, as plugin, are instantiated
-	StringListParameter* param =
-		static_cast<StringListParameter*> (parameters.getParameter (kChannelNameLengthId));
+	auto* param =
+	    static_cast<StringListParameter*> (parameters.getParameter (kChannelNameLengthId));
 	if (param)
 	{
 		int64 length;
@@ -257,7 +256,7 @@ tresult PLUGIN_API PlugController::setChannelContextInfos (IAttributeList* list)
 			param->replaceString (0, undefinedStr);
 	}
 
-	// get Plug-in Channel Location
+	// get plug-in Channel Location
 	param = static_cast<StringListParameter*> (parameters.getParameter (kChannelPluginLocationId));
 	if (param)
 	{

@@ -35,6 +35,8 @@ public:
 	DX10Processor ();
 	~DX10Processor ();
 	
+	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'MDAx'; }
+
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
@@ -43,6 +45,7 @@ public:
 	
 	bool hasProgram () const SMTG_OVERRIDE { return true; }
 	Steinberg::uint32 getCurrentProgram () const SMTG_OVERRIDE { return currentProgram; }
+	Steinberg::uint32 getNumPrograms () const SMTG_OVERRIDE { return kNumPrograms; }
 	void setCurrentProgram (Steinberg::uint32 val) SMTG_OVERRIDE;
 	void setCurrentProgramNormalized (ParamValue val) SMTG_OVERRIDE;
 

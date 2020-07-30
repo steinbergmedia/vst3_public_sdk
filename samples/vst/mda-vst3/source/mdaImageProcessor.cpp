@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID ImageProcessor::uid (0x5653546D, 0x6461496D, 0x64612069, 0x6D616765);
+#else
 //-----------------------------------------------------------------------------
 FUID ImageProcessor::uid (0xE99952F1, 0x3CBD42DE, 0x98604990, 0xD4FB3212);
+#endif
 
 //-----------------------------------------------------------------------------
 ImageProcessor::ImageProcessor ()

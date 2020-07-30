@@ -62,7 +62,11 @@ float DX10Processor::programParams[][NPARAMS] = {
 };
 
 //-----------------------------------------------------------------------------
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+FUID DX10Processor::uid (0x5653544D, 0x4441786D, 0x64612064, 0x78313000);
+#else
 FUID DX10Processor::uid (0xF8713648, 0xE2444174, 0x8AAA3B62, 0xA77F9E2D);
+#endif
 
 //-----------------------------------------------------------------------------
 DX10Processor::DX10Processor ()

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -63,11 +63,11 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (STR16 ("Bypass"), 0, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (STR16 ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	//---PrefetchMode parameter
 	tag = kPrefetchableMode;
-	StringListParameter* prefetchList = new StringListParameter (STR16 ("Prefetch Mode"), tag);
+	auto* prefetchList = new StringListParameter (STR16 ("Prefetch Mode"), tag);
 	parameters.addParameter (prefetchList);
 
 	prefetchList->appendString (STR16 ("Is Never"));

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@ public:
 	bool setEnabled (bool state);
 	bool isEnabled () const;
 
-	// MIDI Network is experimental, don't use yet
+	// MIDI Network is experimental, do not use yet
 	void setMidiNetworkEnabled (bool state);
 	bool isMidiNetworkEnabled () const;
 	void setMidiNetworkPolicy (MIDINetworkConnectionPolicy policy);

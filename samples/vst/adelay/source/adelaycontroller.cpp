@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -55,7 +55,7 @@ tresult PLUGIN_API ADelayController::initialize (FUnknown* context)
 	tresult result = EditController::initialize (context);
 	if (result == kResultTrue)
 	{
-		parameters.addParameter (STR16 ("Bypass"), 0, 1, 0, ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass, kBypassId);
+		parameters.addParameter (STR16 ("Bypass"), nullptr, 1, 0, ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass, kBypassId);
 
 		parameters.addParameter (STR16 ("Delay"), STR16 ("sec"), 0, 1, ParameterInfo::kCanAutomate, kDelayId);
 	}
@@ -66,7 +66,7 @@ tresult PLUGIN_API ADelayController::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 IPlugView* PLUGIN_API ADelayController::createView (FIDString name)
 {
-	if (strcmp (name, ViewType::kEditor) == 0)
+	if (FIDStringsEqual (name, ViewType::kEditor))
 	{
 		return new ADelayEditorForIOS (this);
 	}

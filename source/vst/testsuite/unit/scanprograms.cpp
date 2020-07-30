@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/unit/scanprograms.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
 #include <memory>
@@ -90,7 +90,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 				if (programListId < 0)
 				{
 					addErrorMessage (testResult,
-					                 printf ("Programlist%03d: Invalid ID!!!", programListIndex));
+					                 printf ("Programlist %03d: Invalid ID!!!", programListIndex));
 					return false;
 				}
 
@@ -99,7 +99,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 				{
 					if (programListIds[idIndex] == programListIds[programListIndex])
 					{
-						addErrorMessage (testResult, printf ("Programlist%03d: ID already used!!!",
+						addErrorMessage (testResult, printf ("Programlist %03d: ID already used!!!",
 						                                     programListIndex));
 						return false;
 					}
@@ -108,7 +108,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 				auto programListName = VST3::StringConvert::convert (programListInfo.name);
 				if (programListName.empty ())
 				{
-					addErrorMessage (testResult, printf ("Programlist%03d (ID = %d): No name!!!",
+					addErrorMessage (testResult, printf ("Programlist %03d (id=%d): No name!!!",
 					                                     programListIndex, programListId));
 					return false;
 				}
@@ -119,13 +119,13 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 					addMessage (
 					    testResult,
 					    printf (
-					        "Programlist%03d (ID = %d): \"%s\" No programs!!! (programCount is null!)",
+					        "Programlist %03d (id=%d): \"%s\" No programs!!! (programCount is null!)",
 					        programListIndex, programListId,
 					        VST3::StringConvert::convert (programListName).data ()));
 					// return false;
 				}
 
-				addMessage (testResult, printf ("Programlist%03d (ID = %d):  \"%s\" (%d programs).",
+				addMessage (testResult, printf ("Programlist %03d (id=%d):  \"%s\" (%d programs).",
 				                                programListIndex, programListId,
 				                                programListName.data (), programCount));
 
@@ -137,15 +137,16 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 					{
 						if (programName[0] == 0)
 						{
-							addErrorMessage (testResult,
-							                 printf ("Programlist%03d-Program%03d: has no name!!!",
-							                         programListIndex, programIndex));
+							addErrorMessage (
+							    testResult,
+							    printf ("Programlist %03d->Program %03d: has no name!!!",
+							            programListIndex, programIndex));
 							return false;
 						}
 
 						auto programNameUTF8 = VST3::StringConvert::convert (programName);
-						auto msg = printf ("Programlist%03d-Program%03d: \"%s\"", programListIndex,
-						                   programIndex, programNameUTF8.data ());
+						auto msg = printf ("Programlist %03d->Program %03d: \"%s\"",
+						                   programListIndex, programIndex, programNameUTF8.data ());
 
 						String128 programInfo {};
 						if (iUnitInfo->getProgramInfo (programListId, programIndex,

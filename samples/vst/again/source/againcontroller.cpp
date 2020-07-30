@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,8 +47,8 @@
 
 #include "vstgui/uidescription/delegationcontroller.h"
 
-#include <stdio.h>
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 using namespace VSTGUI;
 
@@ -217,10 +217,11 @@ tresult PLUGIN_API AGainController::setComponentState (IBStream* state)
 }
 
 //------------------------------------------------------------------------
-IPlugView* PLUGIN_API AGainController::createView (const char* name)
+IPlugView* PLUGIN_API AGainController::createView (const char* _name)
 {
 	// someone wants my editor
-	if (name && strcmp (name, "editor") == 0)
+	ConstString name (_name);
+	if (name == ViewType::kEditor)
 	{
 		auto* view = new VST3Editor (this, "view", "again.uidesc");
 		return view;

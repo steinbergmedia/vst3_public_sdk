@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ class NoteTouchController : public IController
 public:
 	NoteTouchController (int32_t pitch, Steinberg::Vst::IInterAppAudioHost* host);
 
-	void setPitch (int32_t pitch) { this->pitch = pitch; }
+	void setPitch (int32_t _pitch) { pitch = _pitch; }
 
 	void setHorizontalNoteExpType (int32_t type) { xNEType = type; }
 	void setVerticalNoteExpType (int32_t type) { yNEType = type; }

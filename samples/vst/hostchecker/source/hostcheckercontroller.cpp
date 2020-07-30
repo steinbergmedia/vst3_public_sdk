@@ -1,4 +1,5 @@
 //-----------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -8,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,7 +36,13 @@
 //-----------------------------------------------------------------------------
 
 #include "hostcheckercontroller.h"
+
+#include "cids.h"
+#include "editorsizecontroller.h"
 #include "eventlogdatabrowsersource.h"
+#include "hostcheckerprocessor.h"
+#include "logevents.h"
+#include "base/source/fstreamer.h"
 
 #include "public.sdk/source/vst/vstcomponentbase.h"
 #include "public.sdk/source/vst/vstrepresentation.h"
@@ -44,13 +51,6 @@
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
-
-#include "cids.h"
-#include "editorsizecontroller.h"
-#include "hostcheckerprocessor.h"
-#include "logevents.h"
-#include "vstgui/lib/cvstguitimer.h"
-#include "base/source/fstreamer.h"
 
 #define THREAD_CHECK_MSG(msg) "The host called '" msg "' in the wrong thread context.\n"
 
@@ -82,22 +82,21 @@ protected:
 
 	bool beforeSizeChange (const CRect& newSize, const CRect& oldSize) override;
 
-	Steinberg::tresult PLUGIN_API onSize (Steinberg::ViewRect* newSize) override;
-	Steinberg::tresult PLUGIN_API canResize () override;
-	Steinberg::tresult PLUGIN_API checkSizeConstraint (Steinberg::ViewRect* rect) override;
-	Steinberg::tresult PLUGIN_API onKeyDown (char16 key, int16 keyMsg, int16 modifiers) override;
-	Steinberg::tresult PLUGIN_API onKeyUp (char16 key, int16 keyMsg, int16 modifiers) override;
-	Steinberg::tresult PLUGIN_API onWheel (float distance) override;
-	Steinberg::tresult PLUGIN_API onFocus (TBool /*state*/) override;
-	Steinberg::tresult PLUGIN_API setFrame (IPlugFrame* frame) override;
-	Steinberg::tresult PLUGIN_API attached (void* parent, FIDString type) override;
-	Steinberg::tresult PLUGIN_API removed () override;
+	tresult PLUGIN_API onSize (ViewRect* newSize) override;
+	tresult PLUGIN_API canResize () override;
+	tresult PLUGIN_API checkSizeConstraint (ViewRect* rect) override;
+	tresult PLUGIN_API onKeyDown (char16 key, int16 keyMsg, int16 modifiers) override;
+	tresult PLUGIN_API onKeyUp (char16 key, int16 keyMsg, int16 modifiers) override;
+	tresult PLUGIN_API onWheel (float distance) override;
+	tresult PLUGIN_API onFocus (TBool /*state*/) override;
+	tresult PLUGIN_API setFrame (IPlugFrame* frame) override;
+	tresult PLUGIN_API attached (void* parent, FIDString type) override;
+	tresult PLUGIN_API removed () override;
 
-	Steinberg::tresult PLUGIN_API setContentScaleFactor (ScaleFactor factor) override;
+	tresult PLUGIN_API setContentScaleFactor (ScaleFactor factor) override;
 
 	// IParameterFinder
-	Steinberg::tresult PLUGIN_API findParameter (int32 xPos, int32 yPos,
-	                                             ParamID& resultTag) override;
+	tresult PLUGIN_API findParameter (int32 xPos, int32 yPos, ParamID& resultTag) override;
 
 	void valueChanged (CControl* pControl) override;
 
@@ -105,8 +104,9 @@ protected:
 	CMessageResult notify (CBaseObject* sender, const char* message) SMTG_OVERRIDE;
 
 private:
-	CVSTGUITimer* checkTimer = nullptr;
-	HostCheckerController* hostController = nullptr;
+	CVSTGUITimer* checkTimer {nullptr};
+
+	HostCheckerController* hostController {nullptr};
 
 	uint32 openCount = 0;
 	bool wasAlreadyClosed = false;
@@ -352,10 +352,12 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdIComponentHandler2RequestOpenEditorSupported, 2);
 	mScoreMap.emplace (kLogIdIComponentHandler3Supported, 2);
 	mScoreMap.emplace (kLogIdIComponentHandlerBusActivationSupported, 1);
+	mScoreMap.emplace (kLogIdIProgressSupported, 1);
 	mScoreMap.emplace (kLogIdIPlugInterfaceSupportSupported, 2);
 	mScoreMap.emplace (kLogIdIPlugFrameonResizeViewSupported, 2);
 	mScoreMap.emplace (kLogIdIPrefetchableSupportSupported, 1);
 	mScoreMap.emplace (kLogIdAudioPresentationLatencySamplesSupported, 1);
+	mScoreMap.emplace (kLogIdIProcessContextRequirementsSupported, 1);
 
 	mScoreMap.emplace (kLogIdProcessContextPlayingSupported, 2);
 	mScoreMap.emplace (kLogIdProcessContextRecordingSupported, 1);
@@ -379,6 +381,8 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdGetRoutingInfo, 1);
 	mScoreMap.emplace (kLogIdActivateAuxBus, 1);
 	mScoreMap.emplace (kLogIdParametersFlushSupported, 1);
+	mScoreMap.emplace (kLogIdSilentFlagsSupported, 2);
+	mScoreMap.emplace (kLogIdSilentFlagsSCSupported, 2);
 
 	mScoreMap.emplace (kLogIdIEditController2Supported, 1);
 	mScoreMap.emplace (kLogIdsetKnobModeSupported, 1);
@@ -412,6 +416,7 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdIPlugViewsetContentScaleFactorSupported, 1);
 
 	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1);
+	mScoreMap.emplace (kLogIdIParameterFunctionNameSupported, 1);
 }
 
 //-----------------------------------------------------------------------------
@@ -436,26 +441,49 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		auto* unit = new Unit (unitInfo);
 		addUnit (unit);
 
+		// add second unit
+		unitInfo.id = kUnit2Id;
+		unitInfo.parentUnitId = kRootUnitId; // attached to the root unit
+		Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name))
+		    .assign (USTRING ("Second Unit"));
+		unitInfo.programListId = kNoProgramListId;
+		unit = new Unit (unitInfo);
+		addUnit (unit);
+
 		parameters.addParameter (STR16 ("Param1"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
 		                         kParam1Tag);
-		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0, 0, kGeneratePeaksTag);
+		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0,
+		                         ParameterInfo::kNoFlags, kGeneratePeaksTag);
 		parameters.addParameter (new RangeParameter (
 		    STR16 ("Latency"), kLatencyTag, nullptr, 0, HostChecker::kMaxLatency, 0,
-		    HostChecker::kMaxLatency, 0, kUnitId, nullptr));
-		parameters.addParameter (STR16 ("CanResize"), STR16 (""), 1, 1, 0, kCanResizeTag);
+		    HostChecker::kMaxLatency, ParameterInfo::kNoFlags, kUnitId, nullptr));
+		parameters.addParameter (STR16 ("CanResize"), STR16 (""), 1, 1, ParameterInfo::kNoFlags,
+		                         kCanResizeTag);
 
 		parameters.addParameter (new RangeParameter (STR16 ("Scoring"), kScoreTag, nullptr, 0, 100,
-		                                             0, 100, ParameterInfo::kNoFlags));
+		                                             0, 100, ParameterInfo::kIsReadOnly));
 
 		parameters.addParameter (STR16 ("Bypass"), STR16 (""), 1, 0,
 		                         ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass,
 		                         kBypassTag);
 
+		parameters.addParameter (new RangeParameter (STR16 ("ProgressValue"), kProgressValueTag,
+		                                             nullptr, 0, 100, 0, 100,
+		                                             ParameterInfo::kIsReadOnly));
+		parameters.addParameter (STR16 ("TriggerProgress"), STR16 (""), 1, 0,
+		                         ParameterInfo::kNoFlags, kTriggerProgressTag);
+
+		parameters.addParameter (STR16 ("ParamWhichCouldBeHidden"), STR16 (""), 0, 0,
+		                         ParameterInfo::kCanAutomate, kParamWhichCouldBeHiddenTag,
+		                         kUnit2Id);
+		parameters.addParameter (STR16 ("TriggerHidden"), STR16 (""), 1, 0, ParameterInfo::kNoFlags,
+		                         kTriggerHiddenTag);
+
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{
-			parameters.addParameter (STR16 ("ProcessWarn"), STR16 (""),
-			                         HostChecker::kParamWarnStepCount, 0,
-			                         ParameterInfo::kIsReadOnly, kProcessWarnTag + i);
+			parameters.addParameter (
+			    STR16 ("ProcessWarn"), STR16 (""), HostChecker::kParamWarnStepCount, 0,
+			    ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden, kProcessWarnTag + i);
 		}
 
 		mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
@@ -487,6 +515,9 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IXmlRepresentationController::iid) ==
 		    kResultTrue)
 			addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IParameterFunctionName::iid) ==
+		    kResultTrue)
+			addFeatureLog (kLogIdIParameterFunctionNameSupported);
 	}
 
 	return result;
@@ -507,6 +538,12 @@ tresult PLUGIN_API HostCheckerController::terminate ()
 		mDataSource = nullptr;
 		mDataBrowserMap.clear ();
 	}
+
+	if (mProgressTimer)
+	{
+		mProgressTimer->forget ();
+		mProgressTimer = nullptr;
+	}
 	return result;
 }
 
@@ -515,7 +552,7 @@ float HostCheckerController::updateScoring (int32 iD)
 {
 	float score = 0;
 	float total = 0;
-	
+
 	if (iD >= 0)
 		mScoreMap[iD].use = true;
 
@@ -535,6 +572,35 @@ float HostCheckerController::updateScoring (int32 iD)
 		val->setNormalized (score);
 
 	return score;
+}
+
+//-----------------------------------------------------------------------------
+void HostCheckerController::onProgressTimer (VSTGUI::CVSTGUITimer* timer)
+{
+	if (!mInProgress)
+	{
+		FUnknownPtr<IProgress> progress (componentHandler);
+		if (progress)
+			progress->start (IProgress::ProgressType::UIBackgroundTask, STR ("Test Progress"),
+			                 mProgressID);
+		mInProgress = true;
+	}
+	else
+	{
+		const float stepInc = 1.0 / 60.0 / 5.0; // ~5sec
+		auto newVal = parameters.getParameter (kProgressValueTag)->getNormalized () + stepInc;
+		// we have finished
+		if (newVal > 1)
+			setParamNormalized (kTriggerProgressTag, 0);
+		else
+		{
+			setParamNormalized (kProgressValueTag, newVal);
+
+			FUnknownPtr<IProgress> progress (componentHandler);
+			if (progress)
+				progress->update (mProgressID, newVal);
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -613,13 +679,18 @@ tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler
 			addFeatureLog (kLogIdIComponentHandler2RequestOpenEditorSupported);
 	}
 
-	FUnknownPtr<IComponentHandler3> handler3 (handler);
+	FUnknownPtr<IComponentHandler3> handler3 (componentHandler);
 	if (handler3)
 		addFeatureLog (kLogIdIComponentHandler3Supported);
 
-	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (handler);
+	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (
+	    componentHandler);
 	if (componentHandlerBusActivationSupport)
 		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
+
+	FUnknownPtr<IProgress> progress (componentHandler);
+	if (progress)
+		addFeatureLog (kLogIdIProgressSupported);
 
 	return res;
 }
@@ -646,12 +717,59 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 		addFeatureLog (kLogIdSetParamNormalizedCalledinWrongThread);
 	}
 
+	//--- ----------------------------------------
 	if (tag == kLatencyTag && mLatencyInEdit)
 	{
 		mWantedLatency = value;
 		// return kResultTrue;
 	}
+	//--- ----------------------------------------
+	else if (tag == kParam1Tag)
+	{
+	}
+	//--- ----------------------------------------
+	else if (tag == kTriggerHiddenTag)
+	{
+		auto param = parameters.getParameter (kParamWhichCouldBeHiddenTag);
+		auto& info = param->getInfo ();
+		if (value > 0.5)
+		{
+			info.flags |= (ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly);
+			info.flags &= ~ParameterInfo::kCanAutomate;
+		}
+		else
+		{
+			info.flags &= (~(ParameterInfo::kIsHidden | ParameterInfo::kIsReadOnly) |
+			               ParameterInfo::kCanAutomate);
+		}
+		auto res = EditControllerEx1::setParamNormalized (tag, value);
+		componentHandler->restartComponent (kParamTitlesChanged);
+		return res;
+	}
+	else if (tag == kTriggerProgressTag)
+	{
+		if (value > 0.5)
+		{
+			if (mProgressTimer == nullptr)
+				mProgressTimer =
+				    new CVSTGUITimer ([this] (CVSTGUITimer* timer) { onProgressTimer (timer); },
+				                      1000 / 60); // 60 Hz
+			mProgressTimer->stop ();
+			mProgressTimer->start ();
+		}
+		else
+		{
+			if (mProgressTimer)
+				mProgressTimer->stop ();
+			setParamNormalized (kProgressValueTag, 0);
+			mInProgress = false;
 
+			FUnknownPtr<IProgress> progress (componentHandler);
+			if (progress)
+				progress->finish (mProgressID);
+		}
+	}
+	//--- ----------------------------------------
 	else if (tag >= kProcessWarnTag && tag <= kProcessWarnTag + HostChecker::kParamWarnCount)
 	{
 		bool latencyRestartWanted = false;
@@ -663,7 +781,7 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 			{
 				addFeatureLog (tagOffset + i);
 				if (tagOffset + i == kLogIdInformLatencyChanged && componentHandler)
-					latencyRestartWanted = true;					
+					latencyRestartWanted = true;
 			}
 		}
 		if (latencyRestartWanted)
@@ -714,7 +832,8 @@ IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 		addFeatureLog (kLogIdCreateViewCalledinWrongThread);
 	}
 
-	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (componentHandler);
+	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (
+	    componentHandler);
 	if (componentHandlerBusActivationSupport)
 		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
 
@@ -846,7 +965,7 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 		int64 id;
 		if (message->getAttributes ()->getInt ("ID", id) != kResultOk)
 			return kResultFalse;
-		int64 count; 
+		int64 count;
 		if (message->getAttributes ()->getInt ("Count", count) != kResultOk)
 			return kResultFalse;
 		addFeatureLog (id, count, false);
@@ -940,7 +1059,7 @@ tresult PLUGIN_API HostCheckerController::setChannelContextInfos (IAttributeList
 	{
 	}
 
-	// get the Channel Name where we, as Plug-in, are instantiated
+	// get the Channel Name where we, as plug-in, are instantiated
 	String128 name;
 	if (list->getString (ChannelContext::kChannelNameKey, name, sizeof (name)) == kResultTrue)
 	{
@@ -1017,7 +1136,7 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
-    int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id /*out*/)
+    int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getMidiControllerAssignment"),
@@ -1199,6 +1318,23 @@ tresult PLUGIN_API HostCheckerController::endEditFromHost (ParamID paramID)
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID unitID,
+                                                                          FIDString functionName,
+                                                                          ParamID& paramID)
+{
+	addFeatureLog (kLogIdIParameterFunctionNameSupported);
+
+	if (FIDStringsEqual (functionName, FunctionNameType::kWetDryMix))
+	{
+		paramID = kParam1Tag;
+	}
+	else
+		paramID = kNoParamId;
+
+	return (paramID != kNoParamId) ? kResultTrue : kResultFalse;
+}
+
+//------------------------------------------------------------------------
 void HostCheckerController::extractCurrentInfo (EditorView* editor)
 {
 	auto rect = editor->getRect ();
@@ -1333,6 +1469,14 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 		addFeatureLog (kLogIdIEditControllerHostEditingSupported);
 		return kResultOk;
 	}
+	else if (FUnknownPrivate::iidEqual (iid, IParameterFunctionName::iid))
+	{
+		addRef ();
+		*obj = static_cast<IParameterFunctionName*> (this);
+		addFeatureLog (kLogIdIParameterFunctionNameSupported);
+		return kResultOk;
+	}
+
 	return EditControllerEx1::queryInterface (iid, obj);
 }
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -390,15 +390,30 @@ Parameter* ParameterContainer::addParameter (const ParameterInfo& info)
 }
 
 //------------------------------------------------------------------------
-Parameter* ParameterContainer::getParameter (ParamID tag)
+Parameter* ParameterContainer::getParameter (ParamID tag) const
 {
 	if (params)
 	{
-		IndexMap::const_iterator it = id2index.find (tag);
+		auto it = id2index.find (tag);
 		if (it != id2index.end ())
 			return params->at (it->second);
 	}
 	return nullptr;
+}
+
+//------------------------------------------------------------------------
+bool ParameterContainer::removeParameter (ParamID tag)
+{
+	if (!params)
+		return false;
+	
+	IndexMap::const_iterator it = id2index.find (tag);
+	if (it != id2index.end ())
+	{
+		params->erase (params->begin () + it->second);
+		id2index.erase (it);
+	}
+	return false;
 }
 
 //------------------------------------------------------------------------

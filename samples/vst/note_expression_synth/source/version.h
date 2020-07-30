@@ -4,11 +4,11 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/note_expression_synth/source/version.h
 // Created by  : Steinberg, 02/2010
-// Description : Example of handling the versioning and copyright info of note_expression_synth Plug-in 
+// Description : Example of handling the versioning and copyright info of note_expression_synth plug-in 
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -61,5 +61,5 @@
 #define stringFileDescription	"Note Expression Synth VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2019 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

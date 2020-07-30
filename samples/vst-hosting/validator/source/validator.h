@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -93,11 +93,13 @@ protected:
 	struct ModuleTestConfig
 	{
 		ModuleTestConfig (bool useGlobalInstance, bool useExtensiveTests,
-		                  std::string& customTestComponentPath, std::string& testSuiteName)
+		                  std::string& customTestComponentPath, std::string& testSuiteName,
+		                  VST3::Optional<VST3::UID>&& testProcessor)
 		: useGlobalInstance (useGlobalInstance)
 		, useExtensiveTests (useExtensiveTests)
 		, customTestComponentPath (customTestComponentPath)
 		, testSuiteName (testSuiteName)
+		, testProcessor (std::move (testProcessor))
 		{
 		}
 
@@ -105,6 +107,7 @@ protected:
 		bool useExtensiveTests {false};
 		std::string customTestComponentPath;
 		std::string testSuiteName;
+		VST3::Optional<VST3::UID> testProcessor;
 	};
 
 	void testModule (Module::Ptr module, const ModuleTestConfig& config);
@@ -122,7 +125,7 @@ protected:
 };
 
 //------------------------------------------------------------------------
-/** This handles the Plug-in factory in its library.
+/** This handles the plug-in factory in its library.
 \ingroup Validator */
 //------------------------------------------------------------------------
 class VstModule : public FObject

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,19 +35,20 @@
 //-----------------------------------------------------------------------------
 
 /**
-
 *******************************************
 \page AAXWrapper VST 3 - AAX Wrapper
 *******************************************
+\tableofcontents
 
-Helper Class wrapping a VST 3 Plug-in to a AAX Plug-in
+\brief
+Helper Class wrapping a VST 3 plug-in to a AAX plug-in
 
 ***************************
 \section AAXIntroduction Introduction
 ***************************
 The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
-a AAX Plug-in.
-\n\n
+a AAX plug-in.
+\n
 
 ***************************
 \section howtoAAX How does it work? 

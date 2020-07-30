@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@ public:
 	HostProcessData () : channelBufferOwner (false) {}
 	virtual ~HostProcessData ();
 
-	/** Prepare buffer containers for all buses. If bufferSamples is not null buffers will be
+	/** Prepare buffer containers for all busses. If bufferSamples is not null buffers will be
 	 * created. */
 	bool prepare (IComponent& component, int32 bufferSamples, int32 _symbolicSampleSize);
 

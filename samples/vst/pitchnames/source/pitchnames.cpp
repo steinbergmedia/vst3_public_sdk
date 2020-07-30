@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -74,8 +74,8 @@ tresult PLUGIN_API PitchNamesController::initialize (FUnknown* context)
 		addUnit (new Unit (String ("Channel 0"), kChannel0UnitId, kRootUnitId, kProgramList0ID));
 		addUnit (new Unit (String ("Channel 1"), kChannel1UnitId, kRootUnitId, kProgramList1ID));
 
-		ProgramListWithPitchNames* list = new ProgramListWithPitchNames (
-		    String ("ProgramList 0"), kProgramList0ID, kChannel0UnitId);
+		auto* list = new ProgramListWithPitchNames (String ("ProgramList 0"), kProgramList0ID,
+		                                            kChannel0UnitId);
 		list->addProgram (String ("Init 1"));
 		list->setPitchName (0, 0, String ("Channel 0 First Item"));
 		addProgramList (list);

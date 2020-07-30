@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,7 +41,7 @@
 #include <gtkmm.h>
 #endif
 
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include <X11/Xutil.h>
 #include <cassert>
 #include <iostream>
@@ -236,10 +236,10 @@ struct X11Window::Impl : public Linux::IRunLoop
 	TimerHandlers timerHandlers;
 
 	tresult PLUGIN_API registerEventHandler (Linux::IEventHandler* handler,
-											 Linux::FileDescriptor fd) override;
+	                                         Linux::FileDescriptor fd) override;
 	tresult PLUGIN_API unregisterEventHandler (Linux::IEventHandler* handler) override;
 	tresult PLUGIN_API registerTimer (Linux::ITimerHandler* handler,
-									  Linux::TimerInterval milliseconds) override;
+	                                  Linux::TimerInterval milliseconds) override;
 	tresult PLUGIN_API unregisterTimer (Linux::ITimerHandler* handler) override;
 
 	uint32 PLUGIN_API addRef () override { return 1000; }
@@ -394,7 +394,7 @@ void X11Window::Impl::resize (Size newSize, bool force)
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API X11Window::Impl::registerEventHandler (Linux::IEventHandler* handler,
-														  Linux::FileDescriptor fd)
+                                                          Linux::FileDescriptor fd)
 {
 	if (!handler)
 		return kInvalidArgument;
@@ -412,13 +412,13 @@ tresult PLUGIN_API X11Window::Impl::registerEventHandler (Linux::IEventHandler* 
 
 	auto ioChannel = g_io_channel_unix_new (fd);
 	g_io_add_watch (ioChannel, (GIOCondition) (G_IO_IN | G_IO_OUT | G_IO_ERR | G_IO_HUP),
-					[] (auto* source, auto condition, auto data) {
-						(void)condition;
-						auto handler = reinterpret_cast<Linux::IEventHandler*> (data);
-						handler->onFDIsSet (g_io_channel_unix_get_fd (source));
-						return static_cast<int> (0);
-					},
-					handler);
+	                [] (auto* source, auto condition, auto data) {
+		                (void)condition;
+		                auto handler = reinterpret_cast<Linux::IEventHandler*> (data);
+		                handler->onFDIsSet (g_io_channel_unix_get_fd (source));
+		                return static_cast<int> (0);
+	                },
+	                handler);
 
 	eventHandlers[fd] = {handler, ioChannel};
 
@@ -446,18 +446,18 @@ tresult PLUGIN_API X11Window::Impl::unregisterEventHandler (Linux::IEventHandler
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API X11Window::Impl::registerTimer (Linux::ITimerHandler* handler,
-												   Linux::TimerInterval milliseconds)
+                                                   Linux::TimerInterval milliseconds)
 {
 	if (!handler || milliseconds == 0)
 		return kInvalidArgument;
 
 	auto id = g_timeout_add (milliseconds,
-							 [] (auto data) {
-								 auto handler = reinterpret_cast<Linux::ITimerHandler*> (data);
-								 handler->onTimer ();
-								 return static_cast<gboolean> (true);
-							 },
-							 handler);
+	                         [] (auto data) {
+		                         auto handler = reinterpret_cast<Linux::ITimerHandler*> (data);
+		                         handler->onTimer ();
+		                         return static_cast<gboolean> (true);
+	                         },
+	                         handler);
 	timerHandlers.emplace (id, handler);
 	return kResultTrue;
 }
@@ -629,20 +629,20 @@ bool X11Window::Impl::init (const std::string& name, Size size, bool resizeable,
 	                                     [this] (const XEvent& e) { return handlePlugEvent (e); });
 
 	RunLoop::instance ().registerWindow (
-		xWindow, [this] (const XEvent& e) { return handleMainWindowEvent (e); });
+	    xWindow, [this] (const XEvent& e) { return handleMainWindowEvent (e); });
 
 	return true;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API X11Window::Impl::registerEventHandler (Linux::IEventHandler* handler,
-														  Linux::FileDescriptor fd)
+                                                          Linux::FileDescriptor fd)
 {
 	if (!handler || eventHandlers.find (fd) != eventHandlers.end ())
 		return kInvalidArgument;
 
 	RunLoop::instance ().registerFileDescriptor (fd,
-												 [handler] (int fd) { handler->onFDIsSet (fd); });
+	                                             [handler] (int fd) { handler->onFDIsSet (fd); });
 	eventHandlers.emplace (fd, handler);
 	return kResultTrue;
 }
@@ -668,13 +668,13 @@ tresult PLUGIN_API X11Window::Impl::unregisterEventHandler (Linux::IEventHandler
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API X11Window::Impl::registerTimer (Linux::ITimerHandler* handler,
-												   Linux::TimerInterval milliseconds)
+                                                   Linux::TimerInterval milliseconds)
 {
 	if (!handler || milliseconds == 0)
 		return kInvalidArgument;
 
 	auto id = RunLoop::instance ().registerTimer (milliseconds,
-												  [handler] (auto) { handler->onTimer (); });
+	                                              [handler] (auto) { handler->onTimer (); });
 	timerHandlers.emplace (id, handler);
 	return kResultTrue;
 }
@@ -943,7 +943,7 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 					case XEMBED_REQUEST_FOCUS:
 					{
 						send_xembed_message (xDisplay, plugWindow, xEmbedAtom, XEMBED_FOCUS_IN, 0,
-											 plugParentWindow, xembedInfo->version);
+						                     plugParentWindow, xembedInfo->version);
 						break;
 					}
 				}
@@ -990,7 +990,7 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 				exit (-1);
 			}
 			RunLoop::instance ().registerWindow (
-				plugWindow, [this] (const XEvent& e) { return handlePlugEvent (e); });
+			    plugWindow, [this] (const XEvent& e) { return handlePlugEvent (e); });
 
 			// XSelectInput (xDisplay, plugWindow, PropertyChangeMask);
 
@@ -1004,9 +1004,9 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 			XResizeWindow (xDisplay, plugWindow, mCurrentSize.width, mCurrentSize.height);
 			// XSetInputFocus (xDisplay, plugWindow, RevertToParent, CurrentTime);
 			send_xembed_message (xDisplay, plugWindow, xEmbedAtom, XEMBED_WINDOW_ACTIVATE, 0,
-								 plugParentWindow, xembedInfo->version);
+			                     plugParentWindow, xembedInfo->version);
 			send_xembed_message (xDisplay, plugWindow, xEmbedAtom, XEMBED_FOCUS_IN, 0,
-								 plugParentWindow, xembedInfo->version);
+			                     plugParentWindow, xembedInfo->version);
 			XSync (xDisplay, False);
 			res = true;
 			break;

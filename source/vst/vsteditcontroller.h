@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -56,11 +56,9 @@ class EditorView;
 //------------------------------------------------------------------------
 /** Default implementation for a VST 3 edit controller.
 \ingroup vstClasses
-Can be used as base class for a specific controller implementation */
-//------------------------------------------------------------------------
-class EditController: public ComponentBase,
-					  public IEditController,
-					  public IEditController2
+Can be used as base class for a specific controller implementation
+*/
+class EditController : public ComponentBase, public IEditController, public IEditController2
 {
 public:
 //------------------------------------------------------------------------
@@ -137,8 +135,8 @@ protected:
 
 //------------------------------------------------------------------------
 /** View related to an edit controller.
-\ingroup vstClasses  */
-//------------------------------------------------------------------------
+\ingroup vstClasses
+*/
 class EditorView : public CPluginView
 {
 public:
@@ -160,8 +158,8 @@ protected:
 
 //------------------------------------------------------------------------
 /** Unit element.
-\ingroup vstClasses  */
-//------------------------------------------------------------------------
+\ingroup vstClasses 
+*/
 class Unit : public FObject
 {
 public:
@@ -200,8 +198,8 @@ protected:
 
 //------------------------------------------------------------------------
 /** ProgramList element.
-\ingroup vstClasses  */
-//------------------------------------------------------------------------
+\ingroup vstClasses 
+*/
 class ProgramList : public FObject
 {
 public:
@@ -255,8 +253,8 @@ protected:
 
 //------------------------------------------------------------------------
 /** ProgramListWithPitchNames element.
-\ingroup vstClasses  */
-//-----------------------------------------------------------------------------
+\ingroup vstClasses
+*/
 class ProgramListWithPitchNames : public ProgramList
 {
 public:
@@ -287,7 +285,6 @@ protected:
 \ingroup vstClasses
 - [extends EditController]
 */
-//------------------------------------------------------------------------
 class EditControllerEx1 : public EditController, public IUnitInfo
 {
 public:

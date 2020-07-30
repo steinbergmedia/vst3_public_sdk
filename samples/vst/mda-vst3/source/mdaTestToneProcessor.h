@@ -22,6 +22,19 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+//------------------------------------------------------------------------
+enum class TestToneParam
+{
+	Mode = 0,
+	Level,
+	Channel,
+	F1,
+	F2,
+	Sweep,
+	Thru,
+	ZerodB,
+};
+
 //-----------------------------------------------------------------------------
 class TestToneProcessor : public BaseProcessor
 {
@@ -29,6 +42,8 @@ public:
 	TestToneProcessor ();
 	~TestToneProcessor ();
 	
+	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaT'; }
+
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
@@ -41,6 +56,8 @@ public:
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;
+
+	ParamValue& param (TestToneParam p) { return params[static_cast<size_t> (p)]; }
 
 	float thru, left, right, len;
 	float zz0, zz1, zz2, zz3, zz4, zz5, phi, dphi;

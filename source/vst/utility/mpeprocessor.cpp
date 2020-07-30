@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : mpeprocessor.cpp
-// Created by  : Steinberg, 07/2017.
+// Filename    : public.sdk/source/vst/utility/mpeprocessor.cpp
+// Created by  : Steinberg, 07/2017
 // Description : VST 3 AUv3Wrapper
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 #include "mpeprocessor.h"
 #include <array>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -376,7 +376,7 @@ void Processor::processMIDIInput (const uint8_t* data, size_t dataSize)
 	}
 
 	auto status = data[0] & 0xF0;
-	auto packetSize = 0;
+	int32_t packetSize = 0;
 	switch (status)
 	{
 		case 0x90: // Note On
@@ -427,7 +427,7 @@ void Processor::processMIDIInput (const uint8_t* data, size_t dataSize)
 			return;
 		}
 	}
-	if (dataSize > packetSize)
+	if (dataSize > static_cast<size_t> (packetSize))
 		processMIDIInput (data + packetSize, dataSize - packetSize);
 }
 

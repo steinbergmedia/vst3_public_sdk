@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,8 +38,8 @@
 #include "validator.h"
 #include "testsuite.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
 #include "public.sdk/source/vst/testsuite/vststructsizecheck.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "base/source/fcommandline.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
@@ -81,13 +81,13 @@ void printAllInstalledPlugins (std::ostream* os)
 	if (!os)
 		return;
 
-	*os << "Searching installed plug-ins...\n";
+	*os << "Searching installed Plug-ins...\n";
 	os->flush ();
 
 	auto paths = VST3::Hosting::Module::getModulePaths ();
 	if (paths.empty ())
 	{
-		*os << "No plug-ins found.\n";
+		*os << "No Plug-ins found.\n";
 		return;
 	}
 	for (const auto& path : paths)
@@ -101,11 +101,11 @@ void printAllSnapshots (std::ostream* os)
 {
 	if (!os)
 		return;
-	*os << "Searching installed plug-ins...\n";
+	*os << "Searching installed Plug-ins...\n";
 	auto paths = VST3::Hosting::Module::getModulePaths ();
 	if (paths.empty ())
 	{
-		*os << "No plug-ins found.\n";
+		*os << "No Plug-ins found.\n";
 		return;
 	}
 	for (const auto& path : paths)
@@ -139,7 +139,7 @@ void printFactoryInfo (const VST3::Hosting::PluginFactory& factory, std::ostream
 		    << "\n\turl = " << factoryInfo.url () << "\n\temail = " << factoryInfo.email ()
 		    << "\n\n";
 
-		//---print all included Plug-ins---------------
+		//---print all included plug-ins---------------
 		uint32 i = 0;
 		for (auto& classInfo : factory.classInfos ())
 		{
@@ -212,6 +212,7 @@ constexpr auto optQuiet = "q";
 constexpr auto optTestComponentPath = "test-component";
 constexpr auto optListInstalledPlugIns = "list";
 constexpr auto optListPlugInSnapshots = "snapshots";
+constexpr auto optCID = "cid";
 
 //------------------------------------------------------------------------
 } // anonymous
@@ -315,6 +316,7 @@ int Validator::run ()
 	     {optSuiteName, "[name] Only run a special test suite", Description::kString},
 	     {optExtensiveTests, "Run extensive tests [may take a long time]", Description::kBool},
 	     {optQuiet, "Only print errors", Description::kBool},
+	     {optCID, "Only test processor with specified class ID", Description::kString},
 	     {optTestComponentPath,
 	      "[path] Path to an additional component which includes custom tests",
 	      Description::kString},
@@ -353,7 +355,9 @@ int Validator::run ()
 		infoStream = nullptr;
 	if (valueMap.count (optSuiteName))
 		testSuiteName = valueMap[optSuiteName];
-
+	VST3::Optional<VST3::UID> testProcessor;
+	if (valueMap.count (optCID))
+		testProcessor = VST3::UID::fromString (valueMap[optCID]);
 	std::string customTestComponentPath;
 	if (valueMap.count (optTestComponentPath))
 		customTestComponentPath = valueMap[optTestComponentPath];
@@ -400,8 +404,8 @@ int Validator::run ()
 			return -1;
 		}
 
-		testModule (module,
-		            {useGlobalInstance, useExtensiveTests, customTestComponentPath, testSuiteName});
+		testModule (module, {useGlobalInstance, useExtensiveTests, customTestComponentPath,
+		                     testSuiteName, std::move (testProcessor)});
 
 		if (numTestsFailed > 0)
 			globalFailure = true;
@@ -436,18 +440,21 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 	{
 		if (filterClassCategory (kVstAudioEffectClass, classInfo.category ().data ()))
 		{
-			auto plugProvider =
-			    owned (new PlugProvider (factory, classInfo, config.useGlobalInstance));
-			if (plugProvider)
+			if (!config.testProcessor || *config.testProcessor == classInfo.ID ())
 			{
-				auto tests =
-				    createTests (plugProvider, classInfo.name ().data (), config.useExtensiveTests);
-				testSuite->addTestSuite (classInfo.name ().data (), tests);
-				plugProviders.emplace_back (plugProvider);
+				auto plugProvider =
+				    owned (new PlugProvider (factory, classInfo, config.useGlobalInstance));
+				if (plugProvider)
+				{
+					auto tests = createTests (plugProvider, classInfo.name ().data (),
+					                          config.useExtensiveTests);
+					testSuite->addTestSuite (classInfo.name ().data (), tests);
+					plugProviders.emplace_back (plugProvider);
+				}
 			}
 		}
 		else if (filterClassCategory (kTestClass, classInfo.category ().data ()))
-		{ // gather test factories supplied by the Plug-in
+		{ // gather test factories supplied by the plug-in
 			if (auto testFactory = factory.createInstance<ITestFactory> (classInfo.ID ()))
 			{
 				testFactories.insert (std::make_pair (classInfo.name ().data (), testFactory));
@@ -466,7 +473,7 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 			for (const auto& classInfo : _factory.classInfos ())
 			{
 				if (filterClassCategory (kTestClass, classInfo.category ().data ()))
-				{ // gather test factories supplied by the Plug-in
+				{ // gather test factories supplied by the plug-in
 					if (auto testFactory = _factory.createInstance<ITestFactory> (classInfo.ID ()))
 					{
 						testFactories.insert (
@@ -483,7 +490,7 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 	}
 	if (infoStream && !testFactories.empty ())
 		*infoStream << "* Creating Plug-in supplied tests...\n\n";
-	// create Plug-in supplied tests
+	// create plug-in supplied tests
 	for (const auto& item : testFactories)
 	{
 		for (const auto& plugProvider : plugProviders)
@@ -623,6 +630,7 @@ IPtr<TestSuite> Validator::createTests (ITestPlugProvider* plugProvider,
 
 	createTest<NoteExpressionTest> (generalTests, plugProvider);
 	createTest<KeyswitchTest> (generalTests, plugProvider);
+	createTest<ProcessContextRequirementsTest> (generalTests, plugProvider);
 
 	plugTestSuite->addTestSuite (generalTests->getName ().data (), generalTests);
 

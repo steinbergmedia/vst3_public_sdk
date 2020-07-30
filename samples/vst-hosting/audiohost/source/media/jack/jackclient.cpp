@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -99,7 +99,7 @@ private:
 	using BufferPointers = std::vector<jack_default_audio_sample_t*>;
 	BufferPointers audioOutputPointers;
 	BufferPointers audioInputPointers;
-	IAudioClient::Buffers buffers {0};
+	IAudioClient::Buffers buffers {nullptr};
 };
 
 //------------------------------------------------------------------------
@@ -110,6 +110,7 @@ int jack_on_process (jack_nframes_t nframes, void* arg)
 	return client->process (nframes);
 }
 
+//------------------------------------------------------------------------
 int jack_on_set_sample_rate (jack_nframes_t nframes, void* arg)
 {
 	auto client = reinterpret_cast<IAudioClient*> (arg);
@@ -117,6 +118,7 @@ int jack_on_set_sample_rate (jack_nframes_t nframes, void* arg)
 	return kJackSuccess;
 }
 
+//------------------------------------------------------------------------
 int jack_on_set_block_size (jack_nframes_t nframes, void* arg)
 {
 	auto client = reinterpret_cast<IAudioClient*> (arg);
@@ -135,7 +137,7 @@ IMediaServerPtr createMediaServer (const AudioClientName& name)
 //------------------------------------------------------------------------
 JackClient::~JackClient ()
 {
-	//! We don't need to "unregister" ports. It is done automatically with "jack_client_close"
+	//! We do not need to "unregister" ports. It is done automatically with "jack_client_close"
 	jack_deactivate (jackClient); // Stops calls of process
 	jack_client_close (jackClient); // Remove client from process graph and remove all ports
 }
@@ -230,8 +232,10 @@ int JackClient::process (jack_nframes_t nframes)
 	if (!audioClient)
 		return 0;
 
-	bool bRes = audioClient->process (buffers, jack_last_frame_time (jackClient));
-	assert (bRes);
+	if (audioClient->process (buffers, jack_last_frame_time (jackClient)) == false)
+	{
+		assert (false);
+	}
 
 	return kJackSuccess;
 }
@@ -310,7 +314,8 @@ int JackClient::processMidi (jack_nframes_t nframes)
 	static const uint8_t kStatusMask = 0xF0;
 	static const uint32_t kDataMask = 0x7F;
 
-	for (int portIndex = 0; portIndex < midiInputPorts.size (); ++portIndex)
+	for (int32_t portIndex = 0, count = static_cast<int32_t> (midiInputPorts.size ());
+	     portIndex < count; ++portIndex)
 	{
 		auto midiInputPort = midiInputPorts.at (portIndex);
 		auto* portBuffer = jack_port_get_buffer (midiInputPort, nframes);

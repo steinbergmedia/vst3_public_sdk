@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -111,6 +111,7 @@ public:
 	bool PLUGIN_API run (ITestResult* /*testResult*/) SMTG_OVERRIDE = 0;
 	bool PLUGIN_API teardown () SMTG_OVERRIDE;
 
+	virtual bool activateMainIOBusses (bool val);
 	virtual void printTestHeader (ITestResult* testResult);
 //------------------------------------------------------------------------
 protected:

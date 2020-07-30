@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -88,8 +88,8 @@ public:
 
 	//--- ---------------------------------------------------------------------
 	// VST 2 AudioEffectX overrides -----------------------------------------------
-	void suspend () SMTG_OVERRIDE; // Called when Plug-in is switched to off
-	void resume () SMTG_OVERRIDE; // Called when Plug-in is switched to on
+	void suspend () SMTG_OVERRIDE; // Called when plug-in is switched to off
+	void resume () SMTG_OVERRIDE; // Called when plug-in is switched to on
 	VstInt32 startProcess () SMTG_OVERRIDE;
 	VstInt32 stopProcess () SMTG_OVERRIDE;
 

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,6 +38,7 @@
 #pragma once
 
 #include "public.sdk/source/vst/testsuite/processing/process.h"
+#include <vector>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -56,7 +57,6 @@ public:
 	                int32 numParams, bool sampleAccuracy);
 	~AutomationTest () override;
 
-	DECLARE_FUNKNOWN_METHODS
 	const char* getName () const SMTG_OVERRIDE;
 	// ITest
 	bool PLUGIN_API setup () SMTG_OVERRIDE;
@@ -68,13 +68,18 @@ public:
 	IParamValueQueue* PLUGIN_API getParameterData (int32 index) SMTG_OVERRIDE;
 	IParamValueQueue* PLUGIN_API addParameterData (const ParamID& id, int32& index) SMTG_OVERRIDE;
 
+	// FUnknown
+	DELEGATE_REFCOUNT (ProcessTest)
+	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override;
+
 //------------------------------------------------------------------------
 protected:
 	bool preProcess (ITestResult* testResult) SMTG_OVERRIDE;
 	bool postProcess (ITestResult* testResult) SMTG_OVERRIDE;
 	ParamID bypassId;
 
-	ParamChanges* paramChanges;
+	using ParamChangeVector = std::vector<IPtr<ParamChanges>>;
+	ParamChangeVector paramChanges;
 	int32 countParamChanges;
 	int32 everyNSamples;
 	int32 numParams;

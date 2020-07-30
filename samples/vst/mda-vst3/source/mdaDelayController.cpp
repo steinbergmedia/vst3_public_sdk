@@ -24,8 +24,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID DelayController::uid (0x5653456D, 0x6461796D, 0x64612064, 0x656C6179);
+#else
 //-----------------------------------------------------------------------------
 FUID DelayController::uid (0xF9AB9778, 0xEF1943F2, 0x86F911A3, 0x50C7AACB);
+#endif
 
 //-----------------------------------------------------------------------------
 DelayController::DelayController ()

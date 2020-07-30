@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID SplitterProcessor::uid (0x5653546D, 0x6461376D, 0x64612073, 0x706C6974);
+#else
 //-----------------------------------------------------------------------------
 FUID SplitterProcessor::uid (0xEB4D7879, 0x67114968, 0xB8E865FB, 0xFC508DB9);
+#endif
 
 //-----------------------------------------------------------------------------
 SplitterProcessor::SplitterProcessor ()

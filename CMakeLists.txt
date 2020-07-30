@@ -5,6 +5,8 @@ project(smtg_public_sdk)
 
 add_library(sdk STATIC 
     source/common/commoniids.cpp
+    source/common/openurl.cpp
+    source/common/openurl.h
     source/common/pluginview.cpp
     source/common/pluginview.h
     source/common/threadchecker_linux.cpp
@@ -29,7 +31,10 @@ endif()
 # Additional sources for VST3 SDK usage
 if(VST_SDK)
     target_sources(sdk PRIVATE
+        source/vst/utility/processcontextrequirements.h
         source/vst/utility/ringbuffer.h
+        source/vst/utility/vst2persistence.h
+        source/vst/utility/vst2persistence.cpp
         source/vst/vstaudioeffect.cpp
         source/vst/vstaudioeffect.h
         source/vst/vstbus.cpp
@@ -42,6 +47,7 @@ if(VST_SDK)
         source/vst/vsteditcontroller.cpp
         source/vst/vsteditcontroller.h
         source/vst/vsteventshelper.h
+        source/vst/vsthelpers.h
         source/vst/vstinitiids.cpp
         source/vst/vstnoteexpressiontypes.cpp
         source/vst/vstnoteexpressiontypes.h

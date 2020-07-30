@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -217,7 +217,7 @@ tresult PLUGIN_API SingleComponentEffect::getBusArrangement (BusDirection dir, i
 	if (busList == nullptr || busIndex >= static_cast<int32> (busList->size ()))
 		return kInvalidArgument;
 
-	AudioBus* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex));
+	auto* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex));
 	if (audioBus)
 	{
 		arr = audioBus->getArrangement ();
@@ -262,6 +262,7 @@ tresult PLUGIN_API SingleComponentEffect::queryInterface (const TUID iid, void**
 	}
 	DEF_INTERFACE (IComponent)
 	DEF_INTERFACE (IAudioProcessor)
+	DEF_INTERFACE (IProcessContextRequirements)
 	return EditControllerEx1::queryInterface (iid, obj);
 }
 

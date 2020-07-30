@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -56,6 +56,8 @@
 // Version without build number (example "1.0.3")
 #define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
+#define stringPluginName		"VST3 Host Checker"
+
 #define stringOriginalFilename	"HostChecker.vst3"
 #if SMTG_PLATFORM_64
 #define stringFileDescription	"HostChecker VST3-SDK (64Bit)"
@@ -63,5 +65,5 @@
 #define stringFileDescription	"HostChecker VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2019 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

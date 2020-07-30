@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -55,7 +55,9 @@ class AGainUIMessageController;
 //------------------------------------------------------------------------
 // AGain as combined processor and controller
 //------------------------------------------------------------------------
-class AGainSimple : public SingleComponentEffect, public VSTGUI::VST3EditorDelegate
+class AGainSimple : public SingleComponentEffect,
+                    public VSTGUI::VST3EditorDelegate,
+                    public IMidiMapping
 {
 public:
 //------------------------------------------------------------------------
@@ -69,6 +71,7 @@ public:
 
 	static FUnknown* createInstance (void* context) { return (IAudioProcessor*)new AGainSimple; }
 
+	//---from IComponent-----------------------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
@@ -81,6 +84,7 @@ public:
 	                                       SpeakerArrangement* outputs,
 	                                       int32 numOuts) SMTG_OVERRIDE;
 
+	//---from IEditController-------
 	IPlugView* PLUGIN_API createView (const char* name) SMTG_OVERRIDE;
 	tresult PLUGIN_API setEditorState (IBStream* state) SMTG_OVERRIDE;
 	tresult PLUGIN_API getEditorState (IBStream* state) SMTG_OVERRIDE;
@@ -90,9 +94,19 @@ public:
 	tresult PLUGIN_API getParamValueByString (ParamID tag, TChar* string,
 	                                          ParamValue& valueNormalized) SMTG_OVERRIDE;
 
+	//---from IMidiMapping-----------------
+	tresult PLUGIN_API getMidiControllerAssignment (int32 busIndex, int16 channel,
+	                                                CtrlNumber midiControllerNumber,
+	                                                ParamID& tag) SMTG_OVERRIDE;
+
 	//---from VST3EditorDelegate-----------
 	IController* createSubController (UTF8StringPtr name, const IUIDescription* description,
 	                                  VST3Editor* editor) SMTG_OVERRIDE;
+
+	//---Interface---------
+	OBJ_METHODS (AGainSimple, SingleComponentEffect)
+	tresult PLUGIN_API queryInterface (const TUID iid, void** obj) SMTG_OVERRIDE;
+	REFCOUNT_METHODS (SingleComponentEffect)
 
 	//---Internal functions-------
 	void addUIMessageController (UIMessageController* controller);
@@ -108,7 +122,7 @@ public:
 	{
 		SampleType vuPPM = 0;
 
-		// in real Plug-in it would be better to do dezippering to avoid jump (click) in gain value
+		// in real plug-in it would be better to do dezippering to avoid jump (click) in gain value
 		for (int32 i = 0; i < numChannels; i++)
 		{
 			int32 samples = sampleFrames;

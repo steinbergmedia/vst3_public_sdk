@@ -5,12 +5,12 @@
 // Filename    : public.sdk/samples/vst/again/source/again.h
 // Created by  : Steinberg, 04/2005
 // Description : AGain Example for VST SDK 3.0
-//               Simple gain Plug-in with gain, bypass values and 1 midi input
-//               and the same Plug-in with sidechain 
+//               Simple gain plug-in with gain, bypass values and 1 midi input
+//               and the same plug-in with sidechain 
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -53,8 +53,8 @@ public:
 	virtual ~AGain (); // do not forget virtual here
 
 	//--- ---------------------------------------------------------------------
-	// create function required for Plug-in factory,
-	// it will be called to create new instances of this Plug-in
+	// create function required for plug-in factory,
+	// it will be called to create new instances of this plug-in
 	//--- ---------------------------------------------------------------------
 	static FUnknown* createInstance (void* /*context*/) { return (IAudioProcessor*)new AGain; }
 
@@ -67,7 +67,7 @@ public:
 	/** Called at the end before destructor */
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
-	/** Switch the Plug-in on/off */
+	/** Switch the plug-in on/off */
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
 
 	/** Here we go...the process call */

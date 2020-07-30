@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,24 +44,31 @@ namespace Vst {
 //------------------------------------------------------------------------
 // AutomationTest
 //------------------------------------------------------------------------
-IMPLEMENT_FUNKNOWN_METHODS (AutomationTest, IParameterChanges, IParameterChanges::iid)
 
 //------------------------------------------------------------------------
 AutomationTest::AutomationTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl,
                                 int32 everyNSamples, int32 numParams, bool sampleAccuracy)
 : ProcessTest (plugProvider, sampl)
 , bypassId (kNoParamId)
-, paramChanges (nullptr)
 , countParamChanges (0)
 , everyNSamples (everyNSamples)
 , numParams (numParams)
 , sampleAccuracy (sampleAccuracy)
-, onceExecuted (false) {FUNKNOWN_CTOR}
+, onceExecuted (false)
+{
+}
 
 //------------------------------------------------------------------------
 AutomationTest::~AutomationTest ()
 {
-	FUNKNOWN_DTOR
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API AutomationTest::queryInterface (const TUID _iid, void** obj)
+{
+	QUERY_INTERFACE (_iid, obj, FUnknown::iid, IParameterChanges);
+	QUERY_INTERFACE (_iid, obj, Vst::IParameterChanges::iid, IParameterChanges);
+	return ProcessTest::queryInterface (_iid, obj);
 }
 
 //------------------------------------------------------------------------
@@ -100,7 +107,7 @@ bool AutomationTest::setup ()
 		numParams = controller->getParameterCount ();
 	if (audioEffect && (numParams > 0))
 	{
-		paramChanges = new ParamChanges[numParams];
+		paramChanges.push_back (owned (new ParamChanges));
 		ParameterInfo inf = {};
 		for (int32 i = 0; i < numParams; ++i)
 		{
@@ -108,7 +115,7 @@ bool AutomationTest::setup ()
 			if (r != kResultTrue)
 				return false;
 			if ((inf.flags & inf.kCanAutomate) != 0)
-				paramChanges[i].init (inf.id, processSetup.maxSamplesPerBlock);
+				paramChanges[i]->init (inf.id, processSetup.maxSamplesPerBlock);
 		}
 
 		for (int32 i = 0; i < controller->getParameterCount (); ++i)
@@ -144,11 +151,7 @@ bool AutomationTest::run (ITestResult* testResult)
 //------------------------------------------------------------------------
 bool AutomationTest::teardown ()
 {
-	if (paramChanges)
-	{
-		delete[] paramChanges;
-		paramChanges = nullptr;
-	}
+	paramChanges.clear ();
 	return ProcessTest::teardown ();
 }
 
@@ -157,12 +160,12 @@ bool AutomationTest::preProcess (ITestResult* testResult)
 {
 	if (!testResult)
 		return false;
-	if (!paramChanges)
+	if (paramChanges.empty ())
 		return numParams == 0;
 	bool check = true;
 	for (int32 i = 0; i < numParams; ++i)
 	{
-		paramChanges[i].resetPoints ();
+		paramChanges[i]->resetPoints ();
 		int32 point = 0;
 		for (int32 pos = 0; pos < processData.numSamples; pos++)
 		{
@@ -182,8 +185,8 @@ bool AutomationTest::preProcess (ITestResult* testResult)
 				}
 			}
 			if (add)
-				check &= paramChanges[i].setPoint (point++, pos,
-				                                   ((float)(rand () % 1000000000)) / 1000000000.0);
+				check &= paramChanges[i]->setPoint (point++, pos,
+				                                    ((float)(rand () % 1000000000)) / 1000000000.0);
 		}
 		if (check)
 			processData.inputParameterChanges = this;
@@ -196,13 +199,13 @@ bool AutomationTest::postProcess (ITestResult* testResult)
 {
 	if (!testResult)
 		return false;
-	if (!paramChanges)
+	if (paramChanges.empty ())
 		return numParams == 0;
 
 	for (int32 i = 0; i < numParams; ++i)
 	{
-		if ((paramChanges[i].getPointCount () > 0) &&
-		    !paramChanges[i].havePointsBeenRead (!sampleAccuracy))
+		if ((paramChanges[i]->getPointCount () > 0) &&
+		    !paramChanges[i]->havePointsBeenRead (!sampleAccuracy))
 		{
 			if (sampleAccuracy)
 				addMessage (testResult,
@@ -220,16 +223,16 @@ bool AutomationTest::postProcess (ITestResult* testResult)
 //------------------------------------------------------------------------
 int32 AutomationTest::getParameterCount ()
 {
-	if (paramChanges)
+	if (paramChanges.empty ())
 		return numParams;
-	return 0;
+	return static_cast<int32> (paramChanges.size ());
 }
 
 //------------------------------------------------------------------------
 IParamValueQueue* AutomationTest::getParameterData (int32 index)
 {
-	if (paramChanges && (index >= 0) && (index < getParameterCount ()))
-		return &paramChanges[index];
+	if ((index >= 0) && (index < getParameterCount ()))
+		return paramChanges[index];
 	return nullptr;
 }
 
@@ -335,11 +338,7 @@ bool FlushParamTest2::teardown ()
 FlushParamTest3::FlushParamTest3 (ITestPlugProvider* plugProvider, ProcessSampleSize sampl)
 : FlushParamTest (plugProvider, sampl)
 {
-	if (paramChanges)
-	{
-		delete[] paramChanges;
-	}
-	paramChanges = nullptr;
+	paramChanges.clear ();
 }
 
 //------------------------------------------------------------------------

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -79,7 +79,8 @@ bool PLUGIN_API ProcessTailTest::setup ()
 
 		StringResult subCat;
 		plugProvider->getSubCategories (subCat);
-		if (subCat.get ().find ("Generator") >= 0 || subCat.get ().find ("Instrument") >= 0)
+		if (subCat.get ().find ("Generator") != std::string::npos ||
+		    subCat.get ().find ("Instrument") != std::string::npos)
 		{
 			mDontTest = true;
 		}

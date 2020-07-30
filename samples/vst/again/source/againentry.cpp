@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -84,14 +84,14 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 			   "http://www.steinberg.net", 
 			   "mailto:info@steinberg.de")
 
-	//---First Plug-in included in this factory-------
+	//---First plug-in included in this factory-------
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(AGainProcessorUID),
 				PClassInfo::kManyInstances,	// cardinality
 				kVstAudioEffectClass,	// the component category (do not changed this)
-				stringPluginName,		// here the Plug-in name (to be changed)
+				stringPluginName,		// here the plug-in name (to be changed)
 				Vst::kDistributable,	// means that component and controller could be distributed on different computers
-				AGainVST3Category,		// Subcategory for this Plug-in (to be changed)
+				AGainVST3Category,		// Subcategory for this plug-in (to be changed)
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
 				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
 				Steinberg::Vst::AGain::createInstance)	// function pointer called when this component should be instantiated
@@ -107,17 +107,17 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
 				Steinberg::Vst::AGainController::createInstance)// function pointer called when this component should be instantiated
 
-	//---Second Plug-in (AGain with sidechain (only component, use the same controller) included in this factory-------
+	//---Second plug-in (AGain with sidechain (only component, use the same controller) included in this factory-------
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(AGainWithSideChainProcessorUID),
 				PClassInfo::kManyInstances,	// cardinality
 				kVstAudioEffectClass,		// the component category (do not changed this)
-				stringPluginSideChainName,	// here the Plug-in name (to be changed)
+				stringPluginSideChainName,	// here the plug-in name (to be changed)
 				Vst::kDistributable,	// means that component and controller could be distributed on different computers
-				AGainVST3Category,		// Subcategory for this Plug-in (to be changed)
+				AGainVST3Category,		// Subcategory for this plug-in (to be changed)
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
 				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
 				Steinberg::Vst::AGainWithSideChain::createInstance)	// function pointer called when this component should be instantiated
 	
-	//----for others Plug-ins contained in this factory, put like for the first Plug-in different DEF_CLASS2---
+	//----for others plug-ins contained in this factory, put like for the first plug-in different DEF_CLASS2---
 
 END_FACTORY

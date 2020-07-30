@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,7 +42,7 @@
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include "base/source/fstreamer.h"
 
 namespace Steinberg {
@@ -139,7 +139,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 
 		int32 sampleFrames = data.numSamples;
 
-		// the Plug-in has to be sure that if it sets the flags silence that the output buffer are
+		// the plug-in has to be sure that if it sets the flags silence that the output buffer are
 		// clear
 		for (int32 i = 0; i < numChannels; i++)
 		{

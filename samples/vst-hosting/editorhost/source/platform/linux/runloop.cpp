@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -111,7 +111,7 @@ void RunLoop::select (timeval* timeout)
 		for (auto& e : fileDescriptors)
 		{
 			if (FD_ISSET (e.first, &readFDs) || FD_ISSET (e.first, &writeFDs) ||
-				FD_ISSET (e.first, &exceptFDs))
+			    FD_ISSET (e.first, &exceptFDs))
 				e.second (e.first);
 		}
 	}
@@ -253,7 +253,7 @@ void TimerProcessor::updateTimerNextFireTime (Timer& timer, TimePoint current)
 void TimerProcessor::sortTimers ()
 {
 	std::sort (timers.begin (), timers.end (),
-			   [] (const Timer& t1, const Timer& t2) { return t1.nextFireTime < t2.nextFireTime; });
+	           [] (const Timer& t1, const Timer& t2) { return t1.nextFireTime < t2.nextFireTime; });
 }
 
 //------------------------------------------------------------------------
@@ -266,7 +266,7 @@ auto TimerProcessor::now () -> TimePoint
 
 //------------------------------------------------------------------------
 auto TimerProcessor::registerTimer (TimerInterval interval, const TimerCallback& callback)
-	-> TimerID
+    -> TimerID
 {
 	auto timerId = ++timerIdCounter;
 	Timer timer;

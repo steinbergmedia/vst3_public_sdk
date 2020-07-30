@@ -4,12 +4,12 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/adelay/source/version.h
 // Created by  : Steinberg, 06/2009
-// Description : Example of handle the versionning and copyright info of adelay plugin 
+// Description : Example of handle the versioning and copyright info of adelay plugin 
 //				 used for the resources (RC file for example)
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -64,5 +64,5 @@
 #define stringFileDescription	"ADelay VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2019 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

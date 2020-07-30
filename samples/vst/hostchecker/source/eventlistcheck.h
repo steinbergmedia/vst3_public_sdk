@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -62,7 +62,7 @@ public:
 	EventListCheck ();
 
 	static const Steinberg::int32 kMaxEvents = 2048;
-	typedef std::set<Steinberg::int32> Notes;
+	using Notes = std::set<Steinberg::int32>;
 
 	void check (Steinberg::Vst::IEventList* events);
 	void setComponent (Steinberg::Vst::IComponent* component) { mComponent = component; }

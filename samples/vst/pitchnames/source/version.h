@@ -4,12 +4,12 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/pitchnames/source/version.h
 // Created by  : Steinberg, 12/2010
-// Description : Example of handle the versionning and copyright info of pitchnames Plug-in 
+// Description : Example of handle the versioning and copyright info of pitchnames plug-in 
 //				 used for the resources (RC file for example)
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -62,5 +62,5 @@
 #define stringFileDescription	"PitchNames VST3-SDK"
 #endif
 #define stringCompanyName		"Steinberg Media Technologies\0"
-#define stringLegalCopyright	"© 2019 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2020 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

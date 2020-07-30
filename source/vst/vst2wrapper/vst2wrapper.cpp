@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -1944,7 +1944,7 @@ extern "C" {
 //-----------------------------------------------------------------------------
 VST_EXPORT AEffect* VSTPluginMain (audioMasterCallback audioMaster)
 {
-	// Get VST Version of the Host
+	// Get VST Version of the host
 	if (!audioMaster (nullptr, audioMasterVersion, 0, 0, nullptr, 0))
 		return nullptr; // old version
 

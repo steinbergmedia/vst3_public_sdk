@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID DetuneController::uid (0x5653456D, 0x6461746D, 0x64612064, 0x6574756E);
+#else
 //-----------------------------------------------------------------------------
 FUID DetuneController::uid (0xCE5E213E, 0xE1B74D02, 0x92FF66C6, 0x3DCF27C8);
+#endif
 
 //-----------------------------------------------------------------------------
 DetuneController::DetuneController ()

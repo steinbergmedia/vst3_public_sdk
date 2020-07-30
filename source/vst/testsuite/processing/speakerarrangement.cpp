@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -144,6 +144,14 @@ bool SpeakerArrangementTest::prepareProcessing ()
 
 	if (audioEffect->setBusArrangements (inSpArrs, is, outSpArrs, os) != kResultTrue)
 		ret = false;
+
+	// activate only the extra IO (index > 0), the main ones (index 0) were already activated in
+	// TestBase::setup ()
+	for (int32 i = 1; i < is; i++)
+		vstPlug->activateBus (kAudio, kInput, i, true);
+
+	for (int32 i = 1; i < os; i++)
+		vstPlug->activateBus (kAudio, kOutput, i, true);
 
 	ret &= ProcessTest::prepareProcessing ();
 

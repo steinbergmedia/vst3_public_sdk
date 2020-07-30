@@ -5,12 +5,12 @@
 // Filename    : public.sdk/samples/vst/again/source/againsidechain.h
 // Created by  : Steinberg, 04/2016
 // Description : AGain Example for VST SDK 3.0
-//               Simple gain Plug-in with gain, bypass values and 1 midi input
+//               Simple gain plug-in with gain, bypass values and 1 midi input
 //               and a sidechain
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

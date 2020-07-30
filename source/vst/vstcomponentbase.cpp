@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -115,8 +115,7 @@ tresult PLUGIN_API ComponentBase::notify (IMessage* message)
 	if (FIDStringsEqual (message->getMessageID (), "TextMessage"))
 	{
 		TChar string[256] = {0};
-		if (message->getAttributes ()->getString ("Text", string,
-		                                          sizeof (string) / sizeof (char16)) == kResultOk)
+		if (message->getAttributes ()->getString ("Text", string, sizeof (string)) == kResultOk)
 		{
 			String tmp (string);
 			tmp.toMultiByte (kCP_Utf8);
@@ -128,7 +127,7 @@ tresult PLUGIN_API ComponentBase::notify (IMessage* message)
 }
 
 //------------------------------------------------------------------------
-IMessage* ComponentBase::allocateMessage ()
+IMessage* ComponentBase::allocateMessage () const
 {
 	FUnknownPtr<IHostApplication> hostApp (hostContext);
 	if (hostApp)
@@ -137,7 +136,7 @@ IMessage* ComponentBase::allocateMessage ()
 }
 
 //------------------------------------------------------------------------
-tresult ComponentBase::sendMessage (IMessage* message)
+tresult ComponentBase::sendMessage (IMessage* message) const
 {
 	if (message != nullptr && getPeer () != nullptr)
 		return getPeer ()->notify (message);
@@ -145,7 +144,7 @@ tresult ComponentBase::sendMessage (IMessage* message)
 }
 
 //------------------------------------------------------------------------
-tresult ComponentBase::sendTextMessage (const char8* text)
+tresult ComponentBase::sendTextMessage (const char8* text) const
 {
 	IMessage* message = allocateMessage ();
 	if (!message)

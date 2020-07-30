@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,21 +35,22 @@
 //-----------------------------------------------------------------------------
 
 /**
-
 *******************************************
 \page AUWrapper VST 3 - Audio Unit Wrapper
 *******************************************
+\tableofcontents
 
-Helper Class wrapping a <b>VST 3 Plug-in</b> to a Audio Unit v2 Plug-in
+\brief
+Helper Class wrapping a <b>VST 3 plug-in</b> to a Audio Unit v2 plug-in
 
 ***************************
 \section AUIntroduction Introduction
 ***************************
 The VST 3 SDK comes with an AudioUnit wrapper, which can wrap one VST 3 Audio Processor and Edit Controller as an AudioUnit effect/instrument.
 
-The wrapper is a small dynamic library which loads the <b>VST 3 Plug-in</b>.
-As AudioUnits store some important information in their resource fork, this library must be compiled for every <b>VST 3 Plug-in</b>.
-\n\n
+The wrapper is a small dynamic library which loads the <b>VST 3 plug-in</b>.
+As AudioUnits store some important information in their resource fork, this library must be compiled for every <b>VST 3 plug-in</b>.
+\n
 
 ***************************
 \section AUhowdoesitwork How does it work?
@@ -60,7 +61,7 @@ As AudioUnits store some important information in their resource fork, this libr
 - edit the target settings of the project and change
 	- Product Name
 	- Library search path so that it points to the directory where libauwrapper.a exists
-	- architecture setting so that it only includes architectures the <b>VST 3 Plug-in</b> supports
+	- architecture setting so that it only includes architectures the <b>VST 3 plug-in</b> supports
 
 - search in the project for AUWRAPPER_CHANGE and change the settings to your needs, especially in :
 	- edit audiounitconfig.h see comments there
@@ -69,6 +70,6 @@ As AudioUnits store some important information in their resource fork, this libr
 - build your project
 - done... that is all!
 
-For the release version, you must place a copy or an alias of your <b>VST 3 Plug-in</b> in the resource folder of the bundle named "plugin.vst3"
+For the release version, you must place a copy or an alias of your <b>VST 3 plug-in</b> in the resource folder of the bundle named "plugin.vst3"
 
 */

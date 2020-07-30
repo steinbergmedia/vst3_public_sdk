@@ -18,6 +18,7 @@
 #include "mdaParameter.h"
 #include "helpers.h"
 #include "pluginterfaces/base/ibstream.h"
+#include "public.sdk/source/vst/utility/vst2persistence.h"
 #include "base/source/fstreamer.h"
 
 namespace Steinberg {
@@ -118,6 +119,31 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	if (auto vst2State = VST3::tryVst2StateLoad (*state))
+	{
+		if (vst2State->programs.empty ())
+			return kResultFalse;
+		auto& currentProgram = vst2State->programs[vst2State->currentProgram];
+		if (auto bypassParam = parameters.getParameter (kBypassParam))
+			bypassParam->setNormalized (vst2State->isBypassed ? 1. : 0.);
+		if (auto param = parameters.getParameter (kPresetParam))
+			param->setNormalized (param->toNormalized (vst2State->currentProgram));
+		auto numStateParams = static_cast<int32> (currentProgram.values.size ());
+		auto numParams = parameters.getParameterCount ();
+		for (auto index = 0; index < numParams && index < numStateParams; ++index)
+		{
+			if (auto param = parameters.getParameter (index))
+			{
+				param->setNormalized (currentProgram.values[index]);
+			}
+		}
+		return kResultTrue;
+	}
+
+	return kResultFalse;
+#else
+
 	IBStreamer streamer (state, kLittleEndian);
 
 	uint32 temp;
@@ -154,6 +180,7 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 		bypassParam->setNormalized (bypassState);
 
 	return kResultTrue;
+#endif
 }
 
 //------------------------------------------------------------------------

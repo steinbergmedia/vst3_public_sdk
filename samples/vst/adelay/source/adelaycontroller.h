@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -61,7 +61,7 @@ class ADelayController : public EditController, public IDelayTestController
 {
 public:
 //------------------------------------------------------------------------
-	// create function required for Plug-in factory,
+	// create function required for plug-in factory,
 	// it will be called to create new instances of this controller
 //------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new ADelayController (); }

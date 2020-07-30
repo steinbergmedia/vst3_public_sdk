@@ -20,8 +20,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID LoudnessController::uid (0x5653456D, 0x64616C6D, 0x6461206C, 0x6F75646E);
+#else
 //-----------------------------------------------------------------------------
 FUID LoudnessController::uid (0x9184DDF5, 0x6A2B4C5B, 0xA51BF670, 0x2A8B1BB0);
+#endif
 
 //-----------------------------------------------------------------------------
 LoudnessController::LoudnessController ()

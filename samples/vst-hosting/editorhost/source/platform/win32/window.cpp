@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "window.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
@@ -152,7 +152,7 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		case WM_ERASEBKGND:
 		{
-			return TRUE; // don't draw background
+			return TRUE; // do not draw background
 		}
 		case WM_PAINT:
 		{

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -100,3 +100,5 @@ struct AAX_Effect_Desc
 extern int AAXWrapper_linkAnchor;
 
 AAX_Effect_Desc* AAXWrapper_GetDescription (); // to be defined by the Plug-In
+
+/// \endcond

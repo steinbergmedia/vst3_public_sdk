@@ -1,7 +1,7 @@
 include(AddVST3AuV3)
 
 # iOS target
-if(SMTG_MAC AND SMTG_ADD_VSTGUI)
+if(SMTG_MAC)
     if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         
         set(auv3wrapperlib_sources
@@ -29,6 +29,9 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         add_library(${target} STATIC ${auv3wrapperlib_sources})
         set_target_properties(${target} PROPERTIES ${SDK_IDE_LIBS_FOLDER} XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES)
         target_link_libraries(${target} PRIVATE base sdk)
+        if (SMTG_AUV3_WRAPPER_EXTERNAL_PLUGIN_FACTORY)
+            target_compile_definitions(${target} PRIVATE SMTG_AUV3_WRAPPER_EXTERNAL_PLUGIN_FACTORY=1)
+        endif()
 
         #--------------------------------------------------------------------------------------------------------
         set(target auv3wrapperios)
@@ -37,7 +40,9 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         set_target_properties(${target} PROPERTIES LINK_FLAGS "-Wl,-F/Library/Frameworks")
         smtg_set_platform_ios(${target})
         target_link_libraries(${target} PRIVATE base_ios sdk_ios)
-
+        if (SMTG_AUV3_WRAPPER_EXTERNAL_PLUGIN_FACTORY)
+            target_compile_definitions(${target} PRIVATE SMTG_AUV3_WRAPPER_EXTERNAL_PLUGIN_FACTORY=1)
+        endif()
     else()
         message("* To enable building the AUv3 Wrapper example for iOS you need to set the SMTG_IOS_DEVELOPMENT_TEAM and use the Xcode generator")
     endif()

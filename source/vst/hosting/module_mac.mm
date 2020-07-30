@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -189,10 +189,17 @@ public:
 			if (auto bundleExit = getFunctionPointer<BundleExitFunc> ("bundleExit"))
 				bundleExit ();
 
+#if defined(MAC_OS_X_VERSION_10_11)
+			// workaround, because CFBundleCreate returns refcount == 2.
 			if (CFBundleIsExecutableLoaded ((CFBundleRef)bundle))
 			{
 				CFBundleUnloadExecutable ((CFBundleRef)bundle);
+				CFRelease ((CFBundleRef)bundle);
 			}
+#else
+			// CFBundleUnloadExecutable ((CFBundleRef)bundle); // CFRelease should do this
+			CFRelease ((CFBundleRef)bundle);
+#endif
 		}
 	}
 

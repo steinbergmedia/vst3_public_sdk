@@ -1,4 +1,5 @@
 //-----------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -8,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -72,7 +73,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 	tresult result = AudioEffect::initialize (context);
 	if (result == kResultOk)
 	{
-		if (mCurrentState != kUninitialized)
+		if (mCurrentState != State::kUninitialized)
 			addLogEvent (kLogIdInvalidStateInitializedMissing);
 
 		mCurrentState = State::kInitialized;
@@ -81,7 +82,17 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		addAudioInput (USTRING ("Aux Input 1"), SpeakerArr::kStereo, kAux, 0);
 		FUnknownPtr<IVst3ToAAXWrapper> AAXContext (context);
 		if (AAXContext == nullptr)
+		{
 			addAudioInput (USTRING ("Aux Input 2"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 3"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 4"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 5"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 6"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 7"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 8"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 9"), SpeakerArr::kMono, kAux, 0);
+			addAudioInput (USTRING ("Aux Input 10"), SpeakerArr::kMono, kAux, 0);
+		}
 
 		addAudioOutput (USTRING ("Audio Output"), SpeakerArr::kStereo);
 
@@ -105,6 +116,9 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IPrefetchableSupport::iid) ==
 		    kResultTrue)
 			addLogEvent (kLogIdIPrefetchableSupportSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IProcessContextRequirements::iid) ==
+		    kResultTrue)
+			addLogEvent (kLogIdIProcessContextRequirementsSupported);
 	}
 	return result;
 }
@@ -112,15 +126,15 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::terminate ()
 {
-	if (mCurrentState == kUninitialized)
+	if (mCurrentState == State::kUninitialized)
 	{
 		// redundance
 	}
-	else if (mCurrentState != kSetupDone)
+	else if (mCurrentState != State::kSetupDone)
 	{
 		// wrong state
 	}
-	mCurrentState = kUninitialized;
+	mCurrentState = State::kUninitialized;
 	return AudioEffect::terminate ();
 }
 
@@ -182,12 +196,31 @@ tresult PLUGIN_API HostCheckerProcessor::setAudioPresentationLatencySamples (
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerProcessor::getPrefetchableSupport (
-    PrefetchableSupport& prefetchable /*out*/)
+tresult PLUGIN_API HostCheckerProcessor::getPrefetchableSupport (PrefetchableSupport& prefetchable)
 {
 	addLogEvent (kLogIdIPrefetchableSupportSupported);
 	prefetchable = kIsYetPrefetchable;
 	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
+uint32 PLUGIN_API HostCheckerProcessor::getProcessContextRequirements ()
+{
+	addLogEvent (kLogIdIProcessContextRequirementsSupported);
+
+	processContextRequirements.needSystemTime ();
+	processContextRequirements.needContinousTimeSamples ();
+	processContextRequirements.needProjectTimeMusic ();
+	processContextRequirements.needBarPositionMusic ();
+	processContextRequirements.needCycleMusic ();
+	processContextRequirements.needSamplesToNextClock ();
+	processContextRequirements.needTempo ();
+	processContextRequirements.needTimeSignature ();
+	processContextRequirements.needChord ();
+	processContextRequirements.needFrameRate ();
+	processContextRequirements.needTransportState ();
+
+	return AudioEffect::getProcessContextRequirements ();
 }
 
 //-----------------------------------------------------------------------------
@@ -222,7 +255,11 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 	{
 		addLogEvent (kLogIdInvalidStateProcessingMissing);
 	}
-
+	if (mSetActiveCalled)
+	{
+		mSetActiveCalled = false;
+		addLogEvent (kLogIdSetActiveCalledSupported);
+	}
 	// flush parameters case
 	if (data.numInputs == 0 && data.numOutputs == 0)
 	{
@@ -292,13 +329,23 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 	}
 	else if (data.numSamples && data.numOutputs)
 	{
-		if (data.symbolicSampleSize == kSample32)
-			Algo::clear32 (data.outputs, data.numSamples);
-		else // kSample64
-			Algo::clear64 (data.outputs, data.numSamples);
+		if (data.numInputs > 0 && data.inputs[0].silenceFlags != 0)
+		{
+			addLogEvent (kLogIdSilentFlagsSupported);
+		}
+		if (data.numInputs > 1 && data.inputs[1].silenceFlags != 0)
+		{
+			addLogEvent (kLogIdSilentFlagsSCSupported);
+		}
 
+		// Generate output (peak at a given tempo) (overwrite the input)
 		if (mGeneratePeaks > 0 && data.processContext)
 		{
+			if (data.symbolicSampleSize == kSample32)
+				Algo::clear32 (data.outputs, data.numSamples);
+			else // kSample64
+				Algo::clear64 (data.outputs, data.numSamples);
+
 			float coef = mGeneratePeaks * mLastBlockMarkerValue;
 
 			float distance2BarPosition =
@@ -388,7 +435,24 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			});
 		}
 		else
-			data.outputs[0].silenceFlags = 0x3;
+		{
+			//---get audio buffers----------------
+			uint32 sampleFramesSize = getSampleFramesSizeInBytes (processSetup, data.numSamples);
+			void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
+			void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
+
+			for (int32 i = 0; i < data.outputs[0].numChannels && i < data.inputs[0].numChannels;
+			     i++)
+			{
+				// do not need to be copied if the buffers are the same
+				if (in[i] != out[i])
+				{
+					memcpy (out[i], in[i], sampleFramesSize);
+				}
+			}
+
+			data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
+		}
 	}
 
 	if (data.outputParameterChanges)
@@ -453,7 +517,7 @@ tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 	{
 		addLogEvent (kLogIdInvalidStateSetActiveWrong);
 	}
-	
+
 	if (!state)
 	{
 		// only possible previous State: kActivated
@@ -461,13 +525,15 @@ tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 		{
 			addLogEvent (kLogIdsetActiveFalseRedundant);
 		}
-	
+
 		mCurrentState = State::kSetupDone;
 		mBypassProcessorFloat.reset ();
 		mBypassProcessorDouble.reset ();
 	}
 	else
 	{
+		mSetActiveCalled = true;
+
 		// only possible previous State: kSetupDone
 		if (mCurrentState == State::kActivated)
 		{
@@ -560,7 +626,7 @@ tresult PLUGIN_API HostCheckerProcessor::activateBus (MediaType type, BusDirecti
 
 	if (type == kAudio && dir == kInput)
 	{
-		if (index < 0 || index > 2)
+		if (index < 0 || index >= static_cast<int32> (getBusList (kAudio, kInput)->size ()))
 			addLogEvent (kLogIdInvalidActivateAuxBus);
 		else if (index > 0)
 			addLogEvent (kLogIdActivateAuxBus);

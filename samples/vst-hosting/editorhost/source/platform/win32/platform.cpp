@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iplatform.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/win32/window.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 
 #include <Windows.h>
 #include <string>

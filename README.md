@@ -3,7 +3,7 @@
 Here are located:
 
 - helper classes implementing VST3 Interfaces
-- samples of VST3 hosting and VST3 Plug-Ins
+- samples of VST3 Hosting and VST3 Plug-Ins
 - AAX Wrapper
 - AU Wrapper
 - AUv3 Wrapper

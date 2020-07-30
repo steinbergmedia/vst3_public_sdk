@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -62,7 +62,8 @@ A virtual base class for a voice manager implementation.
 The idea behind this class is to make it easier to support either single precision or double precision samples (float or double) or different channel layouts.
 
 Example:
-\code
+\code{.cpp}
+//------------------------------------------------------------------------
 class MySynthProcessor : public AudioEffect
 {
 public:
@@ -129,7 +130,7 @@ protected:
 \param GlobalParameterStorage a class holding global parameters
 
 The VoiceClass must implement the following methods:
-\code
+\code{.cpp}
 int32 getNoteId () const;
 void setGlobalParameterStorage (GlobalParameterStorage* globalParameters);
 void setSampleRate (ParamValue sampleRate);
@@ -152,7 +153,7 @@ public:
 	VoiceProcessorImplementation (float sampleRate, GlobalParameterStorage* globalParameters = 0);
 	~VoiceProcessorImplementation ();
 
-	tresult process (ProcessData& data);
+	tresult process (ProcessData& data) override;
 
 protected:
 	VoiceClass* getVoice (int32 noteId);
@@ -317,7 +318,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 
 	IEventList* inputEvents = data.inputEvents;
 	Event e = {};
-	Event* eventPtr = 0;
+	Event* eventPtr = nullptr;
 	int32 eventIndex = 0;
 	int32 numEvents = inputEvents ? inputEvents->getEventCount () : 0;
 	
@@ -340,7 +341,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 	while (numSamples > 0)
 	{
 		int32 samplesToProcess = std::min<int32> (kBlockSize, numSamples);
-		while (eventPtr != 0)
+		while (eventPtr != nullptr)
 		{
 			// if the event is not in the current processing block then adapt offset for next block
 			if (e.sampleOffset > samplesToProcess)
@@ -413,12 +414,12 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 				}
 				else
 				{
-					eventPtr = 0;
+					eventPtr = nullptr;
 				}
 			}
 			else
 			{
-				eventPtr = 0;
+				eventPtr = nullptr;
 			}
 		}	// end while (event != 0)
 

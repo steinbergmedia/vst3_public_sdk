@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID ShepardProcessor::uid (0x5653546D, 0x6461686D, 0x64612073, 0x68657061);
+#else
 //-----------------------------------------------------------------------------
 FUID ShepardProcessor::uid (0xDA28F022, 0x6D3E4744, 0x88C9C4DA, 0xC690F337);
+#endif
 
 //-----------------------------------------------------------------------------
 ShepardProcessor::ShepardProcessor ()

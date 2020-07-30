@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,12 +44,14 @@
 
 #include "hostcheck.h"
 #include "logevents.h"
+#include "vstgui/lib/cvstguitimer.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 #include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivstautomationstate.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
+#include "pluginterfaces/vst/ivstparameterfunctionname.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
@@ -74,12 +76,17 @@ enum
 	kBypassTag,
 	kCanResizeTag,
 	kScoreTag,
+	kParamWhichCouldBeHiddenTag,
+	kTriggerHiddenTag,
+	kTriggerProgressTag,
+	kProgressValueTag,
 
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
 	// for Units
-	kUnitId = 1234
+	kUnitId = 1234,
+	kUnit2Id = 1235
 };
 
 class EditorSizeController;
@@ -95,7 +102,8 @@ class HostCheckerController : public EditControllerEx1,
                               public IMidiLearn,
                               public INoteExpressionController,
                               public INoteExpressionPhysicalUIMapping,
-                              public IKeyswitchController
+                              public IKeyswitchController,
+                              public IParameterFunctionName
 {
 public:
 	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
@@ -182,6 +190,9 @@ public:
 	tresult PLUGIN_API beginEditFromHost (ParamID paramID) SMTG_OVERRIDE;
 	tresult PLUGIN_API endEditFromHost (ParamID paramID) SMTG_OVERRIDE;
 
+	//---IParameterFunctionName---------------------------
+	tresult PLUGIN_API getParameterIDFromFunctionName (UnitID unitID, FIDString functionName,
+	                                                   ParamID& paramID) SMTG_OVERRIDE;
 	//--- --------------------------------------------------------------------------
 	void editorAttached (EditorView* editor) SMTG_OVERRIDE;
 	void editorRemoved (EditorView* editor) SMTG_OVERRIDE;
@@ -200,7 +211,7 @@ public:
 	}
 
 	void addFeatureLog (int32 iD, int32 count = 1, bool addToLastCount = true);
-	bool getSavedSize (ViewRect& size)
+	bool getSavedSize (ViewRect& size) const
 	{
 		if (sizeFactor <= 0)
 			return false;
@@ -212,12 +223,13 @@ public:
 protected:
 	void extractCurrentInfo (EditorView* editor);
 	float updateScoring (int32 iD);
+	void onProgressTimer (VSTGUI::CVSTGUITimer*);
 
 	std::map<VSTGUI::VST3Editor*, VSTGUI::SharedPointer<VSTGUI::CDataBrowser>> mDataBrowserMap;
 	VSTGUI::SharedPointer<VSTGUI::EventLogDataBrowserSource> mDataSource;
 
-	bool mLatencyInEdit = false;
-	ParamValue mWantedLatency = 0.0;
+	bool mLatencyInEdit {false};
+	ParamValue mWantedLatency {0.0};
 
 	using EditorVector = std::vector<Steinberg::Vst::EditorView*>;
 	EditorVector editors;
@@ -225,9 +237,9 @@ protected:
 	using EditorMap = std::map<Steinberg::Vst::EditorView*, EditorSizeController*>;
 	EditorMap editorsSubCtlerMap;
 
-	uint32 width = 0;
-	uint32 height = 0;
-	double sizeFactor = 0;
+	uint32 width {0};
+	uint32 height {0};
+	double sizeFactor {0};
 	int32 inEditFromHost {0};
 
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
@@ -241,6 +253,10 @@ protected:
 
 	using ScoreMap = std::map<uint32, ScoreEntry>;
 	ScoreMap mScoreMap;
+
+	VSTGUI::CVSTGUITimer* mProgressTimer {nullptr};
+	IProgress::ID mProgressID;
+	bool mInProgress {false};
 };
 
 //------------------------------------------------------------------------

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,7 +38,7 @@
 #include "base/source/updatehandler.h"
 #include "pluginterfaces/base/ustring.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 namespace Steinberg {
 namespace Vst {
@@ -348,18 +348,18 @@ EditControllerEx1::EditControllerEx1 () : selectedUnit (kRootUnitId)
 //------------------------------------------------------------------------
 EditControllerEx1::~EditControllerEx1 ()
 {
-	for (ProgramListVector::const_iterator it = programLists.begin (), end = programLists.end ();
-	     it != end; ++it)
-	{
-		if (*it)
-			(*it)->removeDependent (this);
-	}
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditControllerEx1::terminate ()
 {
 	units.clear ();
+
+	for (const auto& programList : programLists)
+	{
+		if (programList)
+			programList->removeDependent (this);
+	}
 	programLists.clear ();
 	programIndexMap.clear ();
 
@@ -628,13 +628,12 @@ Parameter* ProgramList::getParameter ()
 	if (parameter == nullptr)
 	{
 		auto* listParameter = new StringListParameter (
-		    info.name, info.id, nullptr,
-		    ParameterInfo::kCanAutomate | ParameterInfo::kIsList | ParameterInfo::kIsProgramChange,
-		    unitId);
-		for (StringVector::const_iterator it = programNames.begin (), end = programNames.end ();
-		     it != end; ++it)
+			info.name, info.id, nullptr,
+			ParameterInfo::kCanAutomate | ParameterInfo::kIsList | ParameterInfo::kIsProgramChange,
+			unitId);
+		for (const auto& programName : programNames)
 		{
-			listParameter->appendString (*it);
+			listParameter->appendString (programName);
 		}
 		parameter = listParameter;
 	}

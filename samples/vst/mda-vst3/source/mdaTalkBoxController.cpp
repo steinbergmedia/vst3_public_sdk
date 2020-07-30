@@ -20,8 +20,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID TalkBoxController::uid (0x5653456D, 0x6461266D, 0x64612074, 0x616C6B62);
+#else
 //-----------------------------------------------------------------------------
 FUID TalkBoxController::uid (0x64F420A3, 0xC25242A7, 0xAE8AAE63, 0xD0DC1C2D);
+#endif
 
 //-----------------------------------------------------------------------------
 TalkBoxController::TalkBoxController ()

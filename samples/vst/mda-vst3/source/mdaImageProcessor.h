@@ -29,6 +29,8 @@ public:
 	ImageProcessor ();
 	~ImageProcessor ();
 	
+	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaI'; }
+
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;

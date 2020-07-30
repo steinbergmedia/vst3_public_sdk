@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/general/scanparameters.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include <unordered_map>
 
@@ -93,14 +93,15 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		tresult result = controller->getParameterInfo (i, paramInfo);
 		if (result != kResultOk)
 		{
-			addErrorMessage (testResult, printf ("Param %03d: is missing!!!", i));
+			addErrorMessage (testResult, printf ("Parameter %03d: is missing!!!", i));
 			return false;
 		}
 
 		int32 paramId = paramInfo.id;
 		if (paramId < 0)
 		{
-			addErrorMessage (testResult, printf ("Param %03d: Invalid Id!!!", i));
+			addErrorMessage (testResult,
+			                 printf ("Parameter %03d (id=%d): Invalid Id!!!", i, paramId));
 			return false;
 		}
 
@@ -108,8 +109,9 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		auto search = paramIds.find (paramId);
 		if (search != paramIds.end ())
 		{
-			addErrorMessage (
-			    testResult, printf ("Param %03d: ID already used (by %03d)!!!", i, search->second));
+			addErrorMessage (testResult,
+			                 printf ("Parameter %03d (id=%d): ID already used by idx=%03d!!!", i,
+			                         paramId, search->second));
 			return false;
 		}
 		else
@@ -118,7 +120,9 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		const tchar* paramType = kEmptyString;
 		if (paramInfo.stepCount < 0)
 		{
-			addErrorMessage (testResult, printf ("Param %03d: invalid stepcount!!!", i));
+			addErrorMessage (
+			    testResult,
+			    printf ("Parameter %03d (id=%d): invalid stepcount (<0)!!!", i, paramId));
 			return false;
 		}
 		if (paramInfo.stepCount == 0)
@@ -134,28 +138,31 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		addMessage (
 		    testResult,
 		    printf (
-		        "   Param %03d (ID = %d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
+		        "   Parameter %03d (id=%d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
 		        i, paramId, paramTitle.data (), paramUnits.data (), paramType,
 		        paramInfo.defaultNormalizedValue, paramInfo.unitId));
 
 		if (paramTitle.empty ())
 		{
-			addErrorMessage (testResult, printf ("Param %03d: has no title!!!", i));
+			addErrorMessage (testResult,
+			                 printf ("Parameter %03d (id=%d): has no title!!!", i, paramId));
 			return false;
 		}
 
 		if (paramInfo.defaultNormalizedValue != -1.f &&
 		    (paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))
 		{
-			addErrorMessage (testResult,
-			                 printf ("Param %03d: defaultValue is not normalized!!!", i));
+			addErrorMessage (
+			    testResult,
+			    printf ("Parameter %03d (id=%d): defaultValue is not normalized!!!", i, paramId));
 			return false;
 		}
-
 		int32 unitId = paramInfo.unitId;
 		if (unitId < -1)
 		{
-			addErrorMessage (testResult, printf ("Param %03d: No appropriate unit ID!!!", i));
+			addErrorMessage (
+			    testResult,
+			    printf ("Parameter %03d (id=%d): No appropriate unit ID!!!", i, paramId));
 			return false;
 		}
 		if (unitId >= -1)
@@ -179,7 +186,8 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 					UnitInfo uinfo = {};
 					if (iUnitInfo->getUnitInfo (ui, uinfo) != kResultTrue)
 					{
-						addErrorMessage (testResult, STR ("IUnitInfo::getUnitInfo (..) failed."));
+						addErrorMessage (testResult,
+						                 printf ("IUnitInfo::getUnitInfo (%d..) failed.", ui));
 						return false;
 					}
 					if (uinfo.id == unitId)
@@ -189,37 +197,114 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 				{
 					addErrorMessage (
 					    testResult,
-					    STR ("Parameter has a UnitID, which isn't defined in IUnitInfo."));
+					    printf (
+					        "Parameter %03d (id=%d) has a UnitID (%d), which isn't defined in IUnitInfo.",
+					        i, paramId, unitId));
 					return false;
 				}
 			}
 		}
+
+		//---check for incompatible flags---------------------
+		// kCanAutomate and kIsReadOnly
 		if (((paramInfo.flags & ParameterInfo::kCanAutomate) != 0) &&
 		    ((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0))
 		{
 			addErrorMessage (
 			    testResult,
-			    STR ("Parameter must not be kCanAutomate and kReadOnly at the same time."));
+			    printf (
+			        "Parameter %03d (id=%d) must not be kCanAutomate and kReadOnly at the same time.",
+			        i, paramId));
+			return false;
+		}
+		// kIsProgramChange and kIsReadOnly
+		if (((paramInfo.flags & ParameterInfo::kIsProgramChange) != 0) &&
+		    ((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0))
+		{
+			addErrorMessage (
+			    testResult,
+			    printf (
+			        "Parameter %03d (id=%d) must not be kIsProgramChange and kReadOnly at the same time.",
+			        i, paramId));
+			return false;
+		}
+		// kIsBypass only or kIsBypass and kCanAutomate only
+		if (((paramInfo.flags & ParameterInfo::kIsBypass) != 0) &&
+		    !((paramInfo.flags == ParameterInfo::kIsBypass) ||
+		      ((paramInfo.flags & ParameterInfo::kCanAutomate) != 0)))
+		{
+			addErrorMessage (
+			    testResult,
+			    printf (
+			        "Parameter %03d (id=%d) is kIsBypass and could have only kCanAutomate as other flag at the same time.",
+			        i, paramId));
 			return false;
 		}
 
+		//---maybe wrong combination of flags-------------------
+		// kIsBypass but not kCanAutomate
+		if (paramInfo.flags == ParameterInfo::kIsBypass)
+		{
+			addMessage (
+			    testResult,
+			    printf ("Parameter %03d (id=%d) is kIsBypass, but not kCanAutomate!", i, paramId));
+		}
+		// kIsHidden and (kCanAutomate or not kIsReadOnly)
+		if (paramInfo.flags == ParameterInfo::kIsHidden)
+		{
+			if ((paramInfo.flags & ParameterInfo::kCanAutomate) != 0)
+			{
+				addMessage (
+				    testResult,
+				    printf ("Parameter %03d (id=%d) is kIsHidden and kCanAutomate!", i, paramId));
+			}
+			if ((paramInfo.flags & ParameterInfo::kIsReadOnly) == 0)
+			{
+				addMessage (testResult,
+				            printf ("Parameter %03d (id=%d) is kIsHidden and NOT kIsReadOnly!", i,
+				                    paramId));
+			}
+		}
+
+		// kIsProgramChange and not kIsList
+		if (((paramInfo.flags & ParameterInfo::kIsProgramChange) != 0) &&
+		    ((paramInfo.flags & ParameterInfo::kIsList) == 0))
+		{
+			addMessage (testResult,
+			            printf ("Parameter %03d (id=%d) is kIsProgramChange, but not a kIsList!", i,
+			                    paramId));
+		}
+		// kIsReadOnly and kIsWrapAround
+		if (((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0) &&
+		    ((paramInfo.flags & ParameterInfo::kIsWrapAround) != 0))
+		{
+			addMessage (
+			    testResult,
+			    printf ("Parameter %03d (id=%d) is kIsReadOnly, no need to be kIsWrapAround too!",
+			            i, paramId));
+		}
+
+		//---check bypass--------------------------------------
 		if ((paramInfo.flags & ParameterInfo::kIsBypass) != 0)
 		{
 			if (!foundBypass)
 				foundBypass = true;
 			else
 			{
-				addErrorMessage (testResult, STR ("There can only be one bypass (kIsBypass)."));
+				addErrorMessage (
+				    testResult,
+				    printf ("Parameter %03d (id=%d): There can only be one bypass (kIsBypass).", i,
+				            paramId));
 				return false;
 			}
 		}
-	}
+	} // end for each parameter
 
 	if (foundBypass == false)
 	{
 		StringResult subCat;
 		plugProvider->getSubCategories (subCat);
-		if (subCat.get ().find ("Instrument") >= 0)
+		if (subCat.get ().find ("Instrument") != std::string::npos)
 			addMessage (testResult, STR ("No bypass parameter found. This is an instrument."));
 		else
 			addMessage (testResult, STR ("Warning: No bypass parameter found. Is this intended ?"));

@@ -1,4 +1,5 @@
 //-----------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -8,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -86,8 +87,8 @@ public:
 	{
 		return (IAudioProcessor*)new HostCheckerProcessor ();
 	}
-	
-	//---IAudioPresentationLatency------------
+
+	//---IAudioPresentationLatency-------------------------
 	tresult PLUGIN_API setAudioPresentationLatencySamples (BusDirection dir, int32 busIndex,
 	                                                       uint32 latencyInSamples) SMTG_OVERRIDE;
 
@@ -95,13 +96,16 @@ public:
 	tresult PLUGIN_API getPrefetchableSupport (PrefetchableSupport& prefetchable /*out*/)
 	    SMTG_OVERRIDE;
 
+	//---IProcessContextRequirements-----------------------
+	uint32 PLUGIN_API getProcessContextRequirements () SMTG_OVERRIDE;
+
 	DEFINE_INTERFACES
 		DEF_INTERFACE (IAudioPresentationLatency)
 		DEF_INTERFACE (IPrefetchableSupport)
 	END_DEFINE_INTERFACES (AudioEffect)
 	REFCOUNT_METHODS (AudioEffect)
 
-	enum State : uint32
+	enum class State : uint32
 	{
 		kUninitialized = 0,
 		kInitialized,
@@ -112,7 +116,7 @@ public:
 
 protected:
 	void addLogEvent (Steinberg::int32 logId);
-	
+
 	void informLatencyChanged ();
 	void sendLatencyChanged ();
 
@@ -131,7 +135,7 @@ protected:
 	uint32 mLatency = 0;
 	uint32 mWantedLatency = 0;
 	float mGeneratePeaks = 0;
-	State mCurrentState = kUninitialized;
+	State mCurrentState {State::kUninitialized};
 
 	uint32 mMinimumOfInputBufferCount {0};
 	uint32 mMinimumOfOutputBufferCount {0};
@@ -142,6 +146,7 @@ protected:
 	std::list<LogEvent*> msgQueue;
 
 	bool mBypass {false};
+	bool mSetActiveCalled {false};
 };
 
 //------------------------------------------------------------------------

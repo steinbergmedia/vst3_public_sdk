@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID ComboProcessor::uid (0x5653546D, 0x6461586D, 0x64612063, 0x6F6D626F);
+#else
 //-----------------------------------------------------------------------------
 FUID ComboProcessor::uid (0x11C1BD22, 0x888F4F17, 0xB2E2A77B, 0x51CEDCD6);
+#endif
 
 //-----------------------------------------------------------------------------
 ComboProcessor::ComboProcessor ()

@@ -42,9 +42,11 @@ protected:
 	virtual void recalculate () {}
 	virtual bool hasProgram () const { return false; }
 	virtual uint32 getCurrentProgram () const { return 0; }
+	virtual uint32 getNumPrograms () const { return 1; }
 	virtual void setCurrentProgram (uint32 val) {}
 	virtual void setCurrentProgramNormalized (ParamValue val) {}
-
+	virtual int32 getVst2UniqueId () const = 0;
+	
 	bool isBypassed () const { return bypassState; }
 	double getSampleRate () const { return processSetup.sampleRate; }
 

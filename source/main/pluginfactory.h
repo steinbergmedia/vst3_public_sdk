@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,8 +43,8 @@ namespace Steinberg {
 //------------------------------------------------------------------------
 /** Default Class Factory implementation.
 \ingroup sdkBase
-\see \ref classFactoryMacros */
-//------------------------------------------------------------------------
+\see \ref classFactoryMacros 
+*/
 class CPluginFactory : public IPluginFactory3
 {
 public:
@@ -53,15 +53,15 @@ public:
 	virtual ~CPluginFactory ();
 
 	//--- ---------------------------------------------------------------------
-	/** Registers a Plug-in class with classInfo version 1, returns true for success. */
+	/** Registers a plug-in class with classInfo version 1, returns true for success. */
 	bool registerClass (const PClassInfo* info, FUnknown* (*createFunc) (void*),
 	                    void* context = nullptr);
 
-	/** Registers a Plug-in class with classInfo version 2, returns true for success. */
+	/** Registers a plug-in class with classInfo version 2, returns true for success. */
 	bool registerClass (const PClassInfo2* info, FUnknown* (*createFunc) (void*),
 	                    void* context = nullptr);
 
-	/** Registers a Plug-in class with classInfo Unicode version, returns true for success. */
+	/** Registers a plug-in class with classInfo Unicode version, returns true for success. */
 	bool registerClass (const PClassInfoW* info, FUnknown* (*createFunc) (void*),
 	                    void* context = nullptr);
 
@@ -139,7 +139,6 @@ DEF_CLASS (INLINE_UID (0x00000000, 0x00000000, 0x00000000, 0x00000000),
 			"Service",
 			"Test Service",
 			TestService::newInstance)
-
 END_FACTORY
 \endcode 
 

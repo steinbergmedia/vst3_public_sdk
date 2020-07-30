@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -42,7 +42,7 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstevents.h"
 
-#include <stdio.h>
+#include <cstdio>
 #include "base/source/fstreamer.h"
 
 namespace Steinberg {
@@ -69,7 +69,7 @@ tresult PLUGIN_API Plug::initialize (FUnknown* context)
 		return result;
 	}
 
-	//---create Audio In/Out buses------
+	//---create Audio In/Out busses------
 	// we want a stereo Input and a Stereo Output
 	addEventInput  (STR16 ("Event In"), 1);
 	addAudioOutput (STR16 ("Stereo Out"), SpeakerArr::kStereo);

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -81,7 +81,7 @@ PlugProvider::~PlugProvider ()
 }
 
 //------------------------------------------------------------------------
-IComponent* PlugProvider::getComponent ()
+IComponent* PLUGIN_API PlugProvider::getComponent ()
 {
 	if (!component)
 		setupPlugin (getPluginContext ());
@@ -93,7 +93,7 @@ IComponent* PlugProvider::getComponent ()
 }
 
 //------------------------------------------------------------------------
-IEditController* PlugProvider::getController ()
+IEditController* PLUGIN_API PlugProvider::getController ()
 {
 	if (controller)
 		controller->addRef ();
@@ -103,14 +103,22 @@ IEditController* PlugProvider::getController ()
 }
 
 //------------------------------------------------------------------------
-tresult PlugProvider::getComponentUID (FUID& uid) const
+IPluginFactory* PLUGIN_API PlugProvider::getPluginFactory ()
+{
+	if (auto f = factory.get ())
+		return f.get ();
+	return nullptr;
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API PlugProvider::getComponentUID (FUID& uid) const
 {
 	uid = FUID::fromTUID (classInfo.ID ().data ());
 	return kResultOk;
 }
 
 //------------------------------------------------------------------------
-tresult PlugProvider::releasePlugIn (IComponent* iComponent, IEditController* iController)
+tresult PLUGIN_API PlugProvider::releasePlugIn (IComponent* iComponent, IEditController* iController)
 {
 	if (iComponent)
 		iComponent->release ();

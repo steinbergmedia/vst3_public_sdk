@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -82,8 +82,8 @@ bool PLUGIN_API BypassPersistenceTest::run (ITestResult* testResult)
 	// set bypass on
 	// if (paramChanges[0].getParameterId () == bypassId)
 	{
-		paramChanges[0].init (bypassId, 1);
-		paramChanges[0].setPoint (0, 0, 1);
+		paramChanges[0]->init (bypassId, 1);
+		paramChanges[0]->setPoint (0, 0, 1);
 
 		controller->setParamNormalized (bypassId, 1);
 
@@ -120,10 +120,10 @@ bool PLUGIN_API BypassPersistenceTest::run (ITestResult* testResult)
 	preProcess (testResult);
 
 	// set bypass off
-	if (paramChanges[0].getParameterId () == bypassId)
+	if (paramChanges[0]->getParameterId () == bypassId)
 	{
-		paramChanges[0].init (bypassId, 1);
-		paramChanges[0].setPoint (0, 0, 0);
+		paramChanges[0]->init (bypassId, 1);
+		paramChanges[0]->setPoint (0, 0, 0);
 
 		controller->setParamNormalized (bypassId, 0);
 

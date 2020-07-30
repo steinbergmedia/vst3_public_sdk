@@ -24,8 +24,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID BeatBoxProcessor::uid (0x5653546D, 0x6461476D, 0x64612062, 0x65617462);
+#else
 //-----------------------------------------------------------------------------
 FUID BeatBoxProcessor::uid (0x9E6A6E95, 0x9B734440, 0x97D787BE, 0xBBDDD831);
+#endif
 
 //-----------------------------------------------------------------------------
 BeatBoxProcessor::BeatBoxProcessor ()

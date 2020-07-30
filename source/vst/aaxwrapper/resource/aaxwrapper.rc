@@ -72,7 +72,7 @@ BEGIN
             VALUE "FileDescription", "AAXWrapper Plug-In"
             VALUE "FileVersion", "1.0.0.0"
             VALUE "InternalName", "AAXWrapper.aaxplugin"
-            VALUE "LegalCopyright", "(c) Steinberg Media Technologies 2017"
+            VALUE "LegalCopyright", "(c) Steinberg Media Technologies 2020"
             VALUE "OriginalFilename", "AAXWrapper.aaxplugin"
             VALUE "ProductName", "AAX Wrapper"
             VALUE "ProductVersion", "0.1"

@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/hosting/stringconvert.h
+// Filename    : public.sdk/source/vst/utility/stringconvert.h
 // Created by  : Steinberg, 11/2014
 // Description : c++11 unicode string convert functions
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

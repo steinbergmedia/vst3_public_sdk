@@ -22,8 +22,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID SplitterController::uid (0x5653456D, 0x6461376D, 0x64612073, 0x706C6974);
+#else
 //-----------------------------------------------------------------------------
 FUID SplitterController::uid (0xD3766521, 0x24EF4691, 0xAB7CD29D, 0xB855BF1F);
+#endif
 
 //-----------------------------------------------------------------------------
 SplitterController::SplitterController ()

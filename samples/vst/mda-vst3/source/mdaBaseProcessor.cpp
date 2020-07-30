@@ -19,10 +19,11 @@
 #include "helpers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/base/ibstream.h"
+#include "public.sdk/source/vst/utility/vst2persistence.h"
+#include "base/source/fstreamer.h"
 
 #include <cmath>
 #include <cstdlib>
-#include "base/source/fstreamer.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -294,6 +295,25 @@ tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	if (auto vst2State = VST3::tryVst2StateLoad (*state))
+	{
+		if ((vst2State->programs.empty ()) ||
+		    (static_cast<int32_t> (vst2State->programs.size ()) <= vst2State->currentProgram))
+			return kResultFalse;
+		auto& currentProgram = vst2State->programs[vst2State->currentProgram];
+		bypassState = vst2State->isBypassed;
+		auto numStateParams = static_cast<uint32> (currentProgram.values.size ());
+		for (uint32 index = 0; index < numParams && index < numStateParams; ++index)
+		{
+			params[index] = currentProgram.values[index];
+		}
+		recalculate ();
+		return kResultTrue;
+	}
+	return kResultFalse;
+#else
+
 	IBStreamer streamer (state, kLittleEndian);
 
 	uint32 temp;
@@ -321,6 +341,7 @@ tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
 	recalculate ();
 
 	return kResultTrue;
+	#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -329,6 +350,25 @@ tresult PLUGIN_API BaseProcessor::getState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	VST3::Vst2xState fxb;
+	fxb.fxUniqueID = getVst2UniqueId ();
+	fxb.fxVersion = 1;
+	fxb.currentProgram = getCurrentProgram ();
+	fxb.isBypassed = isBypassed ();
+	fxb.programs.resize (getNumPrograms ());
+	for (auto& program : fxb.programs)
+		program.values.resize (numParams);
+	auto& currentProgram = fxb.programs[fxb.currentProgram];
+	currentProgram.fxUniqueID = getVst2UniqueId ();
+	currentProgram.fxVersion = 1;
+	currentProgram.name = "";
+	for (uint32 index = 0; index < numParams; ++index)
+	{
+		currentProgram.values[index] = static_cast<float> (params[index]);
+	}
+	VST3::writeVst2State (fxb, *state);
+#else
 	IBStreamer streamer (state, kLittleEndian);
 
 	if (hasProgram ())
@@ -353,6 +393,7 @@ tresult PLUGIN_API BaseProcessor::getState (IBStream* state)
 
 	// save bypass
 	streamer.writeInt32u (bypassState ? 1 : 0);
+#endif
 
 	return kResultTrue;
 }

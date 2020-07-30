@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -62,7 +62,6 @@
 #include "../Interfaces/ACF/CACFClassFactory.cpp"
 #include "../Libs/AAXLibrary/source/AAX_CACFUnknown.cpp"
 #include "../Libs/AAXLibrary/source/AAX_CChunkDataParser.cpp"
-#include "../Libs/AAXLibrary/source/AAX_VDescriptionHost.cpp"
 #include "../Libs/AAXLibrary/source/AAX_CEffectDirectData.cpp"
 #include "../Libs/AAXLibrary/source/AAX_CEffectGUI.cpp"
 #include "../Libs/AAXLibrary/source/AAX_CEffectParameters.cpp"
@@ -85,6 +84,7 @@
 #include "../Libs/AAXLibrary/source/AAX_VCollection.cpp"
 #include "../Libs/AAXLibrary/source/AAX_VComponentDescriptor.cpp"
 #include "../Libs/AAXLibrary/source/AAX_VController.cpp"
+#include "../Libs/AAXLibrary/source/AAX_VDescriptionHost.cpp"
 #include "../Libs/AAXLibrary/source/AAX_VEffectDescriptor.cpp"
 #include "../Libs/AAXLibrary/source/AAX_VFeatureInfo.cpp"
 #include "../Libs/AAXLibrary/source/AAX_VHostProcessorDelegate.cpp"
@@ -101,7 +101,6 @@
 //#include "../Libs/AAXLibrary/source/AAX_CAutoreleasePool.OSX.mm"
 #endif
 
-
 #undef min
 #undef max
 
@@ -111,3 +110,5 @@
 #ifdef __clang__
 #pragma clang diagnostic pop
 #endif
+
+/// \endcond

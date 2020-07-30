@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,20 +50,19 @@ Scales [srcMin srcMax] to [destMin destMax]
 
 Scaling curve is defined by given outValue for given inValue
 
-\subsection example1 Example for stretched lower range
+\section example1 Example for stretched lower range
 LogScale myLogScale (0, 1, 0, 1, 0.5, 0.1); \n
 means: input and output ranges are the same, but myLogScale.scale (0.5) is 0.1 ([0, 0.5, 1] => [0, 0.1, 1])
 
-\subsection example2 Example for compressed lower range
+\section example2 Example for compressed lower range
 LogScale myLogScale (0, 1, 0, 1, 0.5, 0.9); \n
 means: input and output ranges are the same, but myLogScale.scale (0.5) is 0.9 ([0, 0.5, 1] => [0, 0.9, 1])
 
-\subsection example3 Example for filter frequency range
+\section example3 Example for filter frequency range
 LogScale myLogScale (0, 1, 80, 22000, 0.5, 2000); \n
 means: input range is between 0 and 1 and output range is between 80 and 22000 and myLogScale.scale (0.5) is 2000 
 ([0, 0.5, 1] => [80, 2000, 22000])
 */
-//-----------------------------------------------------------------------------
 template <class T>
 class LogScale 
 {
@@ -193,7 +192,6 @@ Define a parameter using the LogScale.
 
 \sa Steinberg::Vst::LogScale
 */
-//-----------------------------------------------------------------------------
 template <class T>
 class LogScaleParameter : public Parameter
 {

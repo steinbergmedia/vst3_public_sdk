@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID OverdriveProcessor::uid (0x5653546D, 0x64614F6D, 0x6461206F, 0x76657264);
+#else
 //-----------------------------------------------------------------------------
 FUID OverdriveProcessor::uid (0x203C7009, 0x042A4AC2, 0xA515CFF1, 0xDF647E92);
+#endif
 
 //-----------------------------------------------------------------------------
 OverdriveProcessor::OverdriveProcessor ()

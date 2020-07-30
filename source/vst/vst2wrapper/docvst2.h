@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,22 +38,24 @@
 **************************************
 \page vst2xwrapper VST 3 - VST 2.x Wrapper
 **************************************
+\tableofcontents
 
-Helper Class wrapping a VST 3 Plug-in to a VST 2.4 Plug-in
+\brief
+Helper Class wrapping a VST 3 plug-in to a VST 2.4 plug-in
 
 ***************************
 \section VST2Introduction Introduction
 ***************************
 The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
-a VST 2.x Plug-in.
+a VST 2.x plug-in.
 \n\n
 ***************************
 \section VST2howdoesitwork How does it work?
 ***************************
 You just need to add public.sdk/source/vst/vst2wrapper/vst2wrapper.sdk.cpp to your project and add
 the following code somewhere in your sources:
-\code
-
+\code{.cpp}
+//------------------------------------------------------------------------
 #include "public.sdk/source/vst/vst2wrapper/vst2wrapper.h"
 
 //------------------------------------------------------------------------

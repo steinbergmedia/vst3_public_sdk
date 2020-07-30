@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,8 +37,8 @@
 #pragma once
 
 #include "pluginterfaces/base/ftypes.h"
-#include <map>
 #include "base/source/fstring.h"
+#include <map>
 
 //------------------------------------------------------------------------
 struct LogEvent
@@ -80,6 +80,7 @@ struct LogEvent
 
 #define LOG_EVENT_LIST(LOG_DEF) \
 	LOG_DEF(kLogIdProcessorControllerConnection,CONTROL,	LOG_WARN, SETUP_CONTEXT, "Processor and controller are directly connected (direct pointers no wrapper)."), \
+	LOG_DEF(kLogIdInvalidActivateAuxBus,		PROCESS,	LOG_ERR, SETUP_CONTEXT, "Unknown bus to activate!"),\
 	LOG_DEF(kLogIdInvalidStateInitializedMissing,PROCESS,	LOG_ERR, STATE, "Missing State: Uninitialized => Initialized."), \
 	LOG_DEF(kLogIdInvalidStateSetupMissing,		PROCESS,	LOG_ERR, STATE, "Missing State: Initialized => Setup Done."), \
 	LOG_DEF(kLogIdInvalidStateActivatedMissing,	PROCESS,	LOG_ERR, STATE, "Missing State: Setup Done => Activated."), \
@@ -88,7 +89,7 @@ struct LogEvent
 	LOG_DEF(kLogIdInvalidStateSetProcessingWrong,PROCESS,	LOG_ERR, STATE, "Wrong Call Order: setProcessing () called in not Activated State."), \
 	LOG_DEF(kLogIdsetActiveFalseRedundant,		PROCESS,	LOG_WARN, STATE, "Redondant Call: setActive (false)!"), \
 	LOG_DEF(kLogIdsetActiveTrueRedundant,		PROCESS,	LOG_WARN, STATE, "Redondant Call: setActive (true)!"), \
-	LOG_DEF(kLogIdsetProcessingFalseRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (true)!"), \
+	LOG_DEF(kLogIdsetProcessingFalseRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (false)!"), \
 	LOG_DEF(kLogIdsetProcessingTrueRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (true)!"), \
 	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
@@ -98,14 +99,14 @@ struct LogEvent
 	LOG_DEF(kLogIdNullPointerToChannelBuf,		PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAuxChannelBuf,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a SideChain channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAudioBusBuffer,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to an audio bus buffer is null although the index is valid."),\
-	LOG_DEF(kLogIdAudioBufNotMatchComponentBusCount,PROCESS, LOG_ERR, AUDIO_BUFFER, "Number of Audio Buffers does not match the number of buses defined by IComponent."),\
+	LOG_DEF(kLogIdAudioBufNotMatchComponentBusCount,PROCESS, LOG_ERR, AUDIO_BUFFER, "Number of Audio Buffers does not match the number of busses defined by IComponent."),\
 	LOG_DEF(kLogIdInvalidAudioBufNumOfChannels,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "An audio bus number of channels is different from the one specified by IComponent."),\
 	LOG_DEF(kLogIdUnknownEventType,				PROCESS,	LOG_ERR, EVENT_LIST, "Event has a type which is not specified."),\
 	LOG_DEF(kLogIdInvalidEventVelocityValue,	PROCESS,	LOG_ERR, EVENT_LIST, "Event velocity is either < 0.0 or > 1.0."),\
 	LOG_DEF(kLogIdInvalidEventPitchValue,		PROCESS,	LOG_ERR, EVENT_LIST, "Event pitch is either < 0 or > 127."),\
 	LOG_DEF(kLogIdInvalidEventSampleOffset,		PROCESS,	LOG_ERR, EVENT_LIST, "Event sample offset either < 0 or >= max block size."),\
 	LOG_DEF(kLogIdInvalidEventBusIndex,			PROCESS,	LOG_ERR, EVENT_LIST, "Event has a bus index which is different from the one specified by IComponent."),\
-	LOG_DEF(kLogIdInvalidNoteOnChannelIndex,	PROCESS,	LOG_ERR, EVENT_LIST, "Note On  event has a channel index which was not specified by IComponent."),\
+	LOG_DEF(kLogIdInvalidNoteOnChannelIndex,	PROCESS,	LOG_ERR, EVENT_LIST, "Note On event has a channel index which was not specified by IComponent."),\
 	LOG_DEF(kLogIdInvalidNoteOffChannelIndex,	PROCESS,	LOG_ERR, EVENT_LIST, "Note Off event has a channel index which was not specified by IComponent."),\
 	LOG_DEF(kLogIdInvalidPolyPressChannelIndex,	PROCESS,	LOG_ERR, EVENT_LIST, "Poly pressure event has a channel index which was not specified by IComponent."),\
 	LOG_DEF(kLogIdNumInputEventExceedsLimit,	PROCESS,	LOG_WARN, EVENT_LIST, "List contains more than 2048 events."),\
@@ -114,8 +115,8 @@ struct LogEvent
 	LOG_DEF(kLogIdEventsAreNotSortedByPpqPosition,	PROCESS, LOG_WARN, EVENT_LIST, "Events are not sorted by PPQ position."),\
 	LOG_DEF(kLogIdNoteOnWithPitchAlreadyTriggered,	PROCESS, LOG_INFO, EVENT_LIST, "An event occurred with a pitch currently already triggered."),\
 	LOG_DEF(kLogIdNoteOnWithIdAlreadyTriggered,		PROCESS, LOG_WARN, EVENT_LIST, "An event occurred with an ID currently already triggered."),\
-	LOG_DEF(kLogIdNoteOffWithIdNeverTriggered,		PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note on (ID)"),\
-	LOG_DEF(kLogIdNoteOffWithPitchNeverTriggered,	PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note on (pitch)."),\
+	LOG_DEF(kLogIdNoteOffWithIdNeverTriggered,		PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note On (ID)"),\
+	LOG_DEF(kLogIdNoteOffWithPitchNeverTriggered,	PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note On (pitch)."),\
 	LOG_DEF(kLogIdNoteExpressValNotNormalized,		PROCESS, LOG_ERR, EVENT_LIST,  "A note expression event value is either < 0.0 or > 1.0."),\
 	LOG_DEF(kLogIdInvalidParamValue,				PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter value is < 0.0 or > 1.0"),\
 	LOG_DEF(kLogIdInvalidParameterCount,			PROCESS, LOG_ERR, PARAM_CHANGE, "The number of changes is bigger than the number of parameters specified by IEditController."),\
@@ -162,16 +163,19 @@ struct LogEvent
 	LOG_DEF(kLogIdProcessorGetStateCalledinWrongThread,	PROCESS, LOG_ERR, THREAD_CONTEXT, "IComponent::getState is called in wrong Thread!"),\
 	LOG_DEF(kLogIdactivateBusCalledinWrongThread,		PROCESS, LOG_ERR, THREAD_CONTEXT, "IComponent::activateBus is called in wrong Thread!"),\
 	\
+	LOG_DEF(kLogIdSetActiveCalledSupported,          PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponent::setActive (true) called"), \
 	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2Supported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
 	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
-	LOG_DEF (kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
+	LOG_DEF (kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
+	LOG_DEF (kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
 	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
 	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
 	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
+	LOG_DEF(kLogIdIProcessContextRequirementsSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IProcessContextRequirements supported!"), \
 	\
 	LOG_DEF(kLogIdProcessContextPlayingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kPlaying supported!"), \
 	LOG_DEF(kLogIdProcessContextRecordingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kRecording supported!"), \
@@ -196,22 +200,23 @@ struct LogEvent
 	LOG_DEF(kLogIdGetRoutingInfo,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::getRoutingInfo supported!"), \
 	LOG_DEF(kLogIdActivateAuxBus,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::activateBus for SideChain supported!"), \
 	LOG_DEF(kLogIdParametersFlushSupported,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process called for flush parameter supported!"), \
-	LOG_DEF(kLogIdInvalidActivateAuxBus,		PROCESS, LOG_ERR, SETUP_CONTEXT, "Unknown bus to activate!"),\
+	LOG_DEF(kLogIdSilentFlagsSupported,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for Main Input supported!"), \
+	LOG_DEF(kLogIdSilentFlagsSCSupported,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for SideChain-In supported!"), \
 	\
 	LOG_DEF(kLogIdIEditController2Supported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
 	LOG_DEF(kLogIdsetKnobModeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::setKnobMode supported!"), \
 	LOG_DEF(kLogIdopenHelpSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openHelp supported!"), \
-	LOG_DEF(kLogIdopenAboutBoxSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
+	LOG_DEF(kLogIdopenAboutBoxSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
 	\
-	LOG_DEF(kLogIdIMidiMappingSupported,            CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
-	LOG_DEF(kLogIdUnitSupported,                    CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
-	LOG_DEF(kLogIdGetUnitByBusSupported,            CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
-	LOG_DEF(kLogIdChannelContextSupported,          CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
+	LOG_DEF(kLogIdIMidiMappingSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
+	LOG_DEF(kLogIdUnitSupported,				CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
+	LOG_DEF(kLogIdGetUnitByBusSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
+	LOG_DEF(kLogIdChannelContextSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
 	LOG_DEF(kLogIdINoteExpressionControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
 	LOG_DEF(kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
 	LOG_DEF(kLogIdIKeyswitchControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IKeyswitchController supported!"), \
 	\
-	LOG_DEF(kLogIdIMidiLearnSupported,              CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
+	LOG_DEF(kLogIdIMidiLearnSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
 	LOG_DEF(kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
 	\
 	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
@@ -240,36 +245,28 @@ struct LogEvent
 	LOG_DEF(kLogIdIPlugViewremovedWithoutAttached,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::removed is called without attached first!"), \
 	\
 	LOG_DEF(kLogIdIParameterFinderSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IParameterFinder supported!"), \
+	LOG_DEF(kLogIdIParameterFunctionNameSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName supported!"), \
+	\
 	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")
-
 
 #define LOG_ID(a, b, c, d, e) a
 #define LOG_SEVER(a, b, c, d, e) c
-#define LOG_DESC(a, b, c, d, e) ("[" d"] " e) // "[category] description"
+#define LOG_DESC(a, b, c, d, e) ("[" d "] " e) // "[category] description"
 #define LOG_CONTEXT(a, b, c, d, e) b
 
 // enum of all IDs
 enum eLogIds
 {
-	LOG_EVENT_LIST(LOG_ID),
+	LOG_EVENT_LIST (LOG_ID),
 
 	kNumLogEvents,
 };
 
 // array of bool process : 'true' or controller : 'false'
-static const bool logEventContext[] =
-{
-	LOG_EVENT_LIST (LOG_CONTEXT)
-};
+static const bool logEventContext[] = {LOG_EVENT_LIST (LOG_CONTEXT)};
 
 // array of log descriptions
-static const char *logEventDescriptions[] =
-{
-	LOG_EVENT_LIST(LOG_DESC)
-};
+static const char* logEventDescriptions[] = {LOG_EVENT_LIST (LOG_DESC)};
 
 // array of string 'error' or 'warning'
-static const char* logEventSeverity[] =
-{
-	LOG_EVENT_LIST(LOG_SEVER)
-};
+static const char* logEventSeverity[] = {LOG_EVENT_LIST (LOG_SEVER)};

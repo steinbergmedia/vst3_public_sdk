@@ -4,11 +4,11 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/again/source/version.h
 // Created by  : Steinberg, 03/2016
-// Description : AGain Example for VST SDK 3
+// Description : AGainAAX Example for VST SDK 3
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

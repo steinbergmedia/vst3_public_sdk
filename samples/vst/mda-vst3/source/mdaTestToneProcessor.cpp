@@ -24,8 +24,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID TestToneProcessor::uid (0x5653546D, 0x6461546D, 0x64612074, 0x65737474);
+#else
 //-----------------------------------------------------------------------------
 FUID TestToneProcessor::uid (0x0AF801E5, 0x0B0D4D9B, 0xBB657671, 0xAC8F7847);
+#endif
 
 //-----------------------------------------------------------------------------
 TestToneProcessor::TestToneProcessor ()
@@ -48,14 +53,14 @@ tresult PLUGIN_API TestToneProcessor::initialize (FUnknown* context)
 		addAudioInput (USTRING("Stereo In"), SpeakerArr::kStereo);
 		addAudioOutput (USTRING("Stereo Out"), SpeakerArr::kStereo);
 
-		params[0] = 0.47f; //mode 
-		params[1] = 0.71f; //level dB
-		params[2] = 0.50f; //pan dB
-		params[3] = 0.57f; //freq1 B
-		params[4] = 0.50f; //freq2 Hz
-		params[5] = 0.00f; //thru dB
-		params[6] = 0.30f; //sweep ms
-		params[7] = 1.00f; //cal dBFS
+		param (TestToneParam::Mode) = 0.47f; //mode
+		param (TestToneParam::Level) = 0.71f; //level dB
+		param (TestToneParam::Channel) = 0.50f; //pan dB
+		param (TestToneParam::F1) = 0.57f; //freq1 B
+		param (TestToneParam::F2) = 0.50f; //freq2 Hz
+		param (TestToneParam::Thru) = 0.00f; //thru dB
+		param (TestToneParam::Sweep) = 0.30f; //sweep ms
+		param (TestToneParam::ZerodB) = 1.00f; //cal dBFS
 
 		recalculate ();
 	}
@@ -176,27 +181,27 @@ void TestToneProcessor::recalculate ()
 	float f, df, twopi=6.2831853f;
 
 	//calcs here!	
-	mode = std::min<int32> (7, 8 * params[0]);
-	left = 0.05f * (float)int (60.f*params[1]);
+	mode = std::min<int32> (8, 9 * param (TestToneParam::Mode));
+	left = 0.05f * (float)int (60.f*param (TestToneParam::Level));
 	left = (float)pow (10.0f, left - 3.f);
 	if (mode==2) left*=0.0000610f; //scale white for RAND_MAX = 32767
 	if (mode==3) left*=0.0000243f; //scale pink for RAND_MAX = 32767
-	int32 channel = std::min<int32> (2, 3 * params[2]);
+	int32 channel = std::min<int32> (2, 3 * param (TestToneParam::Channel));
 	switch (channel)
 	{
 		case 0: right = 0.f; break;
 		case 1:	right = left; break;
 		case 2: right = left; left = 0.f; break;
 	}
-	len = 1.f + 0.5f*(float)int (62*params[6]);
+	len = 1.f + 0.5f*(float)int (62*param (TestToneParam::Sweep));
 	swt= (int32)(len*getSampleRate ());
 
-	if (params[7]>0.8) //output level trim
+	if (param (TestToneParam::ZerodB)>0.8) //output level trim
 	{
-		if (params[7]>0.96) cal = 0.f;
-		else if (params[7]>0.92) cal = -0.01000001f;
-		else if (params[7]>0.88) cal = -0.02000001f;
-		else if (params[7]>0.84) cal = -0.1f;
+		if (param (TestToneParam::ZerodB)>0.96) cal = 0.f;
+		else if (param (TestToneParam::ZerodB)>0.92) cal = -0.01000001f;
+		else if (param (TestToneParam::ZerodB)>0.88) cal = -0.02000001f;
+		else if (param (TestToneParam::ZerodB)>0.84) cal = -0.1f;
 		else cal = -0.2f;
 
 		calx = (float)pow (10.0f, 0.05f*cal); 
@@ -205,30 +210,30 @@ void TestToneProcessor::recalculate ()
 	}
 	else //output level calibrate
 	{
-		cal = (float)int (25.f*params[7] - 21.1f);
+		cal = (float)int (25.f*param (TestToneParam::ZerodB) - 21.1f);
 		calx = cal;
 	}
 
 	df=0.f;
-	if (params[4]>0.6) df = 1.25f*params[4] - 0.75f;
-	if (params[4]<0.4) df = 1.25f*params[4] - 0.50f;
+	if (param (TestToneParam::F2)>0.6) df = 1.25f*param (TestToneParam::F2) - 0.75f;
+	if (param (TestToneParam::F2)<0.4) df = 1.25f*param (TestToneParam::F2) - 0.50f;
 
 	switch (mode)
 	{
 		case 0: //MIDI note
-				f = (float)floor(128.f*params[3]);
+				f = std::min<int32> (128, 129 * param (TestToneParam::F1));
 				dphi = 51.37006f*(float)pow (1.0594631f,f+df)/getSampleRate ();
 				break;
 
 		case 5: //sine
-				f = 13.f + (float)floor(30.f*params[3]);
+				f = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F1));
 				f= (float)pow (10.0f, 0.1f*(f+df));
 				dphi=twopi*f/getSampleRate ();
 				break;
 
 		case 6: //log sweep & step        
-		case 7: sw = 13.f + (float)floor(30.f*params[3]);
-				swx = 13.f + (float)floor(30.f*params[4]);
+		case 7: sw = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F1));
+				swx = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F2));
 				if (sw>swx) { swd=swx; swx=sw; sw=swd; } //only sweep up
 				if (mode==7) swx += 1.f;
 				swd = (swx-sw) / (len*getSampleRate ());
@@ -236,17 +241,20 @@ void TestToneProcessor::recalculate ()
 				break; 
 
 		case 8: //lin sweep
-				sw = 200.f * (float)floor(100.f*params[3]);
-				swx = 200.f * (float)floor(100.f*params[4]);
+				sw = 200.f * (float)floor(100.f*param (TestToneParam::F1));
+				swx = 200.f * (float)floor(100.f*param (TestToneParam::F2));
 				if (sw>swx) { swd=swx; swx=sw; sw=swd; } //only sweep up
 				sw = twopi*sw/getSampleRate ();
 				swx = twopi*swx/getSampleRate ();
 				swd = (swx-sw) / (len*getSampleRate ());
 				swt= 2 * (int32)getSampleRate ();
 				break; 
+		default:
+				sw = swx = 0.f;
+				break;
 	}
-	thru = (float)pow (10.0f, (0.05f * (float)int (40.f*params[5])) - 2.f);
-	if (params[5]==0.0f) thru=0.0f;
+	thru = (float)pow (10.0f, (0.05f * (float)int (40.f*param (TestToneParam::Thru))) - 2.f);
+	if (param (TestToneParam::Thru)==0.0f) thru=0.0f;
 	fscale = twopi/getSampleRate ();
 }
 

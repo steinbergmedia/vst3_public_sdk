@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID LeslieProcessor::uid (0x5653546D, 0x6461486D, 0x6461206C, 0x65736C69);
+#else
 //-----------------------------------------------------------------------------
 FUID LeslieProcessor::uid (0xFBD3AD80, 0x9E2847E0, 0xB87CDEC3, 0x5C0469B1);
+#endif
 
 //-----------------------------------------------------------------------------
 LeslieProcessor::LeslieProcessor ()

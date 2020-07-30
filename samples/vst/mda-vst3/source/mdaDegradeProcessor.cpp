@@ -23,8 +23,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID DegradeProcessor::uid (0x5653546D, 0x6461436D, 0x64612064, 0x65677261);
+#else
 //-----------------------------------------------------------------------------
 FUID DegradeProcessor::uid (0xD31333A7, 0xA34E4690, 0xA279A0B0, 0x6C91BB85);
+#endif
 
 //-----------------------------------------------------------------------------
 DegradeProcessor::DegradeProcessor ()

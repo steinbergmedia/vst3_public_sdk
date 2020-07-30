@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,20 +38,21 @@
 *******************************************
 \page AUv3Wrapper VST 3 - Audio Unit v3 Wrapper
 *******************************************
+\tableofcontents
 
-Helper Class wrapping a VST 3 Plug-in to a Audio Unit v3 Plug-in
+\brief
+Helper Class wrapping a VST 3 plug-in to a Audio Unit v3 plug-in
 
 ***************************
 \section AUv3Introduction Introduction
 ***************************
 The VST 3 SDK comes with a helper class which wraps one VST 3 Audio Processor and Edit Controller to
-a AUv3 Plug-in.
+a AUv3 plug-in.
 
-The wrapped AudioUnit does support MPE when the VST3 Plug-in has Note Expression support. You need
+The wrapped AudioUnit does support MPE when the VST3 plug-in has Note Expression support. You need
 to implement \ref Steinberg::Vst::INoteExpressionPhysicalUIMapping to map your Note Expression to
 the limited three expressions defined by MPE.
-
-\n\n
+\n
 
 ***************************
 \section howtoAUv3 How does it work?

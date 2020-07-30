@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -118,8 +118,8 @@ tresult PLUGIN_API BaseEditorWrapper::resizeView (IPlugView* view, ViewRect* new
 //------------------------------------------------------------------------
 bool BaseEditorWrapper::hasEditor (IEditController* controller)
 {
-	/* Some Plug-ins might have large GUIs. In order to speed up hasEditor function while
-	 * initializing the Plug-in gPluginHasEditor can be set in EditController::initialize
+	/* Some plug-ins might have large GUIs. In order to speed up hasEditor function while
+	 * initializing the plug-in gPluginHasEditor can be set in EditController::initialize
 	 * beforehand. */
 	bool result = false;
 	if (gPluginHasEditor == kEditor)
@@ -646,7 +646,7 @@ void BaseWrapper::getUnitPath (UnitID unitID, String& path) const
 //------------------------------------------------------------------------
 int32 BaseWrapper::_getChunk (void** data, bool isPreset)
 {
-	// Host stores Plug-in state. Returns the size in bytes of the chunk (Plug-in allocates the data
+	// Host stores plug-in state. Returns the size in bytes of the chunk (Plug-in allocates the data
 	// array)
 	MemoryStream componentStream;
 	if (mComponent && mComponent->getState (&componentStream) != kResultTrue)
@@ -696,20 +696,21 @@ int32 BaseWrapper::_setChunk (void* data, int32 byteSize, bool isPreset)
 	VstPresetStream controllerStream (((char*)data) + acc.tell () + componentDataSize,
 	                                  controllerDataSize);
 
+	if (!isPreset)
+	{
+		if (Vst::IAttributeList* attr = componentStream.getAttributes ())
+			attr->setString (Vst::PresetAttributes::kStateType,
+				String (Vst::StateType::kProject));
+		if (Vst::IAttributeList* attr = controllerStream.getAttributes ())
+			attr->setString (Vst::PresetAttributes::kStateType,
+				String (Vst::StateType::kProject));
+	}
+
 	mComponent->setState (&componentStream);
 	componentStream.seek (0, IBStream::kIBSeekSet, nullptr);
 
 	if (mController)
 	{
-		if (!isPreset)
-		{
-			if (Vst::IAttributeList* attr = componentStream.getAttributes ())
-				attr->setString (Vst::PresetAttributes::kStateType,
-				                 String (Vst::StateType::kProject));
-			if (Vst::IAttributeList* attr = controllerStream.getAttributes ())
-				attr->setString (Vst::PresetAttributes::kStateType,
-				                 String (Vst::StateType::kProject));
-		}
 		mController->setComponentState (&componentStream);
 		mController->setState (&controllerStream);
 	}

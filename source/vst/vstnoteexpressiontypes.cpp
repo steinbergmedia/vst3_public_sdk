@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -230,8 +230,7 @@ NoteExpressionTypeContainer::NoteExpressionTypeContainer ()
 NoteExpressionTypeContainer::NoteExprTypeVector::const_iterator NoteExpressionTypeContainer::find (
     NoteExpressionTypeID typeId) const
 {
-	for (NoteExprTypeVector::const_iterator it = noteExps.begin (), end = noteExps.end ();
-	     it != end; ++it)
+	for (auto it = noteExps.begin (), end = noteExps.end (); it != end; ++it)
 	{
 		if ((*it)->getInfo ().typeId == typeId)
 		{
@@ -244,14 +243,14 @@ NoteExpressionTypeContainer::NoteExprTypeVector::const_iterator NoteExpressionTy
 //-----------------------------------------------------------------------------
 bool NoteExpressionTypeContainer::addNoteExpressionType (NoteExpressionType* noteExpType)
 {
-	noteExps.push_back (IPtr<NoteExpressionType> (noteExpType, false));
+	noteExps.emplace_back (noteExpType, false);
 	return true;
 }
 
 //-----------------------------------------------------------------------------
 bool NoteExpressionTypeContainer::removeNoteExpressionType (NoteExpressionTypeID typeId)
 {
-	NoteExprTypeVector::const_iterator it = find (typeId);
+	auto it = find (typeId);
 	if (it != noteExps.end ())
 	{
 		noteExps.erase (it);
@@ -269,7 +268,7 @@ void NoteExpressionTypeContainer::removeAll ()
 //-----------------------------------------------------------------------------
 NoteExpressionType* NoteExpressionTypeContainer::getNoteExpressionType (NoteExpressionTypeID typeId)
 {
-	NoteExprTypeVector::const_iterator it = find (typeId);
+	auto it = find (typeId);
 	if (it != noteExps.end ())
 		return (*it);
 	return nullptr;

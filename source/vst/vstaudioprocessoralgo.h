@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -200,6 +200,33 @@ inline void mix64 (AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCoun
 	foreach64 (src, dest, [&] (Sample64* srcBuffer, Sample64* destBuffer, int32 /*channelIndex*/) {
 		for (int32 sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex)
 			destBuffer[sampleIndex] += srcBuffer[sampleIndex];
+	});
+}
+
+//------------------------------------------------------------------------
+/* Multiply buffer with a constant */
+template <typename T>
+inline void multiply(T* srcBuffer, T* destBuffer, int32 sampleCount, T factor)
+{
+	for (int32 sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex)
+		destBuffer[sampleIndex] = srcBuffer[sampleIndex] * factor;
+}
+
+//------------------------------------------------------------------------
+/* Multiply all channels of AudioBusBuffer with a constant */
+inline void multiply32(AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, float factor)
+{
+	foreach32(src, dest, [&](Sample32* srcBuffer, Sample32* destBuffer, int32 /*channelIndex*/) {
+		multiply(srcBuffer, destBuffer, sampleCount, factor);
+	});
+}
+
+//------------------------------------------------------------------------
+/* Multiply all channels of AudioBusBuffer with a constant */
+inline void multiply64(AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, double factor)
+{
+	foreach64(src, dest, [&](Sample64* srcBuffer, Sample64* destBuffer, int32 /*channelIndex*/) {
+		multiply(srcBuffer, destBuffer, sampleCount, factor);
 	});
 }
 

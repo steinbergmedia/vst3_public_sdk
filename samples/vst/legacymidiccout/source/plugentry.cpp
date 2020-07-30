@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -75,14 +75,14 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 			   "http://www.steinberg.net", 
 			   "mailto:info@steinberg.de")
 
-	//---First Plug-in included in this factory-------
+	//---First plug-in included in this factory-------
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(LegacyMIDICCOut::PlugProcessorUID),
 				PClassInfo::kManyInstances,	// cardinality  
 				kVstAudioEffectClass,		// the component category (do not changed this)
-				stringPluginName,			// here the Plug-in name (to be changed)
+				stringPluginName,			// here the plug-in name (to be changed)
 				Vst::kDistributable,	// means that component and controller could be distributed on different computers
-				"Fx",					// Subcategory for this Plug-in (to be changed)
+				"Fx",					// Subcategory for this plug-in (to be changed)
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
 				kVstVersionString,		// the VST 3 SDK version (do not changed this, use always this define)
 				LegacyMIDICCOut::Plug::createInstance)	// function pointer called when this component should be instantiated

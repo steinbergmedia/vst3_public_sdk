@@ -1,14 +1,14 @@
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/hosting/optional.h
-// Created by  : Steinberg, 08/2016
-// Description : optional helper
+// Filename    : public.sdk/source/vst/vsthelpers.h
+// Created by  : Steinberg, 11/2018
+// Description : common defines
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,89 +35,58 @@
 //-----------------------------------------------------------------------------
 
 #pragma once
+#include "pluginterfaces/base/ibstream.h"
+#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/ivstattributes.h"
+#include "pluginterfaces/vst/vstpresetkeys.h"
 
-#include <cassert>
-#include <memory>
-#include <utility>
+#include <cstring>
 
 //------------------------------------------------------------------------
-namespace VST3 {
+namespace Steinberg {
+namespace Vst {
+namespace Helpers {
+//------------------------------------------------------------------------
+/** Helpers */
+//------------------------------------------------------------------------
 
 //------------------------------------------------------------------------
-template <typename T>
-struct Optional
+/** Retrieve from a IBStream the state type, here the StateType::kProject
+	return kResultTrue if the state is coming from a project,
+	return kResultFalse if the state is coming from a preset,
+	return kNotImplemented if the host does not implement such feature
+*/
+tresult isProjectState (IBStream* state)
 {
-	Optional () noexcept : valid (false) {}
-	explicit Optional (const T& v) noexcept : value (v), valid (true) {}
-	Optional (T&& v) noexcept : value (std::move (v)), valid (true) {}
+	if (!state)
+		return kInvalidArgument;
 
-	Optional (Optional&& other) noexcept { *this = std::move (other); }
-	Optional& operator= (Optional&& other) noexcept
+	FUnknownPtr<IStreamAttributes> stream (state);
+	if (!stream)
+		return kNotImplemented;
+
+	if (IAttributeList* list = stream->getAttributes ())
 	{
-		valid = other.valid;
-		value = std::move (other.value);
-		return *this;
+		// get the current type (project/Default..) of this state
+		String128 string = {0};
+		if (list->getString (PresetAttributes::kStateType, string, 128 * sizeof (TChar)) ==
+		    kResultTrue)
+		{
+			UString128 tmp (string);
+			char ascii[128];
+			tmp.toAscii (ascii, 128);
+			if (!strncmp (ascii, StateType::kProject, strlen (StateType::kProject)))
+			{
+				return kResultTrue;
+			}
+			return kResultFalse;
+		}
 	}
-
-	explicit operator bool () const noexcept
-	{
-		setValidationChecked ();
-		return valid;
-	}
-
-	const T& operator* () const noexcept
-	{
-		checkValid ();
-		return value;
-	}
-
-	const T* operator-> () const noexcept
-	{
-		checkValid ();
-		return &value;
-	}
-
-	T& operator* () noexcept
-	{
-		checkValid ();
-		return value;
-	}
-
-	T* operator-> () noexcept
-	{
-		checkValid ();
-		return &value;
-	}
-
-	void swap (T& other) noexcept
-	{
-		checkValid ();
-		auto tmp = std::move (other);
-		other = std::move (value);
-		value = std::move (tmp);
-	}
-
-private:
-	T value {};
-	bool valid;
-
-#if !defined(NDEBUG)
-	mutable bool validationChecked {false};
-#endif
-
-	void setValidationChecked () const
-	{
-#if !defined(NDEBUG)
-		validationChecked = true;
-#endif
-	}
-	void checkValid () const
-	{
-#if !defined(NDEBUG)
-		assert (validationChecked);
-#endif
-	}
-};
+	return kNotImplemented;
+}
+/*@}*/
 
 //------------------------------------------------------------------------
-}
+} // namespace Helpers
+} // namespace Vst
+} // namespace Steinberg

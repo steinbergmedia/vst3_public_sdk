@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2014, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -40,6 +40,7 @@
 #include "base/source/fstring.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
 #include "public.sdk/source/vst/utility/test/ringbuffertest.h"
+#include "public.sdk/source/vst/utility/test/versionparsertest.h"
 
 namespace Steinberg {
 
@@ -60,6 +61,7 @@ tresult PLUGIN_API ADelayTestFactory::createTests (FUnknown* context, ITestSuite
 	{
 		parentSuite->addTest ("ExampleTest", owned (new ADelayTest (plugProvider)));
 		parentSuite->addTest ("Ringbuffer Tests", owned (new RingBufferTest ()));
+		parentSuite->addTest ("VersionParser Tests", owned (new VersionParserTest ()));
 	}
 	return kResultTrue;
 }

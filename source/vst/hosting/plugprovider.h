@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ class ConnectionProxy;
 /** Helper for creating and initializing component.
 \ingroup Validator */
 //------------------------------------------------------------------------
-class PlugProvider : public FObject, public ITestPlugProvider
+class PlugProvider : public FObject, public ITestPlugProvider2
 {
 public:
 	using ClassInfo = VST3::Hosting::ClassInfo;
@@ -72,10 +72,13 @@ public:
 	}
 	tresult PLUGIN_API getComponentUID (FUID& uid) const SMTG_OVERRIDE;
 
+	//--- from ITestPlugProvider2 ------------------
+	IPluginFactory* PLUGIN_API getPluginFactory () SMTG_OVERRIDE;
+
 	//--- ---------------------------------------------------------------------
 	OBJ_METHODS (PlugProvider, FObject)
 	REFCOUNT_METHODS (FObject)
-	DEF_INTERFACES_1(ITestPlugProvider, FObject)
+	DEF_INTERFACES_2(ITestPlugProvider, ITestPlugProvider2, FObject)
 //------------------------------------------------------------------------
 protected:
 	bool setupPlugin (FUnknown* hostContext);

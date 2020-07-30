@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -507,7 +507,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 		if (editController)
 		{
 			editController->setComponentHandler (this);
-			// initialize buses
+			// initialize busses
 			FUnknownPtr<IComponent> component (audioProcessor);
 			int32 inputBusCount = component->getBusCount (kAudio, kInput);
 			int32 outputBusCount = component->getBusCount (kAudio, kOutput);

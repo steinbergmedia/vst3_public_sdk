@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,10 +39,6 @@
 #include "hostcheckercontroller.h"
 #include "cids.h"
 #include "version.h"	// for versioning
-
-
-#define stringPluginName "VST3 Host Checker"
-
 
 BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
 				   "http://www.steinberg.net", 

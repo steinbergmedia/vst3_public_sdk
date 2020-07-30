@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -45,6 +45,7 @@
 #include "public.sdk/source/vst/testsuite/general/editorclasses.h"
 #include "public.sdk/source/vst/testsuite/general/midilearn.h"
 #include "public.sdk/source/vst/testsuite/general/midimapping.h"
+#include "public.sdk/source/vst/testsuite/general/parameterfunctionname.h"
 #include "public.sdk/source/vst/testsuite/general/scanparameters.h"
 #include "public.sdk/source/vst/testsuite/general/suspendresume.h"
 #include "public.sdk/source/vst/testsuite/general/terminit.h"
@@ -52,6 +53,7 @@
 #include "public.sdk/source/vst/testsuite/noteexpression/noteexpression.h"
 #include "public.sdk/source/vst/testsuite/processing/automation.h"
 #include "public.sdk/source/vst/testsuite/processing/process.h"
+#include "public.sdk/source/vst/testsuite/processing/processcontextrequirements.h"
 #include "public.sdk/source/vst/testsuite/processing/processformat.h"
 #include "public.sdk/source/vst/testsuite/processing/processinputoverwriting.h"
 #include "public.sdk/source/vst/testsuite/processing/processtail.h"

@@ -1,4 +1,5 @@
 //------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -8,39 +9,39 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #include "plugcontroller.h"
 #include "plugparamids.h"
-#include "pluginterfaces/base/ustring.h"
-#include "pluginterfaces/base/ibstream.h"
 #include "vstgui/lib/controls/ctextlabel.h"
 #include "vstgui/lib/cstring.h"
 #include "base/source/fstreamer.h"
+#include "pluginterfaces/base/ibstream.h"
+#include "pluginterfaces/base/ustring.h"
 
 using namespace VSTGUI;
 
@@ -53,7 +54,7 @@ namespace Vst {
 tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 {
 	mTextLabel = nullptr;
-	
+
 	tresult result = EditControllerEx1::initialize (context);
 	if (result != kResultOk)
 	{
@@ -65,10 +66,9 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	//---Bypass parameter---
 	int32 stepCount = 1;
 	ParamValue defaultVal = 0;
-	int32 flags = ParameterInfo::kCanAutomate|ParameterInfo::kIsBypass;
+	int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
 	parameters.addParameter (STR16 ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
-
 
 	return result;
 }
@@ -95,10 +95,10 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 }
 
 //------------------------------------------------------------------------
-IPlugView* PLUGIN_API PlugController::createView (const char* name)
+IPlugView* PLUGIN_API PlugController::createView (const char* _name)
 {
-	// someone wants my editor
-	if (name && strcmp (name, "editor") == 0)
+	ConstString name (_name);
+	if (name == ViewType::kEditor)
 	{
 		return new VST3Editor (this, "Editor", "plug.uidesc");
 	}
@@ -106,7 +106,8 @@ IPlugView* PLUGIN_API PlugController::createView (const char* name)
 }
 
 //------------------------------------------------------------------------
-CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes& attributes, const IUIDescription* description, VST3Editor* editor)
+CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes& attributes,
+                                         const IUIDescription* description, VST3Editor* editor)
 {
 	if (name && strcmp (name, "NoteExpressionText") == 0)
 	{
@@ -118,7 +119,7 @@ CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes&
 }
 
 //------------------------------------------------------------------------
-void PlugController::willClose (VST3Editor* editor) 
+void PlugController::willClose (VST3Editor* editor)
 {
 	mTextLabel = nullptr;
 }
@@ -132,7 +133,8 @@ tresult PLUGIN_API PlugController::notify (IMessage* message)
 	if (!strcmp (message->getMessageID (), "TextMessage") && mTextLabel)
 	{
 		TChar string[256] = {0};
-		if (message->getAttributes ()->getString ("Text", string, sizeof (string) / sizeof (char16)) == kResultOk)
+		if (message->getAttributes ()->getString ("Text", string,
+		                                          sizeof (string) / sizeof (char16)) == kResultOk)
 		{
 			char8 cstr[256];
 			String tmp (string);
@@ -153,7 +155,6 @@ tresult PlugController::receiveText (const char8* text)
 	return kResultOk;
 }
 
-
 //------------------------------------------------------------------------
 int32 PLUGIN_API PlugController::getNoteExpressionCount (int32 busIndex, int16 channel)
 {
@@ -163,7 +164,9 @@ int32 PLUGIN_API PlugController::getNoteExpressionCount (int32 busIndex, int16 c
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
+tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 channel,
+                                                          int32 noteExpressionIndex,
+                                                          NoteExpressionTypeInfo& info /*out*/)
 {
 	if (busIndex == 0 && channel == 0)
 	{
@@ -175,7 +178,7 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 			UString128 ("").copyTo (info.units, 128);
 			info.unitId = -1;
 			info.associatedParameterId = -1;
-			info.flags = 0;	
+			info.flags = 0;
 		}
 		else if (noteExpressionIndex == 1)
 		{
@@ -185,7 +188,7 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 			UString128 ("").copyTo (info.units, 128);
 			info.unitId = -1;
 			info.associatedParameterId = -1;
-			info.flags = 0;	
+			info.flags = 0;
 		}
 		return kResultTrue;
 	}
@@ -194,15 +197,19 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API PlugController::getNoteExpressionStringByValue (int32 busIndex, int16 channel, NoteExpressionTypeID id, NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+tresult PLUGIN_API PlugController::getNoteExpressionStringByValue (
+    int32 busIndex, int16 channel, NoteExpressionTypeID id,
+    NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
 {
 	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API PlugController::getNoteExpressionValueByString (int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/, NoteExpressionValue& valueNormalized /*out*/)
+tresult PLUGIN_API PlugController::getNoteExpressionValueByString (
+    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
+    NoteExpressionValue& valueNormalized /*out*/)
 {
 	return kResultFalse;
 }
-
-}} // namespaces
+}
+} // namespaces

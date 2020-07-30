@@ -24,8 +24,13 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+//-----------------------------------------------------------------------------
+FUID DubDelayProcessor::uid (0x5653546D, 0x6461626D, 0x64612064, 0x75626465);
+#else
 //-----------------------------------------------------------------------------
 FUID DubDelayProcessor::uid (0xA49D1232, 0x24794649, 0xA57337B4, 0xDDC5041C);
+#endif
 
 //-----------------------------------------------------------------------------
 DubDelayProcessor::DubDelayProcessor ()

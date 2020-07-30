@@ -27,7 +27,9 @@ class BandistoProcessor : BaseProcessor
 {
 public:
 	BandistoProcessor ();
-	
+
+	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaD'; }
+
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 
 	void doProcessing (ProcessData& data) SMTG_OVERRIDE;

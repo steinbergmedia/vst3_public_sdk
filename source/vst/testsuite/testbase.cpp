@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,7 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/testbase.h"
-#include "public.sdk/source/vst/hosting/stringconvert.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include <cstdarg>
 
 //------------------------------------------------------------------------
@@ -71,13 +71,7 @@ bool TestBase::setup ()
 		vstPlug = plugProvider->getComponent ();
 		controller = plugProvider->getController ();
 
-		if (vstPlug)
-		{
-			vstPlug->activateBus (kAudio, kInput, 0, true);
-			vstPlug->activateBus (kAudio, kOutput, 0, true);
-
-			return true;
-		}
+		return activateMainIOBusses (true);
 	}
 	return false;
 }
@@ -87,14 +81,26 @@ bool TestBase::teardown ()
 {
 	if (vstPlug)
 	{
-		if (vstPlug)
-		{
-			vstPlug->activateBus (kAudio, kInput, 0, false);
-			vstPlug->activateBus (kAudio, kOutput, 0, false);
-		}
+		activateMainIOBusses (false);
 		plugProvider->releasePlugIn (vstPlug, controller);
 	}
 	return true;
+}
+
+//------------------------------------------------------------------------
+bool TestBase::activateMainIOBusses (bool val)
+{
+	if (vstPlug)
+	{
+		if (auto countIn = vstPlug->getBusCount (kAudio, kInput) > 0)
+			vstPlug->activateBus (kAudio, kInput, 0, val);
+		if (auto countOut = vstPlug->getBusCount (kAudio, kOutput) > 0)
+			vstPlug->activateBus (kAudio, kOutput, 0, val);
+
+		return true;
+	}
+
+	return false;
 }
 
 //------------------------------------------------------------------------

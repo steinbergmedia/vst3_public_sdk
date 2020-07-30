@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2019, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -69,7 +69,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	addUnit (new Unit (String ("Root"), kRootUnitId, kNoParentUnitId, kProgramId));
 
 	// create the program list: here kNumProgs entries
-	ProgramList* prgList = new ProgramList (String ("Bank"), kProgramId, kRootUnitId);
+	auto* prgList = new ProgramList (String ("Bank"), kProgramId, kRootUnitId);
 	addProgramList (prgList);
 	for (int32 i = 0; i < kNumProgs; i++)
 	{
