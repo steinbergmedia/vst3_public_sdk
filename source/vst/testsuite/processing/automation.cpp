@@ -107,10 +107,10 @@ bool AutomationTest::setup ()
 		numParams = controller->getParameterCount ();
 	if (audioEffect && (numParams > 0))
 	{
-		paramChanges.push_back (owned (new ParamChanges));
 		ParameterInfo inf = {};
 		for (int32 i = 0; i < numParams; ++i)
 		{
+			paramChanges.push_back (owned (new ParamChanges));
 			tresult r = controller->getParameterInfo (i, inf);
 			if (r != kResultTrue)
 				return false;
