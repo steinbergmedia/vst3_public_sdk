@@ -576,6 +576,13 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 
 			timer = Timer::create (this, 20);
 		}
+
+		IEditController2* editController2 = nullptr;
+		if (editController->queryInterface (IEditController2::iid, (void**)&editController2) ==
+		    kResultTrue)
+		{
+			editController2->setKnobMode (kLinearMode);
+		}
 	}
 }
 
