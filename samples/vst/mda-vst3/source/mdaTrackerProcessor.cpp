@@ -17,7 +17,7 @@
 #include "mdaTrackerProcessor.h"
 #include "mdaTrackerController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

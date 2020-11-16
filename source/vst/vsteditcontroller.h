@@ -86,7 +86,7 @@ public:
 
 	//---from ComponentBase---------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
-	tresult PLUGIN_API terminate  () SMTG_OVERRIDE;
+	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
 	//---Internal Methods-------
 	virtual tresult beginEdit (ParamID tag);	///< to be called before a serie of performEdit

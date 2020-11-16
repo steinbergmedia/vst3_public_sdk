@@ -1,6 +1,6 @@
 
 if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
-    include(AddAAXLibrary)
+    include(SMTG_AddAAXLibrary)
 
     set(hostchecker_sources
         ../hostchecker/resource/hostchecker.uidesc
@@ -34,9 +34,8 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     set(target hostchecker_aax)
     smtg_add_aaxplugin(${target} ${hostchecker_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
     target_include_directories(${target} PUBLIC ${SDK_ROOT}/public.sdk/samples/vst/hostchecker/source)
-    target_link_libraries(${target} PRIVATE base sdk vstgui_support aaxwrapper)
+    target_link_libraries(${target} PRIVATE sdk vstgui_support aaxwrapper)
 
     smtg_add_vst3_resource(${target} ../hostchecker/resource/hostchecker.uidesc)
     smtg_add_vst3_resource(${target} ../hostchecker/resource/bypass.png)

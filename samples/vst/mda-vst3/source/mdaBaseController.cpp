@@ -50,9 +50,9 @@ tresult PLUGIN_API BaseController::initialize (FUnknown* context)
 
 		if (addBypassParameter)
 		{
-			IndexedParameter* bypassParam = new IndexedParameter (
-			    USTRING ("Bypass"), 0, 1, 0, ParameterInfo::kIsBypass | ParameterInfo::kCanAutomate,
-			    kBypassParam);
+			auto* bypassParam = new IndexedParameter (
+			    USTRING ("Bypass"), nullptr, 1, 0,
+			    ParameterInfo::kIsBypass | ParameterInfo::kCanAutomate, kBypassParam);
 			bypassParam->setIndexString (0, UString128 ("off"));
 			bypassParam->setIndexString (1, UString128 ("on"));
 			parameters.addParameter (bypassParam);
@@ -184,7 +184,7 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API BaseController::getMidiControllerAssignment (int32 busIndex, int16 channel,
+tresult PLUGIN_API BaseController::getMidiControllerAssignment (int32 busIndex, int16 /*channel*/,
                                                                 CtrlNumber midiControllerNumber,
                                                                 ParamID& tag /*out*/)
 {

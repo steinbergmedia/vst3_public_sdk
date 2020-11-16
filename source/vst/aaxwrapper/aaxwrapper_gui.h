@@ -60,8 +60,14 @@ public:
 	                                    AAX_CBoolean /* iIsHighlighted */,
 	                                    AAX_EHighlightColor /* iColor */) SMTG_OVERRIDE;
 
+	AAX_Result TimerWakeup () SMTG_OVERRIDE;
+
+	bool setWindowSize (AAX_Point& size); // calback from AAXWrapper
+
 private:
-	void* mHWND;
+	bool mInOpen = false;
+	bool mRefreshSize = false;
+	void* mHWND = nullptr;
 };
 
 /// \endcond

@@ -35,17 +35,13 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
+#include "pluginterfaces/base/fplatform.h"
+
 #ifndef __CF_USE_FRAMEWORK_INCLUDES__
 #define __CF_USE_FRAMEWORK_INCLUDES__ 1
 #endif
 
 #include <CoreFoundation/CoreFoundation.h>
-
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#define EXPORT __attribute__ ((visibility ("default")))
-#else
-#define EXPORT
-#endif
 
 //------------------------------------------------------------------------
 CFBundleRef ghInst = 0;
@@ -60,8 +56,8 @@ bool DeinitModule (); ///< must be provided by plug-in: called when the library 
 
 //------------------------------------------------------------------------
 extern "C" {
-EXPORT bool bundleEntry (CFBundleRef);
-EXPORT bool bundleExit (void);
+SMTG_EXPORT_SYMBOL bool bundleEntry (CFBundleRef);
+SMTG_EXPORT_SYMBOL bool bundleExit (void);
 }
 
 #include <vector>

@@ -91,10 +91,15 @@ struct LogEvent
 	LOG_DEF(kLogIdsetActiveTrueRedundant,		PROCESS,	LOG_WARN, STATE, "Redondant Call: setActive (true)!"), \
 	LOG_DEF(kLogIdsetProcessingFalseRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (false)!"), \
 	LOG_DEF(kLogIdsetProcessingTrueRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (true)!"), \
+	LOG_DEF(kLogIdProcessContextPointerNull,	PROCESS,	LOG_WARN, PROCESS_DATA, "Pointer to ProcessContext struct is null."),\
 	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdInvalidBlockSize,				PROCESS,	LOG_ERR, PROCESS_DATA, "Block size is either < 1 or >= max block size."),\
-	LOG_DEF(kLogIdProcessContextPointerNull,	PROCESS,	LOG_WARN, PROCESS_DATA, "Pointer to ProcessContext struct is null."),\
+	LOG_DEF (kLogIdProcessPlaybackChangedDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected due to Start/Stop."),\
+	LOG_DEF (kLogIdProcessDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected during playback or pause."),\
+	LOG_DEF (kLogIdProcessPlaybackChangedContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected due to Start/Stop."),\
+	LOG_DEF (kLogIdProcessContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected during playback or pause."),\
+	\
 	LOG_DEF(kLogIdInvalidProcessContextSampleRate,	PROCESS, LOG_ERR, PROCESS_CONTEXT, "The sampleRate does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdNullPointerToChannelBuf,		PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAuxChannelBuf,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a SideChain channel buffer is null although the index is valid."),\
@@ -122,7 +127,7 @@ struct LogEvent
 	LOG_DEF(kLogIdInvalidParameterCount,			PROCESS, LOG_ERR, PARAM_CHANGE, "The number of changes is bigger than the number of parameters specified by IEditController."),\
 	LOG_DEF(kLogIdInvalidParameterID,				PROCESS, LOG_ERR, PARAM_CHANGE, "A parameter change queue has a parameter ID which was not specified by IEditController."),\
 	LOG_DEF(kLogIdParameterChangesPointerIsNull,	PROCESS, LOG_WARN, PARAM_CHANGE, "Pointer to parameter changes interface is null."),\
-	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null, although index is valid."),\
+	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null (index is valid!)"),\
 	LOG_DEF(kLogIdParametersAreNotSortedBySampleOffset, PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter changes (for a ID) are not sorted by sample offset."),\
 	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than one time the same sample offset."),\
 	\
@@ -177,6 +182,10 @@ struct LogEvent
 	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
 	LOG_DEF(kLogIdIProcessContextRequirementsSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IProcessContextRequirements supported!"), \
 	\
+	LOG_DEF(kLogIdProcessModeOfflineSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT,  "ProcessMode::kOffline supported!"), \
+	LOG_DEF(kLogIdProcessModeRealtimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kRealtime supported!"), \
+	LOG_DEF(kLogIdProcessModePrefetchSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kPrefetch supported!"), \
+	\
 	LOG_DEF(kLogIdProcessContextPlayingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kPlaying supported!"), \
 	LOG_DEF(kLogIdProcessContextRecordingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kRecording supported!"), \
 	LOG_DEF(kLogIdProcessContextCycleActiveSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kCycleActive supported!"), \
@@ -222,7 +231,7 @@ struct LogEvent
 	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
 	LOG_DEF (kLogIdIAutomationStateSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
 	LOG_DEF (kLogIdIEditControllerHostEditingSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
-	LOG_DEF(kLogIdIEditControllerHostEditingMisused,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IEditControllerHostEditing::beginEditFromHost-endEditFromHost not correctly used!"), \
+	LOG_DEF(kLogIdIEditControllerHostEditingMisused,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IEditControllerHostEditing::beginEdit/endEditFromHost not correctly used!"), \
 	\
 	LOG_DEF(kLogIdIPlugViewonSizeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize supported!"), \
 	LOG_DEF(kLogIdIPlugViewcanResizeSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::canResize supported!"), \
@@ -247,7 +256,8 @@ struct LogEvent
 	LOG_DEF(kLogIdIParameterFinderSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IParameterFinder supported!"), \
 	LOG_DEF(kLogIdIParameterFunctionNameSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName supported!"), \
 	\
-	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")
+	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")	
+
 
 #define LOG_ID(a, b, c, d, e) a
 #define LOG_SEVER(a, b, c, d, e) c

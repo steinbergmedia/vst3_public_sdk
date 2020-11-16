@@ -157,24 +157,40 @@ Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ()
 //------------------------------------------------------------------------
 namespace Steinberg {
 
-class AUPlugFrame : public FObject, public IPlugFrame
+//------------------------------------------------------------------------
+class AUPlugFrame final : public IPlugFrame
 {
 public:
-	AUPlugFrame (SMTG_IOS_MAC_VIEW* parent) : parent (parent) {}
+	using OnResizeCallback = std::function<void (ViewRect*)>;
+
+	AUPlugFrame (OnResizeCallback&& callback) : callback (std::move (callback)) {}
 	tresult PLUGIN_API resizeView (IPlugView* view, ViewRect* vr) SMTG_OVERRIDE
 	{
-		CGRect newSize = CGRectMake ([parent frame].origin.x, [parent frame].origin.y,
-		                             vr->right - vr->left, vr->bottom - vr->top);
-		[parent setFrame:newSize];
+		callback (vr);
 		return kResultTrue;
 	}
 
-	OBJ_METHODS (AUPlugFrame, FObject)
-	DEF_INTERFACES_1 (IPlugFrame, FObject)
-	REFCOUNT_METHODS (FObject)
+	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override
+	{
+		QUERY_INTERFACE (_iid, obj, IPlugFrame::iid, IPlugFrame);
+		QUERY_INTERFACE (_iid, obj, ::Steinberg::FUnknown::iid, IPlugFrame);
+		*obj = nullptr;
+		return kNoInterface;
+	}
+	uint32 PLUGIN_API addRef () override { return ++refCount; }
+	uint32 PLUGIN_API release () override
+	{
+		if (--refCount == 0)
+		{
+			delete this;
+			return 0;
+		}
+		return refCount;
+	}
 
-protected:
-	SMTG_IOS_MAC_VIEW* parent;
+private:
+	std::atomic<int32> refCount {1};
+	OnResizeCallback callback;
 };
 
 namespace Vst {
@@ -1262,7 +1278,7 @@ using namespace Vst;
 			bus.name = convertedNSString;
 		}
 
-		component->activateBus (kAudio, kInput, busNum, false);
+		component->activateBus (kAudio, isInput ? kInput : kOutput, busNum, true);
 
 		if (bus != nil)
 			[busArray addObject:bus];
@@ -1511,7 +1527,7 @@ using namespace Vst;
 		ps.sampleRate = sampleRate;
 		ps.maxSamplesPerBlock = self.maximumFramesToRender;
 		ps.symbolicSampleSize = kSample32;
-		ps.processMode = kRealtime;
+		ps.processMode = self.isRenderingOffline ? kOffline : kRealtime;
 
 		audioProcessor->setupProcessing (ps);
 
@@ -1999,7 +2015,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)setRenderingOffline:(BOOL)renderingOffline
 {
-	// set offline rendering of vst3 to true
+	renderingOfflineValue = renderingOffline;
 }
 
 //------------------------------------------------------------------------
@@ -2428,10 +2444,13 @@ using namespace Vst;
 - (void)setFrame:(CGRect)newSize
 {
 	[super.view setFrame:newSize];
-	ViewRect viewRect (0, 0, newSize.size.width, newSize.size.height);
+	self.preferredContentSize = newSize.size;
 
 	if (plugView)
+	{
+		ViewRect viewRect (0, 0, newSize.size.width, newSize.size.height);
 		plugView->onSize (&viewRect);
+	}
 }
 
 //------------------------------------------------------------------------
@@ -2453,42 +2472,47 @@ using namespace Vst;
 		editController->addRef ();
 
 	dispatch_async (dispatch_get_main_queue (), ^{
-  //------------------------------------------------------------------------
-	  //  attach from VST3Editor.mm
-  //------------------------------------------------------------------------
-	  FUnknownPtr<IEditController2> ec2 (editController);
-	  if (ec2)
-		  ec2->setKnobMode (kLinearMode);
+		//------------------------------------------------------------------------
+		//  attach from VST3Editor.mm
+		//------------------------------------------------------------------------
+		FUnknownPtr<IEditController2> ec2 (editController);
+		if (ec2)
+			ec2->setKnobMode (kLinearMode);
 
-	  // create view
-	  plugView = editController->createView (ViewType::kEditor);
-	  if (plugView)
-	  {
-		  if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
-		  {
-			  plugFrame = NEW AUPlugFrame (self.view);
-			  plugView->setFrame (plugFrame);
+		// create view
+		plugView = editController->createView (ViewType::kEditor);
+		if (plugView)
+		{
+			if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
+			{
+				plugFrame = NEW AUPlugFrame ([self] (ViewRect* vr) {
+					auto viewFrame = self.view.frame;
+					CGRect newSize = CGRectMake (viewFrame.origin.x, viewFrame.origin.y,
+											vr->getWidth (), vr->getHeight ());
+					[self setFrame:newSize];
+				});
+				plugView->setFrame (plugFrame);
 
-			  if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) ==
-				  kResultTrue)
-			  {
-				  ViewRect vr;
-				  if (plugView->getSize (&vr) == kResultTrue)
-				  {
-					  int viewWidth = vr.right - vr.left;
-					  int viewHeight = vr.bottom - vr.top;
-					  CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
-					  [self setFrame:newSize];
-					  self.preferredContentSize = CGSizeMake (viewWidth, viewHeight);
-				  }
-			  }
-		  }
-		  else
-		  {
-			  plugView->release ();
-			  plugView = 0;
-		  }
-	  }
+				if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) == 
+					kResultTrue)
+				{
+					isAttached = TRUE;
+					ViewRect vr;
+					if (plugView->getSize (&vr) == kResultTrue)
+					{
+						int viewWidth = vr.right - vr.left;
+						int viewHeight = vr.bottom - vr.top;
+						CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
+						[self setFrame:newSize];
+					}
+				}
+			}
+			else
+			{
+				plugView->release ();
+				plugView = 0;
+			}
+		}
 	});
 }
 

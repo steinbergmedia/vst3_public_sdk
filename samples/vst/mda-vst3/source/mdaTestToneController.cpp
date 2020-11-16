@@ -147,7 +147,7 @@ public:
 		return plainValue;
 	}
 
-	void PLUGIN_API update (FUnknown* changedUnknown, int32 message) SMTG_OVERRIDE
+	void PLUGIN_API update (FUnknown* /*changedUnknown*/, int32 message) SMTG_OVERRIDE
 	{
 		if (message != kChanged)
 			return;
@@ -184,7 +184,7 @@ tresult PLUGIN_API TestToneController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 8, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid (TestToneParam::Mode));
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 8, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid (TestToneParam::Mode));
 		modeParam->setIndexString (0, UString128("MIDI #"));
 		modeParam->setIndexString (1, UString128("IMPULSE"));
 		modeParam->setIndexString (2, UString128("WHITE"));
@@ -196,7 +196,7 @@ tresult PLUGIN_API TestToneController::initialize (FUnknown* context)
 		modeParam->setIndexString (8, UString128("LIN SWP."));
 		parameters.addParameter (modeParam);
 		parameters.addParameter (new ScaledParameter (USTRING("Level"), USTRING("dB"), 0, 0.6, ParameterInfo::kCanAutomate, pid (TestToneParam::Level), -60, 0, true));
-		IndexedParameter* channelParam = new IndexedParameter (USTRING("Channel"), USTRING("L <> R"), 2, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid (TestToneParam::Channel));
+		auto* channelParam = new IndexedParameter (USTRING("Channel"), USTRING("L <> R"), 2, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid (TestToneParam::Channel));
 		channelParam->setIndexString (0, UString128("LEFT"));
 		channelParam->setIndexString (1, UString128("CENTER"));
 		channelParam->setIndexString (2, UString128("RIGHT"));
@@ -320,7 +320,7 @@ void PLUGIN_API TestToneController::update (FUnknown* changedUnknown, int32 mess
 					componentHandler->restartComponent (kParamTitlesChanged | kParamValuesChanged);
 			}
 		}
-		else if (auto param = FCast<FineTuneParameter> (changedUnknown))
+		else if (auto param2 = FCast<FineTuneParameter> (changedUnknown))
 		{
 			if (componentHandler)
 				componentHandler->restartComponent (kParamValuesChanged);
@@ -351,7 +351,6 @@ tresult PLUGIN_API TestToneController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API TestToneController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	
 	/*

@@ -17,7 +17,7 @@
 #include "mdaOverdriveProcessor.h"
 #include "mdaOverdriveController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

@@ -47,7 +47,7 @@ tresult PLUGIN_API LoudnessController::initialize (FUnknown* context)
 		ParamID pid = 0;
 		parameters.addParameter (USTRING("Loudness"), USTRING("dB"), 0, 0.15, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Output"), USTRING("dB"), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
-		IndexedParameter* linkParam = new IndexedParameter (USTRING("Link"), USTRING(""), 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* linkParam = new IndexedParameter (USTRING("Link"), USTRING(""), 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		linkParam->setIndexString (0, UString128("Off"));
 		linkParam->setIndexString (1, UString128("On"));
 		parameters.addParameter (linkParam);
@@ -86,7 +86,6 @@ tresult PLUGIN_API LoudnessController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API LoudnessController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

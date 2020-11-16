@@ -232,7 +232,7 @@ public:
 	VstPresetStream (void* memory, TSize memorySize) : MemoryStream (memory, memorySize) {}
 
 	//---from Vst::IStreamAttributes-----
-	tresult PLUGIN_API getFileName (String128 name) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API getFileName (String128 /*name*/) SMTG_OVERRIDE { return kNotImplemented; }
 	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return &attrList; }
 
 //------------------------------------------------------------------------
@@ -644,7 +644,7 @@ void BaseWrapper::getUnitPath (UnitID unitID, String& path) const
 	}
 }
 //------------------------------------------------------------------------
-int32 BaseWrapper::_getChunk (void** data, bool isPreset)
+int32 BaseWrapper::_getChunk (void** data, bool /*isPreset*/)
 {
 	// Host stores plug-in state. Returns the size in bytes of the chunk (Plug-in allocates the data
 	// array)
@@ -799,18 +799,18 @@ void BaseWrapper::setEffectVersion (char* version)
 		mVersion = 0;
 	else
 	{
-		int32 major = 1;
-		int32 minor = 0;
-		int32 subminor = 0;
-		int32 subsubminor = 0;
-		int32 ret = sscanf (version, "%d.%d.%d.%d", &major, &minor, &subminor, &subsubminor);
-		mVersion = (major & 0xff) << 24;
+		long major = 1;
+		long minor = 0;
+		long subminor = 0;
+		long subsubminor = 0;
+		int32 ret = sscanf (version, "%ld.%ld.%ld.%ld", &major, &minor, &subminor, &subsubminor);
+		mVersion = static_cast<int32> ((major & 0xff) << 24);
 		if (ret > 3)
-			mVersion += (subsubminor & 0xff);
+			mVersion += static_cast<int32> (subsubminor & 0xff);
 		if (ret > 2)
-			mVersion += (subminor & 0xff) << 8;
+			mVersion += static_cast<int32> ((subminor & 0xff) << 8);
 		if (ret > 1)
-			mVersion += (minor & 0xff) << 16;
+			mVersion += static_cast<int32> ((minor & 0xff) << 16);
 	}
 }
 
@@ -933,7 +933,7 @@ void BaseWrapper::setupParameters ()
 		ProgramListID programListId;
 		if (getProgramListAndUnit (midiChannel, unitId, programListId))
 		{
-			for (int32 i = 0; i < static_cast<int32> (programParameterInfos.size ()); i++)
+			for (uint32 i = 0; i < programParameterInfos.size (); i++)
 			{
 				const ParameterInfo& paramInfo = programParameterInfos.at (i);
 				if (paramInfo.unitId == unitId)
@@ -959,7 +959,7 @@ void BaseWrapper::initMidiCtrlerAssignment ()
 	{
 		for (int32 b = 0; b < busses; b++)
 			for (int32 i = 0; i < 16; i++)
-				mMidiCCMapping[b][i] = NEW int32[Vst::kCountCtrlNumber];
+				mMidiCCMapping[b][i] = NEW ParamID[Vst::kCountCtrlNumber];
 	}
 
 	ParamID paramID;
@@ -997,9 +997,9 @@ void BaseWrapper::_setSampleRate (float newSamplerate)
 }
 
 //-----------------------------------------------------------------------------
-int32 BaseWrapper::countMainBusChannels (BusDirection dir, uint64& mainBusBitset)
+uint32 BaseWrapper::countMainBusChannels (BusDirection dir, uint64& mainBusBitset)
 {
-	int32 result = 0;
+	uint32 result = 0;
 	mainBusBitset = 0;
 
 	int32 busCount = mComponent->getBusCount (kAudio, dir);
@@ -1028,8 +1028,8 @@ int32 BaseWrapper::countMainBusChannels (BusDirection dir, uint64& mainBusBitset
 void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, int32 noteLength,
                                     float noteOffVelocity, float detune)
 {
-	uint8 status = midiData[0] & kStatusMask;
-	uint8 channel = midiData[0] & kChannelMask;
+	uint8 status = static_cast<uint8> (midiData[0] & kStatusMask);
+	uint8 channel = static_cast<uint8> (midiData[0] & kChannelMask);
 
 	// not allowed
 	if (channel >= 16)
@@ -1070,8 +1070,8 @@ void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, i
 		{
 			toAdd.type = Vst::Event::kPolyPressureEvent;
 			toAdd.polyPressure.channel = channel;
-			toAdd.polyPressure.pitch = midiData[1] & kDataMask;
-			toAdd.polyPressure.pressure = (midiData[2] & kDataMask) * kMidiScaler;
+			toAdd.polyPressure.pitch = static_cast<int16>(midiData[1] & kDataMask);
+			toAdd.polyPressure.pressure = (float)(midiData[2] & kDataMask) * kMidiScaler;
 			toAdd.polyPressure.noteId = -1; // TODO ?
 
 			mInputEvents->addEvent (toAdd);
@@ -1089,11 +1089,9 @@ void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, i
 					ParamValue value = (double)midiData[2] * kMidiScaler;
 
 					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
+					if (IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index))
 						queue->addPoint (toAdd.sampleOffset, value, index);
-					}
+
 					mGuiTransfer.addChange (paramID, value, toAdd.sampleOffset);
 				}
 			}
@@ -1109,15 +1107,13 @@ void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, i
 				{
 					const double kPitchWheelScaler = 1. / (double)0x3FFF;
 
-					const int32 ctrl = (midiData[1] & kDataMask) | (midiData[2] & kDataMask) << 7;
+					const int32 ctrl = static_cast<int32> ((midiData[1] & kDataMask) | ((midiData[2] & kDataMask) << 7));
 					ParamValue value = kPitchWheelScaler * (double)ctrl;
 
 					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
+					if (IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index))					
 						queue->addPoint (toAdd.sampleOffset, value, index);
-					}
+					
 					mGuiTransfer.addChange (paramID, value, toAdd.sampleOffset);
 				}
 			}
@@ -1134,11 +1130,9 @@ void BaseWrapper::processMidiEvent (Event& toAdd, char* midiData, bool isLive, i
 					ParamValue value = (ParamValue) (midiData[1] & kDataMask) * kMidiScaler;
 
 					int32 index = 0;
-					IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index);
-					if (queue)
-					{
+					if (IParamValueQueue* queue = mInputChanges.addParameterData (paramID, index))
 						queue->addPoint (toAdd.sampleOffset, value, index);
-					}
+
 					mGuiTransfer.addChange (paramID, value, toAdd.sampleOffset);
 				}
 			}
@@ -1389,13 +1383,13 @@ tresult PLUGIN_API BaseWrapper::createInstance (TUID cid, TUID iid, void** obj)
 //-----------------------------------------------------------------------------
 // IUnitHandler
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseWrapper::notifyUnitSelection (UnitID unitId)
+tresult PLUGIN_API BaseWrapper::notifyUnitSelection (UnitID /*unitId*/)
 {
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseWrapper::notifyProgramListChange (ProgramListID listId, int32 programIndex)
+tresult PLUGIN_API BaseWrapper::notifyProgramListChange (ProgramListID /*listId*/, int32 /*programIndex*/)
 {
 	// TODO -> redirect to hasMidiProgramsChanged somehow...
 	return kResultTrue;

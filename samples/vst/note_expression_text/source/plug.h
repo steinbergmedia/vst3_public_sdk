@@ -53,7 +53,7 @@ public:
 // create function required for plug-in factory,
 // it will be called to create new instances of this plug-in
 //------------------------------------------------------------------------
-	static FUnknown* createInstance (void* context)
+	static FUnknown* createInstance (void* /*context*/)
 	{
 		return (IAudioProcessor*)new Plug;
 	}

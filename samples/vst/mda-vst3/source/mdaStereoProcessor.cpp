@@ -17,7 +17,7 @@
 #include "mdaStereoProcessor.h"
 #include "mdaStereoController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -73,7 +73,7 @@ tresult PLUGIN_API StereoProcessor::initialize (FUnknown* context)
 tresult PLUGIN_API StereoProcessor::terminate ()
 {
 	if (buffer) delete [] buffer;
-	buffer = 0;
+	buffer = nullptr;
 	return BaseProcessor::terminate ();
 }
 

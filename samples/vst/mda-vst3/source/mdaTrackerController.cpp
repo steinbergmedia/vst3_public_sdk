@@ -45,7 +45,7 @@ tresult PLUGIN_API TrackerController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = 0;
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 4, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 4, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		modeParam->setIndexString (0, UString128("SINE"));
 		modeParam->setIndexString (1, UString128("SQUARE"));
 		modeParam->setIndexString (2, UString128("SAW"));
@@ -88,7 +88,6 @@ tresult PLUGIN_API TrackerController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API TrackerController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	
 	/*

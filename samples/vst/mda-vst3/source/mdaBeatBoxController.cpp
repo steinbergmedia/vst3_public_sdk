@@ -102,7 +102,7 @@ tresult PLUGIN_API BeatBoxController::initialize (FUnknown* context)
 		param->setUnitID (3);
 
 		parameters.addParameter (new ScaledParameter (USTRING("Dynamics"), USTRING("%"), 0, 0., ParameterInfo::kCanAutomate, kParam9, 0, 100));
-		IndexedParameter* recParam = new IndexedParameter (USTRING("Record"), 0, 4, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam10);
+		auto* recParam = new IndexedParameter (USTRING("Record"), nullptr, 4, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam10);
 		recParam->setIndexString (0, UString128("-"));
 		recParam->setIndexString (1, UString128("MONITOR"));
 		recParam->setIndexString (2, UString128("-> HAT"));
@@ -128,7 +128,6 @@ tresult PLUGIN_API BeatBoxController::getParamStringByValue (ParamID tag, ParamV
 	UString128 result;
 		switch (tag)
 		{
-			// TODO
 			default:
 				return BaseController::getParamStringByValue (tag, valueNormalized, string);
 		}
@@ -140,7 +139,6 @@ tresult PLUGIN_API BeatBoxController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API BeatBoxController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 }
 

@@ -16,7 +16,7 @@
 
 #include "mdaThruZeroController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -92,7 +92,6 @@ tresult PLUGIN_API ThruZeroController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ThruZeroController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

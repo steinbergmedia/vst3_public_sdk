@@ -58,9 +58,9 @@ public:
 	tresult PLUGIN_API seek  (int64 pos, int32 mode, int64* result) SMTG_OVERRIDE;
 	tresult PLUGIN_API tell  (int64* pos) SMTG_OVERRIDE;
 
-	TSize getSize ();		///< returns the current memory size
+	TSize getSize () const;		///< returns the current memory size
 	void setSize (TSize size);	///< set the memory size, a realloc will occur if memory already used
-	char* getData ();		///< returns the memory pointer
+	char* getData () const;		///< returns the memory pointer
 	char* detachData ();	///< returns the memory pointer and give up ownership
 	bool truncate ();		///< realloc to the current use memory size if needed
 	bool truncateToCursor ();	///< truncate memory at current cursor position

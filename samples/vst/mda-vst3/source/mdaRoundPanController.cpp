@@ -88,7 +88,6 @@ tresult PLUGIN_API RoundPanController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RoundPanController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case 1: break;

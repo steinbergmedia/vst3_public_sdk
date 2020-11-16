@@ -108,8 +108,8 @@ public:
 //------------------------------------------------------------------------
 protected:
 	ViewRect rect;
-	void* systemWindow;
-	IPlugFrame* plugFrame;
+	void* systemWindow {nullptr};
+	IPlugFrame* plugFrame {nullptr};
 };
 
 } // namespace

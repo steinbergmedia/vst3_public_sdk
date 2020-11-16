@@ -16,7 +16,7 @@
 
 #include "mdaRingModController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -81,7 +81,6 @@ tresult PLUGIN_API RingModController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RingModController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case 0: break;

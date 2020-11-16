@@ -49,7 +49,7 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				kVstAudioEffectClass,
 				stringPluginName,
 				Vst::kDistributable,
-				"Spatial|Fx|Instrument|Up-Downmix", /*"Fx",*/ /*"Spatial|Fx|Instrument|Up-Downmix",*/
+				"Fx|Instrument", /*"Fx",*/ /*"Spatial|Fx|Instrument|Up-Downmix",*/
 				FULL_VERSION_STR,		// Plug-in version (to be changed)
 				kVstVersionString,
 				Steinberg::Vst::HostCheckerProcessor::createInstance)

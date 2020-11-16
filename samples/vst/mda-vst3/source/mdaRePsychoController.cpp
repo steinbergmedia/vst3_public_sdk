@@ -84,7 +84,6 @@ tresult PLUGIN_API RePsychoController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RePsychoController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

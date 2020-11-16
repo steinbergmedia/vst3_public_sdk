@@ -63,7 +63,7 @@ public:
 	//--- BaseWrapper ------------------------------------------
 	bool init () SMTG_OVERRIDE;
 	void _canDoubleReplacing (bool val) SMTG_OVERRIDE;
-	void _setInitialDelay (int32 delay) SMTG_OVERRIDE;
+	void _setInitialDelay (uint32 delay) SMTG_OVERRIDE;
 	void _noTail (bool val) SMTG_OVERRIDE;
 	void setupProcessTimeInfo () SMTG_OVERRIDE;
 
@@ -72,8 +72,8 @@ public:
 
 	void _ioChanged () SMTG_OVERRIDE;
 	void _updateDisplay () SMTG_OVERRIDE;
-	void _setNumInputs (int32 inputs) SMTG_OVERRIDE;
-	void _setNumOutputs (int32 outputs) SMTG_OVERRIDE;
+	void _setNumInputs (uint32 inputs) SMTG_OVERRIDE;
+	void _setNumOutputs (uint32 outputs) SMTG_OVERRIDE;
 	bool _sizeWindow (int32 width, int32 height) SMTG_OVERRIDE;
 
 	//--- ---------------------------------------------------------------------

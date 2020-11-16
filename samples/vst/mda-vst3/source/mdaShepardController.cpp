@@ -45,7 +45,7 @@ tresult PLUGIN_API ShepardController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = 0;
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		modeParam->setIndexString (0, UString128("TONES"));
 		modeParam->setIndexString (1, UString128("RING MOD"));
 		modeParam->setIndexString (2, UString128("TONES+IN"));
@@ -81,7 +81,6 @@ tresult PLUGIN_API ShepardController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ShepardController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

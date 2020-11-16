@@ -80,7 +80,7 @@ enum
 	kTriggerHiddenTag,
 	kTriggerProgressTag,
 	kProgressValueTag,
-
+	kCopy2ClipboardTag,
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
@@ -240,7 +240,9 @@ protected:
 	uint32 width {0};
 	uint32 height {0};
 	double sizeFactor {0};
-	int32 inEditFromHost {0};
+
+	using EditFromHostMap = std::map<Steinberg::Vst::ParamID, int32>;
+	EditFromHostMap mEditFromHost;
 
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
 

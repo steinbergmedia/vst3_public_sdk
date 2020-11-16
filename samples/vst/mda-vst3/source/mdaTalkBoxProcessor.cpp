@@ -17,7 +17,7 @@
 #include "mdaTalkBoxProcessor.h"
 #include "mdaTalkBoxController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -94,7 +94,7 @@ tresult PLUGIN_API TalkBoxProcessor::terminate ()
 	if (window) delete [] window;
 	if (car0) delete [] car0;
 	if (car1) delete [] car1;
-	buf0=buf1=window=car0=car1=0;
+	buf0=buf1=window=car0=car1=nullptr;
 	return BaseProcessor::terminate ();
 }
 
@@ -231,6 +231,7 @@ void TalkBoxProcessor::recalculate ()
 void TalkBoxProcessor::lpc(float *buf, float *car, int32 n, int32 o)
 {
   float z[ORD_MAX], r[ORD_MAX], k[ORD_MAX], G, x;
+  r[0] = 0.f;
   int32 i, j, nn=n;
 
   for(j=0; j<=o; j++, nn--)  //buf[] is already emphasized and windowed

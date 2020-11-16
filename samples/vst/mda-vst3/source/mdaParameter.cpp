@@ -66,7 +66,7 @@ bool BaseParameter::setNormalized (ParamValue v)
 //-----------------------------------------------------------------------------
 IndexedParameter::IndexedParameter (const TChar* title, const TChar* units, int32 stepCount, ParamValue defaultValueNormalized, int32 flags, int32 tag, UnitID unitID)
 : BaseParameter (title, units, stepCount, defaultValueNormalized, flags, tag, unitID)
-, indexString (0)
+, indexString (nullptr)
 {
 	indexString = new String128[stepCount+1];
 	for (int32 i = 0; i <= stepCount; i++)

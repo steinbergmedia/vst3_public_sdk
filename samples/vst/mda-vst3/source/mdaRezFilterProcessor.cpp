@@ -17,7 +17,7 @@
 #include "mdaRezFilterProcessor.h"
 #include "mdaRezFilterController.h"
 
-#include <math.h>
+#include <cmath>
 #include <cstdlib>
 
 namespace Steinberg {

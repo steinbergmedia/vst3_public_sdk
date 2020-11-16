@@ -37,6 +37,7 @@
 
 #pragma once
 
+#include "public.sdk/source/vst/testsuite/processing/process.h"
 #include "public.sdk/source/vst/testsuite/testbase.h"
 
 //------------------------------------------------------------------------
@@ -47,13 +48,16 @@ namespace Vst {
 /** Test Valid State Transition.
 \ingroup TestClass */
 //------------------------------------------------------------------------
-class ValidStateTransitionTest : public TestEnh
+class ValidStateTransitionTest : public ProcessTest
 {
 public:
-	ValidStateTransitionTest (ITestPlugProvider* plugProvider);
+	ValidStateTransitionTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampleSize);
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
-	DECLARE_VSTTEST ("Valid State Transition")
+	const char* getName () const SMTG_OVERRIDE { return name; }
+
+protected:
+	char name[256];
 };
 
 //------------------------------------------------------------------------

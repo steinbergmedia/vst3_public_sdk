@@ -43,7 +43,6 @@
 
 #define stringPluginName "ADelay"
 
-
 BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
 				   "http://www.steinberg.net", 
 				   "mailto:info@steinberg.de")
@@ -78,9 +77,7 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				"",
 				"",
 				Steinberg::Vst::ADelayTestFactory::createInstance)
-
 END_FACTORY
 
 bool InitModule () { return true; }
 bool DeinitModule () { return true; }
-

@@ -39,7 +39,7 @@
 #include "pluginterfaces/base/ftypes.h"
 
 #if SMTG_OS_WINDOWS
-#include <windows.h>
+#include <Windows.h>
 #else
 #include <cstdlib>
 #endif

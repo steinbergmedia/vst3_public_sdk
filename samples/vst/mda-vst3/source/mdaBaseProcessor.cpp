@@ -31,11 +31,11 @@ namespace mda {
 
 //-----------------------------------------------------------------------------
 BaseProcessor::BaseProcessor ()
-: params (0)
+: params (nullptr)
 , numParams (0)
 , bypassRamp (0)
-, bypassBuffer0 (0)
-, bypassBuffer1 (0)
+, bypassBuffer0 (nullptr)
+, bypassBuffer1 (nullptr)
 , bypassState (false)
 {
 }
@@ -141,7 +141,7 @@ bool BaseProcessor::bypassProcessing (ProcessData& data)
 		}
 		else
 		{
-			for (int32 bus = 0; bus < data.numInputs, bus < data.numOutputs; bus++)
+			for (int32 bus = 0; (bus < data.numInputs) && (bus < data.numOutputs); bus++)
 			{
 				Bus* output = getAudioOutput (bus);
 				if (!output || !output->isActive ())
@@ -228,7 +228,7 @@ bool BaseProcessor::processParameterChanges (IParameterChanges* changes)
 }
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::setBypass (bool state, int32 sampleOffset)
+void BaseProcessor::setBypass (bool state, int32 /*sampleOffset*/)
 {
 	if (state != bypassState)
 	{
@@ -241,7 +241,7 @@ void BaseProcessor::setBypass (bool state, int32 sampleOffset)
 }
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::setParameter (ParamID index, ParamValue newValue, int32 sampleOffset)
+void BaseProcessor::setParameter (ParamID index, ParamValue newValue, int32 /*sampleOffset*/)
 {
 	if (numParams > index)
 		params[index] = newValue;

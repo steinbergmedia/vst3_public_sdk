@@ -16,7 +16,7 @@
 
 #include "mdaMultiBandController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -47,7 +47,7 @@ tresult PLUGIN_API MultiBandController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = 0;
-		IndexedParameter* listenParam = new IndexedParameter (USTRING("Listen"), USTRING(""), 3, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* listenParam = new IndexedParameter (USTRING("Listen"), USTRING(""), 3, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		listenParam->setIndexString (0, UString128("Low"));
 		listenParam->setIndexString (1, UString128("Mid"));
 		listenParam->setIndexString (2, UString128("High"));
@@ -115,7 +115,6 @@ tresult PLUGIN_API MultiBandController::getParamStringByValue (ParamID tag, Para
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API MultiBandController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

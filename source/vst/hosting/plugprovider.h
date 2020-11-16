@@ -96,5 +96,23 @@ protected:
 
 	bool plugIsGlobal;
 };
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+class PluginContextFactory
+{
+public:
+	static PluginContextFactory& instance ()
+	{
+		static PluginContextFactory factory;
+		return factory;
+	}
+	
+	void setPluginContext (FUnknown* obj) { context = obj; }
+	FUnknown* getPluginContext () const { return context; }
+private:
+	FUnknown* context;
+};
+
+//------------------------------------------------------------------------
+} // Vst
+} // Steinberg

@@ -189,12 +189,12 @@ void HostProcessData::destroyBuffers (AudioBusBuffers*& buffers, int32& busCount
 				{
 					if (symbolicSampleSize == kSample64)
 					{
-						if (buffers[i].channelBuffers64[j])
+						if (buffers[i].channelBuffers64 && buffers[i].channelBuffers64[j])
 							delete[] buffers[i].channelBuffers64[j];
 					}
 					else
 					{
-						if (buffers[i].channelBuffers32[j])
+						if (buffers[i].channelBuffers32 && buffers[i].channelBuffers32[j])
 							delete[] buffers[i].channelBuffers32[j];
 					}
 				}

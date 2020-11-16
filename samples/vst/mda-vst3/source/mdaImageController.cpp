@@ -44,7 +44,7 @@ tresult PLUGIN_API ImageController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
 		modeParam->setIndexString (0, UString128("SM->LR"));
 		modeParam->setIndexString (1, UString128("MS->LR"));
 		modeParam->setIndexString (2, UString128("LR->LR"));

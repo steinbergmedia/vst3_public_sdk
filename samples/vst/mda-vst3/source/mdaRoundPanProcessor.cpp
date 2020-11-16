@@ -17,7 +17,7 @@
 #include "mdaRoundPanProcessor.h"
 #include "mdaRoundPanController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

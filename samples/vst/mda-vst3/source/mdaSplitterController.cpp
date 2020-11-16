@@ -16,7 +16,7 @@
 
 #include "mdaSplitterController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -47,14 +47,14 @@ tresult PLUGIN_API SplitterController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = 0;
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		modeParam->setIndexString (0, UString128("NORMAL"));
 		modeParam->setIndexString (1, UString128("INVERSE"));
 		modeParam->setIndexString (2, UString128("NORM/INV"));
 		modeParam->setIndexString (3, UString128("INV/NORM"));
 		parameters.addParameter (modeParam);
 		parameters.addParameter (USTRING("Freq"), USTRING("Hz"), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
-		IndexedParameter* modeParam2 = new IndexedParameter (USTRING("Freq Mode"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* modeParam2 = new IndexedParameter (USTRING("Freq Mode"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		modeParam2->setIndexString (0, UString128("BELOW"));
 		modeParam2->setIndexString (1, UString128("ALL"));
 		modeParam2->setIndexString (2, UString128("ABOVE"));
@@ -100,7 +100,6 @@ tresult PLUGIN_API SplitterController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API SplitterController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

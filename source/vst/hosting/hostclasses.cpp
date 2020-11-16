@@ -165,12 +165,12 @@ public:
 	HostAttribute (int64 value) : size (0), type (kInteger) { v.intValue = value; }
 	HostAttribute (double value) : size (0), type (kFloat) { v.floatValue = value; }
 	/** size is in code unit (count of TChar) */
-	HostAttribute (const TChar* value, uint32 size) : size (size), type (kString)
+	HostAttribute (const TChar* value, uint32 sizeInCodeUnit) : size (sizeInCodeUnit), type (kString)
 	{
 		v.stringValue = new TChar[size];
 		memcpy (v.stringValue, value, size * sizeof (TChar));
 	}
-	HostAttribute (const void* value, uint32 size) : size (size), type (kBinary)
+	HostAttribute (const void* value, uint32 sizeInBytes) : size (sizeInBytes), type (kBinary)
 	{
 		v.binaryValue = new char[size];
 		memcpy (v.binaryValue, value, size);
@@ -285,7 +285,8 @@ tresult PLUGIN_API HostAttributeList::getFloat (AttrID aid, double& value)
 tresult PLUGIN_API HostAttributeList::setString (AttrID aid, const TChar* string)
 {
 	removeAttrID (aid);
-	list[aid] = new HostAttribute (string, String (const_cast<TChar*> (string)).length () + 1);
+	// + 1 for the null-terminate
+	list[aid] = new HostAttribute (string, String (string).length () + 1);
 	return kResultTrue;
 }
 

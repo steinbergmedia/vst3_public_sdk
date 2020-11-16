@@ -19,13 +19,20 @@ add_library(${target} STATIC ${${target}_sources})
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces")
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces/ACF")
 target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Libs/AAXLibrary/Include")
+target_link_libraries(${target} PRIVATE base)
 smtg_setup_universal_binary(${target})
 
 if(XCODE)
     add_compile_options(-Wno-incompatible-ms-struct)
 elseif(SMTG_WIN)
-    add_compile_options(/wd4996)
-    add_compile_options(/GR)
     # too much warnings in the AAX SDK!!
-add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_compile_options(/wd4996)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+    add_compile_options(/GR)
+    if(MSVC)
+        target_compile_options(${target} 
+            PRIVATE 
+                /wd4127 /wd6001 /wd6053
+        )
+    endif()
 endif()

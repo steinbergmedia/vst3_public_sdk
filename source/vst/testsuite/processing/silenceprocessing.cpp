@@ -94,45 +94,51 @@ bool PLUGIN_API SilenceProcessingTest::run (ITestResult* testResult)
 
 	if (processData.inputs != nullptr)
 	{
+		// process 20s before checking flags
+		int32 numPasses = int32 (20 * processSetup.sampleRate / processData.numSamples + 0.5);
+
 		audioEffect->setProcessing (true);
-
-		for (int32 busIndex = 0; busIndex < processData.numInputs; busIndex++)
+		for (int32 pass = 0; pass < numPasses; pass++)
 		{
-			processData.inputs[busIndex].silenceFlags = 0;
-			for (int32 channelIndex = 0; channelIndex < processData.inputs[busIndex].numChannels;
-			     channelIndex++)
+			for (int32 busIndex = 0; busIndex < processData.numInputs; busIndex++)
 			{
-				processData.inputs[busIndex].silenceFlags |= (uint64)1 << (uint64)channelIndex;
-				if (processData.symbolicSampleSize == kSample32)
-					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
-					        sizeof (float) * processData.numSamples);
-				else if (processData.symbolicSampleSize == kSample64)
-					memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
-					        sizeof (double) * processData.numSamples);
-			}
-		}
-
-		for (int32 busIndex = 0; busIndex < processData.numOutputs; busIndex++)
-		{
-			if (processData.numInputs > busIndex)
-				processData.outputs[busIndex].silenceFlags =
-				    processData.inputs[busIndex].silenceFlags;
-			else
-			{
-				processData.outputs[busIndex].silenceFlags = 0;
+				processData.inputs[busIndex].silenceFlags = 0;
 				for (int32 channelIndex = 0;
 				     channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
-					processData.outputs[busIndex].silenceFlags |= (uint64)1 << (uint64)channelIndex;
+				{
+					processData.inputs[busIndex].silenceFlags |= (uint64)1 << (uint64)channelIndex;
+					if (processData.symbolicSampleSize == kSample32)
+						memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
+						        sizeof (float) * processData.numSamples);
+					else if (processData.symbolicSampleSize == kSample64)
+						memset (processData.inputs[busIndex].channelBuffers32[channelIndex], 0,
+						        sizeof (double) * processData.numSamples);
+				}
 			}
-		}
 
-		tresult result = audioEffect->process (processData);
-		if (result != kResultOk)
-		{
-			addErrorMessage (testResult, printf ("%s", "The component failed to process!"));
+			for (int32 busIndex = 0; busIndex < processData.numOutputs; busIndex++)
+			{
+				if (processData.numInputs > busIndex)
+					processData.outputs[busIndex].silenceFlags =
+					    processData.inputs[busIndex].silenceFlags;
+				else
+				{
+					processData.outputs[busIndex].silenceFlags = 0;
+					for (int32 channelIndex = 0;
+					     channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
+						processData.outputs[busIndex].silenceFlags |= (uint64)1
+						                                              << (uint64)channelIndex;
+				}
+			}
 
-			audioEffect->setProcessing (false);
-			return false;
+			tresult result = audioEffect->process (processData);
+			if (result != kResultOk)
+			{
+				addErrorMessage (testResult, printf ("%s", "The component failed to process!"));
+
+				audioEffect->setProcessing (false);
+				return false;
+			}
 		}
 
 		for (int32 busIndex = 0; busIndex < processData.numOutputs; busIndex++)

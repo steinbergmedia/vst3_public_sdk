@@ -17,7 +17,7 @@
 #include "mdaBandistoProcessor.h"
 #include "mdaBandistoController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

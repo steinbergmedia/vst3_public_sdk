@@ -44,17 +44,9 @@
 #include <cstdio>
 #include <iostream>
 
-namespace Steinberg {
-extern FUnknown* gStandardPluginContext;
-
-FUnknown* getPluginContext ()
-{
-	return gStandardPluginContext;
-}
-}
-
 static std::ostream* errorStream = &std::cout;
 
+//------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
@@ -70,7 +62,7 @@ PlugProvider::PlugProvider (const PluginFactory& factory, ClassInfo classInfo, b
 {
 	if (plugIsGlobal)
 	{
-		setupPlugin (getPluginContext ());
+		setupPlugin (PluginContextFactory::instance ().getPluginContext ());
 	}
 }
 
@@ -84,7 +76,7 @@ PlugProvider::~PlugProvider ()
 IComponent* PLUGIN_API PlugProvider::getComponent ()
 {
 	if (!component)
-		setupPlugin (getPluginContext ());
+		setupPlugin (PluginContextFactory::instance ().getPluginContext ());
 
 	if (component)
 		component->addRef ();

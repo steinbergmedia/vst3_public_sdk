@@ -35,7 +35,7 @@ FUID BeatBoxProcessor::uid (0x9E6A6E95, 0x9B734440, 0x97D787BE, 0xBBDDD831);
 //-----------------------------------------------------------------------------
 BeatBoxProcessor::BeatBoxProcessor ()
 {
-	hbuf = kbuf = sbuf = sbuf2 = 0;
+	hbuf = kbuf = sbuf = sbuf2 = nullptr;
 	hthr = hfil = sthr = kthr = kfil1 = kfil2 = mix = 0;
 	klev = hlev = slev = 0;
 	ww = wwx = sb1 = sb2 = sf1 = sf2 = sf3 = 0;
@@ -136,7 +136,7 @@ tresult PLUGIN_API BeatBoxProcessor::setActive (TBool state)
 		if (kbuf) delete [] kbuf;
 		if (sbuf) delete [] sbuf;
 		if (sbuf2) delete [] sbuf2;
-		hbuf = kbuf = sbuf = sbuf2 = 0;
+		hbuf = kbuf = sbuf = sbuf2 = nullptr;
 	}
 	return BaseProcessor::setActive (state);
 }

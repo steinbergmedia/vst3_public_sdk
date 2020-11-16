@@ -34,18 +34,25 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "module.h"
 #include "../utility/optional.h"
 #include "../utility/stringconvert.h"
+#include "module.h"
 #include <ShlObj.h>
 #include <Windows.h>
 #include <algorithm>
+#include <iostream>
 
-// The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem> header.
-// You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the warning,
-// otherwise the build will fail in VS2020 16.3.0
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING 
+#if _HAS_CXX17 && defined(_MSC_VER)
+#include <filesystem>
+using namespace std;
+#else
+// The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem>
+// header. You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the
+// warning, otherwise the build will fail in VS2020 16.3.0
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
+using namespace std::experimental;
+#endif
 
 #pragma comment(lib, "Shell32")
 
@@ -54,8 +61,6 @@ extern "C" {
 using InitModuleFunc = bool (PLUGIN_API*) ();
 using ExitModuleFunc = bool (PLUGIN_API*) ();
 }
-
-using namespace std::experimental;
 
 //------------------------------------------------------------------------
 namespace VST3 {
@@ -134,8 +139,14 @@ public:
 			module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
 			if (!module)
 			{
-				// TODO: is there an API to get more information about the failure ?
-				errorDescription = "LoadLibray failed.";
+				auto lastError = GetLastError ();
+				LPVOID lpMessageBuffer;
+				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+				                lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+				                (LPSTR)&lpMessageBuffer, 0, NULL);
+				errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
+				LocalFree (lpMessageBuffer);
+
 				return false;
 			}
 		}
@@ -144,18 +155,18 @@ public:
 		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
 		if (!factoryProc)
 		{
-			errorDescription = "dll does not export the required 'GetPluginFactory' function";
+			errorDescription = "dll does not export the required 'GetPluginFactory' function!";
 			return false;
 		}
 		if (dllEntry && !dllEntry ())
 		{
-			errorDescription = "Calling 'InitDll' failed";
+			errorDescription = "Calling 'InitDll' failed!";
 			return false;
 		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
+		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned (factoryProc ()));
 		if (!f)
 		{
-			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
+			errorDescription = "Calling 'GetPluginFactory' returned nullptr!";
 			return false;
 		}
 		factory = PluginFactory (f);
@@ -288,7 +299,8 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 				{
 					if (resolvedLink->extension () == ext)
 					{
-						if (filesystem::is_directory (*resolvedLink) || isFolderSymbolicLink (*resolvedLink))
+						if (filesystem::is_directory (*resolvedLink) ||
+						    isFolderSymbolicLink (*resolvedLink))
 						{
 							filesystem::path finalPath (*resolvedLink);
 							if (checkVST3Package (finalPath))
@@ -321,7 +333,8 @@ void findModules (const filesystem::path& path, Module::PathList& pathList)
 }
 
 //------------------------------------------------------------------------
-Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (const std::string& modulePath)
+Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (
+    const std::string& modulePath)
 {
 	filesystem::path path (modulePath);
 	path = path.parent_path ();

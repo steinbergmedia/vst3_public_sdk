@@ -46,7 +46,7 @@ tresult PLUGIN_API ComboController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* modelParam = new IndexedParameter (USTRING("Model"), 0, 6, 0.7, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
+		auto* modelParam = new IndexedParameter (USTRING("Model"), nullptr, 6, 0.7, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
 		modelParam->setIndexString (0, UString128("D.I."));
 		modelParam->setIndexString (1, UString128("Spkr Sim"));
 		modelParam->setIndexString (2, UString128("Radio"));
@@ -56,9 +56,9 @@ tresult PLUGIN_API ComboController::initialize (FUnknown* context)
 		modelParam->setIndexString (6, UString128("4x12 >"));
 		parameters.addParameter (modelParam);
 		parameters.addParameter (new ScaledParameter (USTRING("Drive"), USTRING("S <> H"), 0, 0.7, ParameterInfo::kCanAutomate, kParam1, -100, 100, true));
-		parameters.addParameter (new ScaledParameter (USTRING("Bias"), 0, 0, 0.9, ParameterInfo::kCanAutomate, kParam2, -100, 100, true));
+		parameters.addParameter (new ScaledParameter (USTRING("Bias"), nullptr, 0, 0.9, ParameterInfo::kCanAutomate, kParam2, -100, 100, true));
 		parameters.addParameter (new ScaledParameter (USTRING("Output"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, kParam3, -20, 20, true));
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Process"), 0, 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam4);
+		auto* modeParam = new IndexedParameter (USTRING("Process"), nullptr, 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam4);
 		modeParam->setIndexString (0, UString128("Stereo"));
 		modeParam->setIndexString (1, UString128("Mono"));
 		parameters.addParameter (modeParam);

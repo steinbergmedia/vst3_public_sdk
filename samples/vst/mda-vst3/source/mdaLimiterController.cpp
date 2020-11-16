@@ -16,7 +16,7 @@
 
 #include "mdaLimiterController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -51,7 +51,7 @@ tresult PLUGIN_API LimiterController::initialize (FUnknown* context)
 		parameters.addParameter (new ScaledParameter (USTRING("Output"), USTRING("dB"), 0, 0, ParameterInfo::kCanAutomate, pid++, -20, 20, true));
 		parameters.addParameter (USTRING("Release"), USTRING("ms"), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Attack"), UString128(kMicroSecondsString), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
-		IndexedParameter* kneeParam = new IndexedParameter (USTRING("Knee"), 0, 1, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* kneeParam = new IndexedParameter (USTRING("Knee"), nullptr, 1, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		kneeParam->setIndexString (0, UString128("HARD"));
 		kneeParam->setIndexString (1, UString128("SOFT"));
 		parameters.addParameter (kneeParam);
@@ -93,7 +93,6 @@ tresult PLUGIN_API LimiterController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API LimiterController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

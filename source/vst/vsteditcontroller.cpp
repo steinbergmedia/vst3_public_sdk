@@ -299,8 +299,8 @@ tresult EditController::requestOpenEditor (FIDString name)
 //------------------------------------------------------------------------
 // EditorView Implementation
 //------------------------------------------------------------------------
-EditorView::EditorView (EditController* controller, ViewRect* size)
-: CPluginView (size), controller (controller)
+EditorView::EditorView (EditController* _controller, ViewRect* size)
+: CPluginView (size), controller (_controller)
 {
 	if (controller)
 	{

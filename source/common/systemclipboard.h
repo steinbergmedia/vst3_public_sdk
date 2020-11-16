@@ -33,8 +33,9 @@
 
 #pragma once
 
-#include "base/source/fstring.h"
+#include <string>
 
+//------------------------------------------------------------------------
 namespace Steinberg {
 namespace SystemClipboard {
 
@@ -42,19 +43,19 @@ namespace SystemClipboard {
 /** Copies the given text into the system clipboard
 \ingroup sdkBase
 
-It returns false if it fails
+\param text UTF-8 encoded text
+\return true on success
 */
-bool copyTextToClipboard (const String& text);
+bool copyTextToClipboard (const std::string& text);
 
 //-----------------------------------------------------------------------------
-/** Gets the current clipboard's contents.
- */
 /** Retrieves the current text from the system clipboard
 \ingroup sdkBase
 
-It returns false if it fails
+\param text UTF-8 encoded text
+\return true on success
 */
-bool getTextFromClipboard (String& text);
+bool getTextFromClipboard (std::string& text);
 
 //-----------------------------------------------------------------------------
 } // namespace SystemClipboard

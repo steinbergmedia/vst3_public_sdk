@@ -45,7 +45,7 @@ tresult PLUGIN_API PianoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* presetParam = new IndexedParameter (
+		auto* presetParam = new IndexedParameter (
 		    USTRING ("Factory Presets"), USTRING ("%"), 4, 0.15,
 		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		presetParam->setIndexString (0, UString128("mda Piano"));
@@ -124,7 +124,6 @@ tresult PLUGIN_API PianoController::getParamStringByValue (ParamID tag, ParamVal
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API PianoController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

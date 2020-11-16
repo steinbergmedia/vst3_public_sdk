@@ -1,4 +1,5 @@
 //------------------------------------------------------------------------
+// Flags       : clang-format auto
 // Project     : VST SDK
 //
 // Category    : Helpers
@@ -12,24 +13,24 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -73,7 +74,7 @@ using namespace Steinberg::Base::Thread;
 #endif
 #endif
 
-IPluginFactory* PLUGIN_API GetPluginFactory ();
+SMTG_EXPORT_SYMBOL IPluginFactory* PLUGIN_API GetPluginFactory ();
 extern bool InitModule ();
 
 const char* kBypassId = "Byp";
@@ -139,10 +140,11 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 		if (ctrl->GetSampleRate (&sampleRate) == AAX_SUCCESS)
 			mWrapper->_setSampleRate (sampleRate);
 		if (mWrapper->mProcessor)
-			ctrl->SetSignalLatency (mWrapper->mProcessor->getLatencySamples ());
+			ctrl->SetSignalLatency (
+			    static_cast<int32> (mWrapper->mProcessor->getLatencySamples ()));
 	}
 
-	for (int32 i = 0; i < mWrapper->mNumParams; i++)
+	for (uint32 i = 0; i < static_cast<uint32> (mWrapper->mNumParams); i++)
 	{
 		AAX_CParamID iParameterID = mParamNames[i];
 		ParameterInfo paramInfo = {};
@@ -163,10 +165,9 @@ AAX_Result AAXWrapper_Parameters::EffectInit ()
 
 	if (mSimulateBypass)
 	{
-		AAX_IParameter* param = nullptr;
-		param = NEW AAX_CParameter<bool> (kBypassId, AAX_CString ("Bypass"), false,
-		                                  AAX_CBinaryTaperDelegate<bool> (),
-		                                  AAX_CBinaryDisplayDelegate<bool> ("off", "on"), true);
+		AAX_IParameter* param = NEW AAX_CParameter<bool> (
+		    kBypassId, AAX_CString ("Bypass"), false, AAX_CBinaryTaperDelegate<bool> (),
+		    AAX_CBinaryDisplayDelegate<bool> ("off", "on"), true);
 
 		mParameterManager.AddParameter (param);
 	}
@@ -195,6 +196,8 @@ AAX_Result AAXWrapper_Parameters::UpdateMIDINodes (AAX_CFieldIndex inFieldIndex,
 	AAX_Result result;
 	result = AAX_SUCCESS;
 
+	inFieldIndex;
+	inPacket;
 	// Do some MIDI work if necessary.
 
 	return result;
@@ -320,6 +323,8 @@ AAX_Result AAXWrapper_Parameters::GetParameterDefaultNormalizedValue (AAX_CParam
 AAX_Result AAXWrapper_Parameters::SetParameterDefaultNormalizedValue (AAX_CParamID iParameterID,
                                                                       double iValue)
 {
+	iParameterID;
+	iValue;
 	HLOG (HAPI, "%s(id=%s, value=%lf)", __FUNCTION__, iParameterID, iValue);
 
 	return AAX_ERROR_UNIMPLEMENTED;
@@ -343,6 +348,7 @@ AAX_Result AAXWrapper_Parameters::GetParameterType (AAX_CParamID iParameterID,
 AAX_Result AAXWrapper_Parameters::GetParameterOrientation (
     AAX_CParamID iParameterID, AAX_EParameterOrientation* oParameterOrientation) const
 {
+	iParameterID;
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
 	*oParameterOrientation = AAX_eParameterOrientation_BottomMinTopMax; // we don't care
@@ -351,8 +357,9 @@ AAX_Result AAXWrapper_Parameters::GetParameterOrientation (
 
 //------------------------------------------------------------------------
 AAX_Result AAXWrapper_Parameters::GetParameter (AAX_CParamID iParameterID,
-                                                AAX_IParameter** oParameter)
+                                                AAX_IParameter** /*oParameter*/)
 {
+	iParameterID;
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
 	SMTG_ASSERT (!"the host is not supposed to retrieve the AAX_IParameter interface");
@@ -406,8 +413,10 @@ AAX_Result AAXWrapper_Parameters::GetParameterIDFromIndex (int32_t iControlIndex
 
 //------------------------------------------------------------------------
 AAX_Result AAXWrapper_Parameters::GetParameterValueInfo (AAX_CParamID iParameterID,
-                                                         int32_t iSelector, int32_t* oValue) const
+                                                         int32_t /*iSelector*/,
+                                                         int32_t* oValue) const
 {
+	iParameterID;
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
 	*oValue = 0;
@@ -589,8 +598,9 @@ AAX_Result AAXWrapper_Parameters::ReleaseParameter (AAX_CParamID iParameterID)
 
 //------------------------------------------------------------------------
 AAX_Result AAXWrapper_Parameters::UpdateParameterTouch (AAX_CParamID iParameterID,
-                                                        AAX_CBoolean iTouchState)
+                                                        AAX_CBoolean /*iTouchState*/)
 {
+	iParameterID;
 	HLOG (HAPI, "%s(id=%s)", __FUNCTION__, iParameterID);
 
 	return AAX_SUCCESS;
@@ -690,7 +700,7 @@ AAX_Result AAXWrapper_Parameters::GetChunkSize (AAX_CTypeID chunkID, uint32_t* o
 	FGuard guard (mWrapper->mSyncCalls);
 	bool isPreset = false;
 	void* data;
-	*oSize = mWrapper->_getChunk (&data, isPreset);
+	*oSize = static_cast<uint32> (mWrapper->_getChunk (&data, isPreset));
 	return AAX_SUCCESS;
 }
 
@@ -706,7 +716,8 @@ AAX_Result AAXWrapper_Parameters::GetChunk (AAX_CTypeID chunkID, AAX_SPlugInChun
 	// assume GetChunkSize called before and size of oChunk correct
 	oChunk->fVersion = 1;
 	oChunk->fSize = mWrapper->mChunk.getSize ();
-	memcpy (oChunk->fData, mWrapper->mChunk.getData (), mWrapper->mChunk.getSize ());
+	memcpy (oChunk->fData, mWrapper->mChunk.getData (),
+	        static_cast<size_t> (mWrapper->mChunk.getSize ()));
 	strncpy (reinterpret_cast<char*> (oChunk->fName), AAXWRAPPER_CONTROLS_CHUNK_DESCRIPTION, 31);
 	return AAX_SUCCESS;
 }
@@ -727,8 +738,8 @@ AAX_Result AAXWrapper_Parameters::SetChunk (AAX_CTypeID chunkID, const AAX_SPlug
 }
 
 //------------------------------------------------------------------------
-AAX_Result AAXWrapper_Parameters::CompareActiveChunk (const AAX_SPlugInChunk* iChunk,
-                                                      AAX_CBoolean* oIsEqual) const
+AAX_Result AAXWrapper_Parameters::CompareActiveChunk (const AAX_SPlugInChunk* /*iChunk*/,
+                                                      AAX_CBoolean* /*oIsEqual*/) const
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
 
@@ -773,7 +784,7 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 			Controller ()->GetSignalLatency (&outSample);
 
 			if (mPluginDesc)
-				mPluginDesc->mLatency = outSample;
+				mPluginDesc->mLatency = static_cast<uint32> (outSample);
 
 			if (mWrapper->isActive ())
 			{
@@ -804,11 +815,13 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 		//--- Entering offline processing mode (i.e.offline bounce)
 		case AAX_eNotificationEvent_EnteringOfflineMode:
 		{
+			mWrapper->setRenderingOffline (true);
 			break;
 		}
 		//--- Exiting offline processing mode (i.e. offline bounce)
 		case AAX_eNotificationEvent_ExitingOfflineMode:
 		{
+			mWrapper->setRenderingOffline (false);
 			break;
 		}
 		//---  A string representing the path of the current session
@@ -846,14 +859,14 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 		//--- The zero-indexed insert position of this plug-in instance within its track
 		case AAX_eNotificationEvent_InsertPositionChanged:
 		{
-		//	auto tmp = *reinterpret_cast<const int32_t*> (iNotificationData);
+			//	auto tmp = *reinterpret_cast<const int32_t*> (iNotificationData);
 			break;
 		}
 		//--- Tell the plug-in the maximum allowed GUI dimensions
 		case AAX_eNotificationEvent_MaxViewSizeChanged:
 		{
-		//	auto tmp = *reinterpret_cast<const AAX_Point*> (iNotificationData);
-			break; 
+			//	auto tmp = *reinterpret_cast<const AAX_Point*> (iNotificationData);
+			break;
 		}
 	}
 

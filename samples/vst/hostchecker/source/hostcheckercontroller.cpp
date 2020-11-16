@@ -44,6 +44,8 @@
 #include "logevents.h"
 #include "base/source/fstreamer.h"
 
+#include "public.sdk/source/common/systemclipboard.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "public.sdk/source/vst/vstcomponentbase.h"
 #include "public.sdk/source/vst/vstrepresentation.h"
 #include "pluginterfaces/base/ibstream.h"
@@ -145,9 +147,9 @@ bool PLUGIN_API MyVST3Editor::open (void* parent, const PlatformType& type)
 	auto hcController = dynamic_cast<HostCheckerController*> (controller);
 	if (hcController)
 	{
-		ViewRect rect;
-		if (hcController->getSavedSize (rect))
-			onSize (&rect);
+		ViewRect rect2;
+		if (hcController->getSavedSize (rect2))
+			onSize (&rect2);
 	}
 	inOpen = false;
 
@@ -227,10 +229,10 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::canResize ()
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::checkSizeConstraint (Steinberg::ViewRect* rect)
+Steinberg::tresult PLUGIN_API MyVST3Editor::checkSizeConstraint (Steinberg::ViewRect* _rect)
 {
 	hostController->addFeatureLog (kLogIdIPlugViewcheckSizeConstraintSupported);
-	return VST3Editor::checkSizeConstraint (rect);
+	return VST3Editor::checkSizeConstraint (_rect);
 }
 
 //------------------------------------------------------------------------
@@ -275,10 +277,10 @@ tresult PLUGIN_API MyVST3Editor::onFocus (TBool state)
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API MyVST3Editor::setFrame (IPlugFrame* frame)
+tresult PLUGIN_API MyVST3Editor::setFrame (IPlugFrame* _frame)
 {
 	hostController->addFeatureLog (kLogIdIPlugViewsetFrameSupported);
-	return VSTGUIEditor::setFrame (frame);
+	return VSTGUIEditor::setFrame (_frame);
 }
 
 //-----------------------------------------------------------------------------
@@ -479,6 +481,9 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("TriggerHidden"), STR16 (""), 1, 0, ParameterInfo::kNoFlags,
 		                         kTriggerHiddenTag);
 
+		parameters.addParameter (STR16 ("Copy2Clipboard"), STR16 (""), 1, 0,
+		                         ParameterInfo::kIsHidden, kCopy2ClipboardTag);
+
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{
 			parameters.addParameter (
@@ -575,7 +580,7 @@ float HostCheckerController::updateScoring (int32 iD)
 }
 
 //-----------------------------------------------------------------------------
-void HostCheckerController::onProgressTimer (VSTGUI::CVSTGUITimer* timer)
+void HostCheckerController::onProgressTimer (VSTGUI::CVSTGUITimer* /*timer*/)
 {
 	if (!mInProgress)
 	{
@@ -787,6 +792,53 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 		if (latencyRestartWanted)
 			componentHandler->restartComponent (kLatencyChanged);
 	}
+	//--- ----------------------------------------
+	else if (tag == kCopy2ClipboardTag)
+	{
+		if (mDataSource && value > 0.)
+		{
+			std::ostringstream s;
+			auto val = parameters.getParameter (kScoreTag);
+			if (val)
+			{
+				s << "/* VST3 Hostname: ";
+				FUnknownPtr<IHostApplication> hostApp (hostContext);
+				if (hostApp)
+				{
+					Vst::String128 name;
+					if (hostApp->getName (name) == kResultTrue)
+						s << VST3::StringConvert::convert (name);
+				}
+				s << ", Scoring=";
+				s << int32 (val->getNormalized () * 100 + 0.5);
+				s << " (checking ";
+				s << kVstVersionString;
+				s << ")*/\n";
+			}
+
+			s << "ID,Severity,Description,Count\n";
+			auto list = mDataSource->getLogEvents ();
+			int32 i = 0;
+			for (auto& item : list)
+			{
+				// if (item.count > 0)
+				{
+					s << item.id;
+					s << ", ";
+					s << logEventSeverity[item.id];
+					s << ", ";
+					s << logEventDescriptions[i];
+					s << ", ";
+					s << item.count;
+					s << "\n";
+				}
+				i++;
+			}
+			SystemClipboard::copyTextToClipboard (s.str ());
+			EditControllerEx1::setParamNormalized (tag, value);
+			value = 0;
+		}
+	}
 
 	return EditControllerEx1::setParamNormalized (tag, value);
 }
@@ -861,8 +913,9 @@ IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 }
 
 //-----------------------------------------------------------------------------
-CView* HostCheckerController::createCustomView (UTF8StringPtr name, const UIAttributes& attributes,
-                                                const IUIDescription* description,
+CView* HostCheckerController::createCustomView (UTF8StringPtr name,
+                                                const UIAttributes& /*attributes*/,
+                                                const IUIDescription* /*description*/,
                                                 VST3Editor* editor)
 {
 	if (ConstString (name) == "HostCheckerDataBrowser")
@@ -1136,7 +1189,7 @@ tresult PLUGIN_API HostCheckerController::getXmlRepresentationStream (
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
-    int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& id)
+    int32 busIndex, int16 /*channel*/, CtrlNumber midiControllerNumber, ParamID& id)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getMidiControllerAssignment"),
@@ -1160,8 +1213,9 @@ tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIndex, int16 channel,
-                                                                     CtrlNumber midiCC)
+tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 /*busIndex*/,
+                                                                     int16 /*channel*/,
+                                                                     CtrlNumber /*midiCC*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::onLiveMIDIControllerInput"),
 	                          THREAD_CHECK_EXIT))
@@ -1174,7 +1228,8 @@ tresult PLUGIN_API HostCheckerController::onLiveMIDIControllerInput (int32 busIn
 }
 
 //-----------------------------------------------------------------------------
-int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, int16 channel)
+int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 /*busIndex*/,
+                                                                int16 /*channel*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionCount"),
 	                          THREAD_CHECK_EXIT))
@@ -1187,8 +1242,10 @@ int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 busIndex, 
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (
-    int32 busIndex, int16 channel, int32 noteExpressionIndex, NoteExpressionTypeInfo& info /*out*/)
+tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (int32 /*busIndex*/,
+                                                                 int16 /*channel*/,
+                                                                 int32 /*noteExpressionIndex*/,
+                                                                 NoteExpressionTypeInfo& /*info*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionInfo"),
 	                          THREAD_CHECK_EXIT))
@@ -1200,8 +1257,8 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
-    int32 busIndex, int16 channel, NoteExpressionTypeID id,
-    NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/,
+    NoteExpressionValue /*valueNormalized*/, String128 /*string*/)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionStringByValue"),
@@ -1215,8 +1272,8 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
-    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
-    NoteExpressionValue& valueNormalized /*out*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/, const TChar* /*string*/,
+    NoteExpressionValue& /*valueNormalized*/)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionValueByString"),
@@ -1229,8 +1286,9 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, int16 channel,
-                                                                PhysicalUIMapList& list)
+tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 /*busIndex*/,
+                                                                int16 /*channel*/,
+                                                                PhysicalUIMapList& /*list*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getPhysicalUIMapping"),
 	                          THREAD_CHECK_EXIT))
@@ -1244,7 +1302,7 @@ tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, 
 
 //--- IKeyswitchController ---------------------------
 //------------------------------------------------------------------------
-int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 busIndex, int16 channel)
+int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 /*busIndex*/, int16 /*channel*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchCount"),
 	                          THREAD_CHECK_EXIT))
@@ -1257,9 +1315,9 @@ int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 busIndex, int16
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 busIndex, int16 channel,
-                                                            int32 keySwitchIndex,
-                                                            KeyswitchInfo& info /*out*/)
+tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 /*busIndex*/, int16 /*channel*/,
+                                                            int32 /*keySwitchIndex*/,
+                                                            KeyswitchInfo& /*info*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchInfo"),
 	                          THREAD_CHECK_EXIT))
@@ -1272,7 +1330,7 @@ tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 busIndex, int1
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::setAutomationState (int32 state)
+tresult PLUGIN_API HostCheckerController::setAutomationState (int32 /*state*/)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::setAutomationState"),
 	                          THREAD_CHECK_EXIT))
@@ -1294,7 +1352,7 @@ tresult PLUGIN_API HostCheckerController::beginEditFromHost (ParamID paramID)
 	}
 
 	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
-	inEditFromHost++;
+	mEditFromHost[paramID]++;
 	return kResultTrue;
 }
 
@@ -1308,23 +1366,23 @@ tresult PLUGIN_API HostCheckerController::endEditFromHost (ParamID paramID)
 	}
 
 	addFeatureLog (kLogIdIEditControllerHostEditingSupported);
-	inEditFromHost--;
-	if (inEditFromHost < 0)
+	mEditFromHost[paramID]--;
+	if (mEditFromHost[paramID] < 0)
 	{
 		addFeatureLog (kLogIdIEditControllerHostEditingMisused);
-		inEditFromHost = 0;
+		mEditFromHost[paramID] = 0;
 	}
 	return kResultTrue;
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID unitID,
+tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID /*unitID*/,
                                                                           FIDString functionName,
                                                                           ParamID& paramID)
 {
 	addFeatureLog (kLogIdIParameterFunctionNameSupported);
 
-	if (FIDStringsEqual (functionName, FunctionNameType::kWetDryMix))
+	if (FIDStringsEqual (functionName, FunctionNameType::kDryWetMix))
 	{
 		paramID = kParam1Tag;
 	}
@@ -1356,7 +1414,7 @@ void HostCheckerController::editorRemoved (EditorView* editor)
 }
 
 //------------------------------------------------------------------------
-void HostCheckerController::editorDestroyed (EditorView* editor)
+void HostCheckerController::editorDestroyed (EditorView* /*editor*/)
 {
 }
 
@@ -1368,9 +1426,8 @@ void HostCheckerController::editorAttached (EditorView* editor)
 }
 
 //------------------------------------------------------------------------
-VSTGUI::IController* HostCheckerController::createSubController (UTF8StringPtr name,
-                                                                 const IUIDescription* description,
-                                                                 VST3Editor* editor)
+VSTGUI::IController* HostCheckerController::createSubController (
+    UTF8StringPtr name, const IUIDescription* /*description*/, VST3Editor* editor)
 {
 	if (UTF8StringView (name) == "EditorSizeController")
 	{

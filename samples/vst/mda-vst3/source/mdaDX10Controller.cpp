@@ -55,7 +55,7 @@ static const char* presetNames[] =
 	"Harmonics",     
 	"Scratch",       
 	"Syn Tom",
-	NULL
+	nullptr
 };
 
 //-----------------------------------------------------------------------------
@@ -82,8 +82,8 @@ tresult PLUGIN_API DX10Controller::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* presetParam = new IndexedParameter (
-		    USTRING ("Factory Presets"), 0, DX10Processor::kNumPrograms - 1, 0,
+		auto* presetParam = new IndexedParameter (
+		    USTRING ("Factory Presets"), nullptr, DX10Processor::kNumPrograms - 1, 0,
 		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		for (int32 i = 0; i < DX10Processor::kNumPrograms; i++)
 			presetParam->setIndexString (i, UString128 (presetNames[i]));
@@ -145,7 +145,6 @@ tresult PLUGIN_API DX10Controller::getParamStringByValue (ParamID tag, ParamValu
 	UString128 result;
 		switch (tag)
 		{
-			// TODO
 			default:
 				return BaseController::getParamStringByValue (tag, valueNormalized, string);
 		}

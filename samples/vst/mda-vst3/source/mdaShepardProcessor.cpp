@@ -17,7 +17,7 @@
 #include "mdaShepardProcessor.h"
 #include "mdaShepardController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -93,7 +93,7 @@ tresult PLUGIN_API ShepardProcessor::terminate ()
 {
 	if (buf1) delete [] buf1;
 	if (buf2) delete [] buf2;
-	buf1 = buf2 = 0;
+	buf1 = buf2 = nullptr;
 	return BaseProcessor::terminate ();
 }
 

@@ -72,9 +72,12 @@ public:
 	/** Sends the given message to the peer. */
 	tresult sendMessage (IMessage* message) const;
 
-	/** Sends a simple text message to the peer (max 255 characters). Text is interpreted as UTF-8.
-	 */
+	/** Sends a simple text message to the peer (max 255 characters).
+	Text is interpreted as UTF-8.	 */
 	tresult sendTextMessage (const char8* text) const;
+
+	/** Sends a message with a given ID without any other payload. */
+	tresult sendMessageID (const char8* messageID) const;
 
 	/** Receives a simple text message from the peer (max 255 characters). Text is UTF-8 encoded. */
 	virtual tresult receiveText (const char8* text);

@@ -47,7 +47,7 @@ PitchNamesDataBrowserSource::PitchNamesDataBrowserSource (EditControllerEx1* edi
                                                           Steinberg::Vst::UnitID unitID)
 : pitchnames (nullptr)
 {
-	UnitInfo info;
+	UnitInfo info {0};
 	int32_t unitCount = editController->getUnitCount ();
 	for (int32_t i = 0; i < unitCount; i++)
 	{
@@ -69,7 +69,7 @@ PitchNamesDataBrowserSource::PitchNamesDataBrowserSource (EditControllerEx1* edi
 PitchNamesDataBrowserSource::~PitchNamesDataBrowserSource () {}
 
 //-----------------------------------------------------------------------------
-int32_t PitchNamesDataBrowserSource::dbGetNumRows (CDataBrowser* browser)
+int32_t PitchNamesDataBrowserSource::dbGetNumRows (CDataBrowser* /*browser*/)
 {
 	if (pitchnames)
 		return 128;
@@ -77,11 +77,11 @@ int32_t PitchNamesDataBrowserSource::dbGetNumRows (CDataBrowser* browser)
 }
 
 //-----------------------------------------------------------------------------
-int32_t PitchNamesDataBrowserSource::dbGetNumColumns (CDataBrowser* browser) { return 2; }
+int32_t PitchNamesDataBrowserSource::dbGetNumColumns (CDataBrowser* /*browser*/) { return 2; }
 
 //-----------------------------------------------------------------------------
-bool PitchNamesDataBrowserSource::dbGetColumnDescription (int32_t index, CCoord& minWidth,
-                                                          CCoord& maxWidth, CDataBrowser* browser)
+bool PitchNamesDataBrowserSource::dbGetColumnDescription (int32_t /*index*/, CCoord& /*minWidth*/,
+                                                          CCoord& /*maxWidth*/, CDataBrowser* /*browser*/)
 {
 	return false;
 }
@@ -96,17 +96,17 @@ CCoord PitchNamesDataBrowserSource::dbGetCurrentColumnWidth (int32_t index, CDat
 }
 
 //-----------------------------------------------------------------------------
-void PitchNamesDataBrowserSource::dbSetCurrentColumnWidth (int32_t index, const CCoord& width,
-                                                           CDataBrowser* browser)
+void PitchNamesDataBrowserSource::dbSetCurrentColumnWidth (int32_t /*index*/, const CCoord& /*width*/,
+                                                           CDataBrowser* /*browser*/)
 {
 }
 
 //-----------------------------------------------------------------------------
-CCoord PitchNamesDataBrowserSource::dbGetRowHeight (CDataBrowser* browser) { return 18; }
+CCoord PitchNamesDataBrowserSource::dbGetRowHeight (CDataBrowser* /*browser*/) { return 18; }
 
 //-----------------------------------------------------------------------------
 bool PitchNamesDataBrowserSource::dbGetLineWidthAndColor (CCoord& width, CColor& color,
-                                                          CDataBrowser* browser)
+                                                          CDataBrowser* /*browser*/)
 {
 	width = 1.;
 	color = kGreyCColor;
@@ -115,8 +115,8 @@ bool PitchNamesDataBrowserSource::dbGetLineWidthAndColor (CCoord& width, CColor&
 
 //-----------------------------------------------------------------------------
 void PitchNamesDataBrowserSource::dbDrawHeader (CDrawContext* context, const CRect& size,
-                                                int32_t column, int32_t flags,
-                                                CDataBrowser* browser)
+                                                int32_t column, int32_t /*flags*/,
+                                                CDataBrowser* /*browser*/)
 {
 	context->setDrawMode (kAliasing);
 	context->setFillColor (kGreyCColor);
@@ -188,7 +188,7 @@ void PitchNamesDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect
 }
 
 //-----------------------------------------------------------------------------
-CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseDown (const CPoint& where,
+CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseDown (const CPoint& /*where*/,
                                                               const CButtonState& buttons,
                                                               int32_t row, int32_t column,
                                                               CDataBrowser* browser)
@@ -203,29 +203,29 @@ CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseDown (const CPoint& wher
 }
 
 //-----------------------------------------------------------------------------
-CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseMoved (const CPoint& where,
-                                                               const CButtonState& buttons,
-                                                               int32_t row, int32_t column,
-                                                               CDataBrowser* browser)
+CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseMoved (const CPoint& /*where*/,
+                                                               const CButtonState& /*buttons*/,
+                                                               int32_t /*row*/, int32_t /*column*/,
+                                                               CDataBrowser* /*browser*/)
 {
 	return kMouseEventNotHandled;
 }
 
 //-----------------------------------------------------------------------------
-CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseUp (const CPoint& where,
-                                                            const CButtonState& buttons,
-                                                            int32_t row, int32_t column,
-                                                            CDataBrowser* browser)
+CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseUp (const CPoint& /*where*/,
+                                                            const CButtonState& /*buttons*/,
+                                                            int32_t /*row*/, int32_t /*column*/,
+                                                            CDataBrowser* /*browser*/)
 {
 	return kMouseEventNotHandled;
 }
 
 //-----------------------------------------------------------------------------
-void PitchNamesDataBrowserSource::dbSelectionChanged (CDataBrowser* browser) {}
+void PitchNamesDataBrowserSource::dbSelectionChanged (CDataBrowser* /*browser*/) {}
 
 //-----------------------------------------------------------------------------
-void PitchNamesDataBrowserSource::dbCellTextChanged (int32_t row, int32_t column,
-                                                     UTF8StringPtr newText, CDataBrowser* browser)
+void PitchNamesDataBrowserSource::dbCellTextChanged (int32_t row, int32_t /*column*/,
+                                                     UTF8StringPtr newText, CDataBrowser* /*browser*/)
 {
 	if (pitchnames)
 	{
@@ -238,9 +238,9 @@ void PitchNamesDataBrowserSource::dbCellTextChanged (int32_t row, int32_t column
 }
 
 //-----------------------------------------------------------------------------
-void PitchNamesDataBrowserSource::dbCellSetupTextEdit (int32_t row, int32_t column,
+void PitchNamesDataBrowserSource::dbCellSetupTextEdit (int32_t /*row*/, int32_t /*column*/,
                                                        CTextEdit* textEditControl,
-                                                       CDataBrowser* browser)
+                                                       CDataBrowser* /*browser*/)
 {
 	textEditControl->setBackColor (kWhiteCColor);
 	textEditControl->setFont (kNormalFontSmall);

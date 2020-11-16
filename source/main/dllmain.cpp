@@ -37,7 +37,7 @@
 
 #include "pluginterfaces/base/ftypes.h"
 
-#include <windows.h>
+#include <Windows.h>
 
 #if defined(_MSC_VER) && defined(DEVELOPMENT)
 #include <crtdbg.h>
@@ -56,9 +56,6 @@ void* moduleHandle = nullptr;
 Steinberg::tchar gPath[VST_MAX_PATH] = {0};
 
 //------------------------------------------------------------------------
-#define DllExport __declspec (dllexport)
-
-//------------------------------------------------------------------------
 extern bool InitModule (); ///< must be provided by plug-in: called when the library is loaded
 extern bool DeinitModule (); ///< must be provided by plug-in: called when the library is unloaded
 
@@ -72,7 +69,7 @@ static int moduleCounter {0}; // counting for InitDll/ExitDll pairs
 //------------------------------------------------------------------------
 /** must be called from host right after loading dll
 Note: this could be called more than one time! */
-bool DllExport InitDll ()
+SMTG_EXPORT_SYMBOL bool InitDll ()
 {
 	if (++moduleCounter == 1)
 		return InitModule ();
@@ -82,7 +79,7 @@ bool DllExport InitDll ()
 //------------------------------------------------------------------------
 /** must be called from host right before unloading dll
 Note: this could be called more than one time! */
-bool DllExport ExitDll ()
+SMTG_EXPORT_SYMBOL bool ExitDll ()
 {
 	if (--moduleCounter == 0)
 		return DeinitModule ();

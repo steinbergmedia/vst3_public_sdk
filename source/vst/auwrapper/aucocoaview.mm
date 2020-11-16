@@ -45,7 +45,6 @@
 #import "base/source/fobject.h"
 
 namespace Steinberg {
-DEF_CLASS_IID(IPlugFrame)
 
 //------------------------------------------------------------------------
 class AUPlugFrame : public FObject, public IPlugFrame

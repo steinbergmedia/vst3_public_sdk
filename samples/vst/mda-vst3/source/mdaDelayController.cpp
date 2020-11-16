@@ -18,7 +18,7 @@
 
 #include "pluginterfaces/base/ibstream.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -119,7 +119,6 @@ tresult PLUGIN_API DelayController::getParamStringByValue (ParamID tag, ParamVal
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DelayController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 /*
 		switch (tag)

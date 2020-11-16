@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <Windows.h>
 #include "pluginterfaces/base/fplatform.h"
 #include "../source/version.h"
 

@@ -64,7 +64,7 @@ public:
 
 	NativePlatformWindow getNativePlatformWindow () const override;
 
-	tresult queryInterface (const TUID iid, void** obj) override { return kNoInterface; }
+	tresult queryInterface (const TUID /*iid*/, void** /*obj*/) override { return kNoInterface; }
 
 	void closeImmediately ();
 

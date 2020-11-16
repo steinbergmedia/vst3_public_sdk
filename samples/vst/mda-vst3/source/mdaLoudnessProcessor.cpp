@@ -17,7 +17,7 @@
 #include "mdaLoudnessProcessor.h"
 #include "mdaLoudnessController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

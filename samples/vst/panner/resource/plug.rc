@@ -1,4 +1,4 @@
-#include <windows.h>
+#include <Windows.h>
 #include "../include/version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS

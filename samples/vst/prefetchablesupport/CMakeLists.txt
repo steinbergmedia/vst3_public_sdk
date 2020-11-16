@@ -13,7 +13,7 @@ set(prefetchable_sources
 set(target prefetchablesupport)
 smtg_add_vst3plugin(${target} ${prefetchable_sources})
 set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-target_link_libraries(${target} PRIVATE base sdk)
+target_link_libraries(${target} PRIVATE sdk)
 if(SMTG_MAC)
     smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
 elseif(SMTG_WIN)

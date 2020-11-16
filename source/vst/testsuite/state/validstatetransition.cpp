@@ -44,9 +44,14 @@ namespace Vst {
 //------------------------------------------------------------------------
 // ValidStateTransitionTest
 //------------------------------------------------------------------------
-ValidStateTransitionTest::ValidStateTransitionTest (ITestPlugProvider* plugProvider)
-: TestEnh (plugProvider, kSample32)
+ValidStateTransitionTest::ValidStateTransitionTest (ITestPlugProvider* plugProvider,
+                                                    ProcessSampleSize sampleSize)
+: ProcessTest (plugProvider, sampleSize)
 {
+	if (sampleSize == kSample32)
+		strcpy (name, "Valid State Transition 32bits");
+	else
+		strcpy (name, "Valid State Transition 64bits");
 }
 
 //------------------------------------------------------------------------
@@ -56,6 +61,8 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 		return false;
 
 	printTestHeader (testResult);
+	if (!canProcessSampleSize (testResult))
+		return true;
 
 	for (int32 i = 0; i < 3; ++i)
 	{

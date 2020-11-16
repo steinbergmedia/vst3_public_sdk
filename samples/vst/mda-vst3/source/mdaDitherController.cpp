@@ -16,7 +16,7 @@
 
 #include "mdaDitherController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -48,7 +48,7 @@ tresult PLUGIN_API DitherController::initialize (FUnknown* context)
 	{
 		parameters.addParameter (USTRING("Word Len"), USTRING("Bits"), 0, 0.15, ParameterInfo::kCanAutomate, kParam0);
 
-		IndexedParameter* ditherParam = new IndexedParameter (USTRING("Dither"), USTRING(""), 3, 0.3, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam1);
+		auto* ditherParam = new IndexedParameter (USTRING("Dither"), USTRING(""), 3, 0.3, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam1);
 		ditherParam->setIndexString (0, UString128("OFF"));
 		ditherParam->setIndexString (1, UString128("TRI"));
 		ditherParam->setIndexString (2, UString128("HP-TRI"));

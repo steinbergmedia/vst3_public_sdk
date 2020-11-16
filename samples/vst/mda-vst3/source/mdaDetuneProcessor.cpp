@@ -17,7 +17,7 @@
 #include "mdaDetuneProcessor.h"
 #include "mdaDetuneController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -38,7 +38,7 @@ DetuneProcessor::DetuneProcessor ()
 {
 	setControllerClass (DetuneController::uid);
 	allocParameters (4);
-	buf=win=0;
+	buf=win=nullptr;
 }
 
 //-----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ tresult PLUGIN_API DetuneProcessor::terminate ()
 {
 	if (buf) delete [] buf;
 	if (win) delete [] win;
-	buf=win=0;
+	buf=win=nullptr;
 	return BaseProcessor::terminate ();
 }
 

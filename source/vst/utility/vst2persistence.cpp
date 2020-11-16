@@ -219,7 +219,8 @@ template <typename T>
 inline Result ByteOrderStream<StreamByteOrder>::operator<< (const T& input) noexcept
 {
 	static_assert (std::is_standard_layout<T>::value, "Only standard layout types allowed");
-	if (StreamByteOrder == BYTEORDER)
+	// with C++17: if constexpr (StreamByteOrder == BYTEORDER)
+	if (constexpr bool tmp = (StreamByteOrder == BYTEORDER))
 		return write (WriteBufferDesc {sizeof (T), static_cast<const void*> (&input)});
 
 	return swapAndWrite<sizeof (T)> (reinterpret_cast<const uint8_t*> (&input));
@@ -232,7 +233,8 @@ inline Result ByteOrderStream<StreamByteOrder>::operator>> (T& output) const noe
 {
 	static_assert (std::is_standard_layout<T>::value, "Only standard layout types allowed");
 	auto res = read (ReadBufferDesc {sizeof (T), &output});
-	if (StreamByteOrder == BYTEORDER)
+	// with C++17: if constexpr (StreamByteOrder == BYTEORDER)
+	if (constexpr bool tmp = (StreamByteOrder == BYTEORDER))
 		return res;
 
 	swap (reinterpret_cast<uint8_t*> (&output), res.bytes);
@@ -244,7 +246,8 @@ template <uint32_t StreamByteOrder>
 template <size_t _size>
 inline Result ByteOrderStream<StreamByteOrder>::swapAndWrite (const uint8_t* buffer) noexcept
 {
-	if (_size > 1)
+	// with C++17: if constexpr (_size > 1)
+	if (constexpr bool tmp2 = (_size > 1))
 	{
 		int8_t tmp[_size];
 

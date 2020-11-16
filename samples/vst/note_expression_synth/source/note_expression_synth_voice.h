@@ -496,7 +496,7 @@ bool Voice<SamplePrecision>::process (SamplePrecision* outputBuffers[2], int32 n
 
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
-void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tuning, int32 sampleOffset, int32 nId)
+void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float _tuning, int32 sampleOffset, int32 nId)
 {	
 	currentVolume = 0;
 	this->values[kVolumeMod] = 0;
@@ -525,7 +525,7 @@ void Voice<SamplePrecision>::noteOn (int32 _pitch, ParamValue velocity, float tu
 	this->values[kSinusDetune] = currentSinusDetune;
 	this->values[kTuningMod] = 0;
 
-	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn (_pitch, velocity, tuning, sampleOffset, nId);
+	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::noteOn (_pitch, velocity, _tuning, sampleOffset, nId);
 	this->noteOnSampleOffset++;
 }
 
@@ -577,10 +577,10 @@ void Voice<SamplePrecision>::reset ()
 
 //-----------------------------------------------------------------------------
 template<class SamplePrecision>
-void Voice<SamplePrecision>::setSampleRate (ParamValue sampleRate)
+void Voice<SamplePrecision>::setSampleRate (ParamValue _sampleRate)
 {
-	filter->setSampleRate (sampleRate);
-	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate (sampleRate);
+	filter->setSampleRate (_sampleRate);
+	VoiceBase<kNumParameters, SamplePrecision, 2, GlobalParameterState>::setSampleRate (_sampleRate);
 }
 
 //-----------------------------------------------------------------------------

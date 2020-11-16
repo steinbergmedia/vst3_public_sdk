@@ -81,8 +81,6 @@ tresult PLUGIN_API SyncDelayController::setComponentState (IBStream* state)
 	setParamNormalized (kDelayId, ToNormalized<ParamValue> (savedDelay, static_cast<int32> (Synced.size () - 1)));
 	setParamNormalized (kBypassId, savedBypassState ? 1 : 0);
 
-	getComponentHandler ()->restartComponent (RestartFlags::kParamValuesChanged);
-
 	return kResultOk;
 }
 

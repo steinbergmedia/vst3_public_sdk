@@ -43,6 +43,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstinterappaudio.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
+#include <cassert>
 
 using namespace VSTGUI;
 
@@ -186,6 +187,13 @@ public:
 	}
 	~KeyboardController () noexcept override
 	{
+		if (player)
+		{
+			for (auto& e : noteOnIds)
+			{
+				player->onNoteOff (e.second, e.first);
+			}
+		}
 		if (keyboard)
 			keyboard->unregisterViewListener (this);
 		if (rangeSelector)
@@ -241,7 +249,10 @@ private:
 	{
 		int32_t noteID = note;
 		if (player)
+		{
 			noteID = player->onNoteOn (note, xPos, yPos);
+			noteOnIds[noteID] = note;
+		}
 		keyboard->setKeyPressed (note, true);
 		rangeSelector->setKeyPressed (note, true);
 		return noteID;
@@ -249,7 +260,10 @@ private:
 	void onNoteOff (NoteIndex note, int32_t noteID) override
 	{
 		if (player)
+		{
 			player->onNoteOff (note, noteID);
+			noteOnIds.erase (noteID);
+		}
 		rangeSelector->setKeyPressed (note, false);
 		keyboard->setKeyPressed (note, false);
 	}
@@ -294,6 +308,70 @@ private:
 	KeyboardViewRangeSelector* rangeSelector {nullptr};
 	IKeyboardViewPlayerDelegate* player {nullptr};
 	KeyboardViewRangeSelector::Range& selectedRange;
+	std::map<int32_t, NoteIndex> noteOnIds;
+};
+
+//------------------------------------------------------------------------
+class VST3KeyboardPlayerDelegate : public VSTGUI::IKeyboardViewPlayerDelegate
+{
+public:
+	using NewMessageFunc = std::function<IMessage*()>;
+
+	VST3KeyboardPlayerDelegate (IConnectionPoint* _processor, NewMessageFunc&& _newMessage)
+	: newMessage (std::move (_newMessage)), processor (_processor)
+	{
+	}
+
+	int32_t onNoteOn (NoteIndex note, double /*xPos*/, double /*yPos*/) override
+	{
+		if (noteIDCounter < kNoteIDUserRangeLowerBound)
+			noteIDCounter = kNoteIDUserRangeUpperBound;
+		auto newNoteID = --noteIDCounter;
+		Event evt {};
+		evt.type = Event::EventTypes::kNoteOnEvent;
+		evt.flags = Event::EventFlags::kIsLive;
+		evt.noteOn.channel = 0;
+		evt.noteOn.pitch = note;
+		evt.noteOn.tuning = 0.f;
+		evt.noteOn.velocity = 1.f;
+		evt.noteOn.length = 0;
+		evt.noteOn.noteId = newNoteID;
+		sendEvent (evt);
+		return newNoteID;
+	}
+
+	void onNoteOff (NoteIndex note, int32_t noteID) override
+	{
+		Event evt {};
+		evt.type = Event::EventTypes::kNoteOffEvent;
+		evt.flags = Event::EventFlags::kIsLive;
+		evt.noteOff.channel = 0;
+		evt.noteOff.pitch = note;
+		evt.noteOff.velocity = 0.f;
+		evt.noteOff.noteId = noteID;
+		evt.noteOff.tuning = 0.f;
+		sendEvent (evt);
+	}
+
+	void onNoteModulation (int32_t /*noteID*/, double /*xPos*/, double /*yPos*/) override {}
+
+private:
+	void sendEvent (const Event& evt)
+	{
+		if (auto message = owned (newMessage ()))
+		{
+			message->setMessageID (MsgIDEvent);
+			if (auto attr = message->getAttributes ())
+			{
+				attr->setBinary (MsgIDEvent, &evt, sizeof (Event));
+			}
+			processor->notify (message);
+		}
+	}
+
+	int32_t noteIDCounter = kNoteIDUserRangeUpperBound;
+	NewMessageFunc newMessage;
+	IConnectionPoint* processor {nullptr};
 };
 
 //------------------------------------------------------------------------
@@ -377,7 +455,7 @@ IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 
 //------------------------------------------------------------------------
 IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
-                                                    const IUIDescription* description,
+                                                    const IUIDescription* /*description*/,
                                                     VST3Editor* editor)
 {
 	ConstString name (_name);
@@ -410,6 +488,15 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 			{
 				playerDelegate = new InterAppAudioPlayer (interAudioApp);
 			}
+			else
+			{
+				playerDelegate = new VST3KeyboardPlayerDelegate (
+				    peerConnection, [this] () { return allocateMessage (); });
+			}
+		}
+		if (keyboardRange.length == 0)
+		{
+			keyboardRange.length = editor->getRect ().getWidth () >= 1024 ? 24 : 12;
 		}
 		return new KeyboardController (editor, playerDelegate, keyboardRange);
 	}
@@ -521,9 +608,9 @@ tresult PLUGIN_API ControllerWithUI::onLiveMIDIControllerInput (int32 busIndex, 
 				pid = InvalidParamID;
 		}
 		midiCCMapping[midiCC] = midiLearnParamID;
-		if (auto componentHandler = getComponentHandler ())
+		if (auto _componentHandler = getComponentHandler ())
 		{
-			componentHandler->restartComponent (kMidiCCAssignmentChanged);
+			_componentHandler->restartComponent (kMidiCCAssignmentChanged);
 		}
 	}
 	return kResultTrue;

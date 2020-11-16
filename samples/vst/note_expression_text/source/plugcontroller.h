@@ -55,7 +55,7 @@ public:
 // create function required for plug-in factory,
 // it will be called to create new instances of this controller
 //------------------------------------------------------------------------
-	static FUnknown* createInstance (void* context)
+	static FUnknown* createInstance (void* /*context*/)
 	{
 		return (IEditController*)new PlugController;
 	}

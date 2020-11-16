@@ -45,44 +45,44 @@ tresult PLUGIN_API SpecMeterController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = kBandParamStart;
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 1"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 2"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 3"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 4"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 5"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 6"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 7"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 8"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 9"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 10"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 11"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 12"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left Band 13"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 1"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 2"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 3"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 4"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 5"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 6"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 7"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 8"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 9"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 10"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 11"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 12"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left Band 13"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
 
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 1"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 2"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 3"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 4"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 5"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 6"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 7"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 8"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 9"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 10"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 11"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 12"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right Band 13"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 1"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 2"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 3"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 4"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 5"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 6"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 7"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 8"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 9"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 10"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 11"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 12"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right Band 13"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
 
 		pid = kLeftPeakParam;
-		parameters.addParameter (new ScaledParameter (USTRING("Left Peak"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
-		parameters.addParameter (new ScaledParameter (USTRING("Left Hold"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
-		parameters.addParameter (new BaseParameter (USTRING("Left Min"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Left RMS"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new ScaledParameter (USTRING("Left Peak"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
+		parameters.addParameter (new ScaledParameter (USTRING("Left Hold"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
+		parameters.addParameter (new BaseParameter (USTRING("Left Min"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Left RMS"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
 
-		parameters.addParameter (new ScaledParameter (USTRING("Right Peak"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
-		parameters.addParameter (new ScaledParameter (USTRING("Right Hold"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
-		parameters.addParameter (new BaseParameter (USTRING("Right Min"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
-		parameters.addParameter (new BaseParameter (USTRING("Right RMS"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new ScaledParameter (USTRING("Right Peak"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
+		parameters.addParameter (new ScaledParameter (USTRING("Right Hold"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++, 0, 2));
+		parameters.addParameter (new BaseParameter (USTRING("Right Min"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
+		parameters.addParameter (new BaseParameter (USTRING("Right RMS"), nullptr, 0, 0, ParameterInfo::kIsReadOnly, pid++));
 
 		parameters.addParameter (new BaseParameter (USTRING("Correlation"), 0, 0, 0, ParameterInfo::kIsReadOnly, pid++));
 	}

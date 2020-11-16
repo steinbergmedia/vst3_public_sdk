@@ -95,7 +95,8 @@ tresult PLUGIN_API ADelayProcessor::setActive (TBool state)
 		for (int32 channel = 0; channel < numChannels; channel++)
 		{
 			mBuffer[channel] = (float*)std::malloc (size);	// 1 second delay max
-			memset (mBuffer[channel], 0, size);
+			if (mBuffer[channel])
+				memset (mBuffer[channel], 0, size);
 		}
 		mBufferPos = 0;
 	}
@@ -151,7 +152,7 @@ tresult PLUGIN_API ADelayProcessor::process (ProcessData& data)
 		getBusArrangement (kOutput, 0, arr);
 		int32 numChannels = SpeakerArr::getChannelCount (arr);
 
-		// TODO do something in Bypass : copy inpuit to output if necessary...
+		// TODO do something in Bypass : copy input to output if necessary...
 
 		// apply delay
 		int32 delayInSamples = std::max<int32> (1, (int32)(mDelay * processSetup.sampleRate)); // we have a minimum of 1 sample delay here

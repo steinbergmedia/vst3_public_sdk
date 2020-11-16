@@ -39,10 +39,19 @@
 #include "../utility/stringconvert.h"
 #include <algorithm>
 #include <dlfcn.h>
-#include <experimental/filesystem>
 #include <sys/types.h>
 #include <sys/utsname.h>
 #include <unistd.h>
+
+#if (__cplusplus >= 201707L)
+#include <filesystem>
+using namespace std;
+using Path = std::filesystem::path;
+#else
+#include <experimental/filesystem>
+using namespace std::experimental;
+using Path = std::experimental::filesystem::path;
+#endif
 
 //------------------------------------------------------------------------
 extern "C" {
@@ -69,7 +78,6 @@ Optional<std::string> getCurrentMachineName ()
 	return {unameData.machine};
 }
 
-using Path = std::experimental::filesystem::path;
 //------------------------------------------------------------------------
 Optional<Path> getApplicationPath ()
 {
@@ -119,8 +127,6 @@ public:
 
 	static Optional<Path> getSOPath (const std::string& inPath)
 	{
-		using namespace std::experimental;
-
 		Path modulePath {inPath};
 		if (!filesystem::is_directory (modulePath))
 			return {};
@@ -131,6 +137,7 @@ public:
 		if (!filesystem::is_directory (modulePath))
 			return {};
 
+		// use the Machine Hardware Name (from uname cmd-line) as prefix for "-linux"
 		auto machine = getCurrentMachineName ();
 		if (!machine)
 			return {};
@@ -197,8 +204,6 @@ public:
 void findFilesWithExt (const std::string& path, const std::string& ext, Module::PathList& pathList,
                        bool recursive = true)
 {
-	using namespace std::experimental;
-
 	try
 	{
 		for (auto& p : filesystem::directory_iterator (path))
@@ -254,13 +259,10 @@ Module::PathList Module::getModulePaths ()
 
 	const auto systemPaths = {"/usr/lib/vst3/", "/usr/local/lib/vst3/"};
 
-	// 32bit Plug-ins on 64bit OS
-	// const auto systemPaths = {"/usr/lib32/vst3/", "/usr/local/lib32/vst3/"};
-
 	PathList list;
 	if (auto homeDir = getenv ("HOME"))
 	{
-		std::experimental::filesystem::path homePath (homeDir);
+		filesystem::path homePath (homeDir);
 		homePath /= ".vst3";
 		findModules (homePath.generic_u8string (), list);
 	}
@@ -281,8 +283,6 @@ Module::PathList Module::getModulePaths ()
 //------------------------------------------------------------------------
 Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 {
-	using namespace std::experimental;
-
 	SnapshotList result;
 	filesystem::path path (modulePath);
 	path /= "Contents";

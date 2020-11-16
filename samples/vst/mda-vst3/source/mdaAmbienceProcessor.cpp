@@ -17,7 +17,7 @@
 #include "mdaAmbienceProcessor.h"
 #include "mdaAmbienceController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -28,10 +28,10 @@ FUID AmbienceProcessor::uid (0xAF799E3A, 0xC94B444A, 0xB5B24FD5, 0xD3E3F9E4);
 
 //-----------------------------------------------------------------------------
 AmbienceProcessor::AmbienceProcessor ()
-: buf1 (0)
-, buf2 (0)
-, buf3 (0)
-, buf4 (0)
+: buf1 (nullptr)
+, buf2 (nullptr)
+, buf3 (nullptr)
+, buf4 (nullptr)
 {
 	setControllerClass (AmbienceController::uid);
 	allocParameters (4);
@@ -80,7 +80,7 @@ tresult PLUGIN_API AmbienceProcessor::terminate ()
 		delete [] buf3;
 	if (buf4)
 		delete [] buf4;
-	buf1 = buf2 = buf3 = buf4 = 0;
+	buf1 = buf2 = buf3 = buf4 = nullptr;
 	return BaseProcessor::terminate ();
 }
 

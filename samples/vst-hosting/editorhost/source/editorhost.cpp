@@ -49,7 +49,6 @@
 
 //------------------------------------------------------------------------
 namespace Steinberg {
-FUnknown* gStandardPluginContext = nullptr;
 
 //------------------------------------------------------------------------
 inline bool operator== (const ViewRect& r1, const ViewRect& r2)
@@ -282,7 +281,7 @@ options:
 		}
 	}
 
-	gStandardPluginContext = &pluginContext;
+	PluginContextFactory::instance ().setPluginContext (&pluginContext);
 
 	openEditor (cmdArgs.back (), std::move (uid), flags);
 }
@@ -295,7 +294,7 @@ void App::terminate ()
 	windowController.reset ();
 	plugProvider.reset ();
 	module.reset ();
-	gStandardPluginContext = nullptr;
+	PluginContextFactory::instance ().setPluginContext (nullptr);
 }
 
 //------------------------------------------------------------------------

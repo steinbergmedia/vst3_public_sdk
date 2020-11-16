@@ -146,17 +146,27 @@ tresult ComponentBase::sendMessage (IMessage* message) const
 //------------------------------------------------------------------------
 tresult ComponentBase::sendTextMessage (const char8* text) const
 {
-	IMessage* message = allocateMessage ();
-	if (!message)
-		return kResultFalse;
+	if (auto msg = owned (allocateMessage ()))
+	{
+		msg->setMessageID ("TextMessage");
+		String tmp (text, kCP_Utf8);
+		if (tmp.length () >= 256)
+			tmp.remove (255);
+		msg->getAttributes ()->setString ("Text", tmp.text16 ());
+		return sendMessage (msg);
+	}
+	return kResultFalse;
+}
 
-	FReleaser msgReleaser (message);
-	message->setMessageID ("TextMessage");
-	String tmp (text, kCP_Utf8);
-	if (tmp.length () >= 256)
-		tmp.remove (255);
-	message->getAttributes ()->setString ("Text", tmp.text16 ());
-	return sendMessage (message);
+//------------------------------------------------------------------------
+tresult ComponentBase::sendMessageID (const char* messageID) const
+{
+	if (auto msg = owned (allocateMessage ()))
+	{
+		msg->setMessageID (messageID);
+		return sendMessage (msg);
+	}
+	return kResultFalse;
 }
 
 //------------------------------------------------------------------------

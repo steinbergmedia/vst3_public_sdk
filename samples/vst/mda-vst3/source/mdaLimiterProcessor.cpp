@@ -78,7 +78,7 @@ tresult PLUGIN_API LimiterProcessor::setActive (TBool state)
 }
 
 //-----------------------------------------------------------------------------
-void LimiterProcessor::checkSilence (ProcessData& data)
+void LimiterProcessor::checkSilence (ProcessData& /*data*/)
 {
 }
 

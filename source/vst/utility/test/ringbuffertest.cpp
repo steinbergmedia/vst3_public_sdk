@@ -46,6 +46,7 @@ namespace Vst {
 //------------------------------------------------------------------------
 bool RingBufferTest::testPushUntilFull (ITestResult* testResult) const
 {
+	testResult;
 	OneReaderOneWriter::RingBuffer<uint32> rb (4);
 	if (!rb.push (0))
 		return false;
@@ -63,6 +64,7 @@ bool RingBufferTest::testPushUntilFull (ITestResult* testResult) const
 //------------------------------------------------------------------------
 bool RingBufferTest::testPopUntilEmpty (ITestResult* testResult) const
 {
+	testResult;
 	OneReaderOneWriter::RingBuffer<uint32> rb (4);
 	if (!rb.push (0))
 		return false;
@@ -89,8 +91,9 @@ bool RingBufferTest::testPopUntilEmpty (ITestResult* testResult) const
 }
 
 //------------------------------------------------------------------------
-bool RingBufferTest::testRoundtrip (ITestResult* restResult) const
+bool RingBufferTest::testRoundtrip (ITestResult* testResult) const
 {
+	testResult;
 	OneReaderOneWriter::RingBuffer<uint32> rb (2);
 	uint32 value;
 

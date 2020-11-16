@@ -81,21 +81,21 @@ public:
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 
 	//---from IComponent-----------------------
-	tresult PLUGIN_API getControllerClassId (TUID classId) SMTG_OVERRIDE { return kNotImplemented; }
-	tresult PLUGIN_API setIoMode (IoMode mode) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API getControllerClassId (TUID /*classId*/) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API setIoMode (IoMode /*mode*/) SMTG_OVERRIDE { return kNotImplemented; }
 	int32 PLUGIN_API getBusCount (MediaType type, BusDirection dir) SMTG_OVERRIDE;
 	tresult PLUGIN_API getBusInfo (MediaType type, BusDirection dir, int32 index,
 	                               BusInfo& bus /*out*/) SMTG_OVERRIDE;
-	tresult PLUGIN_API getRoutingInfo (RoutingInfo& inInfo,
-	                                   RoutingInfo& outInfo /*out*/) SMTG_OVERRIDE
+	tresult PLUGIN_API getRoutingInfo (RoutingInfo& /*inInfo*/,
+	                                   RoutingInfo& /*outInfo*/ /*out*/) SMTG_OVERRIDE
 	{
 		return kNotImplemented;
 	}
 	tresult PLUGIN_API activateBus (MediaType type, BusDirection dir, int32 index,
 	                                TBool state) SMTG_OVERRIDE;
-	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE { return kResultOk; }
-	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
-	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API setActive (TBool /*state*/) SMTG_OVERRIDE { return kResultOk; }
+	tresult PLUGIN_API setState (IBStream* /*state*/) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API getState (IBStream* /*state*/) SMTG_OVERRIDE { return kNotImplemented; }
 
 	// bus setup methods
 	AudioBus* addAudioInput (const TChar* name, SpeakerArrangement arr, BusType busType = kMain,
@@ -123,8 +123,8 @@ public:
 	tresult PLUGIN_API canProcessSampleSize (int32 symbolicSampleSize) SMTG_OVERRIDE;
 	uint32 PLUGIN_API getLatencySamples () SMTG_OVERRIDE { return 0; }
 	tresult PLUGIN_API setupProcessing (ProcessSetup& setup) SMTG_OVERRIDE;
-	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE { return kNotImplemented; }
-	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API setProcessing (TBool /*state*/) SMTG_OVERRIDE { return kNotImplemented; }
+	tresult PLUGIN_API process (ProcessData& /*data*/) SMTG_OVERRIDE { return kNotImplemented; }
 	uint32 PLUGIN_API getTailSamples () SMTG_OVERRIDE { return kNoTail; }
 
 	//---from IProcessContextRequirements -------------------

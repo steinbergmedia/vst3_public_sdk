@@ -1,8 +1,17 @@
 
 if(SMTG_ADD_VST3_HOSTING_SAMPLES)
+ 
+    # Enable Sample audioHost (based on Jack Audio)
+    if(SMTG_LINUX)
+        option(SMTG_ENABLE_USE_OF_JACK "Enable Use of Jack" ON)
+    else()
+        # not yet tested on Windows and Mac
+        option(SMTG_ENABLE_USE_OF_JACK "Enable Use of Jack" OFF)
+    endif()
+
     if(SMTG_ENABLE_USE_OF_JACK)
 
-        include(FindJack)
+        include(SMTG_FindJack)
 
         if(${LIBJACK_FOUND})
             set(audiohost_sources
@@ -60,7 +69,9 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
                     ${audiohost_sources}
                     ${SDK_ROOT}/public.sdk/source/vst/hosting/module_win32.cpp )
                 set(audiohost_PLATFORM_LIBS)
-                set(APP_PROPERTIES	LINK_FLAGS "/SUBSYSTEM:console"	)
+                if(MSVC)
+                    set(APP_PROPERTIES	LINK_FLAGS "/SUBSYSTEM:console"	)
+                endif()
             endif()
 
             set(target audiohost)

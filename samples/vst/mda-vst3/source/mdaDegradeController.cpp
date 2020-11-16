@@ -19,7 +19,7 @@
 #include "mdaDegradeController.h"
 #include "pluginterfaces/base/ibstream.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

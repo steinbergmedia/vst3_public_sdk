@@ -228,7 +228,7 @@ IMidiClient::IOSetup AudioClient::getMidiIOSetup () const
 		if (component->getBusInfo (MediaTypes::kEvent, BusDirections::kInput, i, info) != kResultOk)
 			continue;
 
-		auto busName = VST3::StringConvert::convert (info.name, 128); // TODO: 128???
+		auto busName = VST3::StringConvert::convert (info.name, 128);
 		iosetup.inputs.push_back (busName);
 	}
 
@@ -240,7 +240,7 @@ IMidiClient::IOSetup AudioClient::getMidiIOSetup () const
 		    kResultOk)
 			continue;
 
-		auto busName = VST3::StringConvert::convert (info.name, 128); // TODO: 128???
+		auto busName = VST3::StringConvert::convert (info.name, 128);
 		iosetup.outputs.push_back (busName);
 	}
 
@@ -261,7 +261,7 @@ IAudioClient::IOSetup AudioClient::getIOSetup () const
 
 		for (int32_t j = 0; j < info.channelCount; j++)
 		{
-			auto channelName = VST3::StringConvert::convert (info.name, 128); // TODO: 128???
+			auto channelName = VST3::StringConvert::convert (info.name, 128);
 			iosetup.outputs.push_back (channelName + " " + std::to_string (j));
 		}
 	}
@@ -275,7 +275,7 @@ IAudioClient::IOSetup AudioClient::getIOSetup () const
 
 		for (int32_t j = 0; j < info.channelCount; j++)
 		{
-			auto channelName = VST3::StringConvert::convert (info.name, 128); // TODO: 128???
+			auto channelName = VST3::StringConvert::convert (info.name, 128);
 			iosetup.inputs.push_back (channelName + " " + std::to_string (j));
 		}
 	}

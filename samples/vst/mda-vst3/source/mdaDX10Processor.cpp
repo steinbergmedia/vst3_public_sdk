@@ -17,7 +17,7 @@
 #include "mdaDX10Processor.h"
 #include "mdaDX10Controller.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

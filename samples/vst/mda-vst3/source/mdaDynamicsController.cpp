@@ -72,7 +72,7 @@ tresult PLUGIN_API DynamicsController::getParamStringByValue (ParamID tag, Param
 	UString128 result;
 		switch (tag)
 		{
-			#if 0 // TODO
+			#if 0
 			case kParam1:
 			{
 				break;
@@ -89,7 +89,6 @@ tresult PLUGIN_API DynamicsController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DynamicsController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

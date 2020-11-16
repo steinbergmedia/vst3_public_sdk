@@ -140,6 +140,11 @@ protected:
 	uint32 mMinimumOfInputBufferCount {0};
 	uint32 mMinimumOfOutputBufferCount {0};
 
+	TSamples mLastContinuousProjectTimeSamples {kMinInt64};
+	TSamples mLastProjectTimeSamples {kMinInt64};
+	int32 mLastNumSamples {0};
+	uint32 mLastState {0};
+
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
 
 	Steinberg::Base::Thread::FLock msgQueueLock;

@@ -38,8 +38,7 @@
 
 #if SMTG_OS_WINDOWS
 
-#include <windows.h>
-#include <processthreadsapi.h>
+#include <Windows.h>
 
 //------------------------------------------------------------------------
 namespace Steinberg {

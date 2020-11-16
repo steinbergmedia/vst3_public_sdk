@@ -69,7 +69,7 @@ tresult PLUGIN_API DetuneController::getParamStringByValue (ParamID tag, ParamVa
 	UString128 result;
 		switch (tag)
 		{
-			#if 0 // TODO
+			#if 0
 			case kParam3:
 			{
 				result.printFloat (bufres);
@@ -92,7 +92,6 @@ tresult PLUGIN_API DetuneController::getParamStringByValue (ParamID tag, ParamVa
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DetuneController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 /*
 		switch (tag)

@@ -17,7 +17,7 @@
 #include "mdaSpecMeterProcessor.h"
 #include "mdaSpecMeterController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -391,7 +391,7 @@ void SpecMeterProcessor::doProcessing (ProcessData& data)
 //-----------------------------------------------------------------------------
 void SpecMeterProcessor::sendParameterChanges (IParameterChanges* changes, int32 numSamples)
 {
-	IParamValueQueue* queue = 0;
+	IParamValueQueue* queue = nullptr;
 	int32 index;
 	int32 pid = SpecMeterController::kBandParamStart;
 	for (int32 ch = 0; ch < 2; ch++)

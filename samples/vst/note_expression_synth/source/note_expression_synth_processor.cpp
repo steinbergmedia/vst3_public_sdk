@@ -84,6 +84,26 @@ tresult PLUGIN_API Processor::initialize (FUnknown* context)
 	return result;
 }
 
+//------------------------------------------------------------------------
+tresult PLUGIN_API Processor::notify (IMessage* message)
+{
+	auto msgID = message->getMessageID ();
+	if (strcmp (msgID, MsgIDEvent) != 0)
+		return kResultFalse;
+	if (auto attr = message->getAttributes ())
+	{
+		const void* msgData;
+		uint32 msgSize;
+		if (attr->getBinary (MsgIDEvent, msgData, msgSize) == kResultTrue &&
+		    msgSize == sizeof (Event))
+		{
+			auto evt = reinterpret_cast<const Event*>(msgData);
+			controllerEvents.push (*evt);
+		}
+	}
+	return kResultTrue;
+}
+
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API Processor::setState (IBStream* state)
 {
@@ -274,6 +294,11 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 		}
 	}
 	tresult result;
+	Event evt;
+	while (controllerEvents.pop (evt))
+	{
+		voiceProcessor->processEvent (evt);
+	}
 
 	// flush mode
 	if (data.numOutputs < 1)

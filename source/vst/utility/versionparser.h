@@ -127,9 +127,9 @@ public:
 			if (index == StringType::npos)
 			{
 				// skip non digits in the back
-				auto it = std::find_if (str.begin (), str.end (),
-				                        [] (const auto& c) { return !std::isdigit (c); });
-				index = std::distance (str.begin (), it);
+				auto itBack = std::find_if (str.begin (), str.end (),
+				                            [] (const auto& c) { return !std::isdigit (c); });
+				index = std::distance (str.begin (), itBack);
 				if (index == 0)
 					break;
 				str = {str.data (), index};

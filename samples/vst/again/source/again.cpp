@@ -280,7 +280,7 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 				memset (out[i], 0, sampleFramesSize);
 			}
 			// this will set to 1 all channels
-			data.outputs[0].silenceFlags = (1 << numChannels) - 1; 
+			data.outputs[0].silenceFlags = ((uint64)1 << numChannels) - 1;
 		}
 		else
 		{

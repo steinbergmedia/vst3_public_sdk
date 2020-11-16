@@ -15,8 +15,7 @@ if(SMTG_ADD_VSTGUI)
 
     smtg_add_vst3plugin(${target} ${plug_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-    target_link_libraries(${target} PRIVATE base sdk vstgui_support)
+    target_link_libraries(${target} PRIVATE sdk vstgui_support)
 
     smtg_add_vst3_resource(${target} "resource/plug.uidesc")
     smtg_add_vst3_resource(${target} "resource/background.png")

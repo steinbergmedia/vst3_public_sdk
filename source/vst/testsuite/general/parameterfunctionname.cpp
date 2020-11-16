@@ -123,7 +123,7 @@ bool PLUGIN_API ParameterFunctionNameTest::run (ITestResult* testResult)
 	                                     FunctionNameType::kCompResetGainReductionMax,
 	                                     FunctionNameType::kLowLatencyMode,
 	                                     FunctionNameType::kRandomize,
-	                                     FunctionNameType::kWetDryMix};
+	                                     FunctionNameType::kDryWetMix};
 	ParamID paramID;
 	for (auto item : arrayFunctionName)
 	{

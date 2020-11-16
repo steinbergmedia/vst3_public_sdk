@@ -109,17 +109,18 @@ public:
 	                                                Steinberg::uint32 inDataSize);
 	Steinberg::int32 Process (AAXWrapper_Context* instance);
 
-	Steinberg::int32 getNumMIDIports () const { return mCountMIDIports; }
+	Steinberg::uint32 getNumMIDIports () const { return mCountMIDIports; }
 
 	void setSideChainEnable (bool enable);
 	bool generatePageTables (const char* outputFile);
+	void setRenderingOffline (bool val);
 
 	static void DescribeAlgorithmComponent (AAX_IComponentDescriptor* outDesc,
 	                                        const AAX_Effect_Desc* desc,
 	                                        const AAX_Plugin_Desc* pdesc);
 
 	//--- ---------------------------------------------------------------------
-	Steinberg::int32 getNumAAXOutputs () const { return mAAXOutputs; }
+	Steinberg::uint32 getNumAAXOutputs () const { return mAAXOutputs; }
 
 	//------------------------------------------------------------------------
 	// BaseWrapper overrides ---------------------------------
@@ -140,17 +141,17 @@ private:
 	Steinberg::int32 countSidechainBusChannels (Steinberg::Vst::BusDirection dir,
 	                                            Steinberg::uint64& scBusBitset);
 
-	void guessActiveOutputs (float** out, Steinberg::int32 num);
+	void guessActiveOutputs (float** out, Steinberg::uint32 num);
 	void updateActiveOutputState ();
 
 	AAXWrapper_Parameters* mAAXParams = nullptr;
 	AAXWrapper_GUI* mAAXGUI = nullptr;
 
-	Steinberg::int32 mAAXOutputs = 0;
+	Steinberg::uint32 mAAXOutputs = 0;
 
 	Steinberg::Base::Thread::FLock mSyncCalls; // synchronize calls expected in the same thread in VST3
 	AAX_Plugin_Desc* mPluginDesc = nullptr;
-	Steinberg::int32 mCountMIDIports = 0;
+	Steinberg::uint32 mCountMIDIports = 0;
 
 	// as of ProTools 12 (?) the context struct does no longer allow unused slots,
 	//  so we have to generate indices into the context struct dynamically
@@ -169,25 +170,24 @@ private:
 	std::bitset<maxActiveChannels> mActiveChannels;
 	std::bitset<maxActiveChannels> mPropagatedChannels;
 
-	Steinberg::int32 mCntMeters = 0;
-	std::unique_ptr<Steinberg::int32[]> mMeterIds;
+	Steinberg::uint32 mCntMeters = 0;
+	std::unique_ptr<Steinberg::Vst::ParamID[]> mMeterIds;
 
 	struct GetChunkMessage;
 	void* mainThread = nullptr;
 	Steinberg::Base::Thread::FLock msgQueueLock;
 	std::list<GetChunkMessage*> msgQueue;
 
-	bool mWantsSetChunk = false;
-	bool mSettingChunk = false;
-
-	bool mSimulateBypass = false;
-	bool mBypass = false;
-
 	float mBypassGain = 1.0;
 	float* mMetersTmp = nullptr;
 
 	Steinberg::Vst::TQuarterNotes mLastPpqPos = 0;
 	Steinberg::Vst::TQuarterNotes mNextPpqPos = 0;
+
+	bool mWantsSetChunk = false;
+	bool mSettingChunk = false;
+	bool mSimulateBypass = false;
+	bool mBypass = false;
 
 	bool mPresetChanged = false;
 	bool mBypassBeforePresetChanged = false;

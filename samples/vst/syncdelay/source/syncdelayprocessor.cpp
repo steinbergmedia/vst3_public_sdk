@@ -102,7 +102,8 @@ tresult PLUGIN_API SyncDelayProcessor::setActive (TBool state)
 		for (int32 channel = 0; channel < numChannels; channel++)
 		{
 			mBuffer[channel] = static_cast<float*> (std::malloc (size));
-			memset (mBuffer[channel], 0, size);
+			if (mBuffer[channel])
+				memset (mBuffer[channel], 0, size);
 		}
 		mBufferPos = 0;
 		mDelayIndex = FromNormalized<ParamValue> (0, static_cast<int32>(Synced.size () - 1));

@@ -4,6 +4,6 @@ if(ANDROID)
     return()
 endif()
 
-include(AddSubDirectories)
+include(SMTG_AddSubDirectories)
 
-add_subdirectories()
+smtg_add_subdirectories()

@@ -15,7 +15,7 @@
  */
 
 #include "mdaBandistoController.h"
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -45,7 +45,7 @@ tresult PLUGIN_API BandistoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* listenParam = new IndexedParameter (USTRING("Listen"), 0, 3, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
+		auto* listenParam = new IndexedParameter (USTRING("Listen"), nullptr, 3, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
 		listenParam->setIndexString (0, UString128("Low"));
 		listenParam->setIndexString (1, UString128("Mid"));
 		listenParam->setIndexString (2, UString128("High"));
@@ -62,7 +62,7 @@ tresult PLUGIN_API BandistoController::initialize (FUnknown* context)
 		parameters.addParameter (new ScaledParameter (USTRING("M Out"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, kParam7, -20, 20));
 		parameters.addParameter (new ScaledParameter (USTRING("H Out"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, kParam8, -20, 20));
 		
-		IndexedParameter* modeParam = new IndexedParameter (USTRING("Mode"), 0, 1, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam9);
+		auto* modeParam = new IndexedParameter (USTRING("Mode"), nullptr, 1, 0., ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam9);
 		modeParam->setIndexString (0, UString128("Bipolar"));
 		modeParam->setIndexString (1, UString128("Unipolar"));
 		parameters.addParameter (modeParam);
@@ -106,7 +106,6 @@ tresult PLUGIN_API BandistoController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API BandistoController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case kParam1:

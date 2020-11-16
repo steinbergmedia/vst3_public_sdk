@@ -189,7 +189,7 @@ void HostCheckerProcessor::sendLogEventMessage (const LogEvent& logEvent)
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setAudioPresentationLatencySamples (
-    BusDirection dir, int32 busIndex, uint32 latencyInSamples)
+    BusDirection /*dir*/, int32 /*busIndex*/, uint32 /*latencyInSamples*/)
 {
 	addLogEvent (kLogIdAudioPresentationLatencySamplesSupported);
 	return kResultTrue;
@@ -265,6 +265,13 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 	{
 		addLogEvent (kLogIdParametersFlushSupported);
 	}
+	if (data.processMode == Vst::kOffline)
+		addLogEvent (kLogIdProcessModeOfflineSupported);
+	else if (data.processMode == kRealtime)
+		addLogEvent (kLogIdProcessModeRealtimeSupported);
+	else if (data.processMode == kPrefetch)
+		addLogEvent (kLogIdProcessModePrefetchSupported);
+
 	if (data.processContext)
 	{
 		if (data.processContext->state & ProcessContext::kPlaying)
@@ -296,9 +303,54 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		if (data.processContext->state & ProcessContext::kClockValid)
 			addLogEvent (kLogIdProcessContextClockSupported);
 	}
+	if (data.processContext)
+	{
+		if (mLastProjectTimeSamples != kMinInt64)
+		{
+			bool playbackChanged = (data.processContext->state & ProcessContext::kPlaying) !=
+			                       (mLastState & ProcessContext::kPlaying);
+			if ((mLastState & ProcessContext::kPlaying) == 0)
+			{
+				if (mLastProjectTimeSamples != data.processContext->projectTimeSamples)
+				{
+					if (playbackChanged)
+						addLogEvent (kLogIdProcessPlaybackChangedDiscontinuityDetected);
+					else
+						addLogEvent (kLogIdProcessDiscontinuityDetected);
+				}
+			}
+			else if (data.processContext->state & ProcessContext::kPlaying)
+			{
+				if (mLastProjectTimeSamples + mLastNumSamples !=
+				    data.processContext->projectTimeSamples)
+				{
+					if (playbackChanged)
+						addLogEvent (kLogIdProcessPlaybackChangedDiscontinuityDetected);
+					else
+						addLogEvent (kLogIdProcessDiscontinuityDetected);
+				}
+			}
+			if ((data.processContext->state & ProcessContext::kContTimeValid) &&
+			    (mLastContinuousProjectTimeSamples != kMinInt64))
+			{
+				if (mLastContinuousProjectTimeSamples + mLastNumSamples !=
+				    data.processContext->continousTimeSamples)
+				{
+					if (playbackChanged)
+						addLogEvent (kLogIdProcessPlaybackChangedContinuousDiscontinuityDetected);
+					else
+						addLogEvent (kLogIdProcessContinuousDiscontinuityDetected);
+				}
+			}
+		}
+		mLastProjectTimeSamples = data.processContext->projectTimeSamples;
+		mLastContinuousProjectTimeSamples = data.processContext->continousTimeSamples;
+		mLastState = data.processContext->state;
+		mLastNumSamples = data.numSamples;
+	}
 
 	Algo::foreach (data.inputParameterChanges, [&] (IParamValueQueue& paramQueue) {
-		Algo::foreachLast (paramQueue, [&] (ParamID id, int32 sampleOffset, ParamValue value) {
+		Algo::foreachLast (paramQueue, [&] (ParamID id, int32 /*sampleOffset*/, ParamValue value) {
 			if (id == kBypassTag)
 			{
 				mBypass = value > 0;

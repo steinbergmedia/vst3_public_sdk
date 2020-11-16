@@ -17,7 +17,7 @@
 #include "mdaRingModProcessor.h"
 #include "mdaRingModController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

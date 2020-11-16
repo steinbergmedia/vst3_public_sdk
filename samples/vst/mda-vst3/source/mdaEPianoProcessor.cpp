@@ -18,7 +18,7 @@
 #include "mdaEPianoController.h"
 #include "mdaEPianoData.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

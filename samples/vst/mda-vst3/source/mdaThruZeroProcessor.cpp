@@ -17,7 +17,7 @@
 #include "mdaThruZeroProcessor.h"
 #include "mdaThruZeroController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -80,7 +80,7 @@ tresult PLUGIN_API ThruZeroProcessor::terminate ()
 		delete [] buffer;
 	if (buffer2)
 		delete [] buffer2;
-	buffer = buffer2 = 0;
+	buffer = buffer2 = nullptr;
 	return BaseProcessor::terminate ();
 }
 

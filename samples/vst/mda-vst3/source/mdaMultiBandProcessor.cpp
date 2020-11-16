@@ -17,7 +17,7 @@
 #include "mdaMultiBandProcessor.h"
 #include "mdaMultiBandController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {

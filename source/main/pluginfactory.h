@@ -115,14 +115,6 @@ extern CPluginFactory* gPluginFactory;
 //------------------------------------------------------------------------
 } // namespace Steinberg
 
-
-//------------------------------------------------------------------------
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-	#define EXPORT_FACTORY	__attribute__ ((visibility ("default")))
-#else
-	#define EXPORT_FACTORY
-#endif
-
 //------------------------------------------------------------------------
 /** \defgroup classFactoryMacros Macros for defining the class factory
 \ingroup sdkBase
@@ -145,13 +137,13 @@ END_FACTORY
 @{*/
 
 #define BEGIN_FACTORY_CLASS(FactoryClass,vendor,url,email,flags) using namespace Steinberg; \
-	EXPORT_FACTORY IPluginFactory* PLUGIN_API GetPluginFactory () { \
+	SMTG_EXPORT_SYMBOL IPluginFactory* PLUGIN_API GetPluginFactory () { \
 	if (!gPluginFactory) \
 	{	static PFactoryInfo factoryInfo (vendor,url,email,flags); \
 	gPluginFactory = new FactoryClass (factoryInfo); \
 
 #define BEGIN_FACTORY(vendor,url,email,flags) using namespace Steinberg; \
-	EXPORT_FACTORY IPluginFactory* PLUGIN_API GetPluginFactory () { \
+	SMTG_EXPORT_SYMBOL IPluginFactory* PLUGIN_API GetPluginFactory () { \
 	if (!gPluginFactory) \
 	{	static PFactoryInfo factoryInfo (vendor,url,email,flags); \
 		gPluginFactory = new CPluginFactory (factoryInfo); \

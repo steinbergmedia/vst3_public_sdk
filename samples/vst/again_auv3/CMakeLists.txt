@@ -1,7 +1,7 @@
-include(AddVST3AuV3)
+include(SMTG_AddVST3AuV3)
 
 if(SMTG_MAC AND SMTG_ADD_VSTGUI)
-    if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+    if(XCODE)
         set(again_mac_app_sources
             "macOS/Sources/ViewController.m"
             "macOS/Sources/ViewController.h"
@@ -40,7 +40,8 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         #--------------------------------------------------------------------------------------------------------
         # iOS target
         #--------------------------------------------------------------------------------------------------------
-        smtg_add_auv3(again_auv3_ios "iOS" "AGain AUV3 iOS" "com.steinberg.sdk.auv3.againios" "audiounitconfig.h" "iOS/again.entitlements" "${again_ios_app_sources}" "${again_ios_app_ui_resources}" "iOS/Resources/Info.plist" "Shared/Info.plist" again_ios)
-
+        if(SMTG_IOS_DEVELOPMENT_TEAM)
+            smtg_add_auv3(again_auv3_ios "iOS" "AGain AUV3 iOS" "com.steinberg.sdk.auv3.againios" "audiounitconfig.h" "iOS/again.entitlements" "${again_ios_app_sources}" "${again_ios_app_ui_resources}" "iOS/Resources/Info.plist" "Shared/Info.plist" again_ios)
+        endif()
     endif()
 endif()

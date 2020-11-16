@@ -16,7 +16,7 @@
 
 #include "mdaLeslieController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -46,7 +46,7 @@ tresult PLUGIN_API LeslieController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* speedParam = new IndexedParameter (USTRING("Speed"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
+		auto* speedParam = new IndexedParameter (USTRING("Speed"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
 		speedParam->setIndexString (0, UString128("STOP"));
 		speedParam->setIndexString (1, UString128("SLOW"));
 		speedParam->setIndexString (2, UString128("FAST"));
@@ -90,7 +90,6 @@ tresult PLUGIN_API LeslieController::getParamStringByValue (ParamID tag, ParamVa
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API LeslieController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

@@ -16,7 +16,7 @@
 
 #include "mdaSubSynthController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -47,7 +47,7 @@ tresult PLUGIN_API SubSynthController::initialize (FUnknown* context)
 	if (res == kResultTrue)
 	{
 		ParamID pid = 0;
-		IndexedParameter* typeParam = new IndexedParameter (USTRING("Type"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* typeParam = new IndexedParameter (USTRING("Type"), USTRING(""), 3, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		typeParam->setIndexString (0, UString128("Distort"));
 		typeParam->setIndexString (1, UString128("Divide"));
 		typeParam->setIndexString (2, UString128("Invert"));
@@ -94,7 +94,6 @@ tresult PLUGIN_API SubSynthController::getParamStringByValue (ParamID tag, Param
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API SubSynthController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case 2:

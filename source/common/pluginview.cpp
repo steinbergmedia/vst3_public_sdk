@@ -42,7 +42,7 @@ namespace Steinberg {
 //  CPluginView implementation
 //------------------------------------------------------------------------
 CPluginView::CPluginView (const ViewRect* _rect)
-: rect (0, 0, 0, 0), systemWindow (nullptr), plugFrame (nullptr)
+: rect (0, 0, 0, 0)
 {
 	if (_rect)
 		rect = *_rect;

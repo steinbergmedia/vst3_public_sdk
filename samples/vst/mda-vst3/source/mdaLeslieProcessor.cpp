@@ -17,7 +17,7 @@
 #include "mdaLeslieProcessor.h"
 #include "mdaLeslieController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -80,7 +80,7 @@ tresult PLUGIN_API LeslieProcessor::initialize (FUnknown* context)
 tresult PLUGIN_API LeslieProcessor::terminate ()
 {
 	if (hbuf) delete [] hbuf;
-	hbuf = 0;
+	hbuf = nullptr;
 	return BaseProcessor::terminate ();
 }
 

@@ -149,9 +149,9 @@ IPlugView* PLUGIN_API PitchNamesController::createView (FIDString name)
 }
 
 //-----------------------------------------------------------------------------
-CView* PitchNamesController::createCustomView (UTF8StringPtr name, const UIAttributes& attributes,
-                                               const IUIDescription* description,
-                                               VST3Editor* editor)
+CView* PitchNamesController::createCustomView (UTF8StringPtr name, const UIAttributes& /*attributes*/,
+                                               const IUIDescription* /*description*/,
+                                               VST3Editor* /*editor*/)
 {
 #if MULTI_CHANNEL_SCENARIO
 	if (ConstString (name) == "PitchNamesDataBrowser")

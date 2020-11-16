@@ -32,59 +32,43 @@
 //-----------------------------------------------------------------------------
 
 #include "systemclipboard.h"
+#include "pluginterfaces/base/fplatform.h"
 
 #if SMTG_OS_MACOS
-#include <array>
-#include <cstdio>
-#include <string>
+#import <Cocoa/Cocoa.h>
 
+//------------------------------------------------------------------------
 namespace Steinberg {
 namespace SystemClipboard {
 
 //-----------------------------------------------------------------------------
-bool copyTextToClipboard (const String& text)
+bool copyTextToClipboard (const std::string& text)
 {
-	/* NSPasteboard* pasteBoard = [NSPasteboard generalPasteboard];
-
-	[pasteBoard declareTypes: [NSArray arrayWithObject: NSPasteboardTypeString] owner: nil];
-
-// TODO text to NSString
-//	string
-//	[pasteBoard setString: string forType: NSPasteboardTypeString];
-*/
-	bool result = false;
-	if (text.length () > 0)
-	{
-		String command;
-		command.printf ("echo %s | cbcopy", text.text8 ());
-
-		system (command);
-		result = true;
-	}
-	return result;
+	auto pb = [NSPasteboard generalPasteboard];
+	[pb clearContents];
+	auto nsString = [NSString stringWithUTF8String:text.data ()];
+	return [pb setString:nsString forType:NSPasteboardTypeString];
 }
 
 //-----------------------------------------------------------------------------
-bool getTextFromClipboard (String& text)
+bool getTextFromClipboard (std::string& text)
 {
-	//[[NSPasteboard generalPasteboard] stringForType: NSPasteboardTypeString];
-
-	auto pipe = ::popen ("cbpaste", "r");
-	if (!pipe)
-		return false;
-
-	std::array<char, 128> buffer;
-	std::string result;
-
-	while (::fgets (buffer.data (), 128, pipe) != nullptr)
-		result += buffer.data ();
-
-	::pclose (pipe);
-
-	text = result.data ();
-	return !result.empty ();
+	auto pb = [NSPasteboard generalPasteboard];
+	if ([pb canReadItemWithDataConformingToTypes:@[NSPasteboardTypeString]])
+	{
+		if (auto items = [pb readObjectsForClasses:@[[NSString class]] options:nil])
+		{
+			if (items.count > 0)
+			{
+				text = [items[0] UTF8String];
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
+//------------------------------------------------------------------------
 } // namespace SystemClipboard
 } // namespace Steinberg
 

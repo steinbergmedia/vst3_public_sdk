@@ -149,7 +149,7 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 #endif
 
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
-	PlatformType platformType = kDefaultNative;
+	PlatformType platformType = PlatformType::kDefaultNative;
 #if SMTG_OS_MACOS
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)

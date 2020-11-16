@@ -45,8 +45,7 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3plugin(${target} ${again_sources})
     #smtg_add_vst3plugin(${target} PACKAGE_NAME "A Gain" SOURCES_LIST ${again_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-    target_link_libraries(${target} PRIVATE base sdk vstgui_support)
+    target_link_libraries(${target} PRIVATE sdk vstgui_support)
 
     smtg_add_vst3_resource(${target} "resource/again.uidesc")
     smtg_add_vst3_resource(${target} "resource/background.png")
@@ -69,7 +68,7 @@ if(SMTG_ADD_VSTGUI)
         set(target again_ios)
         smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${target}" "${again_sources}")
         set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-        target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
+        target_include_directories(${target} PUBLIC ${SMTG_VSTGUI_ROOT}/vstgui4)
         target_link_libraries(${target} PRIVATE
             base_ios
             sdk_ios
@@ -92,9 +91,9 @@ if(SMTG_ADD_VSTGUI)
 
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
         target_sources(${target} PRIVATE 
-            ${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
-            ${VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
-            ${VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
+            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
+            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
+            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
             ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
         )
     endif()
@@ -102,8 +101,7 @@ if(SMTG_ADD_VSTGUI)
     set(targetsimple againsimple)
     smtg_add_vst3plugin(${targetsimple} ${again_simple_sources})
     set_target_properties(${targetsimple} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${targetsimple} PUBLIC ${VSTGUI_ROOT}/vstgui4)
-    target_link_libraries(${targetsimple} PRIVATE base sdk vstgui_support)
+    target_link_libraries(${targetsimple} PRIVATE sdk vstgui_support)
 
     smtg_add_vst3_resource(${targetsimple} "resource/again.uidesc")
     smtg_add_vst3_resource(${targetsimple} "resource/background.png")
@@ -119,14 +117,18 @@ if(SMTG_ADD_VSTGUI)
         target_sources(${targetsimple} PRIVATE resource/again.rc)
     endif()
 
-    if (SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
+    # do not build AGain VST 2 by default
+    option(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION "Legacy: Create the VST2 version of the Sample Plug-in AGain, be sure that you have copied the VST2 interfaces into the folder VST_SDK/VST3_SDK/pluginterfaces/vst2.x" OFF)
+    if(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
         message(STATUS "SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
         if(XCODE)
             # fix missing VSTPluginMain symbol when also building VST 2 version
             set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")
         endif()
-        if (SMTG_WIN)
-            add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+        if(SMTG_WIN)
+            if(NOT MINGW)
+                add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+            endif()
         endif()
     endif()
 endif(SMTG_ADD_VSTGUI)

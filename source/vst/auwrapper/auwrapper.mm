@@ -464,11 +464,12 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 		if (FUnknownPtr<IPluginBase> (audioProcessor)->initialize ((HostApplication*)&gHostApp) !=
 		    kResultTrue)
 			return;
+		
+		FUnknownPtr<IComponent> component (audioProcessor);
 
 		if (audioProcessor->queryInterface (IEditController::iid, (void**)&editController) !=
 		    kResultTrue)
 		{
-			FUnknownPtr<IComponent> component (audioProcessor);
 			if (component)
 			{
 				TUID ccid;
@@ -504,11 +505,10 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 				}
 			}
 		}
-		if (editController)
+		if (editController && component)
 		{
 			editController->setComponentHandler (this);
 			// initialize busses
-			FUnknownPtr<IComponent> component (audioProcessor);
 			int32 inputBusCount = component->getBusCount (kAudio, kInput);
 			int32 outputBusCount = component->getBusCount (kAudio, kOutput);
 
@@ -575,6 +575,10 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 			outputParamTransfer.setMaxParameters (500);
 
 			timer = Timer::create (this, 20);
+
+			FUnknownPtr<IEditController2> editController2 (editController);
+			if (editController2)
+				editController2->setKnobMode (kLinearMode);
 		}
 	}
 }

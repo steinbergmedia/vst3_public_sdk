@@ -2,23 +2,8 @@
 if(SMTG_ADD_VST3_HOSTING_SAMPLES)
 
     set(editorhost_sources
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.h
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.h
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/module.h
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h
         ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
         ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h
-        ${SDK_ROOT}/public.sdk/source/vst/utility/optional.h
-        ${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.cpp
-        ${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.h
-        ${SDK_ROOT}/public.sdk/source/vst/utility/uid.h
-        ${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp
         source/editorhost.cpp
         source/editorhost.h
         source/platform/appinit.h
@@ -76,15 +61,24 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
         )
         set(editorhost_PLATFORM_LIBS
         )
-        set(APP_PROPERTIES
-            LINK_FLAGS "/SUBSYSTEM:windows"
-        )
+        if(MSVC)
+            set(APP_PROPERTIES
+                   LINK_FLAGS "/SUBSYSTEM:windows"
+            )
+        endif()
+        if(MINGW)
+            # It causes the UNICODE preprocessor macro to be predefined, and chooses Unicode-capable runtime startup code.
+            set_target_properties(${target}
+                PROPERTIES
+                    LINK_FLAGS -municode
+            )
+        endif()
     endif()
 
     set(target editorhost)
     add_executable(${target} ${editorhost_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_HOSTING_EXAMPLES_FOLDER})
-    target_link_libraries(${target} PRIVATE base sdk ${editorhost_PLATFORM_LIBS})
+    target_link_libraries(${target} PRIVATE sdk_hosting ${editorhost_PLATFORM_LIBS})
     smtg_setup_universal_binary(${target})
     if (APP_PROPERTIES)
         set_target_properties(${target} PROPERTIES ${APP_PROPERTIES})

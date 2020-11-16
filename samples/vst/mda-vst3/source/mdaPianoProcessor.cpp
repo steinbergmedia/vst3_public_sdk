@@ -18,7 +18,8 @@
 #include "mdaPianoController.h"
 #include "mdaPianoData.h"
 
-#include <math.h>
+#include <cstdio>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -114,7 +115,7 @@ tresult PLUGIN_API PianoProcessor::initialize (FUnknown* context)
 tresult PLUGIN_API PianoProcessor::terminate ()
 {
 	if (comb) delete[] comb;
-	comb = 0;
+	comb = nullptr;
 	return BaseProcessor::terminate ();
 }
 
@@ -224,7 +225,7 @@ void PianoProcessor::doProcessing (ProcessData& data)
 
 				if (!(l > -2.0f) || !(l < 2.0f))
 				{
-					printf ("what is this shit?   %d,  %f,  %f\n", i, x, V->f0);
+					printf ("what is this?   %d,  %f,  %f\n", i, x, V->f0);
 					l = 0.0f;
 				}  
 				if (!(r > -2.0f) || !(r < 2.0f))

@@ -1,6 +1,6 @@
 
 if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
-    include(AddAAXLibrary)
+    include(SMTG_AddAAXLibrary)
 
     set(again_sources
         source/againaax.cpp
@@ -21,9 +21,8 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     set(target again_aax)
     smtg_add_aaxplugin(${target} ${again_sources})
     set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${VSTGUI_ROOT}/vstgui4)
     target_include_directories(${target} PUBLIC ${SDK_ROOT}/public.sdk/samples/vst/again/source)
-    target_link_libraries(${target} PRIVATE base sdk vstgui_support aaxwrapper)
+    target_link_libraries(${target} PRIVATE sdk vstgui_support aaxwrapper)
 
     smtg_add_vst3_resource(${target} "../again/resource/again.uidesc")
     smtg_add_vst3_resource(${target} "../again/resource/background.png")
@@ -38,7 +37,9 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     elseif(SMTG_WIN)
         target_sources(${target} PRIVATE ../again/resource/again.rc)
         # remove warnings from VST2
-        add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+        if(NOT MINGW)
+            add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+        endif()
     endif()
 
 endif()

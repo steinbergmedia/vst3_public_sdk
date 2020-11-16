@@ -17,7 +17,7 @@
 #include "mdaDynamicsProcessor.h"
 #include "mdaDynamicsController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -81,7 +81,7 @@ tresult PLUGIN_API DynamicsProcessor::setActive (TBool state)
 }
 
 //-----------------------------------------------------------------------------
-void DynamicsProcessor::checkSilence (ProcessData& data)
+void DynamicsProcessor::checkSilence (ProcessData& /*data*/)
 {
 }
 

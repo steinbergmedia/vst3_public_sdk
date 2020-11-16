@@ -17,7 +17,7 @@
 #include "mdaComboProcessor.h"
 #include "mdaComboController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -33,8 +33,8 @@ FUID ComboProcessor::uid (0x11C1BD22, 0x888F4F17, 0xB2E2A77B, 0x51CEDCD6);
 
 //-----------------------------------------------------------------------------
 ComboProcessor::ComboProcessor ()
-: buffer (0)
-, buffe2 (0)
+: buffer (nullptr)
+, buffe2 (nullptr)
 {
 	setControllerClass (ComboController::uid);
 	allocParameters (7);
@@ -77,7 +77,7 @@ tresult PLUGIN_API ComboProcessor::terminate ()
 {
 	if (buffer) delete [] buffer;
 	if (buffe2) delete [] buffe2;
-	buffer = buffe2 = 0;
+	buffer = buffe2 = nullptr;
 	return BaseProcessor::terminate ();
 }
 

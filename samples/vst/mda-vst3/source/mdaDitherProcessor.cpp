@@ -18,7 +18,7 @@
 
 #include "mdaDitherController.h"
 
-#include <math.h>
+#include <cmath>
 #include <cstdlib>
 
 namespace Steinberg {

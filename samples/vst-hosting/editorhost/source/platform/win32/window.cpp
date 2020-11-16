@@ -37,6 +37,7 @@
 
 #include "window.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include <algorithm>
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
@@ -70,7 +71,7 @@ static void removeWindow (Window* window)
 } // anonymous
 
 //------------------------------------------------------------------------
-static constexpr WCHAR* gWindowClassName = L"VSTSDK WindowClass";
+static const WCHAR* gWindowClassName = L"VSTSDK WindowClass";
 
 //------------------------------------------------------------------------
 WindowPtr Window::make (const std::string& name, Size size, bool resizeable,
@@ -121,9 +122,9 @@ auto Window::getWindows () -> WindowList
 
 //------------------------------------------------------------------------
 bool Window::init (const std::string& name, Size size, bool resizeable,
-                   const WindowControllerPtr& controller, HINSTANCE instance)
+                   const WindowControllerPtr& _controller, HINSTANCE instance)
 {
-	this->controller = controller;
+	controller = _controller;
 	registerWindowClass (instance);
 	DWORD exStyle = WS_EX_APPWINDOW;
 	DWORD dwStyle = WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
@@ -134,9 +135,10 @@ bool Window::init (const std::string& name, Size size, bool resizeable,
 	RECT rect {0, 0, size.width, size.height};
 	AdjustWindowRectEx (&rect, dwStyle, false, exStyle);
 
-	if (hwnd = CreateWindowEx (exStyle, gWindowClassName, (const TCHAR*)windowTitle.data (),
-	                           dwStyle, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
-	                           nullptr, nullptr, instance, nullptr))
+	hwnd = CreateWindowEx (exStyle, gWindowClassName, (const TCHAR*)windowTitle.data (), dwStyle, 0,
+	                       0, rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr,
+	                       instance, nullptr);
+	if (hwnd)
 	{
 		SetWindowLongPtr (hwnd, GWLP_USERDATA, (__int3264) (LONG_PTR)this);
 		This = shared_from_this ();
@@ -185,10 +187,10 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 			auto constraintSize = controller->constrainSize (*this, newClientSize);
 			if (constraintSize != newClientSize)
 			{
-				auto diffX = (oldSize.right - oldSize.left) - (clientSize.right - clientSize.left);
-				auto diffY = (oldSize.bottom - oldSize.top) - (clientSize.bottom - clientSize.top);
-				newSize->right = newSize->left + static_cast<LONG> (constraintSize.width + diffX);
-				newSize->bottom = newSize->top + static_cast<LONG> (constraintSize.height + diffY);
+				auto diffX2 = (oldSize.right - oldSize.left) - (clientSize.right - clientSize.left);
+				auto diffY2 = (oldSize.bottom - oldSize.top) - (clientSize.bottom - clientSize.top);
+				newSize->right = newSize->left + static_cast<LONG> (constraintSize.width + diffX2);
+				newSize->bottom = newSize->top + static_cast<LONG> (constraintSize.height + diffY2);
 			}
 			return TRUE;
 		}
@@ -257,7 +259,7 @@ void Window::resize (Size newSize)
 {
 	if (getContentSize () == newSize)
 		return;
-	WINDOWINFO windowInfo;
+	WINDOWINFO windowInfo {0};
 	GetWindowInfo (hwnd, &windowInfo);
 	RECT clientRect {};
 	clientRect.right = newSize.width;

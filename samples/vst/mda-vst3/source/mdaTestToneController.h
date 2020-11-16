@@ -94,17 +94,17 @@ public:
 		}
 		return false;
 	}
-	void toString (ParamValue valueNormalized, String128 string) const SMTG_OVERRIDE
+	void toString (ParamValue _valueNormalized, String128 string) const SMTG_OVERRIDE
 	{
-		parameter->toString (valueNormalized, string);
+		parameter->toString (_valueNormalized, string);
 	}
-	bool fromString (const TChar* string, ParamValue& valueNormalized) const SMTG_OVERRIDE
+	bool fromString (const TChar* string, ParamValue& _valueNormalized) const SMTG_OVERRIDE
 	{
-		return parameter->fromString (string, valueNormalized);
+		return parameter->fromString (string, _valueNormalized);
 	}
-	ParamValue toPlain (ParamValue valueNormalized) const SMTG_OVERRIDE
+	ParamValue toPlain (ParamValue _valueNormalized) const SMTG_OVERRIDE
 	{
-		return parameter->toPlain (valueNormalized);
+		return parameter->toPlain (_valueNormalized);
 	}
 	ParamValue toNormalized (ParamValue plainValue) const SMTG_OVERRIDE
 	{

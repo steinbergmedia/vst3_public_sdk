@@ -47,7 +47,7 @@ tresult PLUGIN_API TalkBoxController::initialize (FUnknown* context)
 		ParamID pid = 0;
 		parameters.addParameter (USTRING("Wet"), USTRING(""), 0, 0.15, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Dry"), USTRING(""), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
-		IndexedParameter* carrierParam = new IndexedParameter (USTRING("Carrier"), USTRING(""), 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* carrierParam = new IndexedParameter (USTRING("Carrier"), USTRING(""), 1, 0.5, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		carrierParam->setIndexString (0, UString128("RIGHT"));
 		carrierParam->setIndexString (1, UString128("LEFT"));
 		parameters.addParameter (carrierParam);
@@ -82,7 +82,6 @@ tresult PLUGIN_API TalkBoxController::getParamStringByValue (ParamID tag, ParamV
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API TalkBoxController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

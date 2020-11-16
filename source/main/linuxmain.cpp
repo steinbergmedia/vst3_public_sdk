@@ -35,13 +35,8 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#define EXPORT	__attribute__ ((visibility ("default")))
-#else
-#define EXPORT
-#endif
+#include "pluginterfaces/base/fplatform.h"
 
-//------------------------------------------------------------------------
 void* moduleHandle = 0;
 
 //------------------------------------------------------------------------
@@ -51,8 +46,8 @@ bool DeinitModule ();	///< must be provided by plug-in: called when the library 
 //------------------------------------------------------------------------
 extern "C"
 {
-	EXPORT bool ModuleEntry (void*);
-	EXPORT bool ModuleExit (void);
+	SMTG_EXPORT_SYMBOL bool ModuleEntry (void*);
+	SMTG_EXPORT_SYMBOL bool ModuleExit (void);
 }
 
 static int moduleCounter {0}; // counting for ModuleEntry/ModuleExit pairs

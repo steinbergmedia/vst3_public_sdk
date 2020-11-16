@@ -32,58 +32,109 @@
 //-----------------------------------------------------------------------------
 
 #include "systemclipboard.h"
+#include "pluginterfaces/base/fplatform.h"
 
 #if SMTG_OS_WINDOWS
+#include <Windows.h>
+#include <vector>
 
-#include <windows.h>
-
+//------------------------------------------------------------------------
 namespace Steinberg {
 namespace SystemClipboard {
+namespace {
+
+//------------------------------------------------------------------------
+struct Clipboard
+{
+	Clipboard () { open = OpenClipboard (nullptr); }
+	~Clipboard ()
+	{
+		if (open)
+			CloseClipboard ();
+	}
+
+	bool open {false};
+};
+
+//------------------------------------------------------------------------
+std::vector<WCHAR> convertToWide (const std::string& text)
+{
+	std::vector<WCHAR> wideStr;
+
+	auto numChars =
+	    MultiByteToWideChar (CP_UTF8, 0, text.data (), static_cast<int> (text.size ()), nullptr, 0);
+	if (numChars)
+	{
+		wideStr.resize (static_cast<size_t> (numChars) + 1);
+		numChars = MultiByteToWideChar (CP_UTF8, 0, text.data (), static_cast<int> (text.size ()),
+		                                wideStr.data (), static_cast<int> (wideStr.size ()));
+	}
+	wideStr[numChars] = 0;
+	wideStr.resize (static_cast<size_t> (numChars) + 1);
+	return wideStr;
+}
+
+//------------------------------------------------------------------------
+std::string convertToUTF8 (const WCHAR* data, const SIZE_T& dataSize)
+{
+	std::string text;
+	auto numChars = WideCharToMultiByte (CP_UTF8, 0, data, dataSize / sizeof (WCHAR), nullptr, 0,
+	                                     nullptr, nullptr);
+	text.resize (static_cast<size_t> (numChars) + 1);
+	numChars = WideCharToMultiByte (CP_UTF8, 0, data, dataSize / sizeof (WCHAR),
+	                                const_cast<char*> (text.data ()),
+	                                static_cast<int> (text.size ()), nullptr, 0);
+	text.resize (numChars);
+	return text;
+}
+
+//------------------------------------------------------------------------
+} // anonymous
 
 //-----------------------------------------------------------------------------
-bool copyTextToClipboard (const String& text)
+bool copyTextToClipboard (const std::string& text)
 {
-	// Try opening the clipboard
-	if (!OpenClipboard (nullptr))
+	Clipboard cb;
+	if (text.empty () || !cb.open)
+		return false;
+
+	if (!EmptyClipboard ())
 		return false;
 
 	bool result = false;
 
-	int32 length = text.length ();
-	if (length > 0)
-	{
-		if (auto memory =
-		        GlobalAlloc (GMEM_MOVEABLE | GMEM_ZEROINIT, (length + 1) * sizeof (WCHAR)))
-		{
-			if (auto* data = static_cast<WCHAR*> (GlobalLock (memory)))
-			{
-				text.copyTo16 (data);
-				GlobalUnlock (memory);
+	auto wideStr = convertToWide (text);
 
-				SetClipboardData (CF_UNICODETEXT, memory);
-				result = true;
-			}
+	auto byteSize = wideStr.size () * sizeof (WCHAR);
+
+	if (auto memory = GlobalAlloc (GMEM_MOVEABLE | GMEM_ZEROINIT, byteSize))
+	{
+		if (auto* data = static_cast<WCHAR*> (GlobalLock (memory)))
+		{
+#if defined(__MINGW32__)
+			memcpy (data, wideStr.data (), byteSize);
+#else
+			memcpy_s (data, byteSize, wideStr.data (), byteSize);
+#endif
+			GlobalUnlock (memory);
+
+			auto handle = SetClipboardData (CF_UNICODETEXT, memory);
+			result = handle != nullptr;
 		}
 	}
-	// Release the clipboard
-	CloseClipboard ();
 
 	return result;
 }
 
 //-----------------------------------------------------------------------------
-bool getTextFromClipboard (String& text)
+bool getTextFromClipboard (std::string& text)
 {
-	// Try opening the clipboard
-	if (!OpenClipboard (nullptr))
+	Clipboard cb;
+	if (!cb.open)
 		return false;
 
-	// check if clipboard is empty
-	if (EmptyClipboard ())
-	{
-		CloseClipboard ();
+	if (!IsClipboardFormatAvailable (CF_UNICODETEXT))
 		return false;
-	}
 
 	bool result = false;
 
@@ -93,7 +144,8 @@ bool getTextFromClipboard (String& text)
 		// Lock the handle to get the actual text pointer
 		if (auto* data = (const WCHAR*)GlobalLock (hData))
 		{
-			text.append (data, static_cast<int32> (GlobalSize (hData) / sizeof (WCHAR)));
+			auto dataSize = GlobalSize (hData);
+			text = convertToUTF8 (data, dataSize);
 
 			// Release the lock
 			GlobalUnlock (hData);
@@ -102,11 +154,10 @@ bool getTextFromClipboard (String& text)
 		}
 	}
 
-	// Release the clipboard
-	CloseClipboard ();
-
 	return result;
 }
+
+//------------------------------------------------------------------------
 } // namespace SystemClipboard
 } // namespace Steinberg
 

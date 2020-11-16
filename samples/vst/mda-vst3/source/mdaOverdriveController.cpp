@@ -77,7 +77,6 @@ tresult PLUGIN_API OverdriveController::getParamStringByValue (ParamID tag, Para
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API OverdriveController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

@@ -18,7 +18,7 @@
 
 #include "mdaDubDelayController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -80,7 +80,7 @@ tresult PLUGIN_API DubDelayProcessor::initialize (FUnknown* context)
 tresult PLUGIN_API DubDelayProcessor::terminate ()
 {
 	if (buffer) delete [] buffer;
-	buffer = 0;
+	buffer = nullptr;
 	return BaseProcessor::terminate ();
 }
 

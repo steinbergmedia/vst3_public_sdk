@@ -106,8 +106,9 @@ IPlugView* PLUGIN_API PlugController::createView (const char* _name)
 }
 
 //------------------------------------------------------------------------
-CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes& attributes,
-                                         const IUIDescription* description, VST3Editor* editor)
+CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes& /*attributes*/,
+                                         const IUIDescription* /*description*/,
+                                         VST3Editor* /*editor*/)
 {
 	if (name && strcmp (name, "NoteExpressionText") == 0)
 	{
@@ -119,7 +120,7 @@ CView* PlugController::createCustomView (UTF8StringPtr name, const UIAttributes&
 }
 
 //------------------------------------------------------------------------
-void PlugController::willClose (VST3Editor* editor)
+void PlugController::willClose (VST3Editor* /*editor*/)
 {
 	mTextLabel = nullptr;
 }
@@ -177,7 +178,7 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 			UString128 ("Lyrics").copyTo (info.shortTitle, 128);
 			UString128 ("").copyTo (info.units, 128);
 			info.unitId = -1;
-			info.associatedParameterId = -1;
+			info.associatedParameterId = kNoParamId;
 			info.flags = 0;
 		}
 		else if (noteExpressionIndex == 1)
@@ -187,7 +188,7 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 			UString128 ("Phoneme").copyTo (info.shortTitle, 128);
 			UString128 ("").copyTo (info.units, 128);
 			info.unitId = -1;
-			info.associatedParameterId = -1;
+			info.associatedParameterId = kNoParamId;
 			info.flags = 0;
 		}
 		return kResultTrue;
@@ -198,16 +199,16 @@ tresult PLUGIN_API PlugController::getNoteExpressionInfo (int32 busIndex, int16 
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::getNoteExpressionStringByValue (
-    int32 busIndex, int16 channel, NoteExpressionTypeID id,
-    NoteExpressionValue valueNormalized /*in*/, String128 string /*out*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/,
+    NoteExpressionValue /*valueNormalized*/, String128 /*string*/)
 {
 	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::getNoteExpressionValueByString (
-    int32 busIndex, int16 channel, NoteExpressionTypeID id, const TChar* string /*in*/,
-    NoteExpressionValue& valueNormalized /*out*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/,
+    const TChar* /*string*/ /*in*/, NoteExpressionValue& /*valueNormalized*/ /*out*/)
 {
 	return kResultFalse;
 }

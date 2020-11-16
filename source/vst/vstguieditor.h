@@ -65,8 +65,7 @@ public:
 //---Internal function-----
 /** Called when the editor will be opened. */
 #if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
-	virtual bool PLUGIN_API open (void* parent,
-	                              const VSTGUI::PlatformType& platformType = VSTGUI::kDefaultNative) = 0;
+	virtual bool PLUGIN_API open (void* parent, const VSTGUI::PlatformType& platformType) = 0;
 #else
 	virtual bool PLUGIN_API open (void* parent) = 0;
 #endif

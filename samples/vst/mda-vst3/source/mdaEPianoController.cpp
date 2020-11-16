@@ -16,7 +16,7 @@
 
 #include "mdaEPianoController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -47,7 +47,7 @@ tresult PLUGIN_API EPianoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* presetParam = new IndexedParameter (
+		auto* presetParam = new IndexedParameter (
 		    USTRING ("Factory Presets"), USTRING ("%"), 4, 0.15,
 		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		presetParam->setIndexString (0, UString128("Default"));
@@ -143,7 +143,6 @@ tresult PLUGIN_API EPianoController::getParamStringByValue (ParamID tag, ParamVa
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API EPianoController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case 4:

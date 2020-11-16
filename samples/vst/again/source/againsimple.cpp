@@ -574,8 +574,8 @@ tresult PLUGIN_API AGainSimple::getMidiControllerAssignment (int32 busIndex,
 
 //------------------------------------------------------------------------
 IController* AGainSimple::createSubController (UTF8StringPtr name,
-                                               const IUIDescription* description,
-                                               VST3Editor* editor)
+                                               const IUIDescription* /*description*/,
+                                               VST3Editor* /*editor*/)
 {
 	if (UTF8StringView (name) == "MessageController")
 	{

@@ -35,6 +35,7 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
+#include "pluginterfaces/base/ftypes.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iplatform.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/win32/window.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
@@ -42,6 +43,7 @@
 #include <Windows.h>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -116,9 +118,9 @@ void Platform::kill (int resultCode, const std::string& reason)
 }
 
 //------------------------------------------------------------------------
-void Platform::run (LPWSTR lpCmdLine, HINSTANCE hInstance)
+void Platform::run (LPWSTR lpCmdLine, HINSTANCE _hInstance)
 {
-	this->hInstance = hInstance;
+	hInstance = _hInstance;
 	std::vector<std::string> cmdArgStrings;
 	int numArgs = 0;
 	auto cmdArgsArray = CommandLineToArgvW (lpCmdLine, &numArgs);
@@ -147,9 +149,16 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE hInstance)
 } // Vst
 } // Steinberg
 
+#ifndef _In_
+#define _In_
+#endif
+#ifndef _In_opt_
+#define _In_opt_
+#endif
+
 //------------------------------------------------------------------------
-int APIENTRY wWinMain (_In_ HINSTANCE instance, _In_opt_ HINSTANCE prevInstance,
-                       _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
+int APIENTRY wWinMain (_In_ HINSTANCE instance, _In_opt_ HINSTANCE /*prevInstance*/,
+                       _In_ LPWSTR lpCmdLine, _In_ int /*nCmdShow*/)
 {
 #if !SMTG_OS_WINDOWS_ARM
 	HRESULT hr = CoInitialize (nullptr);

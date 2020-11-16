@@ -110,6 +110,7 @@ public:
 	virtual ~VoiceProcessor () {}
 
 	virtual tresult process (ProcessData& data) = 0;
+	virtual void processEvent (Event evt) = 0;
 
 	/** Returns the number of active voices. */
 	int32 getActiveVoices () const { return activeVoices; }
@@ -154,7 +155,7 @@ public:
 	~VoiceProcessorImplementation ();
 
 	tresult process (ProcessData& data) override;
-
+	void processEvent (Event evt) override;
 protected:
 	VoiceClass* getVoice (int32 noteId);
 	VoiceClass* findVoice (int32 noteId);
@@ -219,6 +220,69 @@ VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, max
 	return 0;
 }
 
+//-----------------------------------------------------------------------------
+template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
+void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::processEvent (Event e)
+{
+	switch (e.type)
+	{
+	//-----------------------
+		case Event::kNoteOnEvent:
+		{
+			if (e.noteOn.noteId == -1)
+				e.noteOn.noteId = e.noteOn.pitch;
+			VoiceClass* voice = getVoice (e.noteOn.noteId);
+			if (voice)
+			{
+				voice->noteOn (e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning, e.sampleOffset,
+				               e.noteOn.noteId);
+				this->activeVoices++;
+				// data.outputEvents->addEvent (e);
+			}
+			break;
+		}
+	//-----------------------
+		case Event::kNoteOffEvent:
+		{
+			if (e.noteOff.noteId == -1)
+				e.noteOff.noteId = e.noteOff.pitch;
+			VoiceClass* voice = findVoice (e.noteOff.noteId);
+			if (voice)
+			{
+				voice->noteOff (e.noteOff.velocity, e.sampleOffset);
+				// data.outputEvents->addEvent (e);
+			}
+#if DEBUG_LOG
+			else
+			{
+				FDebugPrint ("Voice for kNoteOffEvent not found : %d\n", e.noteOff.noteId);
+			}
+#endif
+			break;
+		}
+	//-----------------------
+		case Event::kNoteExpressionValueEvent:
+		{
+			VoiceClass* voice = findVoice (e.noteExpressionValue.noteId);
+			if (voice)
+			{
+				voice->setNoteExpressionValue (e.noteExpressionValue.typeId,
+				                               e.noteExpressionValue.value);
+				// data.outputEvents->addEvent (e);
+			}
+#if DEBUG_LOG
+			else
+			{
+				FDebugPrint ("Voice for kNoteExpressionValueEvent not found : %d\n",
+				             e.noteExpressionValue.noteId);
+			}
+#endif
+			break;
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
 #if VOICEPROCESSOR_BLOCKSIZE <= 0	// voice processing happens in chunks of the block size
 //-----------------------------------------------------------------------------
 template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
@@ -237,56 +301,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 		{
 			if (inputEvents->getEvent (i, e) == kResultTrue)
 			{
-				switch (e.type)
-				{
-					//-----------------------
-					case Event::kNoteOnEvent:
-					{
-						if (e.noteOn.noteId == -1) // for host which don't send unique noteId's
-							e.noteOn.noteId = e.noteOn.pitch;
-						VoiceClass* voice = getVoice (e.noteOn.noteId);
-						if (voice)
-						{
-							voice->noteOn (e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning, e.sampleOffset, e.noteOn.noteId);
-							this->activeVoices++;
-						}
-						break;
-					}
-					//-----------------------
-					case Event::kNoteOffEvent:
-					{
-						if (e.noteOff.noteId == -1) // for host which don't send unique noteId's
-							e.noteOff.noteId = e.noteOff.pitch;
-						VoiceClass* voice = findVoice (e.noteOff.noteId);
-						if (voice)
-						{
-							voice->noteOff (e.noteOff.velocity, e.sampleOffset);
-						}
-					#if DEBUG_LOG
-						else
-						{
-							FDebugPrint ("Voice for kNoteOffEvent not found : %d\n", e.noteOff.noteId);
-						}
-					#endif
-						break;
-					}
-					//-----------------------
-					case Event::kNoteExpressionValueEvent:
-					{
-						VoiceClass* voice = findVoice (e.noteExpressionValue.noteId);
-						if (voice)
-						{
-							voice->setNoteExpressionValue (e.noteExpressionValue.typeId, e.noteExpressionValue.value);
-						}
-					#if DEBUG_LOG
-						else
-						{
-							FDebugPrint ("Voice for kNoteExpressionValueEvent not found : %d\n", e.noteExpressionValue.noteId);
-						}
-					#endif
-						break;
-					}
-				}
+				processEvent (e);
 			}
 		}
 	}
@@ -305,11 +320,12 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 	return kResultTrue;
 }
 
+//-----------------------------------------------------------------------------
 #else	// voice processing happens in chunks of VOICEPROCESSOR_BLOCKSIZE samples
 //-----------------------------------------------------------------------------
 template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
 tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::process (ProcessData& data)
-{	
+{
 	const int32 kBlockSize = VOICEPROCESSOR_BLOCKSIZE;
 
 	int32 numSamples = data.numSamples;
@@ -350,59 +366,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 				break;
 			}
 
-			switch (e.type)
-			{
-				//-----------------------
-				case Event::kNoteOnEvent:
-				{
-					if (e.noteOn.noteId == -1)
-						e.noteOn.noteId = e.noteOn.pitch;
-					VoiceClass* voice = getVoice (e.noteOn.noteId);
-					if (voice)
-					{
-						voice->noteOn (e.noteOn.pitch, e.noteOn.velocity, e.noteOn.tuning, e.sampleOffset, e.noteOn.noteId);
-						this->activeVoices++;
-						//data.outputEvents->addEvent (e);
-					}
-					break;
-				}
-				//-----------------------
-				case Event::kNoteOffEvent:
-				{
-					if (e.noteOff.noteId == -1)
-						e.noteOff.noteId = e.noteOff.pitch;
-					VoiceClass* voice = findVoice (e.noteOff.noteId);
-					if (voice)
-					{
-						voice->noteOff (e.noteOff.velocity, e.sampleOffset);
-						//data.outputEvents->addEvent (e);
-					}
-				#if DEBUG_LOG
-					else
-					{
-						FDebugPrint ("Voice for kNoteOffEvent not found : %d\n", e.noteOff.noteId);
-					}
-				#endif
-					break;
-				}
-				//-----------------------
-				case Event::kNoteExpressionValueEvent:
-				{
-					VoiceClass* voice = findVoice (e.noteExpressionValue.noteId);
-					if (voice)
-					{
-						voice->setNoteExpressionValue (e.noteExpressionValue.typeId, e.noteExpressionValue.value);
-						//data.outputEvents->addEvent (e);
-					}
-				#if DEBUG_LOG
-					else
-					{
-						FDebugPrint ("Voice for kNoteExpressionValueEvent not found : %d\n", e.noteExpressionValue.noteId);
-					}
-				#endif
-					break;
-				}
-			}
+			processEvent (e);
 			
 			// get next event
 			eventIndex++;

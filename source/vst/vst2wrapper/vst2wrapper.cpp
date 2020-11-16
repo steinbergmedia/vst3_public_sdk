@@ -72,7 +72,7 @@ bool vst2WrapperFullParameterPath = true;
 //------------------------------------------------------------------------
 // Vst2EditorWrapper Declaration
 //------------------------------------------------------------------------
-class Vst2EditorWrapper : public AEffEditor, public BaseEditorWrapper
+class Vst2EditorWrapper : public BaseEditorWrapper, public AEffEditor
 {
 public:
 //------------------------------------------------------------------------
@@ -235,7 +235,7 @@ Vst2MidiEventQueue::Vst2MidiEventQueue (int32 _maxEventCount) : maxEventCount (_
 	eventList->numEvents = 0;
 	eventList->reserved = 0;
 
-	int32 eventSize = sizeof (VstMidiSysexEvent) > sizeof (VstMidiEvent) ?
+	auto eventSize = sizeof (VstMidiSysexEvent) > sizeof (VstMidiEvent) ?
 	                      sizeof (VstMidiSysexEvent) :
 	                      sizeof (VstMidiEvent);
 
@@ -337,9 +337,9 @@ bool Vst2Wrapper::init ()
 	{
 		if (BaseEditorWrapper::hasEditor (mController))
 		{
-			auto* editor = new Vst2EditorWrapper (this, mController);
-			_setEditor (editor);
-			setEditor (editor);
+			auto* _editor = new Vst2EditorWrapper (this, mController);
+			_setEditor (_editor);
+			setEditor (_editor);
 		}
 	}
 	return res;
@@ -352,9 +352,9 @@ void Vst2Wrapper::_canDoubleReplacing (bool val)
 }
 
 //------------------------------------------------------------------------
-void Vst2Wrapper::_setInitialDelay (int32 delay)
+void Vst2Wrapper::_setInitialDelay (uint32 delay)
 {
-	setInitialDelay (delay);
+	setInitialDelay (static_cast<VstInt32> (delay));
 }
 
 //------------------------------------------------------------------------
@@ -585,7 +585,7 @@ void Vst2Wrapper::setProgram (VstInt32 program)
 }
 
 //------------------------------------------------------------------------
-void Vst2Wrapper::setProgramName (char* name)
+void Vst2Wrapper::setProgramName (char* /*name*/)
 {
 	// not supported in VST 3
 }
@@ -1132,7 +1132,7 @@ void Vst2Wrapper::setupVst2Arrangement (VstSpeakerArrangement*& vst2arr,
 				if (props.type >= 0 && props.type < kNumSpeakerNames)
 					strncpy (props.name, gSpeakerNames[props.type], kVstMaxNameLen);
 				else
-					sprintf (props.name, "%d", i + 1);
+					sprintf (props.name, "%ld", i + 1);
 			}
 		}
 	}
@@ -1235,7 +1235,7 @@ VstInt32 Vst2Wrapper::getNumMidiOutputChannels ()
 VstInt32 Vst2Wrapper::getGetTailSize ()
 {
 	if (mProcessor)
-		return mProcessor->getTailSamples ();
+		return static_cast<VstInt32> (mProcessor->getTailSamples ());
 
 	return 0;
 }
@@ -1452,7 +1452,7 @@ bool Vst2Wrapper::setupMidiProgram (int32 midiChannel, ProgramListID programList
 			String str (string128);
 			str.copyTo8 (midiProgramName.name, 0, 64);
 
-			midiProgramName.midiProgram = midiProgramName.thisProgramIndex;
+			midiProgramName.midiProgram = static_cast<char8> (midiProgramName.thisProgramIndex);
 			midiProgramName.midiBankMsb = -1;
 			midiProgramName.midiBankLsb = -1;
 			midiProgramName.parentCategoryIndex = -1;
@@ -1479,7 +1479,7 @@ int32 Vst2Wrapper::lookupProgramCategory (int32 midiChannel, String128 instrumen
 	{
 		ProgramCategory& cat = channelCategories[categoryIndex];
 		if (memcmp (instrumentAttribute, cat.vst3InstrumentAttribute, sizeof (String128)) == 0)
-			return categoryIndex;
+			return static_cast<int32> (categoryIndex);
 	}
 
 	return -1;
@@ -1514,7 +1514,7 @@ uint32 Vst2Wrapper::makeCategoriesRecursive (std::vector<ProgramCategory>& chann
 		if (isDivider)
 		{
 			singleName.assign (vst3Category + strIndex + 1);
-			parentCategorIndex = makeCategoriesRecursive (channelCategories, str);
+			parentCategorIndex = static_cast<int32> (makeCategoriesRecursive (channelCategories, str));
 			break;
 		}
 	}
@@ -1591,7 +1591,7 @@ VstInt32 Vst2Wrapper::getMidiProgramCategory (VstInt32 channel, MidiProgramCateg
 }
 
 //-----------------------------------------------------------------------------
-bool Vst2Wrapper::hasMidiProgramsChanged (VstInt32 channel)
+bool Vst2Wrapper::hasMidiProgramsChanged (VstInt32 /*channel*/)
 {
 	// names of programs or program categories have changed
 	return false;
@@ -1903,17 +1903,17 @@ void Vst2Wrapper::_updateDisplay ()
 }
 
 //-----------------------------------------------------------------------------
-void Vst2Wrapper::_setNumInputs (int32 inputs)
+void Vst2Wrapper::_setNumInputs (uint32 inputs)
 {
 	BaseWrapper::_setNumInputs (inputs);
-	setNumInputs (inputs);
+	setNumInputs (static_cast<VstInt32> (inputs));
 }
 
 //-----------------------------------------------------------------------------
-void Vst2Wrapper::_setNumOutputs (int32 outputs)
+void Vst2Wrapper::_setNumOutputs (uint32 outputs)
 {
 	BaseWrapper::_setNumOutputs (outputs);
-	setNumOutputs (outputs);
+	setNumOutputs (static_cast<VstInt32> (outputs));
 }
 
 //-----------------------------------------------------------------------------
@@ -1931,18 +1931,10 @@ extern bool InitModule ();
 //-----------------------------------------------------------------------------
 extern "C" {
 
-#if defined(__GNUC__) && ((__GNUC__ >= 4) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 1)))
-#define VST_EXPORT __attribute__ ((visibility ("default")))
-#elif SMTG_OS_WINDOWS
-#define VST_EXPORT __declspec (dllexport)
-#else
-#define VST_EXPORT
-#endif
-
 //-----------------------------------------------------------------------------
 /** Prototype of the export function main */
 //-----------------------------------------------------------------------------
-VST_EXPORT AEffect* VSTPluginMain (audioMasterCallback audioMaster)
+SMTG_EXPORT_SYMBOL AEffect* VSTPluginMain (audioMasterCallback audioMaster)
 {
 	// Get VST Version of the host
 	if (!audioMaster (nullptr, audioMasterVersion, 0, 0, nullptr, 0))
@@ -1963,17 +1955,17 @@ VST_EXPORT AEffect* VSTPluginMain (audioMasterCallback audioMaster)
 //-----------------------------------------------------------------------------
 // support for old hosts not looking for VSTPluginMain
 #if (TARGET_API_MAC_CARBON && __ppc__)
-VST_EXPORT AEffect* main_macho (audioMasterCallback audioMaster)
+SMTG_EXPORT_SYMBOL AEffect* main_macho (audioMasterCallback audioMaster)
 {
 	return VSTPluginMain (audioMaster);
 }
 #elif WIN32
-VST_EXPORT AEffect* MAIN (audioMasterCallback audioMaster)
+SMTG_EXPORT_SYMBOL AEffect* MAIN (audioMasterCallback audioMaster)
 {
 	return VSTPluginMain (audioMaster);
 }
 #elif BEOS
-VST_EXPORT AEffect* main_plugin (audioMasterCallback audioMaster)
+SMTG_EXPORT_SYMBOL AEffect* main_plugin (audioMasterCallback audioMaster)
 {
 	return VSTPluginMain (audioMaster);
 }

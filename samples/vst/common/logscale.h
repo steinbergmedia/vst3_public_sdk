@@ -123,22 +123,22 @@ void LogScale<T>::changeScaling (T srcMin, T srcMax, T destMin, T destMax, T inV
 
 //-----------------------------------------------------------------------------
 template <class T>
-void LogScale<T>::setScaling (T srcMin, T srcMax, T destMin, T destMax, T inValue, T outValue)
+void LogScale<T>::setScaling (T _srcMin, T _srcMax, T _destMin, T _destMax, T inValue, T outValue)
 {
-	this->srcMin = srcMin;
-	this->destMin = destMin;
+	srcMin = _srcMin;
+	destMin = _destMin;
 	
-	scaleFactor = (destMax - destMin);
+	scaleFactor = (_destMax - _destMin);
 	scaleFactorInv = 1.f / scaleFactor;
 
-	inValue = (inValue - srcMin) / (srcMax - srcMin);
+	inValue = (inValue - _srcMin) / (_srcMax - _srcMin);
 
 	SMTG_ASSERT (inValue > 0.);
 
-	expo = ::log ((outValue - destMin) / scaleFactor) / ::log (inValue);
+	expo = ::log ((outValue - _destMin) / scaleFactor) / ::log (inValue);
 	expoInv = 1.f / expo;
 
-	srcScale = (srcMax - srcMin);
+	srcScale = (_srcMax - _srcMin);
 	srcScaleInv = 1.f / srcScale;
 }
 
@@ -146,8 +146,7 @@ void LogScale<T>::setScaling (T srcMin, T srcMax, T destMin, T destMax, T inValu
 template <class T>
 void LogScale<T>::scale (T* pIn, T* pOut, int32 nSamples)
 {
-	int32 i;
-	for (i = 0; i < nSamples; i++)
+	for (int32 i = 0; i < nSamples; i++)
 		pOut[i] = ::powf ((float)((pIn[i] - srcMin) * srcScaleInv), (float)expo) * scaleFactor + destMin;
 }
 
@@ -162,8 +161,7 @@ T LogScale<T>::scale (T input) const
 template <class T>
 void LogScale<T>::invscale (T* pIn, T* pOut, int32 nSamples)
 {
-	int32 i;
-	for (i = 0; i < nSamples; i++)
+	for (int32 i = 0; i < nSamples; i++)
 		pOut[i] = ::powf ((float)((pIn[i] - destMin) * scaleFactorInv), (float)expoInv) * srcScale + srcMin;
 }
 

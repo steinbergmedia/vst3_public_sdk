@@ -26,9 +26,9 @@ namespace mda {
 class DX10Processor : public BaseProcessor
 {
 public:
-
-	enum {
-		NPARAMS=16,
+	enum
+	{
+		NPARAMS = 16,
 		kNumPrograms = 32
 	};
 
@@ -74,7 +74,7 @@ public:
 	};
 
 protected:
-	void checkSilence (ProcessData& data) SMTG_OVERRIDE {}
+	void checkSilence (ProcessData& /*data*/) SMTG_OVERRIDE {}
 	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
 	void processEvents (IEventList* events) SMTG_OVERRIDE;
 	void recalculate () SMTG_OVERRIDE;

@@ -45,7 +45,7 @@ tresult PLUGIN_API JX10Controller::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		IndexedParameter* presetParam = new IndexedParameter (
+		auto* presetParam = new IndexedParameter (
 		    USTRING ("Factory Presets"), USTRING ("%"), JX10Processor::kNumPrograms - 1, 0,
 		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
 		parameters.addParameter (presetParam);
@@ -55,7 +55,7 @@ tresult PLUGIN_API JX10Controller::initialize (FUnknown* context)
 		parameters.addParameter (USTRING("OSC Tune"), USTRING(""), 0, 0.6, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("OSC Fine"), USTRING(""), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
 
-		IndexedParameter* glideModeParam = new IndexedParameter (USTRING("Glide"), 0, 5, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
+		auto* glideModeParam = new IndexedParameter (USTRING("Glide"), nullptr, 5, 0, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, pid++);
 		glideModeParam->setIndexString (0, UString128("Poly"));
 		glideModeParam->setIndexString (1, UString128("Poly-Legato"));
 		glideModeParam->setIndexString (2, UString128("Poly-Glide"));
@@ -198,7 +198,6 @@ tresult PLUGIN_API JX10Controller::getParamStringByValue (ParamID tag, ParamValu
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API JX10Controller::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	return BaseController::getParamValueByString (tag, string, valueNormalized);
 	/*
 	switch (tag)

@@ -48,8 +48,8 @@
 #include "pluginterfaces/vst/ivstunits.h"
 
 #if SMTG_OS_WINDOWS
+#include <Windows.h>
 #include <conio.h>
-#include <windows.h>
 #endif
 
 #include <array>
@@ -58,9 +58,6 @@
 
 //------------------------------------------------------------------------
 namespace Steinberg {
-FUnknown* gStandardPluginContext = nullptr;
-
-//------------------------------------------------------------------------
 namespace Vst {
 namespace {
 
@@ -227,8 +224,8 @@ Validator::Validator (int argc, char* argv[]) : argc (argc), argv (argv)
 
 	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
 
-	gStandardPluginContext = this->unknownCast ();
-	TestingPluginContext::set (gStandardPluginContext);
+	PluginContextFactory::instance ().setPluginContext (this->unknownCast ());
+	TestingPluginContext::set (this->unknownCast ());
 }
 
 //------------------------------------------------------------------------
@@ -615,7 +612,8 @@ IPtr<TestSuite> Validator::createTests (ITestPlugProvider* plugProvider,
 	createTest<ProgramInfoTest> (generalTests, plugProvider);
 	createTest<TerminateInitializeTest> (generalTests, plugProvider);
 	createTest<UnitStructureTest> (generalTests, plugProvider);
-	createTest<ValidStateTransitionTest> (generalTests, plugProvider);
+	createTest<ValidStateTransitionTest> (generalTests, plugProvider, kSample32);
+	createTest<ValidStateTransitionTest> (generalTests, plugProvider, kSample64);
 	//	createTest<InvalidStateTransitionTest> (generalTests, plugProvider);
 	//	createTest<RepeatIdenticalStateTransitionTest> (generalTests, plugProvider);
 

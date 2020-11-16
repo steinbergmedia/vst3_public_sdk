@@ -17,7 +17,7 @@
 #include "mdaDelayProcessor.h"
 #include "mdaDelayController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -33,7 +33,7 @@ FUID DelayProcessor::uid (0xE5041336, 0xE9434B28, 0xB7B01267, 0x95F0C32F);
 
 //-----------------------------------------------------------------------------
 DelayProcessor::DelayProcessor ()
-: buffer(0)
+: buffer(nullptr)
 {
 	setControllerClass (DelayController::uid);
 	allocParameters (7);
@@ -74,7 +74,7 @@ tresult PLUGIN_API DelayProcessor::initialize (FUnknown* context)
 tresult PLUGIN_API DelayProcessor::terminate ()
 {
 	if (buffer) delete [] buffer;
-	buffer = 0;
+	buffer = nullptr;
 	return BaseProcessor::terminate ();
 }
 

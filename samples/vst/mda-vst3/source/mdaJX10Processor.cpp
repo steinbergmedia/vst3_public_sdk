@@ -17,7 +17,7 @@
 #include "mdaJX10Processor.h"
 #include "mdaJX10Controller.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -443,7 +443,7 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 	int32  v=0, tmp, held=0;
 
 	bool polyMode = (mode < 3);
-	bool glide = !(mode == 0 || mode == 3);
+	bool _glide = !(mode == 0 || mode == 3);
 	bool legato = (mode == 1 || mode == 5);
 
 	if (velocity>0) //note on
@@ -461,7 +461,7 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 				p = tune * (float)exp (-0.05776226505 * ((double)note + ANALOG * (double)v));
 				while (p<3.0f || (p * detune)<3.0f) p += p;
 				voice[v].target = p;
-				if ((glide)==0) voice[v].period = p;
+				if ((_glide)==0) voice[v].period = p;
 				voice[v].fc = (float)exp (filtvel * (float)(velocity - 64)) / p;
 				voice[v].env += SILENCE + SILENCE; ///was missed out below if returned?
 				voice[v].note = note;
@@ -486,9 +486,9 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 		voice[v].detune = detune;
 
 		tmp = 0;
-		if (glide || legato)
+		if (_glide || legato)
 		{
-			if ((glide) || held) tmp = note - lastnote; //glide
+			if ((_glide) || held) tmp = note - lastnote; //glide
 		}
 		voice[v].period = p * (float)pow (1.059463094359, (double)tmp - glidedisp);
 		if (voice[v].period<3.0f) voice[v].period = 3.0f; //limit min period
@@ -558,7 +558,7 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 				p = tune * (float)exp (-0.05776226505 * ((double)voice[v].note + ANALOG * (double)v));
 				while (p<3.0f || (p * detune)<3.0f) p += p;
 				voice[v].target = p;
-				if ((glide || legato)==0) voice[v].period = p;
+				if ((_glide || legato)==0) voice[v].period = p;
 				voice[v].fc = 1.0f / p;
 			}
 			else

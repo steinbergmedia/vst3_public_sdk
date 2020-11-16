@@ -16,7 +16,7 @@
 
 #include "mdaRezFilterController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -110,7 +110,6 @@ tresult PLUGIN_API RezFilterController::getParamStringByValue (ParamID tag, Para
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RezFilterController::getParamValueByString (ParamID tag, TChar* string, ParamValue& valueNormalized)
 {
-	// TODO
 	switch (tag)
 	{
 		case 4:

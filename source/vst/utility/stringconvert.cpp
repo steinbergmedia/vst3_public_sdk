@@ -53,12 +53,12 @@ using UTF16Type = wchar_t;
 using UTF16Type = char16_t;
 #endif
 
-using Coverter = std::wstring_convert<std::codecvt_utf8_utf16<UTF16Type>, UTF16Type>;
+using Converter = std::wstring_convert<std::codecvt_utf8_utf16<UTF16Type>, UTF16Type>;
 
 //------------------------------------------------------------------------
-Coverter& converter ()
+Converter& converter ()
 {
-	static Coverter conv;
+	static Converter conv;
 	return conv;
 }
 

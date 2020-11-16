@@ -69,7 +69,7 @@ public:
 
 	AGainSimple ();
 
-	static FUnknown* createInstance (void* context) { return (IAudioProcessor*)new AGainSimple; }
+	static FUnknown* createInstance (void* /*context*/) { return (IAudioProcessor*)new AGainSimple; }
 
 	//---from IComponent-----------------------
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;

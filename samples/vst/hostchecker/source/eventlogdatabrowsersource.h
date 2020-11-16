@@ -92,6 +92,7 @@ public:
 
 	bool updateLog (const LogEvent& logEvent, bool incrementCount = false);
 
+	const LogEvents& getLogEvents () const { return mLogEvents; }
 protected:
 	LogEvents mLogEvents;
 };
