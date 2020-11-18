@@ -298,7 +298,7 @@ tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint
 	{
 		uint32 stringSize = 0;
 		const TChar* _string = it->second->stringValue (stringSize);
-		memcpy (string, _string, std::min<uint32> (stringSize, sizeInBytes));
+		memcpy (string, _string, std::min<uint32> (stringSize * sizeof( TChar ), sizeInBytes));
 		return kResultTrue;
 	}
 	return kResultFalse;
