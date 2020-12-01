@@ -64,6 +64,8 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 	if (!canProcessSampleSize (testResult))
 		return true;
 
+	vstPlug->setActive (false);
+
 	for (int32 i = 0; i < 3; ++i)
 	{
 		tresult result = audioEffect->setupProcessing (processSetup);
