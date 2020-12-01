@@ -125,7 +125,7 @@ bool PLUGIN_API SilenceProcessingTest::run (ITestResult* testResult)
 				{
 					processData.outputs[busIndex].silenceFlags = 0;
 					for (int32 channelIndex = 0;
-					     channelIndex < processData.inputs[busIndex].numChannels; channelIndex++)
+					     channelIndex < processData.outputs[busIndex].numChannels; channelIndex++)
 						processData.outputs[busIndex].silenceFlags |= (uint64)1
 						                                              << (uint64)channelIndex;
 				}
