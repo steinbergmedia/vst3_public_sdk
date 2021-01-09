@@ -46,12 +46,11 @@
 #if (__cplusplus >= 201707L)
 #include <filesystem>
 using namespace std;
-using Path = std::filesystem::path;
 #else
 #include <experimental/filesystem>
 using namespace std::experimental;
-using Path = std::experimental::filesystem::path;
 #endif
+
 
 //------------------------------------------------------------------------
 extern "C" {
@@ -63,170 +62,176 @@ using ModuleExitFunc = bool (PLUGIN_API*) ();
 namespace VST3 {
 namespace Hosting {
 
+#if (__cplusplus >= 201707L)
+using Path = std::filesystem::path;
+#else
+using Path = std::experimental::filesystem::path;
+#endif
+
 //------------------------------------------------------------------------
 namespace {
 
 //------------------------------------------------------------------------
 Optional<std::string> getCurrentMachineName ()
 {
-	struct utsname unameData;
+  struct utsname unameData;
 
-	int res = uname (&unameData);
-	if (res != 0)
-		return {};
+  int res = uname (&unameData);
+  if (res != 0)
+    return {};
 
-	return {unameData.machine};
+  return {unameData.machine};
 }
 
 //------------------------------------------------------------------------
 Optional<Path> getApplicationPath ()
 {
-	std::string appPath = "";
+  std::string appPath = "";
 
-	pid_t pid = getpid ();
-	char buf[10];
-	sprintf (buf, "%d", pid);
-	std::string _link = "/proc/";
-	_link.append (buf);
-	_link.append ("/exe");
-	char proc[1024];
-	int ch = readlink (_link.c_str (), proc, 1024);
-	if (ch == -1)
-		return {};
+  pid_t pid = getpid ();
+  char buf[10];
+  sprintf (buf, "%d", pid);
+  std::string _link = "/proc/";
+  _link.append (buf);
+  _link.append ("/exe");
+  char proc[1024];
+  int ch = readlink (_link.c_str (), proc, 1024);
+  if (ch == -1)
+    return {};
 
-	proc[ch] = 0;
-	appPath = proc;
-	std::string::size_type t = appPath.find_last_of ("/");
-	appPath = appPath.substr (0, t);
+  proc[ch] = 0;
+  appPath = proc;
+  std::string::size_type t = appPath.find_last_of ("/");
+  appPath = appPath.substr (0, t);
 
-	return Path {appPath};
+  return Path {appPath};
 }
 
 //------------------------------------------------------------------------
 class LinuxModule : public Module
 {
 public:
-	template <typename T>
-	T getFunctionPointer (const char* name)
-	{
-		return reinterpret_cast<T> (dlsym (module, name));
-	}
+  template <typename T>
+  T getFunctionPointer (const char* name)
+  {
+    return reinterpret_cast<T> (dlsym (module, name));
+  }
 
-	~LinuxModule () override
-	{
-		factory = PluginFactory (nullptr);
+  ~LinuxModule () override
+  {
+    factory = PluginFactory (nullptr);
 
-		if (module)
-		{
-			if (auto moduleExit = getFunctionPointer<ModuleExitFunc> ("ModuleExit"))
-				moduleExit ();
+    if (module)
+    {
+      if (auto moduleExit = getFunctionPointer<ModuleExitFunc> ("ModuleExit"))
+        moduleExit ();
 
-			dlclose (module);
-		}
-	}
+      dlclose (module);
+    }
+  }
 
-	static Optional<Path> getSOPath (const std::string& inPath)
-	{
-		Path modulePath {inPath};
-		if (!filesystem::is_directory (modulePath))
-			return {};
+  static Optional<Path> getSOPath (const std::string& inPath)
+  {
+    Path modulePath {inPath};
+    if (!filesystem::is_directory (modulePath))
+      return {};
 
-		auto stem = modulePath.stem ();
+    auto stem = modulePath.stem ();
 
-		modulePath /= "Contents";
-		if (!filesystem::is_directory (modulePath))
-			return {};
+    modulePath /= "Contents";
+    if (!filesystem::is_directory (modulePath))
+      return {};
 
-		// use the Machine Hardware Name (from uname cmd-line) as prefix for "-linux"
-		auto machine = getCurrentMachineName ();
-		if (!machine)
-			return {};
+    // use the Machine Hardware Name (from uname cmd-line) as prefix for "-linux"
+    auto machine = getCurrentMachineName ();
+    if (!machine)
+      return {};
 
-		modulePath /= *machine + "-linux";
-		if (!filesystem::is_directory (modulePath))
-			return {};
+    modulePath /= *machine + "-linux";
+    if (!filesystem::is_directory (modulePath))
+      return {};
 
-		stem.replace_extension (".so");
-		modulePath /= stem;
-		return Optional<Path> (std::move (modulePath));
-	}
+    stem.replace_extension (".so");
+    modulePath /= stem;
+    return Optional<Path> (std::move (modulePath));
+  }
 
-	bool load (const std::string& inPath, std::string& errorDescription) override
-	{
-		auto modulePath = getSOPath (inPath);
-		if (!modulePath)
-		{
-			errorDescription = inPath + " is not a module directory.";
-			return false;
-		}
+  bool load (const std::string& inPath, std::string& errorDescription) override
+  {
+    auto modulePath = getSOPath (inPath);
+    if (!modulePath)
+    {
+      errorDescription = inPath + " is not a module directory.";
+      return false;
+    }
 
-		module = dlopen (reinterpret_cast<const char*>(modulePath->generic_u8string ().data ()), RTLD_LAZY);
-		if (!module)
-		{
-			errorDescription = "dlopen failed.\n";
-			errorDescription += dlerror ();
-			return false;
-		}
+    module = dlopen (reinterpret_cast<const char*>(modulePath->generic_string ().data ()), RTLD_LAZY);
+    if (!module)
+    {
+      errorDescription = "dlopen failed.\n";
+      errorDescription += dlerror ();
+      return false;
+    }
 
-		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
-		if (!factoryProc)
-		{
-			errorDescription =
-			    "The shared library does not export the required 'GetPluginFactory' function";
-			return false;
-		}
-		auto moduleEntry = getFunctionPointer<ModuleEntryFunc> ("ModuleEntry");
-		if (!moduleEntry)
-		{
-			errorDescription =
-			    "The shared library does not export the required 'ModuleEntry' function";
-			return false;
-		}
-		if (!moduleEntry (module))
-		{
-			errorDescription = "Calling 'ModuleEntry' failed";
-			return false;
-		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
-		if (!f)
-		{
-			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
-			return false;
-		}
-		factory = PluginFactory (f);
-		return true;
-	}
+    auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
+    if (!factoryProc)
+    {
+      errorDescription =
+          "The shared library does not export the required 'GetPluginFactory' function";
+      return false;
+    }
+    auto moduleEntry = getFunctionPointer<ModuleEntryFunc> ("ModuleEntry");
+    if (!moduleEntry)
+    {
+      errorDescription =
+          "The shared library does not export the required 'ModuleEntry' function";
+      return false;
+    }
+    if (!moduleEntry (module))
+    {
+      errorDescription = "Calling 'ModuleEntry' failed";
+      return false;
+    }
+    auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
+    if (!f)
+    {
+      errorDescription = "Calling 'GetPluginFactory' returned nullptr";
+      return false;
+    }
+    factory = PluginFactory (f);
+    return true;
+  }
 
-	void* module {nullptr};
+  void* module {nullptr};
 };
 
 //------------------------------------------------------------------------
 void findFilesWithExt (const std::string& path, const std::string& ext, Module::PathList& pathList,
                        bool recursive = true)
 {
-	try
-	{
-		for (auto& p : filesystem::directory_iterator (path))
-		{
-			if (p.path ().extension () == ext)
-			{
-				pathList.push_back (p.path ().generic_u8string ());
-			}
-			else if (recursive && p.status ().type () == filesystem::file_type::directory)
-			{
-				findFilesWithExt (p.path (), ext, pathList);
-			}
-		}
-	}
-	catch (...)
-	{
-	}
+  try
+  {
+    for (auto& p : filesystem::directory_iterator (path))
+    {
+      if (p.path ().extension () == ext)
+      {
+        pathList.push_back (p.path ().generic_string ());
+      }
+      else if (recursive && p.status ().type () == filesystem::file_type::directory)
+      {
+        findFilesWithExt (p.path (), ext, pathList);
+      }
+    }
+  }
+  catch (...)
+  {
+  }
 }
 
 //------------------------------------------------------------------------
 void findModules (const std::string& path, Module::PathList& pathList)
 {
-	findFilesWithExt (path, ".vst3", pathList);
+  findFilesWithExt (path, ".vst3", pathList);
 }
 
 //------------------------------------------------------------------------
@@ -235,92 +240,92 @@ void findModules (const std::string& path, Module::PathList& pathList)
 //------------------------------------------------------------------------
 Module::Ptr Module::create (const std::string& path, std::string& errorDescription)
 {
-	auto module = std::make_shared<LinuxModule> ();
-	if (module->load (path, errorDescription))
-	{
-		auto it = std::find_if (path.rbegin (), path.rend (),
-		                        [] (const std::string::value_type& c) { return c == '/'; });
-		if (it != path.rend ())
-			module->name = {it.base (), path.end ()};
-		return module;
-	}
-	return nullptr;
+  auto module = std::make_shared<LinuxModule> ();
+  if (module->load (path, errorDescription))
+  {
+    auto it = std::find_if (path.rbegin (), path.rend (),
+                            [] (const std::string::value_type& c) { return c == '/'; });
+    if (it != path.rend ())
+      module->name = {it.base (), path.end ()};
+    return module;
+  }
+  return nullptr;
 }
 
 //------------------------------------------------------------------------
 Module::PathList Module::getModulePaths ()
 {
-	/* VST3 component locations on linux :
-	 * User privately installed	: $HOME/.vst3/
-	 * Distribution installed	: /usr/lib/vst3/
-	 * Locally installed		: /usr/local/lib/vst3/
-	 * Application				: /$APPFOLDER/vst3/
-	 */
+  /* VST3 component locations on linux :
+   * User privately installed	: $HOME/.vst3/
+   * Distribution installed	: /usr/lib/vst3/
+   * Locally installed		: /usr/local/lib/vst3/
+   * Application				: /$APPFOLDER/vst3/
+   */
 
-	const auto systemPaths = {"/usr/lib/vst3/", "/usr/local/lib/vst3/"};
+  const auto systemPaths = {"/usr/lib/vst3/", "/usr/local/lib/vst3/"};
 
-	PathList list;
-	if (auto homeDir = getenv ("HOME"))
-	{
-		filesystem::path homePath (homeDir);
-		homePath /= ".vst3";
-		findModules (homePath.generic_u8string (), list);
-	}
-	for (auto path : systemPaths)
-		findModules (path, list);
+  PathList list;
+  if (auto homeDir = getenv ("HOME"))
+  {
+    filesystem::path homePath (homeDir);
+    homePath /= ".vst3";
+    findModules (homePath.generic_string (), list);
+  }
+  for (auto path : systemPaths)
+    findModules (path, list);
 
-	// application level
-	auto appPath = getApplicationPath ();
-	if (appPath)
-	{
-		*appPath /= "vst3";
-		findModules (appPath->generic_u8string (), list);
-	}
+  // application level
+  auto appPath = getApplicationPath ();
+  if (appPath)
+  {
+    *appPath /= "vst3";
+    findModules (appPath->generic_string (), list);
+  }
 
-	return list;
+  return list;
 }
 
 //------------------------------------------------------------------------
 Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 {
-	SnapshotList result;
-	filesystem::path path (modulePath);
-	path /= "Contents";
-	path /= "Resources";
-	path /= "Snapshots";
-	PathList pngList;
-	findFilesWithExt (path, ".png", pngList, false);
-	for (auto& png : pngList)
-	{
-		filesystem::path p (png);
-		auto filename = p.filename ().generic_u8string ();
-		auto uid = Snapshot::decodeUID (filename);
-		if (!uid)
-			continue;
-		auto scaleFactor = 1.;
-		if (auto decodedScaleFactor = Snapshot::decodeScaleFactor (filename))
-			scaleFactor = *decodedScaleFactor;
+  SnapshotList result;
+  filesystem::path path (modulePath);
+  path /= "Contents";
+  path /= "Resources";
+  path /= "Snapshots";
+  PathList pngList;
+  findFilesWithExt (path, ".png", pngList, false);
+  for (auto& png : pngList)
+  {
+    filesystem::path p (png);
+    auto filename = p.filename ().generic_string ();
+    auto uid = Snapshot::decodeUID (filename);
+    if (!uid)
+      continue;
+    auto scaleFactor = 1.;
+    if (auto decodedScaleFactor = Snapshot::decodeScaleFactor (filename))
+      scaleFactor = *decodedScaleFactor;
 
-		Module::Snapshot::ImageDesc desc;
-		desc.scaleFactor = scaleFactor;
-		desc.path = std::move (png);
-		bool found = false;
-		for (auto& entry : result)
-		{
-			if (entry.uid != *uid)
-				continue;
-			found = true;
-			entry.images.emplace_back (std::move (desc));
-			break;
-		}
-		if (found)
-			continue;
-		Module::Snapshot snapshot;
-		snapshot.uid = *uid;
-		snapshot.images.emplace_back (std::move (desc));
-		result.emplace_back (std::move (snapshot));
-	}
-	return result;
+    Module::Snapshot::ImageDesc desc;
+    desc.scaleFactor = scaleFactor;
+    desc.path = std::move (png);
+    bool found = false;
+    for (auto& entry : result)
+    {
+      if (entry.uid != *uid)
+        continue;
+      found = true;
+      entry.images.emplace_back (std::move (desc));
+      break;
+    }
+    if (found)
+      continue;
+    Module::Snapshot snapshot;
+    snapshot.uid = *uid;
+    snapshot.images.emplace_back (std::move (desc));
+    result.emplace_back (std::move (snapshot));
+  }
+  return result;
 }
 
 //------------------------------------------------------------------------
