@@ -160,7 +160,7 @@ public:
 			return false;
 		}
 
-		module = dlopen (modulePath->generic_u8string ().data (), RTLD_LAZY);
+		module = dlopen (reinterpret_cast<const char*>(modulePath->generic_u8string ().data ()), RTLD_LAZY);
 		if (!module)
 		{
 			errorDescription = "dlopen failed.\n";
