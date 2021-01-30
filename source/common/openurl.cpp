@@ -40,6 +40,7 @@
 
 #if SMTG_OS_WINDOWS
 #include <Windows.h>
+#include <shellapi.h>
 #else
 #include <cstdlib>
 #endif

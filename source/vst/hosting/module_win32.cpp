@@ -61,7 +61,6 @@ extern "C" {
 using InitModuleFunc = bool (PLUGIN_API*) ();
 using ExitModuleFunc = bool (PLUGIN_API*) ();
 }
-
 //------------------------------------------------------------------------
 namespace VST3 {
 namespace Hosting {
@@ -108,27 +107,27 @@ public:
 	template <typename T>
 	T getFunctionPointer (const char* name)
 	{
-		return reinterpret_cast<T> (GetProcAddress (module, name));
+		return reinterpret_cast<T> (GetProcAddress (winmodule, name));
 	}
 
 	~Win32Module () override
 	{
 		factory = PluginFactory (nullptr);
 
-		if (module)
+		if (winmodule)
 		{
 			if (auto dllExit = getFunctionPointer<ExitModuleFunc> ("ExitDll"))
 				dllExit ();
 
-			FreeLibrary ((HMODULE)module);
+			FreeLibrary ((HMODULE)winmodule);
 		}
 	}
 
 	bool load (const std::string& inPath, std::string& errorDescription) override
 	{
 		auto wideStr = StringConvert::convert (inPath);
-		module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-		if (!module)
+		winmodule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+		if (!winmodule)
 		{
 			filesystem::path p (inPath);
 			auto filename = p.filename ();
@@ -136,8 +135,8 @@ public:
 			p /= architectureString;
 			p /= filename;
 			wideStr = StringConvert::convert (p.string ());
-			module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-			if (!module)
+			winmodule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+			if (!winmodule)
 			{
 				auto lastError = GetLastError ();
 				LPVOID lpMessageBuffer;
@@ -173,7 +172,7 @@ public:
 		return true;
 	}
 
-	HINSTANCE module {nullptr};
+	HINSTANCE winmodule {nullptr};
 };
 
 //------------------------------------------------------------------------
@@ -279,13 +278,13 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 				filesystem::path finalPath (p);
 				if (checkVST3Package (finalPath))
 				{
-					pathList.push_back (finalPath.generic_u8string ());
+					pathList.push_back (finalPath.generic_string ());
 					continue;
 				}
 				findFilesWithExt (cp, ext, pathList, recursive);
 			}
 			else
-				pathList.push_back (cp.generic_u8string ());
+				pathList.push_back (cp.generic_string ());
 		}
 		else if (recursive)
 		{
@@ -305,13 +304,13 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 							filesystem::path finalPath (*resolvedLink);
 							if (checkVST3Package (finalPath))
 							{
-								pathList.push_back (finalPath.generic_u8string ());
+								pathList.push_back (finalPath.generic_string ());
 								continue;
 							}
 							findFilesWithExt (*resolvedLink, ext, pathList, recursive);
 						}
 						else
-							pathList.push_back (resolvedLink->generic_u8string ());
+							pathList.push_back (resolvedLink->generic_string ());
 					}
 					else if (filesystem::is_directory (*resolvedLink))
 					{
@@ -353,15 +352,15 @@ Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (
 //------------------------------------------------------------------------
 Module::Ptr Module::create (const std::string& path, std::string& errorDescription)
 {
-	auto module = std::make_shared<Win32Module> ();
-	if (module->load (path, errorDescription))
+	auto winmodule = std::make_shared<Win32Module> ();
+	if (winmodule->load (path, errorDescription))
 	{
-		module->path = path;
+		winmodule->path = path;
 		auto it = std::find_if (path.rbegin (), path.rend (),
 		                        [] (const std::string::value_type& c) { return c == '/'; });
 		if (it != path.rend ())
-			module->name = {it.base (), path.end ()};
-		return module;
+			winmodule->name = {it.base (), path.end ()};
+		return winmodule;
 	}
 	return nullptr;
 }
@@ -406,7 +405,7 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 	for (auto& png : pngList)
 	{
 		filesystem::path p (png);
-		auto filename = p.filename ().generic_u8string ();
+		auto filename = p.filename ().generic_string ();
 		auto uid = Snapshot::decodeUID (filename);
 		if (!uid)
 			continue;
