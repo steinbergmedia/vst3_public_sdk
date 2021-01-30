@@ -44,11 +44,19 @@
 #include <unistd.h>
 
 #if (__cplusplus >= 201707L)
-#include <filesystem>
-using namespace std;
+  #if __has_include(<filesystem>)
+    #include <filesystem>
+    using namespace std;
+    namespace fs = std::filesystem;
+  #elif  __has_include(<experimental/filesystem>)
+    #include <experimental/filesystem>
+    using namespace std::experimental;
+    namespace fs = std::experimental::filesystem;
+  #endif
 #else
-#include <experimental/filesystem>
-using namespace std::experimental;
+  #include <experimental/filesystem>
+  using namespace std::experimental;
+  namespace fs = std::experimental::filesystem;
 #endif
 
 
@@ -62,11 +70,7 @@ using ModuleExitFunc = bool (PLUGIN_API*) ();
 namespace VST3 {
 namespace Hosting {
 
-#if (__cplusplus >= 201707L)
-using Path = std::filesystem::path;
-#else
-using Path = std::experimental::filesystem::path;
-#endif
+using Path = fs::path;
 
 //------------------------------------------------------------------------
 namespace {
