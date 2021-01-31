@@ -42,16 +42,13 @@
 #include <algorithm>
 #include <iostream>
 
-#if _HAS_CXX17 && defined(_MSC_VER)
+#if defined(_MSC_VER)
 #include <filesystem>
-using namespace std;
+namespace filesystem = std::filesystem;
 #else
-// The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem>
-// header. You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the
-// warning, otherwise the build will fail in VS2020 16.3.0
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
-#include <experimental/filesystem>
-using namespace std::experimental;
+#define GHC_FILESYSTEM_IMPLEMENTATION 1
+#include  "../../../3rdparty/filesystem/include/ghc/filesystem.hpp"
+namespace filesystem = ghc::filesystem;
 #endif
 
 #pragma comment(lib, "Shell32")
