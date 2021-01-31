@@ -234,7 +234,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	        shellLink->QueryInterface (IID_IPersistFile, reinterpret_cast<void**> (&persistFile))))
 		return {};
 
-	if (!SUCCEEDED (persistFile->Load (p.native ().data (), STGM_READ)))
+	if (!SUCCEEDED (persistFile->Load (p.wstring ().data (), STGM_READ)))
 		return {};
 
 	if (!SUCCEEDED (shellLink->Resolve (nullptr, MAKELONG (SLR_NO_UI, 500))))
