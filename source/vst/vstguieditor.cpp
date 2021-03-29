@@ -8,34 +8,41 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #include "vstguieditor.h"
+#include "public.sdk/source/main/moduleinit.h"
 #include "pluginterfaces/base/keycodes.h"
+
+#if SMTG_OS_WINDOWS && SMTG_MODULE_IS_BUNDLE
+#include "vstgui_win32_bundle_support.h"
+#endif
+
+#define VSTGUI_NEEDS_INIT_LIB ((VSTGUI_VERSION_MAJOR == 4 && VSTGUI_VERSION_MINOR > 9) || (VSTGUI_VERSION_MAJOR > 4))
 
 #if VSTGUI_VERSION_MAJOR < 4
 #include "vstgui/vstkeycode.h"
@@ -43,25 +50,46 @@
 
 #include "base/source/fstring.h"
 
+#if VSTGUI_NEEDS_INIT_LIB
+#include "vstgui/lib/vstguiinit.h"
+static Steinberg::ModuleInitializer InitVSTGUI ([] () {
+	using namespace Steinberg;
+	VSTGUI::init (getPlatformModuleHandle ());
+#if SMTG_MODULE_IS_BUNDLE
+	Vst::setupVSTGUIBundleSupport (getPlatformModuleHandle ());
+#endif // SMTG_MODULE_IS_BUNDLE
+});
+
+#else
+
 #if SMTG_OS_MACOS
-#include <CoreFoundation/CoreFoundation.h>
-#include <dlfcn.h>
-namespace VSTGUI {
-static void CreateVSTGUIBundleRef ();
-static void ReleaseVSTGUIBundleRef ();
-}
+namespace VSTGUI { void* gBundleRef = nullptr; }
 #elif SMTG_OS_WINDOWS
 void* hInstance = nullptr; // VSTGUI hInstance
 extern void* moduleHandle;
-#if SMTG_MODULE_IS_BUNDLE
-#include "vstgui_win32_bundle_support.h"
-#endif // SMTG_MODULE_IS_BUNDLE
 #elif SMTG_OS_LINUX
 extern void* moduleHandle;
 namespace VSTGUI {
 void* soHandle = nullptr;
 } // VSTGUI
 #endif // SMTG_OS_MACOS
+
+//------------------------------------------------------------------------
+static Steinberg::ModuleInitializer InitVSTGUIEditor ([] () {
+	using namespace Steinberg;
+#if SMTG_OS_MACOS || SMTG_OS_IOS
+	VSTGUI::gBundleRef = getPlatformModuleHandle ();
+#elif SMTG_OS_WINDOWS
+	hInstance = getPlatformModuleHandle ();
+#if SMTG_MODULE_IS_BUNDLE
+	Vst::setupVSTGUIBundleSupport (hInstance);
+#endif // SMTG_MODULE_IS_BUNDLE
+#elif SMTG_OS_LINUX
+	VSTGUI::soHandle = getPlatformModuleHandle ();
+#endif
+});
+
+#endif // VSTGUI_NEEDS_INIT_LIB
 
 using namespace VSTGUI;
 
@@ -72,19 +100,6 @@ namespace Vst {
 VSTGUIEditor::VSTGUIEditor (void* controller, ViewRect* size)
 : EditorView (static_cast<EditController*> (controller), size)
 {
-#if SMTG_OS_MACOS
-	CreateVSTGUIBundleRef ();
-#elif SMTG_OS_WINDOWS
-	if (hInstance == nullptr)
-	{
-		hInstance = moduleHandle;
-#if SMTG_MODULE_IS_BUNDLE
-		setupVSTGUIBundleSupport (hInstance);
-#endif
-	}
-#elif SMTG_OS_LINUX
-	VSTGUI::soHandle = moduleHandle;
-#endif
 	// create a timer used for idle update: will call notify method
 	timer = new CVSTGUITimer (dynamic_cast<CBaseObject*> (this));
 }
@@ -94,9 +109,6 @@ VSTGUIEditor::~VSTGUIEditor ()
 {
 	if (timer)
 		timer->forget ();
-#if SMTG_OS_MACOS
-	ReleaseVSTGUIBundleRef ();
-#endif
 }
 
 //------------------------------------------------------------------------
@@ -153,16 +165,16 @@ tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 #if SMTG_OS_MACOS
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
-		platformType = kUIView;
+		platformType = PlatformType::kUIView;
 #else
 #if MAC_CARBON
 	if (strcmp (type, kPlatformTypeHIView) == 0)
-		platformType = kWindowRef;
+		platformType = PlatformType::kWindowRef;
 #endif
 
 #if MAC_COCOA
 	if (strcmp (type, kPlatformTypeNSView) == 0)
-		platformType = kNSView;
+		platformType = PlatformType::kNSView;
 #endif
 #endif
 #endif // SMTG_OS_MACOS
@@ -339,82 +351,3 @@ tresult PLUGIN_API VSTGUIEditor::setFrame (IPlugFrame* frame)
 //------------------------------------------------------------------------
 } // namespace Vst
 } // namespace Steinberg
-
-#if SMTG_OS_MACOS
-namespace VSTGUI {
-void* gBundleRef = nullptr;
-static int openCount = 0;
-//------------------------------------------------------------------------
-void CreateVSTGUIBundleRef ()
-{
-#if TARGET_OS_IPHONE
-	(void)openCount;
-	if (gBundleRef == nullptr)
-		gBundleRef = CFBundleGetMainBundle ();
-#else
-	openCount++;
-	if (gBundleRef)
-	{
-		CFRetain (gBundleRef);
-		return;
-	}
-	Dl_info info;
-	if (dladdr ((const void*)CreateVSTGUIBundleRef, &info))
-	{
-		if (info.dli_fname)
-		{
-			Steinberg::String name;
-			name.assign (info.dli_fname);
-			for (int i = 0; i < 3; i++)
-			{
-				int delPos = name.findLast ('/');
-				if (delPos == -1)
-				{
-					fprintf (stdout, "Could not determine bundle location.\n");
-					return; // unexpected
-				}
-				name.remove (delPos, name.length () - delPos);
-			}
-			CFURLRef bundleUrl = CFURLCreateFromFileSystemRepresentation (
-			    0, (const UInt8*)name.text8 (), name.length (), true);
-			if (bundleUrl)
-			{
-				gBundleRef = CFBundleCreate (0, bundleUrl);
-				CFRelease (bundleUrl);
-			}
-		}
-	}
-#endif
-}
-
-//------------------------------------------------------------------------
-void ReleaseVSTGUIBundleRef ()
-{
-#if !TARGET_OS_IPHONE
-	openCount--;
-	if (gBundleRef)
-		CFRelease (gBundleRef);
-	if (openCount == 0)
-		gBundleRef = nullptr;
-#endif
-}
-
-//------------------------------------------------------------------------
-} // namespace VSTGUI
-
-#if TARGET_OS_IPHONE
-//------------------------------------------------------------------------
-namespace Steinberg {
-namespace Vst {
-
-//------------------------------------------------------------------------
-void VSTGUIEditor::setBundleRef (void* bundle)
-{
-	VSTGUI::gBundleRef = bundle;
-}
-
-}
-}
-#endif
-
-#endif // SMTG_OS_MACOS

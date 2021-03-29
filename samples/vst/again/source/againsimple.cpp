@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -702,23 +702,7 @@ enum
 //------------------------------------------------------------------------
 
 //------------------------------------------------------------------------
-// called when library is loaded
-bool InitModule ()
-{
-	return true;
-}
-
-//------------------------------------------------------------------------
-// called when library is unloaded
-bool DeinitModule ()
-{
-	return true;
-}
-
-//------------------------------------------------------------------------
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
 	//---First plug-in included in this factory-------
 	// its kVstAudioEffectClass component

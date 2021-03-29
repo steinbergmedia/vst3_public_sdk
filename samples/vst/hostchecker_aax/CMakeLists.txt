@@ -33,17 +33,33 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
 
     set(target hostchecker_aax)
     smtg_add_aaxplugin(${target} ${hostchecker_sources})
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${SDK_ROOT}/public.sdk/samples/vst/hostchecker/source)
-    target_link_libraries(${target} PRIVATE sdk vstgui_support aaxwrapper)
+    set_target_properties(${target}
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+    )
+    target_include_directories(${target} 
+        PUBLIC 
+            ${SDK_ROOT}/public.sdk/samples/vst/hostchecker/source
+    )
+    target_link_libraries(${target}
+        PRIVATE
+            sdk
+            vstgui_support
+            aaxwrapper
+    )
 
     smtg_add_vst3_resource(${target} ../hostchecker/resource/hostchecker.uidesc)
     smtg_add_vst3_resource(${target} ../hostchecker/resource/bypass.png)
     smtg_add_vst3_resource(${target} ../hostchecker/resource/knob.png)
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../hostchecker/resource/info.plist" PREPROCESS)
+        smtg_set_bundle(${target}
+        	BUNDLE_IDENTIFIER "com.steinberg.vst3.hostchecker-aax"
+        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../hostchecker/resource/info.plist" PREPROCESS)
     elseif(SMTG_WIN)
-        target_sources(${target} PRIVATE ../hostchecker/resource/hostchecker.rc)
-    endif()
-endif()
+        target_sources(${target}
+            PRIVATE
+                ../hostchecker/resource/hostchecker.rc
+        )
+    endif(SMTG_MAC)
+endif(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)

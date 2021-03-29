@@ -5,7 +5,7 @@ if(SMTG_ADD_VSTGUI)
             ${SDK_ROOT}/public.sdk/source/vst/vst2wrapper/vst2wrapper.sdk.cpp
             source/againentry_vst2.cpp
         )
-    endif()
+    endif(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
 
     set(again_sources
         source/again.cpp
@@ -38,14 +38,21 @@ if(SMTG_ADD_VSTGUI)
             set(again_sources ${again_sources} ${again_vst2_sources})
         else()
             set(again_sources ${again_sources})
-        endif()
-    endif()
+        endif(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
+    endif(SMTG_MAC OR SMTG_WIN)
 
     set(target again)
     smtg_add_vst3plugin(${target} ${again_sources})
     #smtg_add_vst3plugin(${target} PACKAGE_NAME "A Gain" SOURCES_LIST ${again_sources})
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_link_libraries(${target} PRIVATE sdk vstgui_support)
+    set_target_properties(${target} 
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+    )
+    target_link_libraries(${target}
+        PRIVATE
+            sdk
+            vstgui_support
+    )
 
     smtg_add_vst3_resource(${target} "resource/again.uidesc")
     smtg_add_vst3_resource(${target} "resource/background.png")
@@ -57,28 +64,40 @@ if(SMTG_ADD_VSTGUI)
 
     smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot.png")
     smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot_2.0x.png")
+    smtg_add_vst3_snapshot(${target} "resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot.png")
+    smtg_add_vst3_snapshot(${target} "resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot_2.0x.png")
 
     if(SMTG_MAC)
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
     elseif(SMTG_WIN)
-        target_sources(${target} PRIVATE resource/again.rc)
-    endif()
+        target_sources(${target}
+            PRIVATE
+                resource/again.rc
+        )
+    endif(SMTG_MAC)
 
     if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target again_ios)
         smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${target}" "${again_sources}")
-        set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-        target_include_directories(${target} PUBLIC ${SMTG_VSTGUI_ROOT}/vstgui4)
-        target_link_libraries(${target} PRIVATE
-            base_ios
-            sdk_ios
-            "-framework UIKit"
-            "-framework CoreGraphics" 
-            "-framework QuartzCore" 
-            "-framework CoreText" 
-            "-framework Accelerate" 
-            "-framework ImageIO" 
-            "-framework MobileCoreServices" 
+        set_target_properties(${target}
+            PROPERTIES
+                ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+        )
+        target_include_directories(${target}
+            PUBLIC
+                ${SMTG_VSTGUI_ROOT}/vstgui4
+        )
+        target_link_libraries(${target} 
+            PRIVATE
+                base_ios
+                sdk_ios
+                "-framework UIKit"
+                "-framework CoreGraphics" 
+                "-framework QuartzCore" 
+                "-framework CoreText" 
+                "-framework Accelerate" 
+                "-framework ImageIO" 
+                "-framework MobileCoreServices" 
         )
 
         smtg_add_vst3_resource(${target} "resource/again.uidesc")
@@ -89,19 +108,29 @@ if(SMTG_ADD_VSTGUI)
         smtg_add_vst3_resource(${target} "resource/vu_on.png")
         smtg_add_vst3_resource(${target} "resource/vu_off.png")
 
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
-        target_sources(${target} PRIVATE 
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
-            ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
+        smtg_set_bundle(${target}
+	    	BUNDLE_IDENTIFIER "com.steinberg.vst3.again"
+        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS
         )
-    endif()
+        target_sources(${target} 
+            PRIVATE 
+                ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
+                ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
+                ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
+                ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
+        )
+    endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
 
     set(targetsimple againsimple)
     smtg_add_vst3plugin(${targetsimple} ${again_simple_sources})
-    set_target_properties(${targetsimple} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_link_libraries(${targetsimple} PRIVATE sdk vstgui_support)
+    set_target_properties(${targetsimple}
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
+    target_link_libraries(${targetsimple}
+        PUBLIC
+            sdk
+            vstgui_support
+    )
 
     smtg_add_vst3_resource(${targetsimple} "resource/again.uidesc")
     smtg_add_vst3_resource(${targetsimple} "resource/background.png")
@@ -112,23 +141,32 @@ if(SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${targetsimple} "resource/vu_off.png")
 
     if(SMTG_MAC)
-        smtg_set_bundle(${targetsimple} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
+        smtg_set_bundle(${targetsimple}
+	        BUNDLE_IDENTIFIER "com.steinberg.vst3.again-simple"
+        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS
+        )
     elseif(SMTG_WIN)
-        target_sources(${targetsimple} PRIVATE resource/again.rc)
-    endif()
+        target_sources(${targetsimple}
+            PRIVATE
+                resource/again.rc
+        )
+    endif(SMTG_MAC)
 
     # do not build AGain VST 2 by default
     option(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION "Legacy: Create the VST2 version of the Sample Plug-in AGain, be sure that you have copied the VST2 interfaces into the folder VST_SDK/VST3_SDK/pluginterfaces/vst2.x" OFF)
     if(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
-        message(STATUS "SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
+        message(STATUS "[SMTG] SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
         if(XCODE)
             # fix missing VSTPluginMain symbol when also building VST 2 version
-            set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE "")
-        endif()
+            set_target_properties(${target}
+                PROPERTIES
+                    XCODE_ATTRIBUTE_EXPORTED_SYMBOLS_FILE ""
+            )
+        endif(XCODE)
         if(SMTG_WIN)
             if(NOT MINGW)
                 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-            endif()
-        endif()
-    endif()
+            endif(NOT MINGW)
+        endif(SMTG_WIN)
+    endif(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
 endif(SMTG_ADD_VSTGUI)

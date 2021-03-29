@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -94,8 +94,8 @@ public:
 	T getFunctionPointer (const char* name)
 	{
 		assert (bundle);
-		CFPtr<CFStringRef> functionName {
-		    CFStringCreateWithCString (kCFAllocatorDefault, name, kCFStringEncodingASCII)};
+		CFPtr<CFStringRef> functionName (
+		    CFStringCreateWithCString (kCFAllocatorDefault, name, kCFStringEncodingASCII));
 		return reinterpret_cast<T> (CFBundleGetFunctionPointerForName (bundle, functionName));
 	}
 
@@ -154,7 +154,7 @@ public:
 			errorDescription = "Calling 'bundleEntry' failed";
 			return false;
 		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
+		auto f = owned (factoryProc ());
 		if (!f)
 		{
 			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
@@ -188,8 +188,6 @@ public:
 		{
 			if (auto bundleExit = getFunctionPointer<BundleExitFunc> ("bundleExit"))
 				bundleExit ();
-
-			CFRelease ((CFBundleRef)bundle);
 		}
 	}
 
@@ -211,7 +209,10 @@ void findModulesInDirectory (NSURL* dirUrl, Module::PathList& result)
 	{
 		if ([[[url lastPathComponent] pathExtension] isEqualToString:@"vst3"])
 		{
-			result.emplace_back ([url.path UTF8String]);
+			CFPtr<CFArrayRef> archs (
+			    CFBundleCopyExecutableArchitecturesForURL (static_cast<CFURLRef> (url)));
+			if (archs)
+				result.emplace_back ([url.path UTF8String]);
 		}
 		else
 		{
@@ -333,7 +334,7 @@ Module::Ptr Module::create (const std::string& path, std::string& errorDescripti
 		                        [] (const std::string::value_type& c) { return c == '/'; });
 		if (it != path.rend ())
 			module->name = {it.base (), path.end ()};
-		return module;
+		return std::move (module);
 	}
 	return nullptr;
 }

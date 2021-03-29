@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -1127,9 +1127,13 @@ ComponentResult AUWrapper::SetParameter (AudioUnitParameterID inID, AudioUnitSco
 	{
 		if (inID == factoryProgramChangedID)
 		{
-			SetAFactoryPresetAsCurrent (presets[(int)((float)inValue * (float)numPresets)]);
-			PropertyChanged (kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global, 0);
-			PropertyChanged (kAudioUnitProperty_CurrentPreset, kAudioUnitScope_Global, 0);
+			int presetIdx = (int)((float)inValue * (float)numPresets);
+			if (presetIdx >= 0 && presetIdx < numPresets)
+			{
+				SetAFactoryPresetAsCurrent (presets[presetIdx]);
+				PropertyChanged (kAudioUnitProperty_PresentPreset, kAudioUnitScope_Global, 0);
+				PropertyChanged (kAudioUnitProperty_CurrentPreset, kAudioUnitScope_Global, 0);
+			}
 		}
 
 		transferParamChanges.addChange (inID, inValue, inBufferOffsetInFrames);

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // This Software Development Kit may not be distributed in parts or its entirety
 // without prior written agreement by Steinberg Media Technologies GmbH.
@@ -35,8 +35,8 @@
 #include "pluginterfaces/base/fplatform.h"
 
 #if SMTG_OS_WINDOWS
-#include <Windows.h>
 #include <vector>
+#include <windows.h>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -83,7 +83,7 @@ std::string convertToUTF8 (const WCHAR* data, const SIZE_T& dataSize)
 	text.resize (static_cast<size_t> (numChars) + 1);
 	numChars = WideCharToMultiByte (CP_UTF8, 0, data, dataSize / sizeof (WCHAR),
 	                                const_cast<char*> (text.data ()),
-	                                static_cast<int> (text.size ()), nullptr, 0);
+	                                static_cast<int> (text.size ()), nullptr, nullptr);
 	text.resize (numChars);
 	return text;
 }

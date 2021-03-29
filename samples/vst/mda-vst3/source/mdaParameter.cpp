@@ -118,7 +118,7 @@ bool IndexedParameter::fromString (const TChar* string, ParamValue& _valueNormal
 			}
 		} while (string[pos] != 0 && indexString[i][pos] != 0);
 	}
-	UString128 str(string);
+	UString128 str (string);
 	int64 value;
 	if (str.scanInt (value) && value <= info.stepCount)
 	{
@@ -131,7 +131,8 @@ bool IndexedParameter::fromString (const TChar* string, ParamValue& _valueNormal
 //-----------------------------------------------------------------------------
 void IndexedParameter::setIndexString (int32 index, const String128 str)
 {
-	memcpy (indexString[index], str, 128 * sizeof (TChar));
+	if (index <= info.stepCount)
+		memcpy (indexString[index], str, sizeof (String128));
 }
 
 //-----------------------------------------------------------------------------

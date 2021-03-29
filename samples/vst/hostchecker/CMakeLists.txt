@@ -30,16 +30,29 @@ if(SMTG_ADD_VSTGUI)
 
     set(target hostchecker)
     smtg_add_vst3plugin(${target} ${hostchecker_sources})
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_link_libraries(${target} PRIVATE sdk vstgui_support)
+    set_target_properties(${target}
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+    )
+    target_link_libraries(${target}
+        PRIVATE
+            sdk
+            vstgui_support
+    )
 
     smtg_add_vst3_resource(${target} resource/hostchecker.uidesc)
     smtg_add_vst3_resource(${target} resource/bypass.png)
     smtg_add_vst3_resource(${target} resource/knob.png)
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/info.plist" PREPROCESS)
+        smtg_set_bundle(${target}
+        	BUNDLE_IDENTIFIER "com.steinberg.vst3.hostchecker"
+        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/info.plist" PREPROCESS
+        )
     elseif(SMTG_WIN)
-        target_sources(${target} PRIVATE resource/hostchecker.rc)
-    endif()
+        target_sources(${target}
+            PRIVATE
+                resource/hostchecker.rc
+        )
+    endif(SMTG_MAC)
 endif(SMTG_ADD_VSTGUI)

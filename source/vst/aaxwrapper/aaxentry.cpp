@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -75,16 +75,20 @@
 
 extern "C" {
 #if SMTG_OS_MACOS
-bool bundleEntry (CFBundleRef);
-bool bundleExit (void);
+// implemented in macmain.cpp
+SMTG_EXPORT_SYMBOL bool bundleEntry (CFBundleRef);
+SMTG_EXPORT_SYMBOL bool bundleExit (void);
+#elif SMTG_OS_WINDOWS
+// implemented in dllmain.cpp
+SMTG_EXPORT_SYMBOL bool InitDll ();
+SMTG_EXPORT_SYMBOL bool ExitDll ();
 #else
-bool InitDll (); // { return true; }
-bool ExitDll (); // { return true; }
+#error platform not supported by AAX
 #endif
 }
 
-int AAXWrapper_linkAnchor; // reference this in the plugin to force inclusion of the wrapper in the
-                           // link
+// reference this in the plugin to force inclusion of the wrapper in the link
+int AAXWrapper_linkAnchor;
 
 //------------------------------------------------------------------------
 #if defined(__GNUC__)
@@ -221,7 +225,7 @@ static CFBundleRef GetCurrentBundle ()
 	}
 	return 0;
 }
-#endif
+#endif // SMTG_OS_MACOS
 
 //------------------------------------------------------------------------
 // \func ACFStartup

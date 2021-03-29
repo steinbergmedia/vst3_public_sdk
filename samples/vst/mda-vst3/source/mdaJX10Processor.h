@@ -43,10 +43,7 @@ public:
 	void setCurrentProgram (Steinberg::uint32 val) SMTG_OVERRIDE;
 	void setCurrentProgramNormalized (ParamValue val) SMTG_OVERRIDE;
 
-	enum {
-		kNumPrograms = 52
-	};
-	
+	static const int32 kNumPrograms = 52;
 	static float programParams[kNumPrograms][24];
 
 //-----------------------------------------------------------------------------
@@ -111,10 +108,10 @@ protected:
 	enum {
 		EVENTBUFFER = 160,
 		EVENTS_DONE = 99999999,
-		KMAX = 32,
 		SUSTAIN = -1,
 		NVOICES = 8
 	};
+	static const int32 KMAX = 32;
 
 	int32 notes[EVENTBUFFER + 8];  //list of delta|note|velocity for current block
 

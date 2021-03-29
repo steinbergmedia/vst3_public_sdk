@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 
 #include "pluginterfaces/base/ftypes.h"
 
-#include <Windows.h>
+#include <windows.h>
 
 #if defined(_MSC_VER) && defined(DEVELOPMENT)
 #include <crtdbg.h>
@@ -67,7 +67,8 @@ extern "C" {
 static int moduleCounter {0}; // counting for InitDll/ExitDll pairs
 
 //------------------------------------------------------------------------
-/** must be called from host right after loading dll
+/** must be called from host right after loading dll,
+must be provided by the plug-in!
 Note: this could be called more than one time! */
 SMTG_EXPORT_SYMBOL bool InitDll ()
 {
@@ -78,6 +79,7 @@ SMTG_EXPORT_SYMBOL bool InitDll ()
 
 //------------------------------------------------------------------------
 /** must be called from host right before unloading dll
+must be provided by the plug-in!
 Note: this could be called more than one time! */
 SMTG_EXPORT_SYMBOL bool ExitDll ()
 {

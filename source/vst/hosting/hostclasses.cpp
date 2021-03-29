@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -167,13 +167,13 @@ public:
 	/** size is in code unit (count of TChar) */
 	HostAttribute (const TChar* value, uint32 sizeInCodeUnit) : size (sizeInCodeUnit), type (kString)
 	{
-		v.stringValue = new TChar[size];
-		memcpy (v.stringValue, value, size * sizeof (TChar));
+		v.stringValue = new TChar[sizeInCodeUnit];
+		memcpy (v.stringValue, value, sizeInCodeUnit * sizeof (TChar));
 	}
 	HostAttribute (const void* value, uint32 sizeInBytes) : size (sizeInBytes), type (kBinary)
 	{
-		v.binaryValue = new char[size];
-		memcpy (v.binaryValue, value, size);
+		v.binaryValue = new char[sizeInBytes];
+		memcpy (v.binaryValue, value, sizeInBytes);
 	}
 	~HostAttribute ()
 	{
@@ -183,14 +183,15 @@ public:
 
 	int64 intValue () const { return v.intValue; }
 	double floatValue () const { return v.floatValue; }
-	const TChar* stringValue (uint32& stringSize)
+	/** sizeInCodeUnit is in code unit (count of TChar) */
+	const TChar* stringValue (uint32& sizeInCodeUnit)
 	{
-		stringSize = size;
+		sizeInCodeUnit = size;
 		return v.stringValue;
 	}
-	const void* binaryValue (uint32& binarySize)
+	const void* binaryValue (uint32& sizeInBytes)
 	{
-		binarySize = size;
+		sizeInBytes = size;
 		return v.binaryValue;
 	}
 
@@ -296,9 +297,9 @@ tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint
 	auto it = list.find (aid);
 	if (it != list.end () && it->second)
 	{
-		uint32 stringSize = 0;
-		const TChar* _string = it->second->stringValue (stringSize);
-		memcpy (string, _string, std::min<uint32> (stringSize, sizeInBytes));
+		uint32 sizeInCodeUnit = 0;
+		const TChar* _string = it->second->stringValue (sizeInCodeUnit);
+		memcpy (string, _string, std::min<uint32> (sizeInCodeUnit * sizeof (TChar), sizeInBytes));
 		return kResultTrue;
 	}
 	return kResultFalse;

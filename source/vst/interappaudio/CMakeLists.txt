@@ -2,12 +2,11 @@
 if(SMTG_MAC)
     option(SMTG_BUILD_INTERAPPAUDIO "Enable building the iOS InterAppAudio examples (deprecated)" OFF)
 
-
     if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM AND SMTG_BUILD_INTERAPPAUDIO)
 
-        message("****************************************************************************************************************************************")
-        message("***** The iOS InterAppAudio wrapper is deprecated and may be removed in the next SDK update. Please switch to AudioUnit V3 on iOS. *****")
-        message("****************************************************************************************************************************************")
+        message("[SMTG] ********************************************************************************************************************************")
+        message("[SMTG] * The iOS InterAppAudio wrapper is deprecated and may be removed in the next SDK update. Please switch to AudioUnit V3 on iOS. *")
+        message("[SMTG] ********************************************************************************************************************************")
 
         set(target interappaudio)
         
@@ -35,7 +34,18 @@ if(SMTG_MAC)
         )
         add_library(${target} STATIC ${${target}_sources})
         smtg_set_platform_ios(${target})
-        set_target_properties(${target} PROPERTIES ${SDK_IDE_LIBS_FOLDER})
-        target_link_libraries(${target} PRIVATE sdk_ios "-framework CoreGraphics" "-framework UIKit" "-framework CoreMIDI" "-framework AudioToolbox" "-framework AVFoundation")
-    endif()
-endif()
+        set_target_properties(${target}
+            PROPERTIES
+                ${SDK_IDE_LIBS_FOLDER}
+        )
+        target_link_libraries(${target}
+            PRIVATE
+                sdk_ios
+                "-framework CoreGraphics"
+                "-framework UIKit"
+                "-framework CoreMIDI"
+                "-framework AudioToolbox"
+                "-framework AVFoundation"
+        )
+    endif(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM AND SMTG_BUILD_INTERAPPAUDIO)
+endif(SMTG_MAC)

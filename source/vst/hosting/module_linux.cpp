@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,13 +44,21 @@
 #include <unistd.h>
 
 #if (__cplusplus >= 201707L)
-#include <filesystem>
-using namespace std;
-using Path = std::filesystem::path;
+#if __has_include(<filesystem>)
+#define USE_EXPERIMENTAL_FS 0
+#elif __has_include(<experimental/filesystem>)
+#define USE_EXPERIMENTAL_FS 1
+#endif
 #else
+#define USE_EXPERIMENTAL_FS 1
+#endif
+
+#if USE_EXPERIMENTAL_FS == 1
 #include <experimental/filesystem>
-using namespace std::experimental;
-using Path = std::experimental::filesystem::path;
+namespace filesystem = std::experimental::filesystem;
+#else
+#include <filesystem>
+namespace filesystem = std::filesystem;
 #endif
 
 //------------------------------------------------------------------------
@@ -62,6 +70,8 @@ using ModuleExitFunc = bool (PLUGIN_API*) ();
 //------------------------------------------------------------------------
 namespace VST3 {
 namespace Hosting {
+
+using Path = filesystem::path;
 
 //------------------------------------------------------------------------
 namespace {
@@ -160,7 +170,7 @@ public:
 			return false;
 		}
 
-		module = dlopen (modulePath->generic_u8string ().data (), RTLD_LAZY);
+		module = dlopen (reinterpret_cast<const char*>(modulePath->generic_string ().data ()), RTLD_LAZY);
 		if (!module)
 		{
 			errorDescription = "dlopen failed.\n";
@@ -210,7 +220,7 @@ void findFilesWithExt (const std::string& path, const std::string& ext, Module::
 		{
 			if (p.path ().extension () == ext)
 			{
-				pathList.push_back (p.path ().generic_u8string ());
+				pathList.push_back (p.path ().generic_string ());
 			}
 			else if (recursive && p.status ().type () == filesystem::file_type::directory)
 			{
@@ -264,7 +274,7 @@ Module::PathList Module::getModulePaths ()
 	{
 		filesystem::path homePath (homeDir);
 		homePath /= ".vst3";
-		findModules (homePath.generic_u8string (), list);
+		findModules (homePath.generic_string (), list);
 	}
 	for (auto path : systemPaths)
 		findModules (path, list);
@@ -274,7 +284,7 @@ Module::PathList Module::getModulePaths ()
 	if (appPath)
 	{
 		*appPath /= "vst3";
-		findModules (appPath->generic_u8string (), list);
+		findModules (appPath->generic_string (), list);
 	}
 
 	return list;
@@ -293,7 +303,7 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 	for (auto& png : pngList)
 	{
 		filesystem::path p (png);
-		auto filename = p.filename ().generic_u8string ();
+		auto filename = p.filename ().generic_string ();
 		auto uid = Snapshot::decodeUID (filename);
 		if (!uid)
 			continue;

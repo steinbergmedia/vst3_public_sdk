@@ -20,9 +20,20 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
 
     set(target again_aax)
     smtg_add_aaxplugin(${target} ${again_sources})
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    target_include_directories(${target} PUBLIC ${SDK_ROOT}/public.sdk/samples/vst/again/source)
-    target_link_libraries(${target} PRIVATE sdk vstgui_support aaxwrapper)
+    set_target_properties(${target}
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+    )
+    target_include_directories(${target}
+        PUBLIC
+            ${SDK_ROOT}/public.sdk/samples/vst/again/source
+    )
+    target_link_libraries(${target}
+        PRIVATE
+            sdk
+            vstgui_support
+            aaxwrapper
+    )
 
     smtg_add_vst3_resource(${target} "../again/resource/again.uidesc")
     smtg_add_vst3_resource(${target} "../again/resource/background.png")
@@ -33,13 +44,19 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
     smtg_add_vst3_resource(${target} "../again/resource/vu_off.png")
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../again/mac/Info.plist" PREPROCESS)
+        smtg_set_bundle(${target}
+        	BUNDLE_IDENTIFIER "com.steinberg.vst3.again-aax"
+        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../again/mac/Info.plist" PREPROCESS
+        )
     elseif(SMTG_WIN)
-        target_sources(${target} PRIVATE ../again/resource/again.rc)
+        target_sources(${target} 
+            PRIVATE 
+                ../again/resource/again.rc
+        )
         # remove warnings from VST2
         if(NOT MINGW)
             add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-        endif()
-    endif()
+        endif(NOT MINGW)
+    endif(SMTG_MAC)
 
-endif()
+endif(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -64,9 +64,14 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 	if (!canProcessSampleSize (testResult))
 		return true;
 
+	// disable it, it was enabled in setup call
+	tresult result = vstPlug->setActive (false);
+	if (result != kResultTrue)
+		return false;
+
 	for (int32 i = 0; i < 3; ++i)
 	{
-		tresult result = audioEffect->setupProcessing (processSetup);
+		result = audioEffect->setupProcessing (processSetup);
 		if (result != kResultTrue)
 			return false;
 

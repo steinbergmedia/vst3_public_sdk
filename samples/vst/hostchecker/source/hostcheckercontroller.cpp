@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -53,6 +53,8 @@
 #include "pluginterfaces/vst/ivstcontextmenu.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
+
+#include <sstream>
 
 #define THREAD_CHECK_MSG(msg) "The host called '" msg "' in the wrong thread context.\n"
 
@@ -482,7 +484,8 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		                         kTriggerHiddenTag);
 
 		parameters.addParameter (STR16 ("Copy2Clipboard"), STR16 (""), 1, 0,
-		                         ParameterInfo::kIsHidden, kCopy2ClipboardTag);
+		                         ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden,
+		                         kCopy2ClipboardTag);
 
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{

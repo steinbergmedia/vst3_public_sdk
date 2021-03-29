@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -109,7 +109,7 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 
 	uint8 val;
 	if (streamer.readInt8u (val) == true)
-		setParamNormalized (kChannelId, (ParamValue)val / kMaxMIDIChannelSupported);
+		setParamNormalized (kChannelId, static_cast<ParamValue>(val) / static_cast<ParamValue>(kMaxMIDIChannelSupported));
 
 	if (streamer.readInt8u (val) == true)
 		setParamNormalized (kControllerNumId, Helpers::getMIDINormValue (val));

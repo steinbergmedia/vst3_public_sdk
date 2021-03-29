@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,10 +41,10 @@
 #define stringPluginName "PitchNames"
 
 
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
+	//---First plug-in included in this factory-------
+	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::PitchNamesProcessor::cid),
 				PClassInfo::kManyInstances,
 				kVstAudioEffectClass,
@@ -66,7 +66,3 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				Steinberg::Vst::PitchNamesController::createInstance)
 
 END_FACTORY
-
-bool InitModule () { return true; }
-bool DeinitModule () { return true; }
-

@@ -54,37 +54,37 @@ std::string pitchToString (int32 pitch)
 //-----------------------------------------------------------------------------
 void fillISOFreqParameter (const IPtr<IndexedParameter>& param)
 {
-	param->setIndexString (0, STR ("20 Hz"));
-	param->setIndexString (1, STR ("25 Hz"));
-	param->setIndexString (2, STR ("31 Hz"));
-	param->setIndexString (3, STR ("40 Hz"));
-	param->setIndexString (4, STR ("50 Hz"));
-	param->setIndexString (5, STR ("63 Hz"));
-	param->setIndexString (6, STR ("80 Hz"));
-	param->setIndexString (7, STR ("100 Hz"));
-	param->setIndexString (8, STR ("125 Hz"));
-	param->setIndexString (9, STR ("160 Hz"));
-	param->setIndexString (10, STR ("200 Hz"));
-	param->setIndexString (11, STR ("250 Hz"));
-	param->setIndexString (12, STR ("310 Hz"));
-	param->setIndexString (13, STR ("400 Hz"));
-	param->setIndexString (14, STR ("500 Hz"));
-	param->setIndexString (15, STR ("630 Hz"));
-	param->setIndexString (16, STR ("800 Hz"));
-	param->setIndexString (17, STR ("1 kHz"));
-	param->setIndexString (18, STR ("1.25 kHz"));
-	param->setIndexString (19, STR ("1.6 kHz"));
-	param->setIndexString (20, STR ("2.0 kHz"));
-	param->setIndexString (21, STR ("2.5 kHz"));
-	param->setIndexString (22, STR ("3.1 kHz"));
-	param->setIndexString (23, STR ("4 kHz"));
-	param->setIndexString (24, STR ("5 kHz"));
-	param->setIndexString (25, STR ("6.3 kHz"));
-	param->setIndexString (26, STR ("8 kHz"));
-	param->setIndexString (27, STR ("10 kHz"));
-	param->setIndexString (28, STR ("12.5 kHz"));
-	param->setIndexString (29, STR ("16 kHz"));
-	param->setIndexString (30, STR ("20 kHz"));
+	param->setIndexString (0, UString128("20 Hz"));
+	param->setIndexString (1, UString128 ("25 Hz"));
+	param->setIndexString (2, UString128 ("31 Hz"));
+	param->setIndexString (3, UString128 ("40 Hz"));
+	param->setIndexString (4, UString128 ("50 Hz"));
+	param->setIndexString (5, UString128 ("63 Hz"));
+	param->setIndexString (6, UString128 ("80 Hz"));
+	param->setIndexString (7, UString128 ("100 Hz"));
+	param->setIndexString (8, UString128 ("125 Hz"));
+	param->setIndexString (9, UString128 ("160 Hz"));
+	param->setIndexString (10, UString128 ("200 Hz"));
+	param->setIndexString (11, UString128 ("250 Hz"));
+	param->setIndexString (12, UString128 ("310 Hz"));
+	param->setIndexString (13, UString128 ("400 Hz"));
+	param->setIndexString (14, UString128 ("500 Hz"));
+	param->setIndexString (15, UString128 ("630 Hz"));
+	param->setIndexString (16, UString128 ("800 Hz"));
+	param->setIndexString (17, UString128 ("1 kHz"));
+	param->setIndexString (18, UString128 ("1.25 kHz"));
+	param->setIndexString (19, UString128 ("1.6 kHz"));
+	param->setIndexString (20, UString128 ("2.0 kHz"));
+	param->setIndexString (21, UString128 ("2.5 kHz"));
+	param->setIndexString (22, UString128 ("3.1 kHz"));
+	param->setIndexString (23, UString128 ("4 kHz"));
+	param->setIndexString (24, UString128 ("5 kHz"));
+	param->setIndexString (25, UString128 ("6.3 kHz"));
+	param->setIndexString (26, UString128 ("8 kHz"));
+	param->setIndexString (27, UString128 ("10 kHz"));
+	param->setIndexString (28, UString128 ("12.5 kHz"));
+	param->setIndexString (29, UString128 ("16 kHz"));
+	param->setIndexString (30, UString128 ("20 kHz"));
 }
 
 //------------------------------------------------------------------------
@@ -162,7 +162,7 @@ public:
 
 private:
 	IPtr<Parameter> freqParameter;
-	ParamValue freq;
+	ParamValue freq {0};
 };
 
 //------------------------------------------------------------------------

@@ -28,9 +28,9 @@ class DX10Processor : public BaseProcessor
 public:
 	enum
 	{
-		NPARAMS = 16,
-		kNumPrograms = 32
+		NPARAMS = 16
 	};
+	static const int32 kNumPrograms = 32;
 
 	DX10Processor ();
 	~DX10Processor ();

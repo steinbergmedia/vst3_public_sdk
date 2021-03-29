@@ -16,11 +16,22 @@ set(${target}_sources
 )
 add_library(${target} STATIC ${${target}_sources})
 
-target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces")
-target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Interfaces/ACF")
-target_include_directories(${target} PRIVATE "${SMTG_AAX_SDK_PATH}/Libs/AAXLibrary/Include")
-target_link_libraries(${target} PRIVATE base)
+target_include_directories(${target}
+    PRIVATE
+        "${SMTG_AAX_SDK_PATH}/Interfaces"
+        "${SMTG_AAX_SDK_PATH}/Interfaces/ACF"
+        "${SMTG_AAX_SDK_PATH}/Libs/AAXLibrary/Include"
+)
+target_link_libraries(${target}
+    PRIVATE
+        base
+)
 smtg_setup_universal_binary(${target})
+
+target_compile_features(aaxwrapper
+    PUBLIC
+        cxx_std_11
+)
 
 if(XCODE)
     add_compile_options(-Wno-incompatible-ms-struct)
@@ -34,5 +45,5 @@ elseif(SMTG_WIN)
             PRIVATE 
                 /wd4127 /wd6001 /wd6053
         )
-    endif()
-endif()
+    endif(MSVC)
+endif(XCODE)

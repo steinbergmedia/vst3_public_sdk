@@ -24,6 +24,10 @@ if(SMTG_MAC)
             PROPERTIES 
                 ${SDK_IDE_LIBS_FOLDER} XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
         )
+        target_compile_features(${target}
+            PUBLIC
+                cxx_std_14
+        )
         target_link_libraries(${target} 
             PRIVATE 
                 sdk_hosting
@@ -50,6 +54,10 @@ if(SMTG_MAC)
                     LINK_FLAGS "-Wl,-F/Library/Frameworks"
             )
             smtg_set_platform_ios(${target})
+            target_compile_features(${target}
+                PUBLIC
+                    cxx_std_14
+            )
             target_link_libraries(${target}
                 PRIVATE
                     sdk_hosting_ios

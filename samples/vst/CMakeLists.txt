@@ -2,7 +2,7 @@
 if(ANDROID)
     add_subdirectory(adelay)
     return()
-endif()
+endif(ANDROID)
 
 include(SMTG_AddSubDirectories)
 

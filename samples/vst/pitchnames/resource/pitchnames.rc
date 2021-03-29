@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <windows.h>
 #include "pluginterfaces/base/fplatform.h"
 #include "../source/version.h"
 
@@ -24,15 +24,15 @@ BEGIN
     BEGIN
         BLOCK "040004e4"
         BEGIN
-            VALUE "FileVersion",      FULL_VERSION_STR"\0"
-            VALUE "ProductVersion",   FULL_VERSION_STR"\0"
-            VALUE "OriginalFilename", "pitchnames.vst3\0"
-            VALUE "FileDescription",  stringFileDescription"\0"
-            VALUE "InternalName",     stringFileDescription"\0"
-            VALUE "ProductName",      stringFileDescription"\0"
-            VALUE "CompanyName",      stringCompanyName"\0"
-            VALUE "LegalCopyright",   stringLegalCopyright"\0"
-            VALUE "LegalTrademarks",  stringLegalTrademarks"\0"
+            VALUE "FileVersion",      FULL_VERSION_STR
+            VALUE "ProductVersion",   FULL_VERSION_STR
+            VALUE "OriginalFilename", stringOriginalFilename
+            VALUE "FileDescription",  stringFileDescription
+            VALUE "InternalName",     stringFileDescription
+            VALUE "ProductName",      stringFileDescription
+            VALUE "CompanyName",      stringCompanyName
+            VALUE "LegalCopyright",   stringLegalCopyright
+            VALUE "LegalTrademarks",  stringLegalTrademarks
             //VALUE "PrivateBuild",     " \0"
             //VALUE "SpecialBuild",     " \0"
             //VALUE "Comments",         " \0"

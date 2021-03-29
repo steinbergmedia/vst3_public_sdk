@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,7 +37,7 @@
 
 #include "pluginterfaces/base/fplatform.h"
 
-void* moduleHandle = 0;
+void* moduleHandle = nullptr;
 
 //------------------------------------------------------------------------
 bool InitModule ();		///< must be provided by plug-in: called when the library is loaded
@@ -46,6 +46,7 @@ bool DeinitModule ();	///< must be provided by plug-in: called when the library 
 //------------------------------------------------------------------------
 extern "C"
 {
+	/** must be provided by the plug-in! */
 	SMTG_EXPORT_SYMBOL bool ModuleEntry (void*);
 	SMTG_EXPORT_SYMBOL bool ModuleExit (void);
 }

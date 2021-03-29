@@ -52,11 +52,11 @@ public:
 		EVENTBUFFER=120,
 		EVENTS_DONE=99999999,
 		NPARAMS=12,
-		kNumPrograms = 8,
 		NVOICES=32,
 		SUSTAIN=128,
 		WAVELEN=586348
 	};
+	static const int32 kNumPrograms = 8;
 
 	static float programParams[][NPARAMS];
 

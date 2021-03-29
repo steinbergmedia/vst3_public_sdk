@@ -53,17 +53,11 @@
 #include "version.h"
 
 //-----------------------------------------------------------------------------
-bool InitModule () { return true; }
-bool DeinitModule () { return true; }
-
-//-----------------------------------------------------------------------------
 #define kVersionString	FULL_VERSION_STR
 
 using namespace Steinberg::Vst;
 
-BEGIN_FACTORY_DEF (stringCompanyName, 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
 //-----------------------------------------------------------------------------
 // -- Ambience

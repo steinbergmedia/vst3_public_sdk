@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -60,10 +60,12 @@
 
 #define stringOriginalFilename "syncdelay.vst3"
 #if SMTG_PLATFORM_64
-#define stringFileDescription "SyncDelay VST3-SDK (64Bit)"
+#define stringFileDescription	"SyncDelay VST3-SDK (64Bit)"
 #else
-#define stringFileDescription "SyncDelay VST3-SDK"
+#define stringFileDescription	"SyncDelay VST3-SDK"
 #endif
-#define stringCompanyName "Steinberg Media Technologies\0"
-#define stringLegalCopyright "© 2020 Steinberg Media Technologies"
-#define stringLegalTrademarks "VST is a trademark of Steinberg Media Technologies GmbH"
+#define stringCompanyWeb		"http://www.steinberg.net"
+#define stringCompanyEmail		"mailto:info@steinberg.de"
+#define stringCompanyName		"Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2021 Steinberg Media Technologies"
+#define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

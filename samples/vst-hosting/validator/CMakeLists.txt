@@ -94,16 +94,29 @@ elseif(SMTG_WIN)
         ${validator_sources}
         ${SDK_ROOT}/public.sdk/source/vst/hosting/module_win32.cpp
     )
-endif()
+endif(SMTG_MAC)
 
 set(target validator)
 add_executable(${target} ${validator_sources})
 if(SDK_IDE_HOSTING_EXAMPLES_FOLDER)
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_HOSTING_EXAMPLES_FOLDER})
-endif()
-target_link_libraries(${target} PRIVATE sdk_hosting)
+    set_target_properties(${target}
+        PROPERTIES
+            ${SDK_IDE_HOSTING_EXAMPLES_FOLDER}
+    )
+endif(SDK_IDE_HOSTING_EXAMPLES_FOLDER)
+target_compile_features(${target}
+    PUBLIC
+        cxx_std_14
+)
+target_link_libraries(${target}
+    PRIVATE
+        sdk_hosting
+)
 smtg_setup_universal_binary(${target})
 if(APPLE AND NOT XCODE)
     find_library(COCOA_FRAMEWORK Cocoa)
-    target_link_libraries(${target} PRIVATE ${COCOA_FRAMEWORK})
-endif()
+    target_link_libraries(${target}
+        PRIVATE
+            ${COCOA_FRAMEWORK}
+    )
+endif(APPLE AND NOT XCODE)

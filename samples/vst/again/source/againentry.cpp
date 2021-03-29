@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,27 +50,6 @@
 extern void* moduleHandle;
 #endif
 
-//------------------------------------------------------------------------
-//  Module init/exit
-//------------------------------------------------------------------------
-
-//------------------------------------------------------------------------
-// called after library was loaded
-bool InitModule ()
-{
-#if TARGET_OS_IPHONE
-	Steinberg::Vst::VSTGUIEditor::setBundleRef (moduleHandle);
-#endif
-	return true;
-}
-
-//------------------------------------------------------------------------
-// called after library is unloaded
-bool DeinitModule ()
-{
-	return true;
-}
-
 using namespace Steinberg::Vst;
 
 //------------------------------------------------------------------------
@@ -80,9 +59,7 @@ using namespace Steinberg::Vst;
 // GetPluginFactory function!
 //------------------------------------------------------------------------
 
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-			   "http://www.steinberg.net", 
-			   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
 	//---First plug-in included in this factory-------
 	// its kVstAudioEffectClass component

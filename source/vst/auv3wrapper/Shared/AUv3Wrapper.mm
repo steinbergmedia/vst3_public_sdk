@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,7 +44,6 @@
 #import "public.sdk/source/vst/hosting/processdata.h"
 #import "public.sdk/source/vst/utility/mpeprocessor.h"
 #import "public.sdk/source/vst/vsteditcontroller.h"
-#import "base/source/timer.h"
 #import "pluginterfaces/base/ustring.h"
 #import "pluginterfaces/gui/iplugview.h"
 #import "pluginterfaces/vst/ivstmidicontrollers.h"
@@ -54,7 +53,9 @@
 #import "pluginterfaces/vst/vsttypes.h"
 
 #import <array>
+#import <cassert>
 #import <atomic>
+#import <pthread/pthread.h>
 
 #if TARGET_OS_IPHONE
 #define SMTG_IOS_MAC_PLATFORMTYPE kPlatformTypeUIView
@@ -267,6 +268,7 @@ public:
 typedef std::map<UnitID, UnitInfo> UnitInfoMap;
 typedef std::vector<String> ParameterGroupVector;
 
+//------------------------------------------------------------------------
 static void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units)
 {
 	units.clear ();
@@ -468,43 +470,6 @@ tresult PLUGIN_API ComponentHelper::restartComponent (int32 flags)
 	// TODO: finish restartComponent implementation
 
 	return result;
-}
-
-//------------------------------------------------------------------------
-//  TimerHelper class
-//------------------------------------------------------------------------
-#pragma mark - TimerHelper class (implementing ITimerCallback)
-class TimerHelper : public ITimerCallback
-{
-public:
-	TimerHelper (void* audioUnit);
-	~TimerHelper ();
-
-	__weak AUv3Wrapper* auv3Wrapper;
-	Timer* timer;
-
-protected:
-	void onTimer (Timer* timer);
-};
-
-//------------------------------------------------------------------------
-TimerHelper::TimerHelper (void* audioUnit)
-{
-	auv3Wrapper = (__bridge AUv3Wrapper*)audioUnit;
-	timer = Timer::create (this, 20);
-}
-
-//------------------------------------------------------------------------
-TimerHelper::~TimerHelper ()
-{
-	auv3Wrapper = nil;
-	timer->release ();
-}
-
-//------------------------------------------------------------------------
-void TimerHelper::onTimer (Timer* timer)
-{
-	[auv3Wrapper onTimer];
 }
 
 #pragma mark - Render Helper structs
@@ -912,9 +877,9 @@ using namespace Vst;
 
 	NSMutableArray<NSNumber*>* overviewParams;
 
-	std::unique_ptr<TimerHelper> timerHelper;
 	std::unique_ptr<ComponentHelper> componentHelper;
 
+	NSTimer* timer;
 	AUAudioUnitPreset* currentPreset;
 	NSInteger currentFactoryPresetIndex;
 	AUParameterObserverToken bypassObserverToken;
@@ -942,7 +907,11 @@ using namespace Vst;
 	transferParamChanges.setMaxParameters (500);
 
 	componentHelper = std::unique_ptr<ComponentHelper> (new ComponentHelper ((__bridge void*)self));
-	timerHelper = std::unique_ptr<TimerHelper> (new TimerHelper ((__bridge void*)self));
+
+	timer = [NSTimer timerWithTimeInterval:1./60. repeats:YES block:^(NSTimer * _Nonnull timer) {
+		[self onTimer];
+	}];
+	[[NSRunLoop mainRunLoop] addTimer:timer forMode:NSRunLoopCommonModes];
 
 	canProcessInPlaceValue = false;
 	renderingOfflineValue = false;
@@ -1065,12 +1034,12 @@ using namespace Vst;
 	if (midiMapping)
 	{
 		midiMapping->release ();
-		midiMapping = 0;
+		midiMapping = nullptr;
 	}
 
 	if (_editcontroller)
 	{
-		_editcontroller->setComponentHandler (0);
+		_editcontroller->setComponentHandler (nullptr);
 		uint32 refCount = _editcontroller->addRef ();
 		if (refCount == 2)
 			_editcontroller->terminate ();
@@ -1083,7 +1052,7 @@ using namespace Vst;
 	if (audioProcessor)
 	{
 		FUnknownPtr<IPluginBase> (audioProcessor)->terminate ();
-		audioProcessor = 0;
+		audioProcessor = nullptr;
 	}
 
 	if (parameterObserverToken != nullptr)
@@ -1092,8 +1061,12 @@ using namespace Vst;
 		parameterObserverToken = nullptr;
 	}
 
-	timerHelper = 0;
-	componentHelper = 0;
+	if (timer)
+	{
+		[timer invalidate];
+		timer = nullptr;
+	}
+	componentHelper = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -1142,7 +1115,7 @@ using namespace Vst;
 			{
 				if (strcmp (ci.category, kVstAudioEffectClass) == 0)
 				{
-					IAudioProcessor* proc = 0;
+					IAudioProcessor* proc = nullptr;
 					if (factory->createInstance (ci.cid, IAudioProcessor::iid, (void**)&proc) ==
 					    kResultTrue)
 					{
@@ -1180,7 +1153,7 @@ using namespace Vst;
 						    kResultTrue)
 						{
 							_editcontroller->release ();
-							_editcontroller = 0;
+							_editcontroller = nullptr;
 							return;
 						}
 
@@ -1730,7 +1703,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)setParameter:(int)tag value:(double)value
 {
-	if (tag == factoryProgramChangedID)
+	if (tag == factoryProgramChangedID && numPresets > 0)
 	{
 		// load factory preset here
 		float normalizedValue = (float)value / (float)numPresets;
@@ -2081,7 +2054,6 @@ using namespace Vst;
 		{
 			if (presentPreset.number == factoryPreset.number)
 			{
-
 				if (numPresets > 0)
 				{
 					float normalizedValue = (float)presentPreset.number / (float)numPresets;
@@ -2460,6 +2432,50 @@ using namespace Vst;
 }
 
 //------------------------------------------------------------------------
+- (void)makePlugView
+{
+	assert (pthread_main_np () != 0);
+	FUnknownPtr<IEditController2> ec2 (editController);
+	if (ec2)
+		ec2->setKnobMode (kLinearMode);
+
+	// create view
+	plugView = editController->createView (ViewType::kEditor);
+	if (plugView)
+	{
+		if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
+		{
+			plugFrame = NEW AUPlugFrame ([self] (ViewRect* vr) {
+				auto viewFrame = self.view.frame;
+				CGRect newSize = CGRectMake (viewFrame.origin.x, viewFrame.origin.y,
+										vr->getWidth (), vr->getHeight ());
+				[self setFrame:newSize];
+			});
+			plugView->setFrame (plugFrame);
+
+			if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) ==
+				kResultTrue)
+			{
+				isAttached = TRUE;
+				ViewRect vr;
+				if (plugView->getSize (&vr) == kResultTrue)
+				{
+					int viewWidth = vr.right - vr.left;
+					int viewHeight = vr.bottom - vr.top;
+					CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
+					[self setFrame:newSize];
+				}
+			}
+		}
+		else
+		{
+			plugView->release ();
+			plugView = nullptr;
+		}
+	}
+}
+
+//------------------------------------------------------------------------
 - (void)setAudioUnit:(AUv3Wrapper*)audioUnit
 {
 	if (audioUnit == nil)
@@ -2471,49 +2487,14 @@ using namespace Vst;
 	if (editController)
 		editController->addRef ();
 
-	dispatch_async (dispatch_get_main_queue (), ^{
-		//------------------------------------------------------------------------
-		//  attach from VST3Editor.mm
-		//------------------------------------------------------------------------
-		FUnknownPtr<IEditController2> ec2 (editController);
-		if (ec2)
-			ec2->setKnobMode (kLinearMode);
-
-		// create view
-		plugView = editController->createView (ViewType::kEditor);
-		if (plugView)
-		{
-			if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
-			{
-				plugFrame = NEW AUPlugFrame ([self] (ViewRect* vr) {
-					auto viewFrame = self.view.frame;
-					CGRect newSize = CGRectMake (viewFrame.origin.x, viewFrame.origin.y,
-											vr->getWidth (), vr->getHeight ());
-					[self setFrame:newSize];
-				});
-				plugView->setFrame (plugFrame);
-
-				if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) == 
-					kResultTrue)
-				{
-					isAttached = TRUE;
-					ViewRect vr;
-					if (plugView->getSize (&vr) == kResultTrue)
-					{
-						int viewWidth = vr.right - vr.left;
-						int viewHeight = vr.bottom - vr.top;
-						CGRect newSize = CGRectMake (0, 0, viewWidth, viewHeight);
-						[self setFrame:newSize];
-					}
-				}
-			}
-			else
-			{
-				plugView->release ();
-				plugView = 0;
-			}
-		}
-	});
+	if (pthread_main_np () != 0)
+		[self makePlugView];
+	else
+	{
+		dispatch_async (dispatch_get_main_queue (), ^{
+			[self makePlugView];
+		});
+	}
 }
 
 //------------------------------------------------------------------------
@@ -2539,7 +2520,7 @@ using namespace Vst;
 		if (editController)
 		{
 			editController->release ();
-			editController = 0;
+			editController = nullptr;
 		}
 	}
 

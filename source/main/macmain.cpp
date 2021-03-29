@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -46,7 +46,7 @@
 //------------------------------------------------------------------------
 CFBundleRef ghInst = 0;
 int bundleRefCounter = 0; // counting for bundleEntry/bundleExit pairs
-void* moduleHandle = 0;
+void* moduleHandle = nullptr;
 #define VST_MAX_PATH 2048
 char gPath[VST_MAX_PATH] = {0};
 
@@ -56,6 +56,7 @@ bool DeinitModule (); ///< must be provided by plug-in: called when the library 
 
 //------------------------------------------------------------------------
 extern "C" {
+/** bundleEntry and bundleExit must be provided by the plug-in! */
 SMTG_EXPORT_SYMBOL bool bundleEntry (CFBundleRef);
 SMTG_EXPORT_SYMBOL bool bundleExit (void);
 }

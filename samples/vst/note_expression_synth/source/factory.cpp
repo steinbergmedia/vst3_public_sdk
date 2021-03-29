@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -48,10 +48,10 @@ extern void* moduleHandle;
 #define stringPluginName "Note Expression Synth"
 
 
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
+	//---First plug-in included in this factory-------
+	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::NoteExpressionSynth::ProcessorWithUIController::cid),
 				PClassInfo::kManyInstances,
 				kVstAudioEffectClass,
@@ -93,13 +93,3 @@ BEGIN_FACTORY_DEF ("Steinberg Media Technologies",
 				Steinberg::Vst::NoteExpressionSynth::Controller::createInstance)
 
 END_FACTORY
-
-bool InitModule ()
-{
-#if TARGET_OS_IPHONE
-	Steinberg::Vst::VSTGUIEditor::setBundleRef (moduleHandle);
-#endif
-	return true;
-}
-
-bool DeinitModule () { return true; }

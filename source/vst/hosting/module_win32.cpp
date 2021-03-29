@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,20 +38,30 @@
 #include "../utility/stringconvert.h"
 #include "module.h"
 #include <ShlObj.h>
-#include <Windows.h>
+#include <windows.h>
 #include <algorithm>
 #include <iostream>
 
 #if _HAS_CXX17 && defined(_MSC_VER)
+#if __has_include(<filesystem>)
+#define USE_FILESYSTEM 1
+#elif __has_include(<experimental/filesystem>)
+#define USE_FILESYSTEM 0
+#endif
+#else
+#define USE_FILESYSTEM 0
+#endif
+
+#if USE_FILESYSTEM == 1
 #include <filesystem>
-using namespace std;
+namespace filesystem = std::filesystem;
 #else
 // The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem>
 // header. You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the
 // warning, otherwise the build will fail in VS2020 16.3.0
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
-using namespace std::experimental;
+namespace filesystem = std::experimental::filesystem;
 #endif
 
 #pragma comment(lib, "Shell32")
@@ -77,7 +87,7 @@ constexpr auto architectureString = "arm_64-win";
 constexpr auto architectureString = "arm-win";
 #endif
 #else
-#define USE_OLE 1
+#define USE_OLE !USE_FILESYSTEM
 #if SMTG_PLATFORM_64
 constexpr auto architectureString = "x86_64-win";
 #else
@@ -108,27 +118,27 @@ public:
 	template <typename T>
 	T getFunctionPointer (const char* name)
 	{
-		return reinterpret_cast<T> (GetProcAddress (module, name));
+		return reinterpret_cast<T> (GetProcAddress (mModule, name));
 	}
 
 	~Win32Module () override
 	{
 		factory = PluginFactory (nullptr);
 
-		if (module)
+		if (mModule)
 		{
 			if (auto dllExit = getFunctionPointer<ExitModuleFunc> ("ExitDll"))
 				dllExit ();
 
-			FreeLibrary ((HMODULE)module);
+			FreeLibrary ((HMODULE)mModule);
 		}
 	}
 
 	bool load (const std::string& inPath, std::string& errorDescription) override
 	{
 		auto wideStr = StringConvert::convert (inPath);
-		module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-		if (!module)
+		mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+		if (!mModule)
 		{
 			filesystem::path p (inPath);
 			auto filename = p.filename ();
@@ -136,14 +146,14 @@ public:
 			p /= architectureString;
 			p /= filename;
 			wideStr = StringConvert::convert (p.string ());
-			module = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-			if (!module)
+			mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+			if (!mModule)
 			{
 				auto lastError = GetLastError ();
 				LPVOID lpMessageBuffer;
-				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr,
 				                lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-				                (LPSTR)&lpMessageBuffer, 0, NULL);
+				                (LPSTR)&lpMessageBuffer, 0, nullptr);
 				errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
 				LocalFree (lpMessageBuffer);
 
@@ -173,7 +183,7 @@ public:
 		return true;
 	}
 
-	HINSTANCE module {nullptr};
+	HINSTANCE mModule {nullptr};
 };
 
 //------------------------------------------------------------------------
@@ -196,6 +206,10 @@ bool checkVST3Package (filesystem::path& p)
 //------------------------------------------------------------------------
 bool isFolderSymbolicLink (const filesystem::path& p)
 {
+#if USE_FILESYSTEM
+	if (/*filesystem::exists (p) &&*/ filesystem::is_symlink (p))
+		return true;
+#else
 	std::wstring wString = p.generic_wstring ();
 	auto attrib = GetFileAttributesW (reinterpret_cast<LPCWSTR> (wString.c_str ()));
 	if (attrib & FILE_ATTRIBUTE_REPARSE_POINT)
@@ -207,6 +221,7 @@ bool isFolderSymbolicLink (const filesystem::path& p)
 		else
 			CloseHandle (hFile);
 	}
+#endif
 	return false;
 }
 
@@ -222,6 +237,9 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 //------------------------------------------------------------------------
 VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 {
+#if USE_FILESYSTEM
+	return {filesystem::read_symlink (p)};
+#else
 #if USE_OLE
 	Ole::instance ();
 
@@ -235,7 +253,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	        shellLink->QueryInterface (IID_IPersistFile, reinterpret_cast<void**> (&persistFile))))
 		return {};
 
-	if (!SUCCEEDED (persistFile->Load (p.native ().data (), STGM_READ)))
+	if (!SUCCEEDED (persistFile->Load (p.wstring ().data (), STGM_READ)))
 		return {};
 
 	if (!SUCCEEDED (shellLink->Resolve (nullptr, MAKELONG (SLR_NO_UI, 500))))
@@ -261,6 +279,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	// TODO for ARM
 	return {};
 #endif
+#endif
 }
 
 //------------------------------------------------------------------------
@@ -269,6 +288,38 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 {
 	for (auto& p : filesystem::directory_iterator (path))
 	{
+#if USE_FILESYSTEM
+		filesystem::path finalPath (p);
+		if (isFolderSymbolicLink (p))
+		{
+			if (auto res = resolveShellLink (p))
+			{
+				finalPath = *res;
+				if (!filesystem::exists (finalPath))
+					continue;
+			}
+			else
+				continue;
+		}
+		const auto& cpExt = finalPath.extension ();
+		if (cpExt == ext)
+		{
+			filesystem::path vstPath (finalPath);
+			if (checkVST3Package (vstPath))
+			{
+				pathList.push_back (vstPath.generic_string ());
+				continue;
+			}
+		}
+
+		if (filesystem::is_directory (finalPath))
+		{
+			if (recursive)
+				findFilesWithExt (finalPath, ext, pathList, recursive);
+		}
+		else if (cpExt == ext)
+			pathList.push_back (finalPath.generic_string ());
+#else
 		const auto& cp = p.path ();
 		const auto& cpExt = cp.extension ();
 		if (cpExt == ext)
@@ -323,13 +374,15 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 				}
 			}
 		}
+#endif
 	}
 }
 
 //------------------------------------------------------------------------
 void findModules (const filesystem::path& path, Module::PathList& pathList)
 {
-	findFilesWithExt (path, ".vst3", pathList);
+	if (filesystem::exists (path))
+		findFilesWithExt (path, ".vst3", pathList);
 }
 
 //------------------------------------------------------------------------
@@ -337,6 +390,7 @@ Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (
     const std::string& modulePath)
 {
 	filesystem::path path (modulePath);
+
 	path = path.parent_path ();
 	if (path.filename () != architectureString)
 		return {};
@@ -353,15 +407,15 @@ Optional<filesystem::path> getContentsDirectoryFromModuleExecutablePath (
 //------------------------------------------------------------------------
 Module::Ptr Module::create (const std::string& path, std::string& errorDescription)
 {
-	auto module = std::make_shared<Win32Module> ();
-	if (module->load (path, errorDescription))
+	auto _module = std::make_shared<Win32Module> ();
+	if (_module->load (path, errorDescription))
 	{
-		module->path = path;
+		_module->path = path;
 		auto it = std::find_if (path.rbegin (), path.rend (),
 		                        [] (const std::string::value_type& c) { return c == '/'; });
 		if (it != path.rend ())
-			module->name = {it.base (), path.end ()};
-		return module;
+			_module->name = {it.base (), path.end ()};
+		return _module;
 	}
 	return nullptr;
 }
@@ -400,13 +454,16 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 
 	*path /= "Resources";
 	*path /= "Snapshots";
-
+	
+	if (filesystem::exists (*path)== false)
+		return result;
+	
 	PathList pngList;
 	findFilesWithExt (*path, ".png", pngList, false);
 	for (auto& png : pngList)
 	{
 		filesystem::path p (png);
-		auto filename = p.filename ().generic_u8string ();
+		auto filename = p.filename ().generic_string ();
 		auto uid = Snapshot::decodeUID (filename);
 		if (!uid)
 			continue;

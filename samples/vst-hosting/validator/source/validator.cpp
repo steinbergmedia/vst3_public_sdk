@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -48,8 +48,8 @@
 #include "pluginterfaces/vst/ivstunits.h"
 
 #if SMTG_OS_WINDOWS
-#include <Windows.h>
 #include <conio.h>
+#include <windows.h>
 #endif
 
 #include <array>
@@ -161,7 +161,7 @@ void checkModuleSnapshots (const VST3::Hosting::Module::Ptr& module, std::ostrea
 	if (snapshots.empty ())
 	{
 		if (infoStream)
-			*infoStream << "Warning: No snapshots in Bundle.\n\n";
+			*infoStream << "Info: No snapshots in Bundle.\n\n";
 	}
 	else
 	{
@@ -190,7 +190,7 @@ void checkModuleSnapshots (const VST3::Hosting::Module::Ptr& module, std::ostrea
 			{
 				if (infoStream)
 				{
-					*infoStream << "Warning: No snapshot for '" << classInfo.name ()
+					*infoStream << "Info: No snapshot for '" << classInfo.name ()
 					            << "' in Bundle.\n\n";
 				}
 			}

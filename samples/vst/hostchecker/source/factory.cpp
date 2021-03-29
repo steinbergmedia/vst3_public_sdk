@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -40,32 +40,22 @@
 #include "cids.h"
 #include "version.h"	// for versioning
 
-BEGIN_FACTORY_DEF ("Steinberg Media Technologies", 
-				   "http://www.steinberg.net", 
-				   "mailto:info@steinberg.de")
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerProcessorUID),
-				PClassInfo::kManyInstances,
-				kVstAudioEffectClass,
-				stringPluginName,
-				Vst::kDistributable,
-				"Fx|Instrument", /*"Fx",*/ /*"Spatial|Fx|Instrument|Up-Downmix",*/
-				FULL_VERSION_STR,		// Plug-in version (to be changed)
-				kVstVersionString,
-				Steinberg::Vst::HostCheckerProcessor::createInstance)
+	//---First plug-in included in this factory-------
+	// its kVstAudioEffectClass component
+    DEF_CLASS2 (INLINE_UID_FROM_FUID (Steinberg::Vst::HostCheckerProcessorUID),
+            PClassInfo::kManyInstances, kVstAudioEffectClass, stringPluginName, Vst::kDistributable,
+            "Fx|Instrument", /*"Fx",*/ /*"Spatial|Fx|Instrument|Up-Downmix",*/
+            FULL_VERSION_STR, // Plug-in version (to be changed)
+            kVstVersionString, Steinberg::Vst::HostCheckerProcessor::createInstance)
 
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::HostCheckerControllerUID),
-				PClassInfo::kManyInstances,
-				kVstComponentControllerClass,
-				stringPluginName,		// controller name (could be the same than component name)
-				0,						// not used here
-				"",						// not used here
-				FULL_VERSION_STR,		// Plug-in version (to be changed)
-				kVstVersionString,
-				Steinberg::Vst::HostCheckerController::createInstance)
+    DEF_CLASS2 (INLINE_UID_FROM_FUID (Steinberg::Vst::HostCheckerControllerUID),
+            PClassInfo::kManyInstances, kVstComponentControllerClass,
+            stringPluginName, // controller name (could be the same than component name)
+            0, // not used here
+            "", // not used here
+            FULL_VERSION_STR, // Plug-in version (to be changed)
+            kVstVersionString, Steinberg::Vst::HostCheckerController::createInstance)
 
 END_FACTORY
-
-bool InitModule () { return true; }
-bool DeinitModule () { return true; }
-

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2020, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -77,7 +77,7 @@ static_assert (AAX_SDK_CURRENT_REVISION >= AAX_SDK_2p3p2_REVISION,
 #endif
 
 #if SMTG_OS_WINDOWS
-#include <Windows.h>
+#include <windows.h>
 #define getCurrentThread() ((void*)(size_t)GetCurrentThreadId ())
 #else
 #include <pthread.h>

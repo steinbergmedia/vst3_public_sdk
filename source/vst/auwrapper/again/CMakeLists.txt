@@ -10,13 +10,19 @@ if(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
     )
     add_library(${target} MODULE ${${target}_sources})
     smtg_setup_universal_binary(${target})
-    set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-    set_target_properties(${target} PROPERTIES BUNDLE TRUE)
-    set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES")
-    set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_OTHER_LDFLAGS "-all_load")
-    set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GENERATE_PKGINFO_FILE "YES")
-    set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_WRAPPER_EXTENSION "component")
-    set_target_properties(${target} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${VST3_OUTPUT_DIR})
+    set_target_properties(${target}
+        PROPERTIES
+            ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+    )
+    set_target_properties(${target}
+        PROPERTIES
+            BUNDLE TRUE
+            XCODE_ATTRIBUTE_GENERATE_MASTER_OBJECT_FILE "YES"
+            XCODE_ATTRIBUTE_OTHER_LDFLAGS "-all_load"
+            XCODE_ATTRIBUTE_GENERATE_PKGINFO_FILE "YES"
+            XCODE_ATTRIBUTE_WRAPPER_EXTENSION "component"
+            LIBRARY_OUTPUT_DIRECTORY ${VST3_OUTPUT_DIR}
+    )
     target_link_libraries(${target} PRIVATE auwrapper)
     smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/Info.plist" PREPROCESS)
 
@@ -47,4 +53,4 @@ if(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
         "${CMAKE_CURRENT_LIST_DIR}/../auresource.r"
     )
 
-endif()
+endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)

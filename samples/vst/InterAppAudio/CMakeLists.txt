@@ -52,19 +52,41 @@ if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
         set(prefix_header ${SDK_ROOT}/public.sdk/samples/vst/InterAppAudio/InterAppAudioExample/InterAppAudioExample-Prefix.pch)
         add_executable(${target} ${${target}_sources} ${${target}_xib_resources})
         smtg_set_platform_ios(${target})
-        target_compile_options(${target} PUBLIC -DVSTGUI_LIVE_EDITING=0) # NO VSTGUI LIVE EDITING SUPPORT FOR iOS
-        set_target_properties(${target} PROPERTIES ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER})
-        set_target_properties(${target} PROPERTIES BUNDLE TRUE)
-        set_target_properties(${target} PROPERTIES RESOURCE "${${target}_xib_resources}")
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon")
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_LIST_DIR}/../note_expression_synth/resource/InterAppAudio/noteexpressionsynth_ios.entitlements")
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${SMTG_CODE_SIGN_IDENTITY_IOS}")
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO") # prevent warning
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GCC_PREFIX_HEADER ${prefix_header})
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_GENERATE_PKGINFO_FILE "YES")
-        target_link_libraries(${target} PRIVATE interappaudio "-framework QuartzCore" "-framework MobileCoreServices" "-framework Accelerate" "-framework ImageIO" "-framework GLKit" "-framework CoreText")
+        target_compile_options(${target} 
+            PUBLIC
+                -DVSTGUI_LIVE_EDITING=0
+        ) # NO VSTGUI LIVE EDITING SUPPORT FOR iOS
+        set_target_properties(${target}
+            PROPERTIES
+                ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
+        )
+        set_target_properties(${target}
+            PROPERTIES
+                BUNDLE TRUE
+                RESOURCE "${${target}_xib_resources}"
+                XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME "AppIcon"
+                XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_LIST_DIR}/../note_expression_synth/resource/InterAppAudio/noteexpressionsynth_ios.entitlements"
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "${SMTG_CODE_SIGN_IDENTITY_IOS}"
+                XCODE_ATTRIBUTE_ENABLE_BITCODE "NO" # prevent warning
+                XCODE_ATTRIBUTE_GCC_PREFIX_HEADER ${prefix_header}
+                XCODE_ATTRIBUTE_GENERATE_PKGINFO_FILE "YES"
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${SMTG_IOS_DEVELOPMENT_TEAM}
+        )
+        target_link_libraries(${target}
+            PRIVATE
+                interappaudio
+                "-framework QuartzCore"
+                "-framework MobileCoreServices"
+                "-framework Accelerate"
+                "-framework ImageIO"
+                "-framework GLKit"
+                "-framework CoreText"
+        )
         smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../note_expression_synth/resource/InterAppAudio/NoteExpressionSynthExample.plist" PREPROCESS)
-        target_include_directories(${target} PUBLIC ${ROOT}/vstgui4)
+        target_include_directories(${target}
+            PUBLIC
+                ${ROOT}/vstgui4
+        )
 
         smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/about.png")
         smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/background.png")
@@ -74,10 +96,7 @@ if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
         smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob2.png")
         smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/note_expression_synth.uidesc")
         smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/vst3_logo_small.png")
-
-        # Development Team 
-        set_target_properties(${target} PROPERTIES XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${SMTG_IOS_DEVELOPMENT_TEAM})
     else()
-        message("* To enable building the InterAppAudio NoteExpressionSynth example for iOS you need to set the SMTG_IOS_DEVELOPMENT_TEAM and use the Xcode generator")
-    endif()
-endif()
+        message("[SMTG] * To enable building the InterAppAudio NoteExpressionSynth example for iOS you need to set the SMTG_IOS_DEVELOPMENT_TEAM and use the Xcode generator")
+    endif(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+endif(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)

@@ -85,13 +85,13 @@ public:
 	enum {
 		kNumVoices = 32,
 		kEventBuffer = 120,
-		kNumPrograms = 4,
 	};
+	static const int32 kNumPrograms = 4;
 
 protected:
 	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
 	void processEvents (IEventList* events) SMTG_OVERRIDE;
-	void noteOn(int32 note, int32 velocity);
+	void noteOn (int32 note, int32 velocity);
 	void recalculate () SMTG_OVERRIDE;
 
 	float Fs, iFs;

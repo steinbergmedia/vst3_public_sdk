@@ -23,7 +23,7 @@ if(SMTG_MAC)
             source/common/threadchecker_mac.mm
             source/common/systemclipboard_mac.mm
     )
-endif()
+endif(SMTG_MAC)
 
 if(NOT VST_SDK)
     target_sources(sdk_common 
@@ -31,13 +31,12 @@ if(NOT VST_SDK)
             source/common/pvaluecontainer.cpp
             source/common/pvaluecontainer.h
     )
-endif()
+endif(NOT VST_SDK)
 
 # add dependencies
 target_link_libraries(sdk_common 
     PUBLIC 
         base
-    PRIVATE
         pluginterfaces
 )
 target_include_directories(sdk_common
@@ -59,6 +58,8 @@ add_library(sdk
 if(VST_SDK)
     target_sources(sdk
         PRIVATE
+            source/main/moduleinit.cpp
+            source/main/moduleinit.h
             source/vst/utility/processcontextrequirements.h
             source/vst/utility/ringbuffer.h
             source/vst/utility/stringconvert.cpp
@@ -86,7 +87,7 @@ if(VST_SDK)
             source/vst/vstrepresentation.cpp
             source/vst/vstrepresentation.h
     )
-endif()
+endif(VST_SDK)
 
 # add dependencies
 target_link_libraries(sdk 
@@ -112,11 +113,11 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
             ${SDK_IDE_LIBS_FOLDER}
     )
     target_link_libraries(sdk_ios 
-        PRIVATE 
+        PUBLIC 
             base_ios
             pluginterfaces_ios
     )
-endif()
+endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
 
 #--for hosting----------------
 add_library(sdk_hosting 
@@ -166,8 +167,8 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
             ${SDK_IDE_LIBS_FOLDER}
     )
     target_link_libraries(sdk_hosting_ios
-        PRIVATE 
+        PUBLIC 
             base_ios
             pluginterfaces_ios
     )
-endif()
+endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)

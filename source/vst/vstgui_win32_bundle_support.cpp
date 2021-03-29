@@ -37,6 +37,9 @@
 #include "vstgui_win32_bundle_support.h"
 #include "vstgui/lib/platform/platform_win32.h"
 #include "vstgui/lib/platform/win32/win32support.h"
+#if ((VSTGUI_VERSION_MAJOR == 4) && (VSTGUI_VERSION_MINOR >= 10)) || (VSTGUI_VERSION_MAJOR > 4)
+#include "vstgui/lib/platform/win32/win32factory.h"
+#endif
 #include "vstgui/lib/optional.h"
 #include <string>
 
@@ -68,7 +71,14 @@ void setupVSTGUIBundleSupport (void* hInstance)
 			if (p = ascend (*p))
 			{
 				*p += "\\Resources";
+#if ((VSTGUI_VERSION_MAJOR == 4) && (VSTGUI_VERSION_MINOR >= 10)) || (VSTGUI_VERSION_MAJOR > 4)
+			    if (auto winFactory = VSTGUI::getPlatformFactory ().asWin32Factory ())
+				{
+					winFactory->setResourceBasePath (VSTGUI::UTF8String (*p));
+				}
+#else
 				IWin32PlatformFrame::setResourceBasePath (UTF8String (*p));
+#endif
 			}
 		}
 	}
