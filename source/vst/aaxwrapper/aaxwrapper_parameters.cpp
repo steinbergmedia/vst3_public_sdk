@@ -75,7 +75,6 @@ using namespace Steinberg::Base::Thread;
 #endif
 
 SMTG_EXPORT_SYMBOL IPluginFactory* PLUGIN_API GetPluginFactory ();
-extern bool InitModule ();
 
 const char* kBypassId = "Byp";
 
@@ -95,9 +94,6 @@ AAXWrapper_Parameters::AAXWrapper_Parameters (int32_t plugIndex)
 : AAX_CEffectParameters (), mSimulateBypass (false)
 {
 	HLOG (HAPI, "%s", __FUNCTION__);
-
-	InitModule (); // the engine is already initialized, but we have to match the DeinitModule in
-	// the VST2Wrapper destructor
 
 	AAX_Effect_Desc* effDesc = AAXWrapper_GetDescription ();
 	mPluginDesc = effDesc->mPluginDesc + plugIndex;
@@ -386,8 +382,8 @@ AAX_Result AAXWrapper_Parameters::GetParameterIndex (AAX_CParamID iParameterID,
 	std::map<ParamID, int32>::iterator iter = mWrapper->mParamIndexMap.find (id);
 	if (iter == mWrapper->mParamIndexMap.end ())
 		return AAX_ERROR_INVALID_PARAMETER_ID;
-
-	*oControlIndex = iter->second;
+	*oControlIndex =
+	    std::distance (mWrapper->mParamIndexMap.begin (), iter) + 1;
 	return AAX_SUCCESS;
 }
 
