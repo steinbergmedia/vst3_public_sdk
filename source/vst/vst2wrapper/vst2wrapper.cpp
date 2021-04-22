@@ -54,7 +54,8 @@
 #include <cstdlib>
 #include <limits>
 
-extern bool DeinitModule (); //! Called in Vst2Wrapper destructor
+extern bool InitModule ();
+extern bool DeinitModule ();
 
 //------------------------------------------------------------------------
 // some Defines
@@ -290,6 +291,9 @@ void Vst2MidiEventQueue::flush ()
 
 //------------------------------------------------------------------------
 // Vst2Wrapper
+
+int32 Vst2Wrapper::gInstanceWrapperCounter = 0;
+ 
 //------------------------------------------------------------------------
 Vst2Wrapper::Vst2Wrapper (BaseWrapper::SVST3Config& config, audioMasterCallback audioMaster,
                           VstInt32 vst2ID)
@@ -306,7 +310,7 @@ Vst2Wrapper::Vst2Wrapper (BaseWrapper::SVST3Config& config, audioMasterCallback 
 //------------------------------------------------------------------------
 Vst2Wrapper::~Vst2Wrapper ()
 {
-	//! editor needs to be destroyed BEFORE DeinitModule. Therefore destroy it here already
+	//! editor needs to be destroyed BEFORE DeinitModule
 	//  instead of AudioEffect destructor
 	if (mEditor)
 	{
@@ -321,6 +325,10 @@ Vst2Wrapper::~Vst2Wrapper ()
 
 	delete mVst2OutputEvents;
 	mVst2OutputEvents = nullptr;
+
+	gInstanceWrapperCounter--;
+	if (gInstanceWrapperCounter == 0)
+		DeinitModule ();
 }
 
 //------------------------------------------------------------------------
@@ -1777,68 +1785,77 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 	BaseWrapper::SVST3Config config;
 	config.factory = factory; 
 	config.processor = nullptr;
-	
-	FReleaser factoryReleaser (factory);
 
-	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&config.processor);
-	if (config.processor)
+	// init the module the first time
+	if (gInstanceWrapperCounter == 0)
 	{
-		config.controller = nullptr;
-		if (config.processor->queryInterface (IEditController::iid, (void**)&config.controller) !=
-		    kResultTrue)
-		{
-			FUnknownPtr<IComponent> component (config.processor);
-			if (component)
-			{
-				TUID editorCID;
-				if (component->getControllerClassId (editorCID) == kResultTrue)
-				{
-					factory->createInstance (editorCID, IEditController::iid,
-					                         (void**)&config.controller);
-				}
-			}
-		}
-
-		config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
-
-		auto* wrapper = new Vst2Wrapper (config, audioMaster, vst2ID);
-		FUnknownPtr<IPluginFactory2> factory2 (factory);
-		if (factory2)
-		{
-			PFactoryInfo factoryInfo;
-			if (factory2->getFactoryInfo (&factoryInfo) == kResultTrue)
-				wrapper->setVendorName (factoryInfo.vendor);
-
-			for (int32 i = 0; i < factory2->countClasses (); i++)
-			{
-				Steinberg::PClassInfo2 classInfo2;
-				if (factory2->getClassInfo2 (i, &classInfo2) == Steinberg::kResultTrue)
-				{
-					if (memcmp (classInfo2.cid, vst3ComponentID, sizeof (TUID)) == 0)
-					{
-						wrapper->setSubCategories (classInfo2.subCategories);
-						wrapper->setEffectName (classInfo2.name);
-						wrapper->setEffectVersion (classInfo2.version);
-
-						if (classInfo2.vendor[0] != 0)
-							wrapper->setVendorName (classInfo2.vendor);
-
-						break;
-					}
-				}
-			}
-		}
-		
-		if (wrapper->init () == false)
-		{
-			wrapper->release ();
+		if (InitModule () == false)
 			return nullptr;
-		}
-		
-		return wrapper;
 	}
 
-	return nullptr;
+	FReleaser factoryReleaser (factory);
+	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&config.processor);
+	if (!config.processor)
+	{
+		if (gInstanceWrapperCounter == 0)
+			DeinitModule ();
+		return nullptr;
+	}
+
+	config.controller = nullptr;
+	if (config.processor->queryInterface (IEditController::iid, (void**)&config.controller) !=
+	    kResultTrue)
+	{
+		FUnknownPtr<IComponent> component (config.processor);
+		if (component)
+		{
+			TUID editorCID;
+			if (component->getControllerClassId (editorCID) == kResultTrue)
+			{
+				factory->createInstance (editorCID, IEditController::iid,
+				                         (void**)&config.controller);
+			}
+		}
+	}
+	config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
+
+	auto* wrapper = new Vst2Wrapper (config, audioMaster, vst2ID);
+	gInstanceWrapperCounter++;
+
+	FUnknownPtr<IPluginFactory2> factory2 (factory);
+	if (factory2)
+	{
+		PFactoryInfo factoryInfo;
+		if (factory2->getFactoryInfo (&factoryInfo) == kResultTrue)
+			wrapper->setVendorName (factoryInfo.vendor);
+
+		for (int32 i = 0; i < factory2->countClasses (); i++)
+		{
+			Steinberg::PClassInfo2 classInfo2;
+			if (factory2->getClassInfo2 (i, &classInfo2) == Steinberg::kResultTrue)
+			{
+				if (memcmp (classInfo2.cid, vst3ComponentID, sizeof (TUID)) == 0)
+				{
+					wrapper->setSubCategories (classInfo2.subCategories);
+					wrapper->setEffectName (classInfo2.name);
+					wrapper->setEffectVersion (classInfo2.version);
+
+					if (classInfo2.vendor[0] != 0)
+						wrapper->setVendorName (classInfo2.vendor);
+
+					break;
+				}
+			}
+		}
+	}
+		
+	if (wrapper->init () == false)
+	{
+		wrapper->release ();
+		return nullptr;
+	}
+			
+	return wrapper;
 }
 
 //-----------------------------------------------------------------------------
@@ -1926,7 +1943,6 @@ bool Vst2Wrapper::_sizeWindow (int32 width, int32 height)
 } // namespace Vst
 } // namespace Steinberg
 
-extern bool InitModule ();
 
 //-----------------------------------------------------------------------------
 extern "C" {
@@ -1939,9 +1955,6 @@ SMTG_EXPORT_SYMBOL AEffect* VSTPluginMain (audioMasterCallback audioMaster)
 	// Get VST Version of the host
 	if (!audioMaster (nullptr, audioMasterVersion, 0, 0, nullptr, 0))
 		return nullptr; // old version
-
-	if (InitModule () == false)
-		return nullptr;
 
 	// Create the AudioEffect
 	AudioEffect* effect = createEffectInstance (audioMaster);

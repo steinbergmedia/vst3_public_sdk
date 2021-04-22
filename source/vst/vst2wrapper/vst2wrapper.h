@@ -171,6 +171,8 @@ public:
 
 	//------------------------------------------------------------------------
 protected:
+	static int32 gInstanceWrapperCounter; // used for InitModule/DeinitModule
+
 	VstSpeakerArrangement* mVst2InputArrangement {nullptr};
 	VstSpeakerArrangement* mVst2OutputArrangement {nullptr};
 	Vst2MidiEventQueue* mVst2OutputEvents {nullptr};

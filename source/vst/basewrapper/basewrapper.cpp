@@ -337,8 +337,6 @@ BaseWrapper::~BaseWrapper ()
 	mPlugInterfaceSupport = nullptr;
 	mProcessorConnection = nullptr;
 	mControllerConnection = nullptr;
-
-	DeinitModule ();
 }
 
 //------------------------------------------------------------------------
