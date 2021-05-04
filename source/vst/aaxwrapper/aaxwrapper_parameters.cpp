@@ -379,12 +379,18 @@ AAX_Result AAXWrapper_Parameters::GetParameterIndex (AAX_CParamID iParameterID,
 		return AAX_ERROR_INVALID_PARAMETER_ID;
 	}
 
-	std::map<ParamID, int32>::iterator iter = mWrapper->mParamIndexMap.find (id);
-	if (iter == mWrapper->mParamIndexMap.end ())
-		return AAX_ERROR_INVALID_PARAMETER_ID;
-
-	*oControlIndex = iter->second;
-	return AAX_SUCCESS;
+	*oControlIndex = -1;
+	int32_t idx = 0;
+	for (auto& item : mParamNames)
+	{
+		if (strcmp (item, iParameterID) == 0)
+		{
+			*oControlIndex = idx;
+			return AAX_SUCCESS;
+		}
+		idx++;
+	}
+	return AAX_ERROR_INVALID_PARAMETER_ID;
 }
 
 //------------------------------------------------------------------------
