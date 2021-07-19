@@ -417,6 +417,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 , isBypassed (false)
 , paramListenerRef (0)
 , midiOutCount (0)
+, isOfflineRender (false)
 {
 	FUNKNOWN_CTOR
 	AutoreleasePool ap;
@@ -1329,6 +1330,7 @@ ComponentResult AUWrapper::Render (AudioUnitRenderActionFlags& ioActionFlags,
 	processParamChanges.clearQueue ();
 	transferParamChanges.transferChangesTo (processParamChanges);
 	processData.numSamples = inNumberFrames;
+	processData.processMode = isOfflineRender? kOffline : kRealtime;
 
 	for (int32 i = 0; i < Inputs ().GetNumberOfElements (); i++)
 	{
@@ -1545,6 +1547,17 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
+    //--------------------------
+		case kAudioUnitProperty_OfflineRender:
+		{
+			if (inScope == kAudioUnitScope_Global)
+			{
+				outWritable = true;
+				outDataSize = sizeof (UInt32);
+				return noErr;
+			}
+			return kAudioUnitErr_InvalidProperty;
+		}
 	}
 	return AUWRAPPER_BASE_CLASS::GetPropertyInfo (inID, inScope, inElement, outDataSize,
 	                                              outWritable);
@@ -1581,6 +1594,42 @@ ComponentResult AUWrapper::SetProperty (AudioUnitPropertyID inID, AudioUnitScope
 				AUMIDIOutputCallbackStruct* callbackStruct = (AUMIDIOutputCallbackStruct*)inData;
 				mCallbackHelper.SetCallbackInfo (callbackStruct->midiOutputCallback,
 				                                 callbackStruct->userData);
+				return noErr;
+			}
+			break;
+		}
+    //--------------------------
+		case kAudioUnitProperty_OfflineRender:
+		{
+			if (inScope == kAudioUnitScope_Global)
+			{
+				bool offline = *((UInt32*)inData) != 0;
+
+				if(offline != isOfflineRender && audioProcessor != nullptr)
+				{
+					isOfflineRender = offline;
+					
+					FUnknownPtr<IComponent> component (audioProcessor);
+					
+					if(IsInitialized())
+					{
+						audioProcessor->setProcessing (false);
+						component->setActive (false);
+					}
+					
+					ProcessSetup ps;
+					ps.sampleRate = getSampleRate ();
+					ps.maxSamplesPerBlock = GetMaxFramesPerSlice ();
+					ps.symbolicSampleSize = kSample32;
+					ps.processMode = isOfflineRender? kOffline : kRealtime;
+					audioProcessor->setupProcessing (ps);
+
+					if(IsInitialized())
+					{
+						component->setActive (true);
+						audioProcessor->setProcessing (true);
+					}
+				}
 				return noErr;
 			}
 			break;

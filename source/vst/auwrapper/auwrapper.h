@@ -290,6 +290,8 @@ protected:
 	MIDIOutputCallbackHelper mCallbackHelper;
 	EventList outputEvents;
 
+	bool isOfflineRender;
+
 private:
 	void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units) const;
 };
