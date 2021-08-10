@@ -54,8 +54,9 @@
 #include <cstdlib>
 #include <limits>
 
-extern bool InitModule ();
-extern bool DeinitModule ();
+// defined in basewrapper.cpp
+extern bool _InitModule ();
+extern bool _DeinitModule ();
 
 //------------------------------------------------------------------------
 // some Defines
@@ -291,9 +292,6 @@ void Vst2MidiEventQueue::flush ()
 
 //------------------------------------------------------------------------
 // Vst2Wrapper
-
-int32 Vst2Wrapper::gInstanceWrapperCounter = 0;
- 
 //------------------------------------------------------------------------
 Vst2Wrapper::Vst2Wrapper (BaseWrapper::SVST3Config& config, audioMasterCallback audioMaster,
                           VstInt32 vst2ID)
@@ -326,9 +324,7 @@ Vst2Wrapper::~Vst2Wrapper ()
 	delete mVst2OutputEvents;
 	mVst2OutputEvents = nullptr;
 
-	gInstanceWrapperCounter--;
-	if (gInstanceWrapperCounter == 0)
-		DeinitModule ();
+	_DeinitModule ();
 }
 
 //------------------------------------------------------------------------
@@ -1787,18 +1783,14 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 	config.processor = nullptr;
 
 	// init the module the first time
-	if (gInstanceWrapperCounter == 0)
-	{
-		if (InitModule () == false)
-			return nullptr;
-	}
+	if (_InitModule () == false)
+		return nullptr;
 
 	FReleaser factoryReleaser (factory);
 	factory->createInstance (vst3ComponentID, IAudioProcessor::iid, (void**)&config.processor);
 	if (!config.processor)
 	{
-		if (gInstanceWrapperCounter == 0)
-			DeinitModule ();
+		_DeinitModule ();
 		return nullptr;
 	}
 
@@ -1820,7 +1812,6 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 	config.vst3ComponentID = FUID::fromTUID (vst3ComponentID);
 
 	auto* wrapper = new Vst2Wrapper (config, audioMaster, vst2ID);
-	gInstanceWrapperCounter++;
 
 	FUnknownPtr<IPluginFactory2> factory2 (factory);
 	if (factory2)

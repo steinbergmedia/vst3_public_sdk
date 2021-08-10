@@ -39,6 +39,10 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreFoundation/CoreFoundation.h>
 
+#if !__has_feature(objc_arc)
+#error this file needs to be compiled with automatic reference counting enabled
+#endif
+
 //------------------------------------------------------------------------
 extern "C" {
 typedef bool (*BundleEntryFunc) (CFBundleRef);
@@ -131,12 +135,14 @@ public:
 			}
 			return false;
 		}
+		// bundleEntry is mandatory
 		auto bundleEntry = getFunctionPointer<BundleEntryFunc> ("bundleEntry");
 		if (!bundleEntry)
 		{
 			errorDescription = "Bundle does not export the required 'bundleEntry' function";
 			return false;
 		}
+		// bundleExit is mandatory
 		auto bundleExit = getFunctionPointer<BundleExitFunc> ("bundleExit");
 		if (!bundleExit)
 		{
@@ -221,12 +227,12 @@ void findModulesInDirectory (NSURL* dirUrl, Module::PathList& result)
 				continue;
 			if (!static_cast<NSNumber*> (resValue).boolValue)
 				continue;
-			url = [url URLByResolvingSymlinksInPath];
-			if (![url getResourceValue:&resValue forKey:NSURLIsDirectoryKey error:nil])
+			auto resolvedUrl = [url URLByResolvingSymlinksInPath];
+			if (![resolvedUrl getResourceValue:&resValue forKey:NSURLIsDirectoryKey error:nil])
 				continue;
 			if (!static_cast<NSNumber*> (resValue).boolValue)
 				continue;
-			findModulesInDirectory (url, result);
+			findModulesInDirectory (resolvedUrl, result);
 		}
 	}
 }
@@ -260,7 +266,7 @@ void getApplicationModules (Module::PathList& result)
 	auto bundle = CFBundleGetMainBundle ();
 	if (!bundle)
 		return;
-	auto bundleUrl = static_cast<NSURL*> (CFBundleCopyBundleURL (bundle));
+	auto bundleUrl = static_cast<NSURL*> (CFBridgingRelease (CFBundleCopyBundleURL (bundle)));
 	if (!bundleUrl)
 		return;
 	auto resUrl = [bundleUrl URLByAppendingPathComponent:@"Contents"];

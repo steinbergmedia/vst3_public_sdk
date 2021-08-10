@@ -37,8 +37,10 @@
 #include "../utility/optional.h"
 #include "../utility/stringconvert.h"
 #include "module.h"
-#include <ShlObj.h>
+
 #include <windows.h>
+#include <shlobj.h>
+
 #include <algorithm>
 #include <iostream>
 
@@ -127,6 +129,7 @@ public:
 
 		if (mModule)
 		{
+			// ExitDll is optional
 			if (auto dllExit = getFunctionPointer<ExitModuleFunc> ("ExitDll"))
 				dllExit ();
 
@@ -151,8 +154,8 @@ public:
 			{
 				auto lastError = GetLastError ();
 				LPVOID lpMessageBuffer;
-				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr,
-				                lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+				                nullptr, lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
 				                (LPSTR)&lpMessageBuffer, 0, nullptr);
 				errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
 				LocalFree (lpMessageBuffer);
@@ -160,23 +163,23 @@ public:
 				return false;
 			}
 		}
-
-		auto dllEntry = getFunctionPointer<InitModuleFunc> ("InitDll");
 		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
 		if (!factoryProc)
 		{
-			errorDescription = "dll does not export the required 'GetPluginFactory' function!";
+			errorDescription = "The dll does not export the required 'GetPluginFactory' function";
 			return false;
 		}
+		// InitDll is optional
+		auto dllEntry = getFunctionPointer<InitModuleFunc> ("InitDll");
 		if (dllEntry && !dllEntry ())
 		{
-			errorDescription = "Calling 'InitDll' failed!";
+			errorDescription = "Calling 'InitDll' failed";
 			return false;
 		}
 		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned (factoryProc ()));
 		if (!f)
 		{
-			errorDescription = "Calling 'GetPluginFactory' returned nullptr!";
+			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
 			return false;
 		}
 		factory = PluginFactory (f);
@@ -454,10 +457,10 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 
 	*path /= "Resources";
 	*path /= "Snapshots";
-	
-	if (filesystem::exists (*path)== false)
+
+	if (filesystem::exists (*path) == false)
 		return result;
-	
+
 	PathList pngList;
 	findFilesWithExt (*path, ".png", pngList, false);
 	for (auto& png : pngList)

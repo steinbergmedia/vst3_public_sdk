@@ -37,7 +37,13 @@
 
 #import "public.sdk/samples/vst-hosting/editorhost/source/platform/iplatform.h"
 #import "public.sdk/samples/vst-hosting/editorhost/source/platform/mac/window.h"
+
+#import <Cocoa/Cocoa.h>
 #import <iostream>
+
+#if !__has_feature(objc_arc)
+#error this file needs to be compiled with automatic reference counting enabled
+#endif
 
 //------------------------------------------------------------------------
 namespace Steinberg {

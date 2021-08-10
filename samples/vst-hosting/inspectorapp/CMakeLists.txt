@@ -26,6 +26,10 @@ if(SMTG_ADD_VSTGUI AND VSTGUI_STANDALONE)
             ${${target}_sources}
             "${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm"
         )
+        set_source_files_properties(
+            "${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm" PROPERTIES
+            COMPILE_FLAGS "-fobjc-arc"
+        )
     elseif(SMTG_WIN)
         set(${target}_sources 
             ${${target}_sources}
@@ -49,7 +53,7 @@ if(SMTG_ADD_VSTGUI AND VSTGUI_STANDALONE)
     endif(NOT SMTG_MAC)
 
     vstgui_add_resources(${target} "${${target}_resources}")
-    vstgui_set_target_infoplist(${target} "Resource/Info.plist")
+    vstgui_set_target_infoplist(${target} "resource/Info.plist")
     #vstgui_set_cxx_version(${target} 17)
 
     target_include_directories(${target}

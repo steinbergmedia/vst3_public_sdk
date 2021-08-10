@@ -34,78 +34,37 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "exampletest.h"
 #include "adelaycontroller.h"
 #include "adelayprocessor.h"
 #include "base/source/fstring.h"
+#include "public.sdk/source/main/moduleinit.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
-#include "public.sdk/source/vst/utility/test/ringbuffertest.h"
-#include "public.sdk/source/vst/utility/test/versionparsertest.h"
+#include "public.sdk/source/vst/utility/testing.h"
 
 namespace Steinberg {
-
-DEF_CLASS_IID(ITest)
-DEF_CLASS_IID(ITestSuite)
-DEF_CLASS_IID(ITestFactory)
-
 namespace Vst {
 
-//-----------------------------------------------------------------------------
-FUID ADelayTestFactory::cid (0x60277237, 0x74CC4303, 0xB6737CA6, 0xEDD0F811);
+//------------------------------------------------------------------------
+static ModuleInitializer InitTests ([] () {
+	registerTest ("ExampleTest", nullptr, [] (FUnknown* context, ITestResult* testResult) {
+		FUnknownPtr<ITestPlugProvider> plugProvider (context);
+		if (plugProvider)
+		{
+			auto controller = plugProvider->getController ();
+			FUnknownPtr<IDelayTestController> testController (controller);
+			if (!controller)
+			{
+				testResult->addErrorMessage (String ("Unknown IEditController"));
+				return false;
+			}
+			bool result = testController->doTest ();
+			plugProvider->releasePlugIn (nullptr, controller);
 
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API ADelayTestFactory::createTests (FUnknown* context, ITestSuite* parentSuite)
-{
-	FUnknownPtr<ITestPlugProvider> plugProvider (context);
-	if (plugProvider)
-	{
-		parentSuite->addTest ("ExampleTest", owned (new ADelayTest (plugProvider)));
-		parentSuite->addTest ("Ringbuffer Tests", owned (new RingBufferTest ()));
-		parentSuite->addTest ("VersionParser Tests", owned (new VersionParserTest ()));
-	}
-	return kResultTrue;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-ADelayTest::ADelayTest (ITestPlugProvider* plugProvider)
-: plugProvider (plugProvider)
-{
-}
-
-//-----------------------------------------------------------------------------
-bool PLUGIN_API ADelayTest::setup ()
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-bool PLUGIN_API ADelayTest::run (ITestResult* testResult)
-{
-	auto controller = plugProvider->getController ();
-	FUnknownPtr<IDelayTestController> testController (controller);
-	if (!controller)
-	{
-		testResult->addErrorMessage (String ("Unknown IEditController"));
+			return (result);
+		}
 		return false;
-	}
-	bool result = testController->doTest ();
-	plugProvider->releasePlugIn (nullptr, controller);
-	return (result);
-}
-
-//-----------------------------------------------------------------------------
-bool PLUGIN_API ADelayTest::teardown ()
-{
-	return true;
-}
-
-//-----------------------------------------------------------------------------
-const tchar* PLUGIN_API ADelayTest::getDescription ()
-{
-	return STR ("Example Test");
-}
+	});
+});
 
 //------------------------------------------------------------------------
 }} // namespaces

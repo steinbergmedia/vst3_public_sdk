@@ -40,6 +40,7 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 #include <set>
+#include <vector>
 
 class EventLogger;
 
@@ -63,7 +64,7 @@ public:
 	void checkParameterChanges (Steinberg::Vst::IParameterChanges* paramChanges);
 	void setEventLogger (EventLogger* eventLogger);
 	void setParamIDs (ParamIDs* parameterID);
-
+	void updateParameterIDs ();
 //------------------------------------------------------------------------
 protected:
 	void checkAllChanges (Steinberg::Vst::IParameterChanges* paramChanges);
@@ -81,4 +82,5 @@ protected:
 
 	EventLogger* mEventLogger;
 	ParamIDs* mParameterIds;
+	std::vector<Steinberg::Vst::ParamID> mTempUsedId;
 };

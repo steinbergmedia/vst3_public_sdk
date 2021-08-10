@@ -17,23 +17,29 @@
 #pragma once
 
 #include "public.sdk/source/vst/vstaudioeffect.h"
+#include "public.sdk/source/vst/utility/sampleaccurate.h"
+#include "public.sdk/source/vst/utility/rttransfer.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
+
+#include <vector>
+#include <array>
 
 namespace Steinberg {
 namespace Vst {
 namespace mda {
 
 //-----------------------------------------------------------------------------
-class BaseProcessor : public AudioEffect
+class Processor : public AudioEffect
 {
 protected:
-	BaseProcessor ();
-	~BaseProcessor ();
+	Processor ();
+	~Processor ();
 
 	virtual void doProcessing (ProcessData& data) = 0;
+	virtual void preProcess () {}
 	virtual bool bypassProcessing (ProcessData& data);
-	virtual void processEvents (IEventList* /*events*/) {}
+	virtual void processEvent (const Event& event) {}
 	virtual void checkSilence (ProcessData& data);
 	virtual void setBypass (bool state, int32 sampleOffset);
 	virtual bool processParameterChanges (IParameterChanges* changes);
@@ -46,7 +52,8 @@ protected:
 	virtual void setCurrentProgram (uint32 /*val*/) {}
 	virtual void setCurrentProgramNormalized (ParamValue /*val*/) {}
 	virtual int32 getVst2UniqueId () const = 0;
-	
+
+	void processEvents (IEventList* events);
 	bool isBypassed () const { return bypassState; }
 	double getSampleRate () const { return processSetup.sampleRate; }
 
@@ -57,8 +64,10 @@ protected:
 	tresult PLUGIN_API setBusArrangements (SpeakerArrangement* inputs, int32 numIns,
 	                                       SpeakerArrangement* outputs, int32 numOuts) SMTG_OVERRIDE;
 
-	tresult PLUGIN_API setState (IBStream* state) SMTG_OVERRIDE;
-	tresult PLUGIN_API getState (IBStream* state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setState (IBStream* state) final;
+	tresult PLUGIN_API getState (IBStream* state) final;
+
+	bool checkStateTransfer ();
 
 	ParamValue* params;
 	uint32 numParams;
@@ -68,8 +77,90 @@ protected:
 	float* bypassBuffer1;
 
 	bool bypassState;
+	
+	using StateT = std::vector<ParamValue>;
+	RTTransferT<StateT> stateTransfer;
 };
-}
-}
-} // namespace
 
+//------------------------------------------------------------------------
+class SampleAccurateBaseProcessor : public Processor
+{
+public:
+	SampleAccurateBaseProcessor ();
+	void allocParameters (int32 numParams) final;
+	tresult PLUGIN_API process (ProcessData& data) final;
+	bool processParameterChanges (IParameterChanges* changes) final;
+private:
+	template<SymbolicSampleSizes SampleSize>
+	void process (ProcessData& data);
+
+	std::vector<std::pair<bool, SampleAccurate::Parameter>> parameterValues;
+};
+
+//------------------------------------------------------------------------
+using BaseProcessor = SampleAccurateBaseProcessor;
+
+static constexpr int32 EndNoteID = NoteIDUserRange::kNoteIDUserRangeLowerBound;
+static constexpr int32 SustainNoteID = NoteIDUserRange::kNoteIDUserRangeLowerBound + 1;
+
+//------------------------------------------------------------------------
+template <typename VoiceT, int32 kEventBufferSize, int32 kNumVoices>
+struct SynthData
+{
+	using VOICE = VoiceT;
+	static constexpr int32 eventBufferSize = kEventBufferSize;
+	static constexpr int32 numVoices = kNumVoices;
+	static constexpr int32 eventsDoneID = 99999999;
+
+	using EventArray = std::array<Event, kEventBufferSize>;
+	using EventPos = typename EventArray::size_type;
+	EventArray events;
+	EventPos eventPos {0};
+
+	using VoiceArray = std::array<VOICE, kNumVoices>;
+	VoiceArray voice;
+	int32 activevoices {0};
+	int32 sustain {0};
+
+	void init () noexcept { activevoices = 0; }
+
+	bool hasEvents () const noexcept
+	{
+		return events[eventPos].flags & Event::EventFlags::kUserReserved1;
+	}
+
+	void clearEvents () noexcept
+	{
+		eventPos = 0;
+		events[0].flags = 0;
+		events[0].sampleOffset = eventsDoneID;
+	}
+
+	void processEvent (const Event& e) noexcept
+	{
+		switch (e.type)
+		{
+			case Event::kNoteOnEvent:
+			case Event::kNoteOffEvent:
+			{
+				events[eventPos] = e;
+				events[eventPos].flags |= Event::EventFlags::kUserReserved1;
+				++eventPos;
+				if (eventPos >= events.size ())
+					--eventPos;
+				else
+				{
+					events[eventPos].flags = 0;
+					events[eventPos].sampleOffset = eventsDoneID;
+				}
+				break;
+			}
+			default: return;
+		}
+	}
+};
+
+//------------------------------------------------------------------------
+}
+}
+} // namespaces

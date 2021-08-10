@@ -26,6 +26,8 @@ namespace mda {
 class EPianoProcessor : public BaseProcessor
 {
 public:
+	using Base = BaseProcessor;
+
 	EPianoProcessor ();
 	~EPianoProcessor ();
 	
@@ -68,7 +70,8 @@ public:
 
 		float outl;
 		float outr;
-		int32  note; //remember what note triggered this
+		int32 note; //remember what note triggered this
+		int32 noteID;
 	};
 
 
@@ -82,29 +85,27 @@ public:
 		int32  loop;
 	};
 
-	enum {
-		kNumVoices = 32,
-		kEventBuffer = 120,
-	};
 	static const int32 kNumPrograms = 4;
 
 protected:
 	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
-	void processEvents (IEventList* events) SMTG_OVERRIDE;
-	void noteOn (int32 note, int32 velocity);
+	void preProcess () SMTG_OVERRIDE;
+	void processEvent (const Event& event) SMTG_OVERRIDE;
+	void noteEvent (const Event& event);
 	void recalculate () SMTG_OVERRIDE;
 
 	float Fs, iFs;
 
-	int32 eventPos;
-	int32 notes[kEventBuffer + 8];  //list of delta|note|velocity for current block
+	static constexpr int32 kNumVoices = 32;
+	static constexpr int32 kEventBufferSize = 64;
+	using SynthDataT = SynthData<VOICE, kEventBufferSize, kNumVoices>;
+	SynthDataT synthData;
 
 	KGRP  kgrp[34];
-	VOICE voice[kNumVoices];
-	int32  activevoices, poly;
+	int32 poly;
 	short *waves;
 	float width;
-	int32  size, sustain;
+	int32 size;
 	float lfo0, lfo1, dlfo, lmod, rmod;
 	float treb, tfrq, tl, tr;
 	float tune, fine, random, stretch, overdrive;

@@ -35,10 +35,10 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/main/pluginfactory.h"
+#include "public.sdk/source/vst/utility/testing.h"
 #include "adelaycontroller.h"
 #include "adelayprocessor.h"
 #include "adelayids.h"
-#include "exampletest.h"
 #include "version.h"	// for versioning
 
 #define stringPluginName "ADelay"
@@ -66,7 +66,7 @@ BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 				Steinberg::Vst::ADelayController::createInstance)
 
 	// add Test Factory
-	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::ADelayTestFactory::cid),
+	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::getTestFactoryUID ()),
 				PClassInfo::kManyInstances,
 				kTestClass,
 				stringPluginName "Test Factory",
@@ -74,5 +74,5 @@ BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 				"",
 				"",
 				"",
-				Steinberg::Vst::ADelayTestFactory::createInstance)
+				Steinberg::Vst::createTestFactoryInstance)
 END_FACTORY

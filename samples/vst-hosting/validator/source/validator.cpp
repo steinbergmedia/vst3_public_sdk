@@ -666,7 +666,16 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 			if (suite->getTest (i, testItem, name) == kResultTrue)
 			{
 				if (infoStream)
-					*infoStream << "[" << name << "]\n";
+				{
+					*infoStream << "[" << name;
+					if (auto desc = testItem->getDescription ())
+					{
+						auto descStr = VST3::StringConvert::convert (desc);
+						if (!descStr.empty ())
+							*infoStream << ": " << descStr;
+					}
+					*infoStream << "]\n";
+				}
 
 				if (testItem->setup ())
 				{

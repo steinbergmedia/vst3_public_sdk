@@ -39,15 +39,21 @@
 @implementation AUv3WrapperViewController (AUAudioUnitFactory)
 
 - (AUv3Wrapper *) createAudioUnitWithComponentDescription:(AudioComponentDescription) desc error:(NSError **)error {
-	if (![NSThread isMainThread])
+	@synchronized (self)
 	{
-		dispatch_sync(dispatch_get_main_queue(), [&]{
-			self.audioUnit = [[AUv3Wrapper alloc] initWithComponentDescription:desc error:error];
-		});
-	}
-	else
-	{
-		self.audioUnit = [[AUv3Wrapper alloc] initWithComponentDescription:desc error:error];
+		if (!self.audioUnit)
+		{
+			if (![NSThread isMainThread])
+			{
+				dispatch_sync(dispatch_get_main_queue(), [&]{
+					self.audioUnit = [[AUv3Wrapper alloc] initWithComponentDescription:desc error:error];
+				});
+			}
+			else
+			{
+				self.audioUnit = [[AUv3Wrapper alloc] initWithComponentDescription:desc error:error];
+			}
+		}
 	}
 	return self.audioUnit;
 }

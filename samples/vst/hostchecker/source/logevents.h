@@ -126,10 +126,11 @@ struct LogEvent
 	LOG_DEF(kLogIdInvalidParamValue,				PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter value is < 0.0 or > 1.0"),\
 	LOG_DEF(kLogIdInvalidParameterCount,			PROCESS, LOG_ERR, PARAM_CHANGE, "The number of changes is bigger than the number of parameters specified by IEditController."),\
 	LOG_DEF(kLogIdInvalidParameterID,				PROCESS, LOG_ERR, PARAM_CHANGE, "A parameter change queue has a parameter ID which was not specified by IEditController."),\
+	LOG_DEF(kLogIdParameterIDMoreThanOneTimeinList, PROCESS, LOG_ERR, PARAM_CHANGE, "A parameter ID is more than 1 time in the IParameterChanges list."),\
 	LOG_DEF(kLogIdParameterChangesPointerIsNull,	PROCESS, LOG_WARN, PARAM_CHANGE, "Pointer to parameter changes interface is null."),\
 	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null (index is valid!)"),\
 	LOG_DEF(kLogIdParametersAreNotSortedBySampleOffset, PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter changes (for a ID) are not sorted by sample offset."),\
-	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than one time the same sample offset."),\
+	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than 2 time the same sample offset."),\
 	\
 	LOG_DEF(kLogIdinitializeCalledinWrongThread,		CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::initialize is called in wrong Thread!"),\
 	LOG_DEF(kLogIdterminateCalledinWrongThread,			CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::terminate is called in wrong Thread!"),\
@@ -170,11 +171,18 @@ struct LogEvent
 	\
 	LOG_DEF(kLogIdSetActiveCalledSupported,          PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponent::setActive (true) called"), \
 	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
+	\
+	LOG_DEF (kLogIdRestartParamValuesChangedSupported,    CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamValuesChanged) supported!"), \
+	LOG_DEF (kLogIdRestartParamTitlesChangedSupported,    CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamTitlesChanged) supported!"), \
+	LOG_DEF (kLogIdRestartNoteExpressionChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kNoteExpressionChanged) supported!"), \
+	LOG_DEF (kLogIdRestartKeyswitchChangedSupported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kKeyswitchChanged) supported!"), \
+	\
 	LOG_DEF(kLogIdIComponentHandler2Supported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
 	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
 	LOG_DEF (kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
+	\
 	LOG_DEF (kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
 	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
 	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
@@ -221,7 +229,10 @@ struct LogEvent
 	LOG_DEF(kLogIdUnitSupported,				CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
 	LOG_DEF(kLogIdGetUnitByBusSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
 	LOG_DEF(kLogIdChannelContextSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
-	LOG_DEF(kLogIdINoteExpressionControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
+	\
+	LOG_DEF(kLogIdINoteExpressionControllerSupported,     CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
+	LOG_DEF(kLogIdGetNoteExpressionStringByValueSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionStringByValue supported!"), \
+	LOG_DEF(kLogIdGetNoteExpressionValueByStringSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionValueByString supported!"), \
 	LOG_DEF(kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
 	LOG_DEF(kLogIdIKeyswitchControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IKeyswitchController supported!"), \
 	\

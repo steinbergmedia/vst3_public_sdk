@@ -35,8 +35,9 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "public.sdk/source/vst/utility/test/ringbuffertest.h"
+#include "public.sdk/source/main/moduleinit.h"
 #include "public.sdk/source/vst/utility/ringbuffer.h"
+#include "public.sdk/source/vst/utility/testing.h"
 #include "pluginterfaces/base/fstrdefs.h"
 
 //------------------------------------------------------------------------
@@ -44,95 +45,61 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-bool RingBufferTest::testPushUntilFull (ITestResult* testResult) const
-{
-	testResult;
-	OneReaderOneWriter::RingBuffer<uint32> rb (4);
-	if (!rb.push (0))
-		return false;
-	if (!rb.push (1))
-		return false;
-	if (!rb.push (2))
-		return false;
-	if (!rb.push (3))
-		return false;
-	if (!rb.push (4))
-		return true;
-	return false;
-}
-
-//------------------------------------------------------------------------
-bool RingBufferTest::testPopUntilEmpty (ITestResult* testResult) const
-{
-	testResult;
-	OneReaderOneWriter::RingBuffer<uint32> rb (4);
-	if (!rb.push (0))
-		return false;
-	if (!rb.push (1))
-		return false;
-	if (!rb.push (2))
-		return false;
-	if (!rb.push (3))
-		return false;
-
-	uint32 value;
-	if (!rb.pop (value) || value != 0)
-		return false;
-	if (!rb.pop (value) || value != 1)
-		return false;
-	if (!rb.pop (value) || value != 2)
-		return false;
-	if (!rb.pop (value) || value != 3)
-		return false;
-	if (!rb.pop (value))
-		return true;
-
-	return false;
-}
-
-//------------------------------------------------------------------------
-bool RingBufferTest::testRoundtrip (ITestResult* testResult) const
-{
-	testResult;
-	OneReaderOneWriter::RingBuffer<uint32> rb (2);
-	uint32 value;
-
-	for (auto i = 0u; i < rb.size () * 2; ++i)
-	{
-		if (!rb.push (i))
+static ModuleInitializer InitRingbufferTests ([] () {
+	registerTest ("RingBuffer", STR ("push until full"), [] (ITestResult*) {
+		OneReaderOneWriter::RingBuffer<uint32> rb (4);
+		if (!rb.push (0))
 			return false;
-		if (!rb.pop (value) || value != i)
+		if (!rb.push (1))
 			return false;
-	}
-	return true;
-}
+		if (!rb.push (2))
+			return false;
+		if (!rb.push (3))
+			return false;
+		if (!rb.push (4))
+			return true;
+		return false;
+	});
+	registerTest ("RingBuffer", STR ("pop until empty"), [] (ITestResult*) {
+		OneReaderOneWriter::RingBuffer<uint32> rb (4);
+		if (!rb.push (0))
+			return false;
+		if (!rb.push (1))
+			return false;
+		if (!rb.push (2))
+			return false;
+		if (!rb.push (3))
+			return false;
 
-//------------------------------------------------------------------------
-bool PLUGIN_API RingBufferTest::setup ()
-{
-	return true;
-}
+		uint32 value;
+		if (!rb.pop (value) || value != 0)
+			return false;
+		if (!rb.pop (value) || value != 1)
+			return false;
+		if (!rb.pop (value) || value != 2)
+			return false;
+		if (!rb.pop (value) || value != 3)
+			return false;
+		if (!rb.pop (value))
+			return true;
 
-//------------------------------------------------------------------------
-bool PLUGIN_API RingBufferTest::run (ITestResult* testResult)
-{
-	auto failed = !testPushUntilFull (testResult);
-	failed |= !testPopUntilEmpty (testResult);
-	failed |= !testRoundtrip (testResult);
-	return !failed;
-}
+		return false;
+	});
+	registerTest ("RingBuffer", STR ("roundtrip"), [] (ITestResult*) {
+		OneReaderOneWriter::RingBuffer<uint32> rb (2);
+		uint32 value;
 
-//------------------------------------------------------------------------
-bool PLUGIN_API RingBufferTest::teardown ()
-{
-	return true;
-}
+		for (auto i = 0u; i < rb.size () * 2; ++i)
+		{
+			if (!rb.push (i))
+				return false;
+			if (!rb.pop (value) || value != i)
+				return false;
+		}
+		return true;
+	});
 
-//------------------------------------------------------------------------
-const tchar* PLUGIN_API RingBufferTest::getDescription ()
-{
-	return STR ("RingBuffer Tests");
-}
+});
 
 //------------------------------------------------------------------------
 } // Vst

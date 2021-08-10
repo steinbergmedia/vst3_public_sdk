@@ -26,6 +26,7 @@ namespace mda {
 class DX10Processor : public BaseProcessor
 {
 public:
+	using Base = BaseProcessor;
 	enum
 	{
 		NPARAMS = 16
@@ -70,29 +71,26 @@ public:
 		float cenv; //smoothed env
 		float catt; //smoothing
 		float cdec; //carrier envelope decay
-		int32  note; //remember what note triggered this
+		int32 note; //remember what note triggered this
 	};
 
 protected:
 	void checkSilence (ProcessData& /*data*/) SMTG_OVERRIDE {}
 	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
-	void processEvents (IEventList* events) SMTG_OVERRIDE;
+	void preProcess () SMTG_OVERRIDE;
+	void processEvent (const Event& event) SMTG_OVERRIDE;
 	void recalculate () SMTG_OVERRIDE;
-	void noteOn(int32 note, int32 velocity);
+	void noteEvent (const Event& event);
 
 	float Fs;
 
-	enum {
-		EVENTBUFFER = 120,
-		EVENTS_DONE = 99999999,
-		NVOICES = 8,       //max polyphony
-		SUSTAIN = 128
-	};
-	int32 notes[EVENTBUFFER + 8];  //list of delta|note|velocity for current block
+	static constexpr int32 kNumVoices = 8;
+	static constexpr int32 kEventBufferSize = 64;
+	using SynthDataT = SynthData<VOICE, kEventBufferSize, kNumVoices>;
+	SynthDataT synthData;
 
 	///global internal variables
-	VOICE voice[NVOICES];
-	int32 sustain, activevoices, K;
+	int32 K;
 
 	float tune, rati, ratf, ratio; //modulator ratio
 	float catt, cdec, crel;        //carrier envelope

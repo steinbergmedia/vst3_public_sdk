@@ -26,6 +26,8 @@ namespace mda {
 class PianoProcessor : public BaseProcessor
 {
 public:
+	using Base = BaseProcessor;
+
 	PianoProcessor ();
 	~PianoProcessor ();
 	
@@ -49,11 +51,7 @@ public:
 //-----------------------------------------------------------------------------
 
 	enum {
-		EVENTBUFFER=120,
-		EVENTS_DONE=99999999,
 		NPARAMS=12,
-		NVOICES=32,
-		SUSTAIN=128,
 		WAVELEN=586348
 	};
 	static const int32 kNumPrograms = 8;
@@ -62,8 +60,9 @@ public:
 
 protected:
 	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
-	void processEvents (IEventList* events) SMTG_OVERRIDE;
-	void noteOn(int32 note, int32 velocity);
+	void preProcess () SMTG_OVERRIDE;
+	void processEvent (const Event& event) SMTG_OVERRIDE;
+	void noteEvent (const Event& event);
 	void recalculate () SMTG_OVERRIDE;
 	void allNotesOff ();
 
@@ -85,6 +84,7 @@ protected:
 		float outl;
 		float outr;
 		int32 note; //remember what note triggered this
+		int32 noteID;
 	};
 
 
@@ -99,20 +99,20 @@ protected:
 
 	float Fs, iFs;
 
-	int32 notes[EVENTBUFFER + 8];  //list of delta|note|velocity for current block
+	static constexpr int32 kNumVoices = 32;
+	static constexpr int32 kEventBufferSize = 64;
+	using SynthDataT = SynthData<VOICE, kEventBufferSize, kNumVoices>;
+	SynthDataT synthData;
 
 	///global internal variables
 	KGRP  kgrp[16];
-	VOICE voice[NVOICES];
-	int32 activevoices, poly, cpos;
+	int32 poly, cpos;
 	short *waves;
 	int32 cmax;
 	float *comb, cdep, width, trim;
-	int32 size, sustain;
+	int32 size;
 	float tune, fine, random, stretch;
 	float muff, muffvel, sizevel, velsens, volume;
-
-	int32 eventPos;
 
 	Steinberg::uint32 currentProgram;
 };

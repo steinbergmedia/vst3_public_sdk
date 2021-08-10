@@ -41,6 +41,7 @@
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/hosting/pluginterfacesupport.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
+#include "base/source/fstring.h"
 #include "pluginterfaces/base/ipluginbase.h"
 #include "pluginterfaces/test/itest.h"
 #include <iosfwd>

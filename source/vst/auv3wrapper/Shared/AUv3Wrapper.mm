@@ -43,12 +43,13 @@
 #import "public.sdk/source/vst/hosting/parameterchanges.h"
 #import "public.sdk/source/vst/hosting/processdata.h"
 #import "public.sdk/source/vst/utility/mpeprocessor.h"
-#import "public.sdk/source/vst/vsteditcontroller.h"
-#import "pluginterfaces/base/ustring.h"
+#import "public.sdk/source/vst/utility/stringconvert.h"
 #import "pluginterfaces/gui/iplugview.h"
+#import "pluginterfaces/vst/ivsteditcontroller.h"
 #import "pluginterfaces/vst/ivstmidicontrollers.h"
 #import "pluginterfaces/vst/ivstphysicalui.h"
 #import "pluginterfaces/vst/ivstpluginterfacesupport.h"
+#import "pluginterfaces/vst/ivstunits.h"
 #import "pluginterfaces/vst/vstpresetkeys.h"
 #import "pluginterfaces/vst/vsttypes.h"
 
@@ -197,10 +198,11 @@ private:
 namespace Vst {
 
 //------------------------------------------------------------------------
-static CFStringRef createCFStringFromString128 (const String128& string)
+static NSString* createCFStringFromString128 (const String128& string)
 {
-	UString128 str (string);
-	return CFStringCreateWithCharacters (0, (const UniChar*)string, str.getLength ());
+	NSUInteger length = tstrlen (string);
+	return [[NSString alloc] initWithCharacters:reinterpret_cast<const unichar*> (string)
+	                                     length:length];
 }
 
 //------------------------------------------------------------------------
@@ -216,8 +218,7 @@ static SpeakerArrangement numChannelsToSpeakerArrangement (UInt32 numChannels)
 }
 
 //------------------------------------------------------------------------
-class AUHostApplication : public FObject,
-                          public HostApplication,
+class AUHostApplication : public HostApplication,
                           public IVst3ToAUWrapper,
                           public IVst3WrapperMPESupport
 {
@@ -233,9 +234,7 @@ public:
 
 	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE
 	{
-		String str ("VST3-AU Wrapper");
-		str.copyTo (name, 0, 127);
-		return kResultTrue;
+		return VST3::StringConvert::convert ("VST3-AU Wrapper", name) ? kResultTrue : kResultFalse;
 	}
 
 	tresult PLUGIN_API enableMPEInputProcessing (TBool state) SMTG_OVERRIDE
@@ -256,17 +255,25 @@ public:
 		           kResultTrue :
 		           kResultFalse;
 	}
+	FUnknown* unknownCast () { return static_cast<IVst3ToAUWrapper*> (this); }
 
-	DEFINE_INTERFACES
-		DEF_INTERFACE (IVst3ToAUWrapper)
-		DEF_INTERFACE (IVst3WrapperMPESupport)
-	END_DEFINE_INTERFACES (HostApplication)
-	REFCOUNT_METHODS (HostApplication)
+private:
+	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override
+	{
+		QUERY_INTERFACE (_iid, obj, IVst3ToAUWrapper::iid, IVst3ToAUWrapper);
+		QUERY_INTERFACE (_iid, obj, IVst3WrapperMPESupport::iid, IVst3WrapperMPESupport);
+		*obj = nullptr;
+		return HostApplication::queryInterface(_iid, obj);
+	}
+
+	// this class is always used as singelton and thus does not need ref counting
+	uint32 PLUGIN_API addRef () override { return 100; }
+	uint32 PLUGIN_API release () override { return 100; }
 };
 
 //------------------------------------------------------------------------
 typedef std::map<UnitID, UnitInfo> UnitInfoMap;
-typedef std::vector<String> ParameterGroupVector;
+typedef std::vector<std::u16string> ParameterGroupVector;
 
 //------------------------------------------------------------------------
 static void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units)
@@ -386,36 +393,33 @@ struct BufferedInputBus : BufferedAudioBus
 class ComponentHelper : public IComponentHandler
 {
 public:
-	ComponentHelper (void* audioUnit);
+	ComponentHelper () = default;
 	virtual ~ComponentHelper ();
 
-	__weak AUv3Wrapper* auv3Wrapper;
-
-	DECLARE_FUNKNOWN_METHODS
+	void setWrapper (AUv3Wrapper* wrapper) { auv3Wrapper = wrapper; }
 
 	tresult PLUGIN_API performEdit (ParamID tag, ParamValue valueNormalized) SMTG_OVERRIDE;
+
+	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) SMTG_OVERRIDE;
+	uint32 PLUGIN_API addRef () SMTG_OVERRIDE { return 100; }
+	uint32 PLUGIN_API release () SMTG_OVERRIDE { return 100; }
 
 protected:
 	tresult PLUGIN_API beginEdit (ParamID tag) SMTG_OVERRIDE;
 	tresult PLUGIN_API endEdit (ParamID tag) SMTG_OVERRIDE;
 	tresult PLUGIN_API restartComponent (int32 flags) SMTG_OVERRIDE;
-};
 
-//------------------------------------------------------------------------
-ComponentHelper::ComponentHelper (void* audioUnit)
-{
-	FUNKNOWN_CTOR
-	auv3Wrapper = (__bridge AUv3Wrapper*)audioUnit;
-}
+private:
+	__weak AUv3Wrapper* auv3Wrapper = nil;
+};
 
 //------------------------------------------------------------------------
 ComponentHelper::~ComponentHelper ()
 {
-	FUNKNOWN_DTOR
 	auv3Wrapper = nil;
 }
 
-IMPLEMENT_FUNKNOWN_METHODS (ComponentHelper, IComponentHandler, IComponentHandler::iid)
+IMPLEMENT_QUERYINTERFACE (ComponentHelper, IComponentHandler, IComponentHandler::iid)
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API ComponentHelper::beginEdit (ParamID tag)
@@ -487,6 +491,7 @@ struct MPEHandler : public MPE::Handler
 		std::array<ParamID, 16> programChangeParameters {{kNoParamId}};
 		std::array<ParamID, 16> programChangeParameterStepCount {{0}};
 		std::array<NoteExpressionTypeID, 3> mpeMap {{kInvalidTypeID}};
+		std::array<NoteExpressionValueDescription, 3> noteExpValueDescMap {};
 	};
 
 	void process (Context& c, const AUMIDIEvent* event, const AudioTimeStamp* timeStamp)
@@ -547,13 +552,16 @@ private:
 	{
 		if (!context || cc > MPE::Controller::Y)
 			return;
-		if (context->mpeMap[static_cast<size_t> (cc)] != kInvalidTypeID)
+		auto index = static_cast<size_t> (cc);
+		if (context->mpeMap[index] != kInvalidTypeID)
 		{
 			Event e {};
 			e.type = Event::kNoteExpressionValueEvent;
 			e.noteExpressionValue.noteId = noteID;
-			e.noteExpressionValue.typeId = context->mpeMap[static_cast<size_t> (cc)];
-			e.noteExpressionValue.value = value;
+			e.noteExpressionValue.typeId = context->mpeMap[index];
+			e.noteExpressionValue.value = (value * (context->noteExpValueDescMap[index].maximum -
+			                                        context->noteExpValueDescMap[index].minimum)) +
+			                              context->noteExpValueDescMap[index].minimum;
 			e.sampleOffset = currentSampleOffset;
 			context->inputEvents->addEvent (e);
 		}
@@ -877,7 +885,7 @@ using namespace Vst;
 
 	NSMutableArray<NSNumber*>* overviewParams;
 
-	std::unique_ptr<ComponentHelper> componentHelper;
+	ComponentHelper componentHelper;
 
 	NSTimer* timer;
 	AUAudioUnitPreset* currentPreset;
@@ -906,7 +914,7 @@ using namespace Vst;
 	outputParamTransfer.setMaxParameters (500);
 	transferParamChanges.setMaxParameters (500);
 
-	componentHelper = std::unique_ptr<ComponentHelper> (new ComponentHelper ((__bridge void*)self));
+	componentHelper.setWrapper (self);
 
 	timer = [NSTimer timerWithTimeInterval:1./60. repeats:YES block:^(NSTimer * _Nonnull timer) {
 		[self onTimer];
@@ -956,7 +964,7 @@ using namespace Vst;
 	mpeHandlerContext.midiMapping = midiMapping;
 	mpeHandlerContext.inputEvents = &inputEvents;
 	mpeHandlerContext.outputParamChanges = &outputParamChanges;
-	mpeHandlerContext.editPerformer = componentHelper.get ();
+	mpeHandlerContext.editPerformer = &componentHelper;
 
 	[self onNoteExpressionChanged];
 
@@ -984,6 +992,27 @@ using namespace Vst;
 			mpeHandlerContext.mpeMap[0] = map[2].noteExpressionTypeID;
 			mpeHandlerContext.mpeMap[1] = map[0].noteExpressionTypeID;
 			mpeHandlerContext.mpeMap[2] = map[1].noteExpressionTypeID;
+			mpeHandlerContext.noteExpValueDescMap[0] = {};
+			mpeHandlerContext.noteExpValueDescMap[1] = {};
+			mpeHandlerContext.noteExpValueDescMap[2] = {};
+			FUnknownPtr<INoteExpressionController> nExpCtrler (_editcontroller);
+			if (nExpCtrler)
+			{
+				auto count = nExpCtrler->getNoteExpressionCount (0, 0);
+				for (auto i = 0; i < count; ++i)
+				{
+					NoteExpressionTypeInfo info;
+					if (nExpCtrler->getNoteExpressionInfo (0, 0, i, info) != kResultTrue)
+						continue;
+					for (auto index = 0; index < 3; ++index)
+					{
+						if (mpeHandlerContext.mpeMap[index] != info.typeId)
+							continue;
+						mpeHandlerContext.noteExpValueDescMap[index] = info.valueDesc;
+						break;
+					}
+				}
+			}
 		}
 	}
 }
@@ -1066,7 +1095,6 @@ using namespace Vst;
 		[timer invalidate];
 		timer = nullptr;
 	}
-	componentHelper = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -1078,8 +1106,7 @@ using namespace Vst;
 
 	if (_editcontroller->getParamStringByValue (tag, value, paramString) == kResultTrue)
 	{
-		UString128 str (paramString);
-		return [NSString stringWithCharacters:(const UniChar*)paramString length:str.getLength ()];
+		return createCFStringFromString128 (paramString);
 	}
 
 	return @"";
@@ -1120,9 +1147,14 @@ using namespace Vst;
 					    kResultTrue)
 					{
 						audioProcessor = owned (proc);
-						ConstString plugCategory (ci.subCategories);
-						if (plugCategory.findFirst ("Instrument", -1,
-						                            ConstString::kCaseInsensitive) >= 0)
+						std::string_view plugCategory (ci.subCategories);
+						std::string_view instrumentStr ("instrument");
+						auto it = std::search (plugCategory.begin (), plugCategory.end (),
+						                       instrumentStr.begin (), instrumentStr.end (),
+						                       [] (auto ch1, auto ch2) {
+							                       return std::toupper (ch1) == std::toupper (ch2);
+						                       });
+						if (it != plugCategory.end ())
 							isInstrument = true;
 						break;
 					}
@@ -1188,7 +1220,7 @@ using namespace Vst;
 
 	if (_editcontroller)
 	{
-		_editcontroller->setComponentHandler (componentHelper.get ());
+		_editcontroller->setComponentHandler (&componentHelper);
 
 		FUnknownPtr<IComponent> component (audioProcessor);
 		int32 inputBusCount = component->getBusCount (kAudio, kInput);
@@ -1245,10 +1277,7 @@ using namespace Vst;
 		BusInfo info = {0};
 		if (component->getBusInfo (kAudio, inputOrOutput, busNum, info) == kResultTrue)
 		{
-			UString128 str (info.name);
-			NSString* convertedNSString =
-			    [NSString stringWithCharacters:(const UniChar*)info.name length:str.getLength ()];
-			bus.name = convertedNSString;
+			bus.name = createCFStringFromString128 (info.name);
 		}
 
 		component->activateBus (kAudio, isInput ? kInput : kOutput, busNum, true);
@@ -1312,8 +1341,10 @@ using namespace Vst;
 		}
 		else
 		{
-			String str = parameterGroups.at (i - 1);
-			NSString* groupName = [NSString stringWithString:[NSString stringWithUTF8String:str]];
+			auto& str = parameterGroups.at (i - 1);
+			NSString* groupName =
+			    [NSString stringWithCharacters:reinterpret_cast<const unichar*> (str.data ())
+			                            length:str.size ()];
 
 			AUParameterGroup* newGroup =
 			    [AUParameterTree createGroupWithIdentifier:groupName
@@ -1379,9 +1410,8 @@ using namespace Vst;
 			// create identifier for parameter
 			NSString* identifier =
 			    [NSString stringWithString:[NSString stringWithFormat:@"%d", pi.id]];
-			NSString* name = (NSString*)CFBridgingRelease (createCFStringFromString128 (pi.title));
-			NSString* unitName =
-			    (NSString*)CFBridgingRelease (createCFStringFromString128 (pi.units));
+			NSString* name = createCFStringFromString128 (pi.title);
+			NSString* unitName = createCFStringFromString128 (pi.units);
 			AUParameterAddress address = static_cast<AUParameterAddress> (pi.id);
 
 			// create flags for parameter
@@ -1448,31 +1478,31 @@ using namespace Vst;
 		if (unitInfos.empty ())
 			buildUnitInfos (unitInfoController, unitInfos);
 
-		String fullParamName;
-		ConstString separator (STR ("."));
+		std::u16string fullParamName;
+		constexpr auto separator = STR (".");
 		bool insertSeparator = false;
 
 		UnitInfoMap::const_iterator it = unitInfos.find (pi.unitId);
 		while (it != unitInfos.end () && it->second.id != kRootUnitId)
 		{
-			ConstString unitName (it->second.name);
-			if (unitName.length () > 0)
+			std::u16string_view unitName (it->second.name);
+			if (unitName.size () > 0)
 			{
 				if (insertSeparator)
-					fullParamName.insertAt (0, separator);
+					fullParamName.insert (0, separator);
 				insertSeparator = true;
-				fullParamName.insertAt (0, unitName);
+				fullParamName.insert (0, unitName);
 			}
 			it = unitInfos.find (it->second.parentUnitId);
 		}
-		if (!fullParamName.isEmpty ())
+		if (!fullParamName.empty ())
 		{
 			bool insertGroup = true;
 			groupIdx = 1;
 			for (int32 i = 0; i < parameterGroups.size (); i++)
 			{
-				const String& str = parameterGroups.at (i);
-				if (str.compare (fullParamName) == 0)
+				const auto& str = parameterGroups.at (i);
+				if (str == fullParamName)
 					break;
 
 				++groupIdx;
@@ -1655,15 +1685,14 @@ using namespace Vst;
 				for (int32 i = 0; i < programListInfo.programCount; i++)
 				{
 					String128 name;
-					unitInfoController->getProgramName (programListInfo.id, i, name);
-
-					UString128 str (name);
-					NSString* convertedNSString =
-					    [NSString stringWithCharacters:(const UniChar*)name
-					                            length:str.getLength ()];
+					if (unitInfoController->getProgramName (programListInfo.id, i, name) !=
+					    kResultTrue)
+					{
+						name[0] = 0;
+					}
 
 					AUAudioUnitPreset* preset = [[AUAudioUnitPreset alloc] init];
-					[preset setName:convertedNSString];
+					[preset setName:createCFStringFromString128 (name)];
 					[preset setNumber:static_cast<NSInteger> (i)];
 
 					[factoryPresetsVar addObject:preset];
@@ -2144,12 +2173,17 @@ using namespace Vst;
 	if (processLen == 0)
 		return;
 
+	std::u16string projectStr;
+	if (fromProject)
+		projectStr = VST3::StringConvert::convert (Vst::StateType::kProject);
 	if (processorData)
 	{
 		NSDataIBStream stream (processorData);
 		if (fromProject)
+		{
 			stream.getAttributes ()->setString (Vst::PresetAttributes::kStateType,
-			                                    String (Vst::StateType::kProject));
+			                                    VST3::toTChar (projectStr));
+		}
 		FUnknownPtr<IComponent> (audioProcessor)->setState (&stream);
 	}
 
@@ -2162,8 +2196,10 @@ using namespace Vst;
 
 		NSDataIBStream stream (controllerData);
 		if (fromProject)
+		{
 			stream.getAttributes ()->setString (Vst::PresetAttributes::kStateType,
-			                                    String (Vst::StateType::kProject));
+			                                    VST3::toTChar (projectStr));
+		}
 		_editcontroller->setState (&stream);
 
 		[self syncParameterValues];
@@ -2264,8 +2300,8 @@ using namespace Vst;
 			  case AURenderEventParameter:
 			  case AURenderEventParameterRamp:
 			  {
-				  componentHelper->performEdit ((int)event->parameter.parameterAddress,
-					                            event->parameter.value);
+				  componentHelper.performEdit ((int)event->parameter.parameterAddress,
+					                           event->parameter.value);
 			  }
 			  break;
 
@@ -2392,10 +2428,9 @@ using namespace Vst;
 #pragma mark - ViewController (implementing AUViewController and AUAudioUnitFactory)
 @interface AUv3WrapperViewController ()
 {
-	IPlugView* plugView;
-	FObject* dynlib;
-	AUPlugFrame* plugFrame;
-	IEditController* editController;
+	IPtr<IPlugView> plugView;
+	IPtr<AUPlugFrame> plugFrame;
+	IPtr<IEditController> editController;
 	BOOL isAttached;
 }
 @end
@@ -2409,13 +2444,51 @@ using namespace Vst;
 - (void)loadView
 {
 	SMTG_IOS_MAC_VIEW* view = [[SMTG_IOS_MAC_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
+	view.autoresizingMask = NSViewNotSizable;
+	view.translatesAutoresizingMaskIntoConstraints = YES;
 	[self setView:view];
+
+#if !TARGET_API_IPHONE
+	//-------------------------------------------
+	// workaround bug of Logic/Garageband to not listen to plug-in editor size changes and using the
+	// initial size and loading the view before creating the audio unit. (FB8971597)
+	//
+	// may just be a misconception of AUv3 not defining editor size and resize behaviour at all
+	//
+	// this also means that it is not supported to change the editor size after creation in these
+	// hosts
+	//-------------------------------------------
+	@synchronized (self)
+	{
+		if (self.audioUnit == nil)
+		{
+			auto infoDict = NSBundle.mainBundle.infoDictionary;
+			if (infoDict =
+			        infoDict[@"NSExtension"][@"NSExtensionAttributes"][@"AudioComponents"][0])
+			{
+				id type = infoDict[@"type"];
+				id subType = infoDict[@"subType"];
+				id manu = infoDict[@"manufacturer"];
+
+				AudioComponentDescription desc {};
+				desc.componentType = UTGetOSTypeFromString ((__bridge CFStringRef)type);
+				desc.componentSubType = UTGetOSTypeFromString ((__bridge CFStringRef)subType);
+				desc.componentManufacturer = UTGetOSTypeFromString ((__bridge CFStringRef)manu);
+
+				self.audioUnit = [[AUv3Wrapper alloc] initWithComponentDescription:desc error:nil];
+			}
+		}
+	}
+#endif
 }
 
 //------------------------------------------------------------------------
 - (void)setFrame:(CGRect)newSize
 {
-	[super.view setFrame:newSize];
+	if (NSEqualRects (self.view.frame, newSize))
+		return;
+
+	self.view.frame = newSize;
 	self.preferredContentSize = newSize.size;
 
 	if (plugView)
@@ -2440,17 +2513,17 @@ using namespace Vst;
 		ec2->setKnobMode (kLinearMode);
 
 	// create view
-	plugView = editController->createView (ViewType::kEditor);
+	plugView = owned (editController->createView (ViewType::kEditor));
 	if (plugView)
 	{
 		if (plugView->isPlatformTypeSupported (SMTG_IOS_MAC_PLATFORMTYPE) == kResultTrue)
 		{
-			plugFrame = NEW AUPlugFrame ([self] (ViewRect* vr) {
+			plugFrame = owned (new AUPlugFrame ([self] (ViewRect* vr) {
 				auto viewFrame = self.view.frame;
 				CGRect newSize = CGRectMake (viewFrame.origin.x, viewFrame.origin.y,
-										vr->getWidth (), vr->getHeight ());
+				                             vr->getWidth (), vr->getHeight ());
 				[self setFrame:newSize];
-			});
+			}));
 			plugView->setFrame (plugFrame);
 
 			if (plugView->attached ((__bridge void*)self.view, SMTG_IOS_MAC_PLATFORMTYPE) ==
@@ -2469,7 +2542,6 @@ using namespace Vst;
 		}
 		else
 		{
-			plugView->release ();
 			plugView = nullptr;
 		}
 	}
@@ -2484,8 +2556,6 @@ using namespace Vst;
 	_audioUnit = audioUnit;
 
 	editController = [_audioUnit editcontroller];
-	if (editController)
-		editController->addRef ();
 
 	if (pthread_main_np () != 0)
 		[self makePlugView];
@@ -2510,22 +2580,14 @@ using namespace Vst;
 		}
 
 		// release plugView
-		plugView->release ();
+		plugView = nullptr;
 
 		// release plugFrame
-		if (plugFrame)
-			plugFrame->release ();
+		plugFrame = nullptr;
 
 		// release editController
-		if (editController)
-		{
-			editController->release ();
-			editController = nullptr;
-		}
+		editController = nullptr;
 	}
-
-	if (dynlib)
-		dynlib->release ();
 
 	self.audioUnit = nil;
 }

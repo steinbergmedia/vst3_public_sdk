@@ -1,11 +1,11 @@
 //-----------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/utility/test/ringbuffertest.h
-// Created by  : Steinberg, 03/2018
-// Description : Test ringbuffer
-// Flags       : clang-format SMTGSequencer
+// Filename    : public.sdk/source/vst/utility/audiobuffers.h
+// Created by  : Steinberg, 04/2021
+// Description : Audio Buffer utilities
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -37,32 +37,30 @@
 
 #pragma once
 
-#include "base/source/fobject.h"
-#include "pluginterfaces/test/itest.h"
+#include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include <type_traits>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-class RingBufferTest : public ITest, public FObject
+/** get channel buffers from audio bus buffers 32 bit variant */
+template <SymbolicSampleSizes SampleSize,
+          typename std::enable_if<SampleSize == SymbolicSampleSizes::kSample32>::type* = nullptr>
+inline Sample32** getChannelBuffers (AudioBusBuffers& buffer)
 {
-public:
-	RingBufferTest () = default;
+	return buffer.channelBuffers32;
+}
 
-	bool PLUGIN_API setup () SMTG_OVERRIDE;
-	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
-	bool PLUGIN_API teardown () SMTG_OVERRIDE;
-	const tchar* PLUGIN_API getDescription () SMTG_OVERRIDE;
-
-	OBJ_METHODS (RingBufferTest, FObject)
-	DEF_INTERFACES_1 (ITest, FObject)
-	REFCOUNT_METHODS (FObject)
-private:
-	bool testPushUntilFull (ITestResult* testResult) const;
-	bool testPopUntilEmpty (ITestResult* testResult) const;
-	bool testRoundtrip (ITestResult* restResult) const;
-};
+//------------------------------------------------------------------------
+/** get channel buffers from audio bus buffers 64 bit variant */
+template <SymbolicSampleSizes SampleSize,
+          typename std::enable_if<SampleSize == SymbolicSampleSizes::kSample64>::type* = nullptr>
+inline Sample64** getChannelBuffers (AudioBusBuffers& buffer)
+{
+	return buffer.channelBuffers64;
+}
 
 //------------------------------------------------------------------------
 } // Vst

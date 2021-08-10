@@ -193,7 +193,7 @@ struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 		{
 			SharedPointer<CBitmap> bitmap;
 			const auto& factory = getPlatformFactory ();
-			for (auto imageDesc : snapshot.images)
+			for (const auto& imageDesc : snapshot.images)
 			{
 				if (auto pb = factory.createBitmapFromPath (imageDesc.path.data ()))
 				{
@@ -381,6 +381,9 @@ struct WindowController : WindowControllerAdapter,
 
 	void onModuleSelection (uint32_t index)
 	{
+		if (index >= modulePathList.size ())
+			return;
+
 		currentClassInfos.clear ();
 		const auto& modulePath = modulePathList[index];
 		std::string errorDesc;

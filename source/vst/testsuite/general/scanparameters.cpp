@@ -93,7 +93,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		tresult result = controller->getParameterInfo (i, paramInfo);
 		if (result != kResultOk)
 		{
-			addErrorMessage (testResult, printf ("Parameter %03d: is missing!!!", i));
+			addErrorMessage (testResult, printf ("=>Parameter %03d: is missing!!!", i));
 			return false;
 		}
 
@@ -101,7 +101,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		if (paramId < 0)
 		{
 			addErrorMessage (testResult,
-			                 printf ("Parameter %03d (id=%d): Invalid Id!!!", i, paramId));
+			                 printf ("=>Parameter %03d (id=%d): Invalid Id!!!", i, paramId));
 			return false;
 		}
 
@@ -110,7 +110,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		if (search != paramIds.end ())
 		{
 			addErrorMessage (testResult,
-			                 printf ("Parameter %03d (id=%d): ID already used by idx=%03d!!!", i,
+			                 printf ("=>Parameter %03d (id=%d): ID already used by idx=%03d!!!", i,
 			                         paramId, search->second));
 			return false;
 		}
@@ -122,7 +122,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		{
 			addErrorMessage (
 			    testResult,
-			    printf ("Parameter %03d (id=%d): invalid stepcount (<0)!!!", i, paramId));
+			    printf ("=>Parameter %03d (id=%d): invalid stepcount (<0)!!!", i, paramId));
 			return false;
 		}
 		if (paramInfo.stepCount == 0)
@@ -145,7 +145,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		if (paramTitle.empty ())
 		{
 			addErrorMessage (testResult,
-			                 printf ("Parameter %03d (id=%d): has no title!!!", i, paramId));
+			                 printf ("=>Parameter %03d (id=%d): has no title!!!", i, paramId));
 			return false;
 		}
 
@@ -154,7 +154,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		{
 			addErrorMessage (
 			    testResult,
-			    printf ("Parameter %03d (id=%d): defaultValue is not normalized!!!", i, paramId));
+			    printf ("=>Parameter %03d (id=%d): defaultValue is not normalized!!!", i, paramId));
 			return false;
 		}
 		int32 unitId = paramInfo.unitId;
@@ -162,7 +162,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		{
 			addErrorMessage (
 			    testResult,
-			    printf ("Parameter %03d (id=%d): No appropriate unit ID!!!", i, paramId));
+			    printf ("=>Parameter %03d (id=%d): No appropriate unit ID!!!", i, paramId));
 			return false;
 		}
 		if (unitId >= -1)
@@ -198,7 +198,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 					addErrorMessage (
 					    testResult,
 					    printf (
-					        "Parameter %03d (id=%d) has a UnitID (%d), which isn't defined in IUnitInfo.",
+					        "=>Parameter %03d (id=%d) has a UnitID (%d), which isn't defined in IUnitInfo.",
 					        i, paramId, unitId));
 					return false;
 				}
@@ -213,7 +213,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			addErrorMessage (
 			    testResult,
 			    printf (
-			        "Parameter %03d (id=%d) must not be kCanAutomate and kReadOnly at the same time.",
+			        "=>Parameter %03d (id=%d) must not be kCanAutomate and kReadOnly at the same time.",
 			        i, paramId));
 			return false;
 		}
@@ -224,7 +224,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			addErrorMessage (
 			    testResult,
 			    printf (
-			        "Parameter %03d (id=%d) must not be kIsProgramChange and kReadOnly at the same time.",
+			        "=>Parameter %03d (id=%d) must not be kIsProgramChange and kReadOnly at the same time.",
 			        i, paramId));
 			return false;
 		}
@@ -236,7 +236,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			addErrorMessage (
 			    testResult,
 			    printf (
-			        "Parameter %03d (id=%d) is kIsBypass and could have only kCanAutomate as other flag at the same time.",
+			        "=>Parameter %03d (id=%d) is kIsBypass and could have only kCanAutomate as other flag at the same time.",
 			        i, paramId));
 			return false;
 		}
@@ -245,9 +245,9 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		// kIsBypass but not kCanAutomate
 		if (paramInfo.flags == ParameterInfo::kIsBypass)
 		{
-			addMessage (
-			    testResult,
-			    printf ("Parameter %03d (id=%d) is kIsBypass, but not kCanAutomate!", i, paramId));
+			addMessage (testResult,
+			            printf ("=>Parameter %03d (id=%d) is kIsBypass, but not kCanAutomate!", i,
+			                    paramId));
 		}
 		// kIsHidden and (kCanAutomate or not kIsReadOnly)
 		if (paramInfo.flags == ParameterInfo::kIsHidden)
@@ -256,12 +256,12 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			{
 				addMessage (
 				    testResult,
-				    printf ("Parameter %03d (id=%d) is kIsHidden and kCanAutomate!", i, paramId));
+				    printf ("=>Parameter %03d (id=%d) is kIsHidden and kCanAutomate!", i, paramId));
 			}
 			if ((paramInfo.flags & ParameterInfo::kIsReadOnly) == 0)
 			{
 				addMessage (testResult,
-				            printf ("Parameter %03d (id=%d) is kIsHidden and NOT kIsReadOnly!", i,
+				            printf ("=>Parameter %03d (id=%d) is kIsHidden and NOT kIsReadOnly!", i,
 				                    paramId));
 			}
 		}
@@ -271,8 +271,8 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		    ((paramInfo.flags & ParameterInfo::kIsList) == 0))
 		{
 			addMessage (testResult,
-			            printf ("Parameter %03d (id=%d) is kIsProgramChange, but not a kIsList!", i,
-			                    paramId));
+			            printf ("=>Parameter %03d (id=%d) is kIsProgramChange, but not a kIsList!",
+			                    i, paramId));
 		}
 		// kIsReadOnly and kIsWrapAround
 		if (((paramInfo.flags & ParameterInfo::kIsReadOnly) != 0) &&
@@ -280,7 +280,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		{
 			addMessage (
 			    testResult,
-			    printf ("Parameter %03d (id=%d) is kIsReadOnly, no need to be kIsWrapAround too!",
+			    printf ("=>Parameter %03d (id=%d) is kIsReadOnly, no need to be kIsWrapAround too!",
 			            i, paramId));
 		}
 
@@ -293,8 +293,8 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			{
 				addErrorMessage (
 				    testResult,
-				    printf ("Parameter %03d (id=%d): There can only be one bypass (kIsBypass).", i,
-				            paramId));
+				    printf ("=>Parameter %03d (id=%d): There can only be one bypass (kIsBypass).",
+				            i, paramId));
 				return false;
 			}
 		}

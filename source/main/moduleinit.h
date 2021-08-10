@@ -39,6 +39,7 @@
 #include "pluginterfaces/base/ftypes.h"
 #include <algorithm>
 #include <functional>
+#include <limits>
 #include <numeric>
 
 //------------------------------------------------------------------------
@@ -54,7 +55,7 @@
  *
  *	static ModuleInitializer InitMyExternalLib ([] () { MyExternalLib::init (); });
  *
- *	Or you have a lazy create wavetable you need to free the alocated memory later:
+ *	Or you have a lazy create wavetable you need to free the allocated memory later:
  *
  *	static ModuleTerminator FreeWaveTableMemory ([] () { MyWaveTable::free (); });
  */

@@ -20,6 +20,7 @@
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "public.sdk/source/vst/utility/vst2persistence.h"
+#include "public.sdk/source/vst/utility/processdataslicer.h"
 #include "base/source/fstreamer.h"
 
 #include <cmath>
@@ -30,7 +31,7 @@ namespace Vst {
 namespace mda {
 
 //-----------------------------------------------------------------------------
-BaseProcessor::BaseProcessor ()
+Processor::Processor ()
 : params (nullptr)
 , numParams (0)
 , bypassRamp (0)
@@ -41,7 +42,7 @@ BaseProcessor::BaseProcessor ()
 }
 
 //-----------------------------------------------------------------------------
-BaseProcessor::~BaseProcessor ()
+Processor::~Processor ()
 {
 	if (bypassBuffer0)
 		std::free (bypassBuffer0);
@@ -51,10 +52,27 @@ BaseProcessor::~BaseProcessor ()
 		delete [] params;
 }
 
-//-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::process (ProcessData& data)
+//------------------------------------------------------------------------
+bool Processor::checkStateTransfer ()
 {
-	if (processParameterChanges (data.inputParameterChanges))
+	bool result = false;
+	stateTransfer.accessTransferObject_rt ([this, &result] (const std::vector<ParamValue>& p) {
+		for (auto index = 0u; index < p.size (); ++index)
+		{
+			params[index] = p[index];
+		}
+		result = true;
+	});
+	return result;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API Processor::process (ProcessData& data)
+{
+	preProcess ();
+	bool doRecalculate = checkStateTransfer ();
+	doRecalculate |= processParameterChanges (data.inputParameterChanges);
+	if (doRecalculate)
 		recalculate ();
 
 	processEvents (data.inputEvents);
@@ -68,7 +86,22 @@ tresult PLUGIN_API BaseProcessor::process (ProcessData& data)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::setupProcessing (ProcessSetup& setup)
+void Processor::processEvents (IEventList* events)
+{
+	if (events)
+	{
+		Event e;
+		int32 count = events->getEventCount ();
+		for (int32 i = 0; i < count; i++)
+		{
+			if (events->getEvent (i, e) == kResultTrue)
+				processEvent (e);
+		}
+	}
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API Processor::setupProcessing (ProcessSetup& setup)
 {
 	if (bypassBuffer0)
 		std::free (bypassBuffer0);
@@ -82,7 +115,7 @@ tresult PLUGIN_API BaseProcessor::setupProcessing (ProcessSetup& setup)
 }
 
 //-----------------------------------------------------------------------------
-bool BaseProcessor::bypassProcessing (ProcessData& data)
+bool Processor::bypassProcessing (ProcessData& data)
 {
 	if (data.numSamples == 0)
 		return true;
@@ -170,7 +203,7 @@ bool BaseProcessor::bypassProcessing (ProcessData& data)
 #define kSilenceThreshold 0.000132184039
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::checkSilence (ProcessData& data)
+void Processor::checkSilence (ProcessData& data)
 {
 	for (int32 bus = 0; bus < data.numOutputs; bus ++)
 	{
@@ -197,7 +230,7 @@ void BaseProcessor::checkSilence (ProcessData& data)
 }
 
 //-----------------------------------------------------------------------------
-bool BaseProcessor::processParameterChanges (IParameterChanges* changes)
+bool Processor::processParameterChanges (IParameterChanges* changes)
 {
 	if (changes)
 	{
@@ -228,7 +261,7 @@ bool BaseProcessor::processParameterChanges (IParameterChanges* changes)
 }
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::setBypass (bool state, int32 /*sampleOffset*/)
+void Processor::setBypass (bool state, int32 /*sampleOffset*/)
 {
 	if (state != bypassState)
 	{
@@ -241,14 +274,14 @@ void BaseProcessor::setBypass (bool state, int32 /*sampleOffset*/)
 }
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::setParameter (ParamID index, ParamValue newValue, int32 /*sampleOffset*/)
+void Processor::setParameter (ParamID index, ParamValue newValue, int32 /*sampleOffset*/)
 {
 	if (numParams > index)
 		params[index] = newValue;
 }
 
 //-----------------------------------------------------------------------------
-void BaseProcessor::allocParameters (int32 _numParams)
+void Processor::allocParameters (int32 _numParams)
 {
 	if (params)
 		return;
@@ -257,7 +290,7 @@ void BaseProcessor::allocParameters (int32 _numParams)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts)
+tresult PLUGIN_API Processor::setBusArrangements (SpeakerArrangement* inputs, int32 numIns, SpeakerArrangement* outputs, int32 numOuts)
 {
 	if (numIns)
 	{
@@ -273,7 +306,7 @@ tresult PLUGIN_API BaseProcessor::setBusArrangements (SpeakerArrangement* inputs
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::setActive (TBool state)
+tresult PLUGIN_API Processor::setActive (TBool state)
 {
 	if (state)
 	{
@@ -290,7 +323,7 @@ tresult PLUGIN_API BaseProcessor::setActive (TBool state)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
+tresult PLUGIN_API Processor::setState (IBStream* state)
 {
 	if (!state)
 		return kResultFalse;
@@ -304,11 +337,13 @@ tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
 		auto& currentProgram = vst2State->programs[vst2State->currentProgram];
 		bypassState = vst2State->isBypassed;
 		auto numStateParams = static_cast<uint32> (currentProgram.values.size ());
+		auto state = std::make_unique<StateT> ();
+		state->reserve (numStateParams);
 		for (uint32 index = 0; index < numParams && index < numStateParams; ++index)
 		{
-			params[index] = currentProgram.values[index];
+			state->push_back (currentProgram.values[index]);
 		}
-		recalculate ();
+		stateTransfer.transferObject_ui (std::move (state));
 		return kResultTrue;
 	}
 	return kResultFalse;
@@ -345,7 +380,7 @@ tresult PLUGIN_API BaseProcessor::setState (IBStream* state)
 }
 
 //-----------------------------------------------------------------------------
-tresult PLUGIN_API BaseProcessor::getState (IBStream* state)
+tresult PLUGIN_API Processor::getState (IBStream* state)
 {
 	if (!state)
 		return kResultFalse;
@@ -397,4 +432,148 @@ tresult PLUGIN_API BaseProcessor::getState (IBStream* state)
 
 	return kResultTrue;
 }
+
+//------------------------------------------------------------------------
+SampleAccurateBaseProcessor::SampleAccurateBaseProcessor ()
+{
+	parameterValues.resize (1);
+}
+
+//------------------------------------------------------------------------
+void SampleAccurateBaseProcessor::allocParameters (int32 numParams)
+{
+	Processor::allocParameters (numParams);
+	parameterValues.resize (numParams+1);
+}
+
+//------------------------------------------------------------------------
+template <SymbolicSampleSizes SampleSize>
+void SampleAccurateBaseProcessor::process (ProcessData& data)
+{
+	ProcessDataSlicer slicer (16);
+
+	Event event {};
+	event.sampleOffset = -1;
+	auto eventCount = data.inputEvents ? data.inputEvents->getEventCount () : 0;
+	auto eventIndex = 0;
+	auto sampleCounter = 0;
+	if (eventCount)
+		data.inputEvents->getEvent (eventIndex++, event);
+
+	auto doProcess = [&] (ProcessData & data) noexcept
+	{
+		preProcess ();
+		while (event.sampleOffset >= 0)
+		{
+			if (event.sampleOffset <= data.numSamples)
+			{
+				processEvent (event);
+				event.sampleOffset = -1;
+				if (eventCount > eventIndex)
+				{
+					if (data.inputEvents->getEvent (eventIndex++, event) == kResultTrue)
+					{
+						event.sampleOffset -= sampleCounter;
+					}
+					else
+						event.sampleOffset = -1;
+				}
+			}
+			else
+			{
+				event.sampleOffset -= data.numSamples;
+				break;
+			}
+		}
+
+		bool needRecalculate = false;
+		for (auto& param : parameterValues)
+		{
+			if (!param.first)
+				break;
+			param.second.advance (data.numSamples, [&] (ParamValue value) {
+				setParameter (param.second.getParamID (), value, 0);
+				needRecalculate = true;
+			});
+		}
+		if (needRecalculate)
+			recalculate ();
+		doProcessing (data);
+		sampleCounter += data.numSamples;
+	};
+	slicer.process<SampleSize> (data, doProcess);
+}
+
+//------------------------------------------------------------------------
+tresult PLUGIN_API SampleAccurateBaseProcessor::process (ProcessData& data)
+{
+	if (checkStateTransfer ())
+		recalculate ();
+	processParameterChanges (data.inputParameterChanges);
+
+	if (data.numSamples > 0 && !bypassProcessing (data))
+	{
+		if (processSetup.symbolicSampleSize == SymbolicSampleSizes::kSample32)
+			process<SymbolicSampleSizes::kSample32> (data);
+		else
+			process<SymbolicSampleSizes::kSample64> (data);
+		checkSilence (data);
+	}
+
+	for (auto& paramterValue : parameterValues)
+	{
+		if (!paramterValue.first)
+			break;
+		paramterValue.second.endChanges ([&] (ParamValue value) {
+			setParameter (paramterValue.second.getParamID (), value, 0);
+		});
+	}
+
+	return kResultTrue;
+}
+
+//------------------------------------------------------------------------
+bool SampleAccurateBaseProcessor::processParameterChanges (IParameterChanges* changes)
+{
+	parameterValues[0].first = false;
+	if (!changes)
+		return false;
+	int32 count = changes->getParameterCount ();
+	if (count > 0)
+	{
+		uint32 usedChangedParameters = 0;
+		for (int32 i = 0; i < count; i++)
+		{
+			IParamValueQueue* queue = changes->getParameterData (i);
+			if (!queue)
+				continue;
+			auto paramID = queue->getParameterId ();
+			if (paramID < parameterValues.size ())
+			{
+				parameterValues[usedChangedParameters].first = true;
+				parameterValues[usedChangedParameters].second.setParamID (paramID);
+				parameterValues[usedChangedParameters].second.setValue (params[paramID]);
+				parameterValues[usedChangedParameters].second.beginChanges (queue);
+				++usedChangedParameters;
+			}
+			else
+			{
+				int32 sampleOffset;
+				ParamValue value;
+				queue->getPoint (queue->getPointCount () - 1, sampleOffset, value);
+				if (paramID == BaseController::kBypassParam)
+					setBypass (value >= 0.5, sampleOffset);
+				else if (paramID == BaseController::kPresetParam)
+					setCurrentProgramNormalized (value);
+				else
+					setParameter (paramID, value, sampleOffset);
+			}
+		}
+		parameterValues[usedChangedParameters].first = false;
+		return true;
+	}
+	return false;	
+}
+
+//------------------------------------------------------------------------
 }}} // namespace

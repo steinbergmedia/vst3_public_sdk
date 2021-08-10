@@ -65,15 +65,31 @@ void ParameterChangesCheck::checkAllChanges (Steinberg::Vst::IParameterChanges* 
 		Steinberg::Vst::IParamValueQueue* paramQueue = paramChanges->getParameterData (paramIdx);
 		if (checkParameterQueue (paramQueue))
 		{
-			checkParameterId (paramQueue->getParameterId ());
+			bool found = false;
+			auto id = paramQueue->getParameterId ();
+			for (auto item : mTempUsedId)
+			{
+				if (item == id)
+				{
+					mEventLogger->addLogEvent (kLogIdParameterIDMoreThanOneTimeinList);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				mTempUsedId.emplace_back (id);
+
+			checkParameterId (id);
 			checkPoints (paramQueue);
 		}
 	}
+	mTempUsedId.clear ();
 }
 
 //------------------------------------------------------------------------
 void ParameterChangesCheck::checkPoints (Steinberg::Vst::IParamValueQueue* paramQueue)
 {
+	Steinberg::int32 lastLastSampleOffset = -1;
 	Steinberg::int32 lastSampleOffset = -1;
 	for (Steinberg::int32 pointIdx = 0; pointIdx < paramQueue->getPointCount (); ++pointIdx)
 	{
@@ -83,7 +99,11 @@ void ParameterChangesCheck::checkPoints (Steinberg::Vst::IParamValueQueue* param
 		{
 			checkNormalized (paramValue);
 			checkSampleOffset (sampleOffset, lastSampleOffset);
+			lastLastSampleOffset = lastSampleOffset;
 			lastSampleOffset = sampleOffset;
+			// here we have more than 3 points at the same sample position
+			if (lastLastSampleOffset == sampleOffset)
+				mEventLogger->addLogEvent (kLogIdParametersHaveSameSampleOffset);
 		}
 	}
 }
@@ -95,7 +115,18 @@ void ParameterChangesCheck::setEventLogger (EventLogger* eventLogger)
 }
 
 //------------------------------------------------------------------------
-void ParameterChangesCheck::setParamIDs (ParamIDs* parameterID) { mParameterIds = parameterID; }
+void ParameterChangesCheck::setParamIDs (ParamIDs* parameterID)
+{
+	mParameterIds = parameterID;
+	updateParameterIDs ();
+}
+
+//------------------------------------------------------------------------
+void ParameterChangesCheck::updateParameterIDs ()
+{
+	if (mParameterIds)
+		mTempUsedId.resize (mParameterIds->size ());
+}
 
 //------------------------------------------------------------------------
 void ParameterChangesCheck::checkParameterCount (Steinberg::int32 paramCount)
@@ -140,12 +171,7 @@ void ParameterChangesCheck::checkNormalized (float normVal)
 void ParameterChangesCheck::checkSampleOffset (Steinberg::int32 sampleOffset,
                                                Steinberg::int32 lastSampleOffset)
 {
-	if (sampleOffset == lastSampleOffset)
-	{
-		mEventLogger->addLogEvent (kLogIdParametersHaveSameSampleOffset);
-	}
-
-	else if (!isValidSampleOffset (sampleOffset, lastSampleOffset))
+	if (!isValidSampleOffset (sampleOffset, lastSampleOffset))
 	{
 		mEventLogger->addLogEvent (kLogIdParametersAreNotSortedBySampleOffset);
 	}
@@ -160,7 +186,7 @@ bool ParameterChangesCheck::isNormalized (float normVal) const
 //------------------------------------------------------------------------
 bool ParameterChangesCheck::isValidSampleOffset (float sampleOffset, float lastSampleOffset) const
 {
-	return sampleOffset > lastSampleOffset;
+	return sampleOffset >= lastSampleOffset;
 }
 
 //------------------------------------------------------------------------

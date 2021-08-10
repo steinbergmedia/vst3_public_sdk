@@ -21,6 +21,12 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
             source/platform/mac/window.mm
             ${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm
         )
+        set_source_files_properties(
+            source/platform/mac/window.mm
+            source/platform/mac/platform.mm
+            "${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm" PROPERTIES
+            COMPILE_FLAGS "-fobjc-arc"
+        )
         set(editorhost_PLATFORM_LIBS
             "-framework Cocoa"
         )

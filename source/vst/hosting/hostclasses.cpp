@@ -35,6 +35,7 @@
 //-----------------------------------------------------------------------------
 
 #include "hostclasses.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 
 #include <algorithm>
 
@@ -46,15 +47,14 @@ HostApplication::HostApplication ()
 {
 	FUNKNOWN_CTOR
 
-	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
+	mPlugInterfaceSupport = owned (new PlugInterfaceSupport);
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostApplication::getName (String128 name)
 {
-	String str ("My VST3 HostApplication");
-	str.copyTo16 (name, 0, 127);
-	return kResultTrue;
+	return VST3::StringConvert::convert ("My VST3 HostApplication", name) ? kResultTrue :
+	                                                                        kInternalError;
 }
 
 //-----------------------------------------------------------------------------
@@ -234,6 +234,8 @@ HostAttributeList::~HostAttributeList ()
 //-----------------------------------------------------------------------------
 void HostAttributeList::removeAttrID (AttrID aid)
 {
+	if (!aid)
+		return;
 	auto it = list.find (aid);
 	if (it != list.end ())
 	{
@@ -245,6 +247,8 @@ void HostAttributeList::removeAttrID (AttrID aid)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setInt (AttrID aid, int64 value)
 {
+	if (!aid)
+		return kInvalidArgument;
 	removeAttrID (aid);
 	list[aid] = new HostAttribute (value);
 	return kResultTrue;
@@ -253,6 +257,8 @@ tresult PLUGIN_API HostAttributeList::setInt (AttrID aid, int64 value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getInt (AttrID aid, int64& value)
 {
+	if (!aid)
+		return kInvalidArgument;
 	auto it = list.find (aid);
 	if (it != list.end () && it->second)
 	{
@@ -265,6 +271,8 @@ tresult PLUGIN_API HostAttributeList::getInt (AttrID aid, int64& value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setFloat (AttrID aid, double value)
 {
+	if (!aid)
+		return kInvalidArgument;
 	removeAttrID (aid);
 	list[aid] = new HostAttribute (value);
 	return kResultTrue;
@@ -273,6 +281,8 @@ tresult PLUGIN_API HostAttributeList::setFloat (AttrID aid, double value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getFloat (AttrID aid, double& value)
 {
+	if (!aid)
+		return kInvalidArgument;
 	auto it = list.find (aid);
 	if (it != list.end () && it->second)
 	{
@@ -285,15 +295,20 @@ tresult PLUGIN_API HostAttributeList::getFloat (AttrID aid, double& value)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setString (AttrID aid, const TChar* string)
 {
+	if (!aid)
+		return kInvalidArgument;
 	removeAttrID (aid);
 	// + 1 for the null-terminate
-	list[aid] = new HostAttribute (string, String (string).length () + 1);
+	auto length = tstrlen (string);
+	list[aid] = new HostAttribute (string, length + 1);
 	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint32 sizeInBytes)
 {
+	if (!aid)
+		return kInvalidArgument;
 	auto it = list.find (aid);
 	if (it != list.end () && it->second)
 	{
@@ -308,6 +323,8 @@ tresult PLUGIN_API HostAttributeList::getString (AttrID aid, TChar* string, uint
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::setBinary (AttrID aid, const void* data, uint32 sizeInBytes)
 {
+	if (!aid)
+		return kInvalidArgument;
 	removeAttrID (aid);
 	list[aid] = new HostAttribute (data, sizeInBytes);
 	return kResultTrue;
@@ -316,6 +333,8 @@ tresult PLUGIN_API HostAttributeList::setBinary (AttrID aid, const void* data, u
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostAttributeList::getBinary (AttrID aid, const void*& data, uint32& sizeInBytes)
 {
+	if (!aid)
+		return kInvalidArgument;
 	auto it = list.find (aid);
 	if (it != list.end () && it->second)
 	{

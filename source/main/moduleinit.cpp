@@ -121,4 +121,3 @@ bool DeinitModule ()
 	Steinberg::sortAndRunFunctions (Steinberg::getTermFunctions ());
 	return true;
 }
-

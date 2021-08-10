@@ -35,7 +35,8 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "public.sdk/source/vst/utility/test/versionparsertest.h"
+#include "public.sdk/source/main/moduleinit.h"
+#include "public.sdk/source/vst/utility/testing.h"
 #include "public.sdk/source/vst/utility/versionparser.h"
 #include "pluginterfaces/base/fstrdefs.h"
 
@@ -44,68 +45,60 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-bool PLUGIN_API VersionParserTest::setup ()
-{
-	return true;
-}
-
-//------------------------------------------------------------------------
-bool PLUGIN_API VersionParserTest::run (ITestResult* testResult)
-{
-	auto version = VST3::Version::parse ("SDK 3.7");
-	if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 0 ||
-	    version.getBuildnumber () != 0)
-	{
-		testResult->addErrorMessage (STR ("Parsing 'SDK 3.7' failed"));
-		return false;
-	}
-
-	version = VST3::Version::parse ("3.7.1.38");
-	if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 1 ||
-	    version.getBuildnumber () != 38)
-	{
-		testResult->addErrorMessage (STR ("Parsing '3.7.1.38' failed"));
-		return false;
-	}
-
-	version = VST3::Version::parse ("SDK 3.7 Prerelease");
-	if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 0 ||
-	    version.getBuildnumber () != 0)
-	{
-		testResult->addErrorMessage (STR ("Parsing 'SDK 3.7 Prerelease' failed"));
-		return false;
-	}
-
-	version = VST3::Version::parse ("SDK 3.7-99");
-	if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 0 ||
-	    version.getBuildnumber () != 0)
-	{
-		testResult->addErrorMessage (STR ("Parsing 'SDK 3.7-99' failed"));
-		return false;
-	}
-
-	version = VST3::Version::parse ("No version at all");
-	if (version.getMajor () != 0 || version.getMinor () != 0 || version.getSub () != 0 ||
-	    version.getBuildnumber () != 0)
-	{
-		testResult->addErrorMessage (STR ("Parsing 'No version at all' failed"));
-		return false;
-	}
-
-	return true;
-}
-
-//------------------------------------------------------------------------
-bool PLUGIN_API VersionParserTest::teardown ()
-{
-	return true;
-}
-
-//------------------------------------------------------------------------
-const tchar* PLUGIN_API VersionParserTest::getDescription ()
-{
-	return STR ("VersionParser Tests");
-}
+static ModuleInitializer InitVersionParserTests ([] () {
+	registerTest ("VersionParser", STR ("Parsing 'SDK 3.7'"), [] (ITestResult* testResult) {
+		auto version = VST3::Version::parse ("SDK 3.7");
+		if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 0 ||
+		    version.getBuildnumber () != 0)
+		{
+			testResult->addErrorMessage (STR ("Parsing 'SDK 3.7' failed"));
+			return false;
+		}
+		return true;
+	});
+	registerTest ("VersionParser", STR ("Parsing 'SDK 3.7.1.38'"), [] (ITestResult* testResult) {
+		auto version = VST3::Version::parse ("3.7.1.38");
+		if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 1 ||
+		    version.getBuildnumber () != 38)
+		{
+			testResult->addErrorMessage (STR ("Parsing '3.7.1.38' failed"));
+			return false;
+		}
+		return true;
+	});
+	registerTest ("VersionParser", STR ("Parsing 'SDK 3.7 Prerelease'"),
+	              [] (ITestResult* testResult) {
+		              auto version = VST3::Version::parse ("SDK 3.7 Prerelease");
+		              if (version.getMajor () != 3 || version.getMinor () != 7 ||
+		                  version.getSub () != 0 || version.getBuildnumber () != 0)
+		              {
+			              testResult->addErrorMessage (STR ("Parsing 'SDK 3.7 Prerelease' failed"));
+			              return false;
+		              }
+		              return true;
+	              });
+	registerTest ("VersionParser", STR ("Parsing 'SDK 3.7-99'"), [] (ITestResult* testResult) {
+		auto version = VST3::Version::parse ("SDK 3.7-99");
+		if (version.getMajor () != 3 || version.getMinor () != 7 || version.getSub () != 0 ||
+		    version.getBuildnumber () != 0)
+		{
+			testResult->addErrorMessage (STR ("Parsing 'SDK 3.7-99' failed"));
+			return false;
+		}
+		return true;
+	});
+	registerTest ("VersionParser", STR ("Parsing 'No version at all'"),
+	              [] (ITestResult* testResult) {
+		              auto version = VST3::Version::parse ("No version at all");
+		              if (version.getMajor () != 0 || version.getMinor () != 0 ||
+		                  version.getSub () != 0 || version.getBuildnumber () != 0)
+		              {
+			              testResult->addErrorMessage (STR ("Parsing 'No version at all' failed"));
+			              return false;
+		              }
+		              return true;
+	              });
+});
 
 //------------------------------------------------------------------------
 } // Vst

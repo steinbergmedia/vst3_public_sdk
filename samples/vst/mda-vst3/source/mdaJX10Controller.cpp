@@ -91,9 +91,9 @@ tresult PLUGIN_API JX10Controller::initialize (FUnknown* context)
 		parameters.addParameter (USTRING("Pitch Bend"), USTRING(""), 0, 0.5, 0, kPitchBendParam);
 		midiCCParamID[kCtrlBreath] = kBreathParam;
 		midiCCParamID[kCtrlFilterResonance] = kBreathParam;
-		parameters.addParameter (USTRING("Filter Mod+"), USTRING(""), 0, 0.5, 0, kBreathParam);
+		parameters.addParameter (USTRING("Filter Mod+"), USTRING(""), 0, 0., 0, kBreathParam);
 		midiCCParamID[3] = kCtrler3Param;
-		parameters.addParameter (USTRING("Filter Mod-"), USTRING(""), 0, 0.5, 0, kCtrler3Param);
+		parameters.addParameter (USTRING("Filter Mod-"), USTRING(""), 0, 0., 0, kCtrler3Param);
 		midiCCParamID[kCtrlExpression] = kCtrler3Param;
 		parameters.addParameter (USTRING("Filter Resonance"), USTRING(""), 0, 0.5, 0, kExpressionParam);
 		midiCCParamID[kAfterTouch] = kAftertouchParam;

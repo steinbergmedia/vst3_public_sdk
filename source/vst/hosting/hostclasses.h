@@ -37,9 +37,9 @@
 #pragma once
 
 #include "public.sdk/source/vst/hosting/pluginterfacesupport.h"
-#include "base/source/fstring.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
 #include <map>
+#include <string>
 
 namespace Steinberg {
 namespace Vst {
@@ -89,7 +89,7 @@ public:
 	DECLARE_FUNKNOWN_METHODS
 protected:
 	void removeAttrID (AttrID aid);
-	std::map<String, HostAttribute*> list;
+	std::map<std::string, HostAttribute*> list;
 };
 
 //------------------------------------------------------------------------

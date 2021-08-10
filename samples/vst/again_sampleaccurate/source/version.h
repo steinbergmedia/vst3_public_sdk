@@ -1,10 +1,11 @@
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/adelay/source/exampletest.h
-// Created by  : Steinberg, 10/2010
-// Description : 
+// Filename    : public.sdk/samples/vst/again_sampleaccurate/source/version.h
+// Created by  : Steinberg, 04/2021
+// Description : Example of handle the versioning and copyright info of again sampleaccurate plug-in 
+//				 used for the resources (RC file for example)
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -34,51 +35,36 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#ifndef __exampletest__
-#define __exampletest__
+#pragma once
 
-#include "base/source/fobject.h"
-#include "pluginterfaces/test/itest.h"
+#include "pluginterfaces/base/fplatform.h"
 
-namespace Steinberg {
-namespace Vst {
-class ITestPlugProvider;
+#define MAJOR_VERSION_STR "1"
+#define MAJOR_VERSION_INT 1
 
-//-----------------------------------------------------------------------------
-class ADelayTest : public ITest, public FObject
-{
-public:
-	ADelayTest (ITestPlugProvider* plugProvider);
+#define SUB_VERSION_STR "0"
+#define SUB_VERSION_INT 0
 
-	//--ITest
-	bool PLUGIN_API setup () SMTG_OVERRIDE;
-	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
-	bool PLUGIN_API teardown () SMTG_OVERRIDE;
-	const tchar* PLUGIN_API getDescription () SMTG_OVERRIDE;
+#define RELEASE_NUMBER_STR "0"
+#define RELEASE_NUMBER_INT 0
 
-	OBJ_METHODS(ADelayTest, FObject)
-	DEF_INTERFACES_1(ITest, FObject)
-	REFCOUNT_METHODS(FObject)
-protected:
-	ITestPlugProvider* plugProvider;
-};
+#define BUILD_NUMBER_STR "1" // Build number to be sure that each result could identified.
+#define BUILD_NUMBER_INT 1
 
-//-----------------------------------------------------------------------------
-class ADelayTestFactory : public ITestFactory, public FObject
-{
-public:
-	//--ITestFactory
-	tresult PLUGIN_API createTests (FUnknown* context, ITestSuite* parentSuite) SMTG_OVERRIDE;
+// Version with build number (example "1.0.3.342")
+#define FULL_VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR "." BUILD_NUMBER_STR
 
-	static FUnknown* createInstance (void*) { return (ITestFactory*)new ADelayTestFactory (); }
+// Version without build number (example "1.0.3")
+#define VERSION_STR MAJOR_VERSION_STR "." SUB_VERSION_STR "." RELEASE_NUMBER_STR
 
-	static FUID cid;
-
-	OBJ_METHODS(ADelayTestFactory, FObject)
-	DEF_INTERFACES_1(ITestFactory, FObject)
-	REFCOUNT_METHODS(FObject)
-};
-
-}} // namespaces
-
+#define stringOriginalFilename	"again_sampleaccurate.vst3"
+#if SMTG_PLATFORM_64
+#define stringFileDescription	"AGain SampleAccurate VST3-SDK (64Bit)"
+#else
+#define stringFileDescription	"AGain SampleAccurate VST3-SDK"
 #endif
+#define stringCompanyWeb		"http://www.steinberg.net"
+#define stringCompanyEmail		"mailto:info@steinberg.de"
+#define stringCompanyName		"Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2021 Steinberg Media Technologies"
+#define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

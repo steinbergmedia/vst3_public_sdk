@@ -119,19 +119,19 @@ public:
 	template <typename T>
 	T getFunctionPointer (const char* name)
 	{
-		return reinterpret_cast<T> (dlsym (module, name));
+		return reinterpret_cast<T> (dlsym (mModule, name));
 	}
 
 	~LinuxModule () override
 	{
 		factory = PluginFactory (nullptr);
 
-		if (module)
+		if (mModule)
 		{
 			if (auto moduleExit = getFunctionPointer<ModuleExitFunc> ("ModuleExit"))
 				moduleExit ();
 
-			dlclose (module);
+			dlclose (mModule);
 		}
 	}
 
@@ -170,21 +170,15 @@ public:
 			return false;
 		}
 
-		module = dlopen (reinterpret_cast<const char*>(modulePath->generic_string ().data ()), RTLD_LAZY);
-		if (!module)
+		mModule = dlopen (reinterpret_cast<const char*> (modulePath->generic_string ().data ()),
+		                  RTLD_LAZY);
+		if (!mModule)
 		{
 			errorDescription = "dlopen failed.\n";
 			errorDescription += dlerror ();
 			return false;
 		}
-
-		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
-		if (!factoryProc)
-		{
-			errorDescription =
-			    "The shared library does not export the required 'GetPluginFactory' function";
-			return false;
-		}
+		// ModuleEntry is mandatory
 		auto moduleEntry = getFunctionPointer<ModuleEntryFunc> ("ModuleEntry");
 		if (!moduleEntry)
 		{
@@ -192,12 +186,28 @@ public:
 			    "The shared library does not export the required 'ModuleEntry' function";
 			return false;
 		}
-		if (!moduleEntry (module))
+		// ModuleExit is mandatory
+		auto moduleExit = getFunctionPointer<ModuleExitFunc> ("ModuleExit");
+		if (!moduleExit)
+		{
+			errorDescription =
+			    "The shared library does not export the required 'ModuleExit' function";
+			return false;
+		}
+		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
+		if (!factoryProc)
+		{
+			errorDescription =
+			    "The shared library does not export the required 'GetPluginFactory' function";
+			return false;
+		}
+
+		if (!moduleEntry (mModule))
 		{
 			errorDescription = "Calling 'ModuleEntry' failed";
 			return false;
 		}
-		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned(factoryProc ()));
+		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned (factoryProc ()));
 		if (!f)
 		{
 			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
@@ -207,7 +217,7 @@ public:
 		return true;
 	}
 
-	void* module {nullptr};
+	void* mModule {nullptr};
 };
 
 //------------------------------------------------------------------------
@@ -245,14 +255,14 @@ void findModules (const std::string& path, Module::PathList& pathList)
 //------------------------------------------------------------------------
 Module::Ptr Module::create (const std::string& path, std::string& errorDescription)
 {
-	auto module = std::make_shared<LinuxModule> ();
-	if (module->load (path, errorDescription))
+	auto _module = std::make_shared<LinuxModule> ();
+	if (_module->load (path, errorDescription))
 	{
 		auto it = std::find_if (path.rbegin (), path.rend (),
 		                        [] (const std::string::value_type& c) { return c == '/'; });
 		if (it != path.rend ())
-			module->name = {it.base (), path.end ()};
-		return module;
+			_module->name = {it.base (), path.end ()};
+		return _module;
 	}
 	return nullptr;
 }

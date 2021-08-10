@@ -55,6 +55,7 @@ HostCheck::HostCheck ()
 void HostCheck::addParameter (Steinberg::Vst::ParamID paramId)
 {
 	mParameterIds.insert (paramId);
+	mParamChangesCheck.updateParameterIDs ();
 }
 
 //------------------------------------------------------------------------
@@ -72,8 +73,10 @@ bool HostCheck::validate (Steinberg::Vst::ProcessData& data, Steinberg::int32 mi
 	mEventListCheck.check (data.inputEvents);
 	mParamChangesCheck.checkParameterChanges (data.inputParameterChanges);
 
-	checkAudioBuffers (data.inputs, data.numInputs, Steinberg::Vst::kInput, data.symbolicSampleSize, minInputBufferCount);
-	checkAudioBuffers (data.outputs, data.numOutputs, Steinberg::Vst::kOutput, data.symbolicSampleSize, minOutputBufferCount);
+	checkAudioBuffers (data.inputs, data.numInputs, Steinberg::Vst::kInput, data.symbolicSampleSize,
+	                   minInputBufferCount);
+	checkAudioBuffers (data.outputs, data.numOutputs, Steinberg::Vst::kOutput,
+	                   data.symbolicSampleSize, minOutputBufferCount);
 
 	return mEventLogger.empty ();
 }
@@ -81,13 +84,15 @@ bool HostCheck::validate (Steinberg::Vst::ProcessData& data, Steinberg::int32 mi
 //------------------------------------------------------------------------
 void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
                                    Steinberg::int32 numBuffers, Steinberg::Vst::BusDirection dir,
-                                   Steinberg::int32 symbolicSampleSize, Steinberg::int32 minBufferCount)
+                                   Steinberg::int32 symbolicSampleSize,
+                                   Steinberg::int32 minBufferCount)
 {
 	if (mComponent)
 	{
 		if (numBuffers > 0)
 		{
-			//Steinberg::int32 audioBusCount = mComponent->getBusCount (Steinberg::Vst::kAudio, dir);
+			// Steinberg::int32 audioBusCount = mComponent->getBusCount (Steinberg::Vst::kAudio,
+			// dir);
 			bool isValid = minBufferCount <= numBuffers;
 			if (!isValid)
 			{

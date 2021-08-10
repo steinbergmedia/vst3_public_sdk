@@ -231,7 +231,7 @@ void App::createViewAndShow (IEditController* controller)
 	auto viewRect = ViewRectToRect (plugViewSize);
 
 	windowController = std::make_shared<WindowController> (view);
-	auto window = IPlatform::instance ().createWindow (
+	window = IPlatform::instance ().createWindow (
 	    "Editor", viewRect.size, view->canResize () == kResultTrue, windowController);
 	if (!window)
 	{
@@ -244,7 +244,24 @@ void App::createViewAndShow (IEditController* controller)
 //------------------------------------------------------------------------
 void App::init (const std::vector<std::string>& cmdArgs)
 {
-	if (cmdArgs.empty ())
+	VST3::Optional<VST3::UID> uid;
+	uint32 flags {};
+	for (auto it = cmdArgs.begin (), end = cmdArgs.end (); it != end; ++it)
+	{
+		if (*it == "--componentHandler")
+			flags |= kSetComponentHandler;
+		else if (*it == "--secondWindow")
+			flags |= kSecondWindow;
+		else if (*it == "--uid")
+		{
+			if (++it != end)
+				uid = VST3::UID::fromString (*it);
+			if (!uid)
+				IPlatform::instance ().kill (-1, "wrong argument to --uid");
+		}
+	}
+
+	if (cmdArgs.empty () || cmdArgs.back ().find (".vst3") == std::string::npos)
 	{
 		auto helpText = R"(
 usage: EditorHost [options] pluginPath
@@ -262,23 +279,6 @@ options:
 )";
 
 		IPlatform::instance ().kill (0, helpText);
-	}
-
-	VST3::Optional<VST3::UID> uid;
-	uint32 flags {};
-	for (auto it = cmdArgs.begin (), end = cmdArgs.end (); it != end; ++it)
-	{
-		if (*it == "--componentHandler")
-			flags |= kSetComponentHandler;
-		else if (*it == "--secondWindow")
-			flags |= kSecondWindow;
-		else if (*it == "--uid")
-		{
-			if (++it != end)
-				uid = VST3::UID::fromString (*it);
-			if (!uid)
-				IPlatform::instance ().kill (-1, "wrong argument to --uid");
-		}
 	}
 
 	PluginContextFactory::instance ().setPluginContext (&pluginContext);

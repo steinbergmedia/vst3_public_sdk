@@ -63,7 +63,7 @@ PianoProcessor::~PianoProcessor ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API PianoProcessor::initialize (FUnknown* context)
 {
-	tresult res = BaseProcessor::initialize (context);
+	tresult res = Base::initialize (context);
 	if (res == kResultTrue)
 	{
 		addEventInput (USTRING("MIDI in"), 1);
@@ -91,16 +91,15 @@ tresult PLUGIN_API PianoProcessor::initialize (FUnknown* context)
 		kgrp[14].root = 93;  kgrp[14].high = 999; kgrp[14].pos = 574123;  kgrp[14].end = 586343;  kgrp[14].loop = 2399;
 
 		//initialise...
-		for(int32 v=0; v<NVOICES; v++) 
+		for(int32 v=0; v<synthData.numVoices; v++) 
 		{
-			memset (&voice[v], 0, sizeof (VOICE));
-			voice[v].env = 0.0f;
-			voice[v].dec = 0.99f; //all notes off
+			memset (&synthData.voice[v], 0, sizeof (VOICE));
+			synthData.voice[v].env = 0.0f;
+			synthData.voice[v].dec = 0.99f; //all notes off
 		}
-		notes[0] = EVENTS_DONE;
 		volume = 0.2f;
 		muff = 160.0f;
-		cpos = sustain = activevoices = 0;
+		cpos = synthData.sustain = synthData.activevoices = 0;
 		comb = new float[256];
 
 		for (int32 i = 0; i < NPARAMS; i++)
@@ -116,7 +115,7 @@ tresult PLUGIN_API PianoProcessor::terminate ()
 {
 	if (comb) delete[] comb;
 	comb = nullptr;
-	return BaseProcessor::terminate ();
+	return Base::terminate ();
 }
 
 //-----------------------------------------------------------------------------
@@ -124,23 +123,22 @@ tresult PLUGIN_API PianoProcessor::setActive (TBool state)
 {
 	if (state)
 	{
+		synthData.init ();
 		Fs = getSampleRate ();
 		iFs = 1.0f / Fs;
 		if (Fs > 64000.0f) cmax = 0xFF; else cmax = 0x7F;
 		memset (comb, 0, sizeof (float) * 256);
-		eventPos = 0;
-		notes[0] = EVENTS_DONE;
 	}
 	else
 		allNotesOff ();
-	return BaseProcessor::setActive (state);
+	return Base::setActive (state);
 }
 
 //-----------------------------------------------------------------------------
 void PianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sampleOffset)
 {
 	if (index < NPARAMS)
-		BaseProcessor::setParameter (index, newValue, sampleOffset);
+		Base::setParameter (index, newValue, sampleOffset);
 	else if (index == BaseController::kPresetParam) // program change
 	{
 		currentProgram = std::min<int32> (kNumPrograms - 1, (int32)(newValue * kNumPrograms));
@@ -158,13 +156,16 @@ void PianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sam
 	}
 	else if (index == BaseController::kSustainParam)
 	{
-		sustain = newValue > 0.5;
-		if (sustain==0)
+		synthData.sustain = newValue > 0.5;
+		if (synthData.sustain==0)
 		{
-			notes[eventPos++] = 0; // was: event->deltaFrames;
-			notes[eventPos++] = SUSTAIN; //end all sustained notes
-			notes[eventPos++] = 0;
-			notes[eventPos++] = EVENTS_DONE;
+			for (auto& v : synthData.voice)
+			{
+				if (v.noteID = SustainNoteID)
+				{
+					v.dec = (float)exp (-iFs * exp (6.0 + 0.01 * (double)v.note - 5.0 * params[1]));
+				}
+			}
 		}
 	}
 }
@@ -189,90 +190,94 @@ void PianoProcessor::doProcessing (ProcessData& data)
 	float* out0 = data.outputs[0].channelBuffers32[0];
 	float* out1 = data.outputs[0].channelBuffers32[1];
 
-	int32 event=0, frame=0, frames, v;
+	int32 frame=0, frames, v;
 	float x, l, r;
 	int32 i;
 
-	while (frame<sampleFrames)
-	{
-		frames = notes[event++];
-		if (frames>sampleFrames) frames = sampleFrames;
-		frames -= frame;
-		frame += frames;
-
-		while (--frames>=0)
+	synthData.eventPos = 0;
+	if (synthData.activevoices > 0 || synthData.hasEvents ())
+	{    
+		while (frame<sampleFrames)
 		{
-			VOICE *V = voice;
-			l = r = 0.0f;
+			frames = synthData.events[synthData.eventPos].sampleOffset;
+			if (frames>sampleFrames) frames = sampleFrames;
+			frames -= frame;
+			frame += frames;
 
-			for(v=0; v<activevoices; v++)
+			while (--frames>=0)
 			{
-				V->frac += V->delta;  //integer-based linear interpolation
-				V->pos += V->frac >> 16;
-				V->frac &= 0xFFFF;
-				if (V->pos > V->end) V->pos -= V->loop;
-				//i = (i << 7) + (V->frac >> 9) * (waves[V->pos + 1] - i) + 0x40400000;   //not working on intel mac !?!
-				i = waves[V->pos] + ((V->frac * (waves[V->pos + 1] - waves[V->pos])) >> 16);
-				x = V->env * (float)i / 32768.0f;
-				//x = V->env * (*(float *)&i - 3.0f);  //fast int->float
+				VOICE *V = synthData.voice.data ();
+				l = r = 0.0f;
 
-				V->env = V->env * V->dec;  //envelope
-				V->f0 += V->ff * (x + V->f1 - V->f0);  //muffle filter
-				V->f1 = x;
-
-				l += V->outl * V->f0;
-				r += V->outr * V->f0;
-
-				if (!(l > -2.0f) || !(l < 2.0f))
+				for(v=0; v<synthData.activevoices; v++)
 				{
-					printf ("what is this?   %d,  %f,  %f\n", i, x, V->f0);
-					l = 0.0f;
-				}  
-				if (!(r > -2.0f) || !(r < 2.0f))
-				{
-					r = 0.0f;
-				}  
+					V->frac += V->delta;  //integer-based linear interpolation
+					V->pos += V->frac >> 16;
+					V->frac &= 0xFFFF;
+					if (V->pos > V->end) V->pos -= V->loop;
+					//i = (i << 7) + (V->frac >> 9) * (waves[V->pos + 1] - i) + 0x40400000;   //not working on intel mac !?!
+					i = waves[V->pos] + ((V->frac * (waves[V->pos + 1] - waves[V->pos])) >> 16);
+					x = V->env * (float)i / 32768.0f;
+					//x = V->env * (*(float *)&i - 3.0f);  //fast int->float
 
-				V++;
+					V->env = V->env * V->dec;  //envelope
+					V->f0 += V->ff * (x + V->f1 - V->f0);  //muffle filter
+					V->f1 = x;
+
+					l += V->outl * V->f0;
+					r += V->outr * V->f0;
+
+					if (!(l > -2.0f) || !(l < 2.0f))
+					{
+						printf ("what is this?   %d,  %f,  %f\n", i, x, V->f0);
+						l = 0.0f;
+					}  
+					if (!(r > -2.0f) || !(r < 2.0f))
+					{
+						r = 0.0f;
+					}  
+
+					V++;
+				}
+				comb[cpos] = l + r;
+				++cpos &= cmax;
+				x = cdep * comb[cpos];  //stereo simulator
+
+				*out0++ = l + x;
+				*out1++ = r - x;
 			}
-			comb[cpos] = l + r;
-			++cpos &= cmax;
-			x = cdep * comb[cpos];  //stereo simulator
 
-			*out0++ = l + x;
-			*out1++ = r - x;
-		}
-
-		if (frame<sampleFrames)
-		{
-			int32 note = notes[event++];
-			int32 vel  = notes[event++];
-			noteOn(note, vel);
+			if (frame<sampleFrames)
+			{
+				noteEvent (synthData.events[synthData.eventPos]);
+				++synthData.eventPos;
+			}
 		}
 	}
-	for(v=0; v<activevoices; v++) if (voice[v].env < SILENCE) voice[v] = voice[--activevoices];
-	notes[0] = EVENTS_DONE;  //mark events buffer as done
-	eventPos = 0;
+	for(v=0; v<synthData.activevoices; v++) if (synthData.voice[v].env < SILENCE) synthData.voice[v] = synthData.voice[--synthData.activevoices];
 }
 
 //-----------------------------------------------------------------------------
-void PianoProcessor::noteOn(int32 note, int32 velocity)
+void PianoProcessor::noteEvent (const Event& event)
 {
 	float l=99.0f;
 	int32  v, vl=0, k, s;
 
-	if (velocity>0) 
+	if (event.type == Event::kNoteOnEvent)
 	{
-		if (activevoices < poly) //add a note
+		auto& noteOn = event.noteOn;
+		auto note = noteOn.pitch;
+		float velocity = noteOn.velocity * 127;
+		if (synthData.activevoices < poly) //add a note
 		{
-			vl = activevoices;
-			activevoices++;
+			vl = synthData.activevoices;
+			synthData.activevoices++;
 		}
 		else //steal a note
 		{
 			for(v=0; v<poly; v++)  //find quietest voice
 			{
-				if (voice[v].env < l) { l = voice[v].env;  vl = v; }
+				if (synthData.voice[v].env < l) { l = synthData.voice[v].env;  vl = v; }
 			}
 		}
 
@@ -288,86 +293,66 @@ void PianoProcessor::noteOn(int32 note, int32 velocity)
 
 		l += (float)(note - kgrp[k].root); //pitch
 		l = 22050.0f * iFs * (float)exp (0.05776226505 * l);
-		voice[vl].delta = (int32)(65536.0f * l);
-		voice[vl].frac = 0;
-		voice[vl].pos = kgrp[k].pos;
-		voice[vl].end = kgrp[k].end;
-		voice[vl].loop = kgrp[k].loop;
+		synthData.voice[vl].delta = (int32)(65536.0f * l);
+		synthData.voice[vl].frac = 0;
+		synthData.voice[vl].pos = kgrp[k].pos;
+		synthData.voice[vl].end = kgrp[k].end;
+		synthData.voice[vl].loop = kgrp[k].loop;
 
-		voice[vl].env = (0.5f + velsens) * (float)pow (0.0078f * velocity, velsens); //velocity
+		synthData.voice[vl].env = (0.5f + velsens) * (float)pow (0.0078f * velocity, velsens); //velocity
 
 		l = 50.0f + params[4] * params[4] * muff + muffvel * (float)(velocity - 64); //muffle
 		if (l < (55.0f + 0.25f * (float)note)) l = 55.0f + 0.25f * (float)note;
 		if (l > 210.0f) l = 210.0f;
-		voice[vl].ff = l * l * iFs;
-		voice[vl].f0 = voice[vl].f1 = 0.0f;
+		synthData.voice[vl].ff = l * l * iFs;
+		synthData.voice[vl].f0 = synthData.voice[vl].f1 = 0.0f;
 
-		voice[vl].note = note; //note->pan
+		synthData.voice[vl].note = note; //note->pan
 		if (note <  12) note = 12;
 		if (note > 108) note = 108;
 		l = volume * trim;
-		voice[vl].outr = l + l * width * (float)(note - 60);
-		voice[vl].outl = l + l - voice[vl].outr;
+		synthData.voice[vl].outr = l + l * width * (float)(note - 60);
+		synthData.voice[vl].outl = l + l - synthData.voice[vl].outr;
 
 		if (note < 44) note = 44; //limit max decay length
 		l = 2.0f * params[0];
 		if (l < 1.0f) l += 0.25f - 0.5f * params[0];
-		voice[vl].dec = (float)exp (-iFs * exp (-0.6 + 0.033 * (double)note - l));
+		synthData.voice[vl].dec = (float)exp (-iFs * exp (-0.6 + 0.033 * (double)note - l));
+		synthData.voice[vl].noteID = noteOn.noteId;
 	}
 	else //note off
 	{
-		for(v=0; v<NVOICES; v++) if (voice[v].note==note) //any voices playing that note?
+		auto& noteOff = event.noteOff;
+		auto note = noteOff.pitch;
+		for(v=0; v<synthData.numVoices; v++) if (synthData.voice[v].noteID==noteOff.noteId) //any voices playing that note?
 		{
-			if (sustain==0)
+			if (synthData.sustain==0)
 			{
-				if (note < 94 || note == SUSTAIN) //no release on highest notes
-				voice[v].dec = (float)exp (-iFs * exp (2.0 + 0.017 * (double)note - 2.0 * params[1]));
+				if (note < 94) //no release on highest notes
+				synthData.voice[v].dec = (float)exp (-iFs * exp (2.0 + 0.017 * (double)note - 2.0 * params[1]));
 			}
-			else voice[v].note = SUSTAIN;
+			else synthData.voice[v].noteID = SustainNoteID;
 		}
 	}
 }
 
 //-----------------------------------------------------------------------------
-void PianoProcessor::processEvents (IEventList* events)
+void PianoProcessor::preProcess ()
 {
-	if (events)
-	{
-		int32 count = events->getEventCount ();
-		for (int32 i = 0; i < count; i++)
-		{
-			Event e;
-			events->getEvent (i, e);
-			switch (e.type)
-			{
-				case Event::kNoteOnEvent:
-				{
-					notes[eventPos++] = e.sampleOffset;
-					notes[eventPos++] = e.noteOn.pitch;
-					notes[eventPos++] = e.noteOn.velocity * 127;
-					break;
-				}
-				case Event::kNoteOffEvent:
-				{
-					notes[eventPos++] = e.sampleOffset;
-					notes[eventPos++] = e.noteOff.pitch;
-					notes[eventPos++] = 0;
-					break;
-				}
-				default:
-					continue;
-			}
-			if (eventPos > EVENTBUFFER) eventPos -= 3; //discard events if buffer full!!
-		}
-		notes[eventPos] = EVENTS_DONE;
-	}
+	synthData.clearEvents ();
+}
+
+//-----------------------------------------------------------------------------
+void PianoProcessor::processEvent (const Event& e)
+{
+	synthData.processEvent (e);
 }
 
 //-----------------------------------------------------------------------------
 void PianoProcessor::allNotesOff ()
 {
-  for (int32 v=0; v<NVOICES; v++) voice[v].dec=0.99f;
-  sustain = 0;
+  for (int32 v=0; v<synthData.numVoices; v++) synthData.voice[v].dec=0.99f;
+  synthData.sustain = 0;
   muff = 160.0f;
 }
 

@@ -53,7 +53,81 @@
 #include <cstdlib>
 #include <limits>
 
-extern bool DeinitModule (); //! Called in BaseWrapper destructor
+#if SMTG_OS_MACOS
+#include <CoreFoundation/CoreFoundation.h>
+#include <dlfcn.h>
+#endif
+
+extern "C" {
+#if SMTG_OS_MACOS
+	// implemented in macmain.cpp
+	SMTG_EXPORT_SYMBOL bool bundleEntry (CFBundleRef);
+	SMTG_EXPORT_SYMBOL bool bundleExit (void);
+#elif SMTG_OS_WINDOWS
+	// implemented in dllmain.cpp
+	SMTG_EXPORT_SYMBOL bool InitDll ();
+	SMTG_EXPORT_SYMBOL bool ExitDll ();
+#else
+#error platform not supported!
+#endif
+}
+
+#if SMTG_OS_MACOS
+//------------------------------------------------------------------------
+static CFBundleRef GetBundleFromExecutable (const char* filepath)
+{
+	// AutoreleasePool ap;
+	char* fname = strdup (filepath);
+	int pos = strlen (fname);
+	int level = 3;
+	while (level > 0 && --pos >= 0)
+	{
+		if (fname[pos] == '/')
+			level--;
+	}
+	if (level > 0)
+		return 0;
+
+	fname[pos] = 0;
+	CFURLRef url = CFURLCreateFromFileSystemRepresentation (0, (const UInt8*)fname, pos, true);
+	CFBundleRef bundle = CFBundleCreate (0, url);
+	return bundle;
+}
+
+//------------------------------------------------------------------------
+static CFBundleRef GetCurrentBundle ()
+{
+	Dl_info info;
+	if (dladdr ((const void*)GetCurrentBundle, &info))
+	{
+		if (info.dli_fname)
+		{
+			return GetBundleFromExecutable (info.dli_fname);
+		}
+	}
+	return 0;
+}
+#endif // SMTG_OS_MACOS
+
+//------------------------------------------------------------------------
+bool _InitModule ()
+{
+#if SMTG_OS_MACOS
+	return bundleEntry (GetCurrentBundle ());
+#else
+	return InitDll ();
+#endif
+}
+
+//------------------------------------------------------------------------
+bool _DeinitModule ()
+{
+#if SMTG_OS_MACOS
+	return bundleExit ();
+#else
+	return ExitDll ();
+#endif
+}
 
 //------------------------------------------------------------------------
 namespace Steinberg {

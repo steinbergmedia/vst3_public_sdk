@@ -1,11 +1,11 @@
-//-----------------------------------------------------------------------------
+//------------------------------------------------------------------------
+// Flags       : clang-format SMTGSequencer
 // Project     : VST SDK
 //
-// Category    : Helpers
-// Filename    : public.sdk/source/vst/utility/test/versionparsertest.h
-// Created by  : Steinberg, 12/2019
-// Description : Test version parser
-// Flags       : clang-format SMTGSequencer
+// Category    : Examples
+// Filename    : public.sdk/samples/vst/again_sampleaccurate/source/tutorial.h
+// Created by  : Steinberg, 04/2021
+// Description : Tutorial
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -37,30 +37,23 @@
 
 #pragma once
 
-#include "base/source/fobject.h"
-#include "pluginterfaces/test/itest.h"
+#include "pluginterfaces/base/funknown.h"
+#include "pluginterfaces/vst/vsttypes.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
+namespace Tutorial {
 
 //------------------------------------------------------------------------
-class VersionParserTest : public ITest, public FObject
-{
-public:
-	VersionParserTest () = default;
-
-	bool PLUGIN_API setup () SMTG_OVERRIDE;
-	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
-	bool PLUGIN_API teardown () SMTG_OVERRIDE;
-	const tchar* PLUGIN_API getDescription () SMTG_OVERRIDE;
-
-	OBJ_METHODS (VersionParserTest, FObject)
-	DEF_INTERFACES_1 (ITest, FObject)
-	REFCOUNT_METHODS (FObject)
-private:
-};
+static const FUID ProcessorID (0xCC48BF25, 0x529043DA, 0x80223510, 0xFFE8BD02);
+static const FUID ControllerID (0x3A89B2B2, 0x4F474E02, 0x9C96EE27, 0x0AD2A15B);
 
 //------------------------------------------------------------------------
+FUnknown* createProcessorInstance (void*);
+FUnknown* createControllerInstance (void*);
+
+//------------------------------------------------------------------------
+} // AgainSampleAccurate
 } // Vst
 } // Steinberg

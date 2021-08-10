@@ -84,7 +84,7 @@ DX10Processor::~DX10Processor ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DX10Processor::initialize (FUnknown* context)
 {
-	tresult res = BaseProcessor::initialize (context);
+	tresult res = Base::initialize (context);
 	if (res == kResultTrue)
 	{
 		addEventInput (USTRING("MIDI in"), 1);
@@ -95,19 +95,18 @@ tresult PLUGIN_API DX10Processor::initialize (FUnknown* context)
 			params[i] = initParams[i];
 
 		//initialise...
-		for(int32 i = 0; i<NVOICES; i++) 
+		for(int32 i = 0; i<synthData.numVoices; i++) 
 		{
-			memset (&voice[i], 0, sizeof (VOICE));
-			voice[i].env = 0.0f;
-			voice[i].car = voice[i].dcar = 0.0f;
-			voice[i].mod0 = voice[i].mod1 = voice[i].dmod = 0.0f;
-			voice[i].cdec = 0.99f; //all notes off
+			memset (&synthData.voice[i], 0, sizeof (VOICE));
+			synthData.voice[i].env = 0.0f;
+			synthData.voice[i].car = synthData.voice[i].dcar = 0.0f;
+			synthData.voice[i].mod0 = synthData.voice[i].mod1 = synthData.voice[i].dmod = 0.0f;
+			synthData.voice[i].cdec = 0.99f; //all notes off
 		}
-		notes[0] = EVENTS_DONE;
+		synthData.sustain = synthData.activevoices = 0;
 		lfo0 = dlfo = modwhl = 0.0f;
 		lfo1 = pbend = 1.0f;
 		volume = 0.0035f;
-		sustain = activevoices = 0;
 		K = 0;
 
 		recalculate ();
@@ -118,7 +117,7 @@ tresult PLUGIN_API DX10Processor::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DX10Processor::terminate ()
 {
-	return BaseProcessor::terminate ();
+	return Base::terminate ();
 }
 
 //-----------------------------------------------------------------------------
@@ -128,15 +127,16 @@ tresult PLUGIN_API DX10Processor::setActive (TBool state)
 	{
 		lfo0 = 0.0f;
 		lfo1 = 1.0f; //reset LFO phase
+		synthData.init ();
 	}
-	return BaseProcessor::setActive (state);
+	return Base::setActive (state);
 }
 
 //-----------------------------------------------------------------------------
 void DX10Processor::setParameter (ParamID index, ParamValue newValue, int32 sampleOffset)
 {
 	if (index < NPARAMS)
-		BaseProcessor::setParameter (index, newValue, sampleOffset);
+		Base::setParameter (index, newValue, sampleOffset);
 	else if (index == BaseController::kPresetParam) // program change
 	{
 		currentProgram = std::min<int32> (kNumPrograms - 1, (int32)(newValue * kNumPrograms));
@@ -183,22 +183,23 @@ void DX10Processor::doProcessing (ProcessData& data)
 	float* out1 = data.outputs[0].channelBuffers32[0];
 	float* out2 = data.outputs[0].channelBuffers32[1];
 
-	int32 event=0, frame=0, frames, v;
+	int32 frame=0, frames, v;
 	float o, x, e, mw=MW, w=rich, m = modmix;
 	int32 k=K;
 
-	if (activevoices>0 || notes[event]<sampleFrames) //detect & bypass completely empty blocks
+	synthData.eventPos = 0;
+	if (synthData.activevoices>0 || synthData.hasEvents ()) //detect & bypass completely empty blocks
 	{    
 		while (frame<sampleFrames)  
 		{
-			frames = notes[event++];
+			frames = synthData.events[synthData.eventPos].sampleOffset;
 			if (frames>sampleFrames) frames = sampleFrames;
 			frames -= frame;
 			frame += frames;
 
 			while (--frames>=0)  //would be faster with voice loop outside frame loop!
 			{                   //but then each voice would need it's own LFO...
-				VOICE *V = voice;
+				VOICE *V = synthData.voice.data ();
 				o = 0.0f;
 
 				if (--k<0)
@@ -209,7 +210,7 @@ void DX10Processor::doProcessing (ProcessData& data)
 					k=100;
 				}
 
-				for(v=0; v<NVOICES; v++) //for each voice
+				for(v=0; v<synthData.numVoices; v++) //for each voice
 				{
 					e = V->env;
 					if (e > SILENCE) //**** this is the synth ****
@@ -240,21 +241,20 @@ void DX10Processor::doProcessing (ProcessData& data)
 
 			if (frame<sampleFrames) //next note on/off
 			{
-				int32 note = notes[event++];
-				int32 vel  = notes[event++];
-				noteOn(note, vel);
+				noteEvent (synthData.events[synthData.eventPos]);
+				++synthData.eventPos;
 			}
 		}
 
-		activevoices = NVOICES;
-		for(v=0; v<NVOICES; v++)
+		synthData.activevoices = synthData.numVoices;
+		for(v=0; v<synthData.numVoices; v++)
 		{
-			if (voice[v].env < SILENCE)  //choke voices that have finished
+			if (synthData.voice[v].env < SILENCE)  //choke voices that have finished
 			{
-				voice[v].env = voice[v].cenv = 0.0f;
-				activevoices--;
+				synthData.voice[v].env = synthData.voice[v].cenv = 0.0f;
+				synthData.activevoices--;
 			}
-			if (voice[v].menv < SILENCE) voice[v].menv = voice[v].mlev = 0.0f;
+			if (synthData.voice[v].menv < SILENCE) synthData.voice[v].menv = synthData.voice[v].mlev = 0.0f;
 		}
 	}
 	else //completely empty block
@@ -267,92 +267,70 @@ void DX10Processor::doProcessing (ProcessData& data)
 		data.outputs[0].silenceFlags = 3;
 	}
 	K=k; MW=mw; //remember these so vibrato speed not buffer size dependant!
-	notes[0] = EVENTS_DONE;
 }
 
 //-----------------------------------------------------------------------------
-void DX10Processor::processEvents (IEventList* events)
+void DX10Processor::preProcess ()
 {
-	if (events)
-	{
-		int32 npos=0;
-		int32 count = events->getEventCount ();
-		for (int32 i = 0; i < count; i++)
-		{
-			Event e;
-			events->getEvent (i, e);
-			switch (e.type)
-			{
-				case Event::kNoteOnEvent:
-				{
-					notes[npos++] = e.sampleOffset;
-					notes[npos++] = e.noteOn.pitch;
-					notes[npos++] = e.noteOn.velocity * 127;
-					break;
-				}
-				case Event::kNoteOffEvent:
-				{
-					notes[npos++] = e.sampleOffset;
-					notes[npos++] = e.noteOff.pitch;
-					notes[npos++] = 0;
-					break;
-				}
-				default:
-					continue;
-			}
-			if (npos > EVENTBUFFER) npos -= 3; //discard events if buffer full!!
-		}
-		notes[npos] = EVENTS_DONE;
-	}
+	synthData.clearEvents ();
 }
 
 //-----------------------------------------------------------------------------
-void DX10Processor::noteOn(int32 note, int32 velocity)
+void DX10Processor::processEvent (const Event& e)
+{
+	synthData.processEvent (e);
+}
+
+//-----------------------------------------------------------------------------
+void DX10Processor::noteEvent (const Event& event)
 {
 	float l = 1.0f;
 	int32  v, vl=0;
 
-	if (velocity>0) 
+	if (event.type == Event::kNoteOnEvent) 
 	{
-		for(v=0; v<NVOICES; v++)  //find quietest voice
+		auto& note = event.noteOn;
+		float velocity = note.velocity * 127;
+		for(v=0; v<synthData.numVoices; v++)  //find quietest voice
 		{
-			if (voice[v].env<l) { l=voice[v].env;  vl=v; }
+			if (synthData.voice[v].env<l) { l=synthData.voice[v].env;  vl=v; }
 		}
 
-		l = (float)exp (0.05776226505f * ((float)note + params[12] + params[12] - 1.0f));
-		voice[vl].note = note;                         //fine tuning
-		voice[vl].car  = 0.0f;
-		voice[vl].dcar = tune * pbend * l; //pitch bend not updated during note as a bit tricky...
+		l = (float)exp (0.05776226505f * ((float)note.pitch + params[12] + params[12] - 1.0f));
+		synthData.voice[vl].note = note.pitch;                         //fine tuning
+		synthData.voice[vl].car  = 0.0f;
+		synthData.voice[vl].dcar = tune * pbend * l; //pitch bend not updated during note as a bit tricky...
 
 		if (l>50.0f) l = 50.0f; //key tracking
 		l *= (64.0f + velsens * (velocity - 64)); //vel sens
-		voice[vl].menv = depth * l;
-		voice[vl].mlev = dept2 * l;
-		voice[vl].mdec = mdec;
+		synthData.voice[vl].menv = depth * l;
+		synthData.voice[vl].mlev = dept2 * l;
+		synthData.voice[vl].mdec = mdec;
 
-		voice[vl].dmod = ratio * voice[vl].dcar; //sine oscillator
-		voice[vl].mod0 = 0.0f;
-		voice[vl].mod1 = (float)sin(voice[vl].dmod); 
-		voice[vl].dmod = 2.0f * (float)cos(voice[vl].dmod);
+		synthData.voice[vl].dmod = ratio * synthData.voice[vl].dcar; //sine oscillator
+		synthData.voice[vl].mod0 = 0.0f;
+		synthData.voice[vl].mod1 = (float)sin(synthData.voice[vl].dmod); 
+		synthData.voice[vl].dmod = 2.0f * (float)cos(synthData.voice[vl].dmod);
 		//scale volume with richness
-		voice[vl].env  = (1.5f - params[13]) * volume * (velocity + 10);
-		voice[vl].catt = catt;
-		voice[vl].cenv = 0.0f;
-		voice[vl].cdec = cdec;
+		synthData.voice[vl].env  = (1.5f - params[13]) * volume * (velocity + 10);
+		synthData.voice[vl].catt = catt;
+		synthData.voice[vl].cenv = 0.0f;
+		synthData.voice[vl].cdec = cdec;
 	}
 	else //note off
 	{
-		for(v=0; v<NVOICES; v++) if (voice[v].note==note) //any voices playing that note?
+		auto& note = event.noteOff;
+		for(v=0; v<synthData.numVoices; v++) if (synthData.voice[v].note==note.pitch) //any voices playing that note?
 		{
-			if (sustain==0)
+			if (synthData.sustain==0)
 			{
-				voice[v].cdec = crel; //release phase
-				voice[v].env  = voice[v].cenv;
-				voice[v].catt = 1.0f;
-				voice[v].mlev = 0.0f;
-				voice[v].mdec = mrel;
+				synthData.voice[v].cdec = crel; //release phase
+				synthData.voice[v].env  = synthData.voice[v].cenv;
+				synthData.voice[v].catt = 1.0f;
+				synthData.voice[v].mlev = 0.0f;
+				synthData.voice[v].mdec = mrel;
 			}
-			else voice[v].note = SUSTAIN;
+			else synthData.voice[v].note = SustainNoteID;
 		}
 	}
 }

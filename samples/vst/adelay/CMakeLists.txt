@@ -6,12 +6,9 @@ set(adelay_sources
     source/adelayprocessor.cpp
     source/adelayprocessor.h
     source/exampletest.cpp
-    source/exampletest.h
     source/factory.cpp
     source/version.h
-    ${SDK_ROOT}/public.sdk/source/vst/utility/test/ringbuffertest.h
     ${SDK_ROOT}/public.sdk/source/vst/utility/test/ringbuffertest.cpp
-    ${SDK_ROOT}/public.sdk/source/vst/utility/test/versionparsertest.h
     ${SDK_ROOT}/public.sdk/source/vst/utility/test/versionparsertest.cpp
 )
 

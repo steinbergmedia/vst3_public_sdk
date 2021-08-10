@@ -60,7 +60,7 @@ namespace Steinberg {
 
 namespace HostChecker {
 const int32 kMaxLatency = 8192;
-const uint32 kParamWarnCount = 7;
+const uint32 kParamWarnCount = 8;
 const uint32 kParamWarnBitCount = 24;
 const uint32 kParamWarnStepCount = 1 << kParamWarnBitCount;
 }
@@ -81,6 +81,10 @@ enum
 	kTriggerProgressTag,
 	kProgressValueTag,
 	kCopy2ClipboardTag,
+	kRestartNoteExpressionChangedTag,
+	kRestartKeyswitchChangedTag,
+	kRestartParamValuesChangedTag,
+	kRestartParamTitlesChangedTag,
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
@@ -245,6 +249,8 @@ protected:
 	EditFromHostMap mEditFromHost;
 
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
+
+	int32 mNumKeyswitch {1};
 
 	struct ScoreEntry
 	{

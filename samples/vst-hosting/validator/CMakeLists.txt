@@ -84,6 +84,10 @@ if(SMTG_MAC)
         ${validator_sources}
         ${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm
     )
+    set_source_files_properties(
+        "${SDK_ROOT}/public.sdk/source/vst/hosting/module_mac.mm" PROPERTIES
+        COMPILE_FLAGS "-fobjc-arc"
+    )
 elseif(SMTG_LINUX)
     set(validator_sources
         ${validator_sources}

@@ -26,6 +26,8 @@ namespace mda {
 class JX10Processor : public BaseProcessor
 {
 public:
+	using Base = BaseProcessor;
+
 	JX10Processor ();
 	~JX10Processor ();
 	
@@ -51,11 +53,6 @@ public:
 	static FUID uid;
 //-----------------------------------------------------------------------------
 protected:
-	void processEvents (IEventList* events) SMTG_OVERRIDE;
-	void recalculate () SMTG_OVERRIDE;
-	void noteOn (int32 note, int32 velocity, int32 noteID);
-	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
-
 	struct VOICE  //voice state
 	{
 		float  period;
@@ -105,20 +102,22 @@ protected:
 		float snaPanRight;	// SNA addition
 	};
 
-	enum {
-		EVENTBUFFER = 160,
-		EVENTS_DONE = 99999999,
-		SUSTAIN = -1,
-		NVOICES = 8
-	};
+	static constexpr int32 kEventBufferSize = 64;
+	static constexpr int32 kNumVoices = 8;
+	using SynthDataT = SynthData<VOICE, kEventBufferSize, kNumVoices>;
+
+	void preProcess () SMTG_OVERRIDE;
+	void processEvent (const Event& event) SMTG_OVERRIDE;
+	void recalculate () SMTG_OVERRIDE;
+	void noteEvent (const Event& event);
+	void setParameter (ParamID index, ParamValue newValue, int32 sampleOffset) SMTG_OVERRIDE;
+	void clearVoice (VOICE& v);
+
+
+	SynthDataT synthData;
 	static const int32 KMAX = 32;
 
-	int32 notes[EVENTBUFFER + 8];  //list of delta|note|velocity for current block
-
 	///global internal variables
-	int32 sustain, activevoices;
-	VOICE voice[NVOICES];
-
 	float semi, cent;
 	float tune, detune;
 	float filtf, fzip, filtq, filtlfo, filtenv, filtvel, filtwhl;

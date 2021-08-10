@@ -39,7 +39,6 @@
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
 #include <vector>
-#include "base/source/fobject.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -48,7 +47,7 @@ namespace Vst {
 /** Implementation's example of IPlugInterfaceSupport.
 \ingroup hostingBase
 */
-class PlugInterfaceSupport : public FObject, public IPlugInterfaceSupport
+class PlugInterfaceSupport : public IPlugInterfaceSupport
 {
 public:
 	PlugInterfaceSupport ();
@@ -59,11 +58,7 @@ public:
 	void addPlugInterfaceSupported (const TUID _iid);
 	bool removePlugInterfaceSupported (const TUID _iid);
 
-	OBJ_METHODS (PlugInterfaceSupport, FObject)
-	REFCOUNT_METHODS (FObject)
-	DEFINE_INTERFACES
-		DEF_INTERFACE (IPlugInterfaceSupport)
-	END_DEFINE_INTERFACES (FObject)
+	DECLARE_FUNKNOWN_METHODS
 
 private:
 	std::vector<FUID> mFUIDArray;

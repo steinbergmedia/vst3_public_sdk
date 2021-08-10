@@ -520,6 +520,10 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 				int64 id = (*iter).id;
 				int32 offset = id / HostChecker::kParamWarnBitCount;
 				id = id % HostChecker::kParamWarnBitCount;
+				if (offset >= HostChecker::kParamWarnCount)
+				{
+					break;
+				}
 				warnIdValue[offset] |= 1 << id;
 				// addLogEventMessage ((*iter));
 			}

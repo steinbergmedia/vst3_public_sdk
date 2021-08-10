@@ -163,6 +163,21 @@ IPlugView* PLUGIN_API PlugController::createView (const char* _name)
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API PlugController::getParameterIDFromFunctionName (Vst::UnitID unitID,
+                                                                   FIDString functionName,
+                                                                   Vst::ParamID& paramID)
+{
+	using namespace Vst;
+
+	paramID = kNoParamId;
+
+	if (unitID == kRootUnitId && FIDStringsEqual (functionName, FunctionNameType::kPanPosCenterX))
+		paramID = PannerParams::kParamPanId;
+
+	return (paramID != kNoParamId) ? kResultOk : kResultFalse;
+}
+
+//------------------------------------------------------------------------
 tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 {
 	// we receive the current state of the component (processor part)

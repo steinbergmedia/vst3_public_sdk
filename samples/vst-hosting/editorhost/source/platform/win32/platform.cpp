@@ -124,6 +124,7 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE _hInstance)
 	std::vector<std::string> cmdArgStrings;
 	int numArgs = 0;
 	auto cmdArgsArray = CommandLineToArgvW (lpCmdLine, &numArgs);
+	cmdArgStrings.reserve (numArgs);
 	for (int i = 0; i < numArgs; ++i)
 	{
 		cmdArgStrings.push_back (VST3::StringConvert::convert (cmdArgsArray[i]));

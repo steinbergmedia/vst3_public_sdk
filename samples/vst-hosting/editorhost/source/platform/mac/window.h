@@ -35,8 +35,9 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#import "public.sdk/samples/vst-hosting/editorhost/source/platform/iwindow.h"
-#import <Cocoa/Cocoa.h>
+#pragma once
+
+#include "public.sdk/samples/vst-hosting/editorhost/source/platform/iwindow.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -50,7 +51,7 @@ public:
 	static WindowPtr make (const std::string& name, Size size, bool resizeable,
 	                       const WindowControllerPtr& controller);
 
-	Window () = default;
+	Window ();
 	~Window () noexcept override;
 
 	bool init (const std::string& name, Size size, bool resizeable,
@@ -63,13 +64,13 @@ public:
 
 	NativePlatformWindow getNativePlatformWindow () const override;
 
-	WindowControllerPtr getController () const { return controller; }
-
 	tresult queryInterface (const TUID iid, void** obj) override { return kNoInterface; }
 
+	WindowControllerPtr getController () const;
+	void windowClosed ();
 private:
-	WindowControllerPtr controller;
-	NSWindow* nsWindow {nullptr};
+	struct Impl;
+	std::unique_ptr<Impl> impl;
 };
 
 //------------------------------------------------------------------------

@@ -60,10 +60,16 @@ if(VST_SDK)
         PRIVATE
             source/main/moduleinit.cpp
             source/main/moduleinit.h
+            source/vst/utility/audiobuffers.h
             source/vst/utility/processcontextrequirements.h
+            source/vst/utility/processdataslicer.h
             source/vst/utility/ringbuffer.h
+            source/vst/utility/rttransfer.h
+            source/vst/utility/sampleaccurate.h
             source/vst/utility/stringconvert.cpp
             source/vst/utility/stringconvert.h
+            source/vst/utility/testing.cpp
+            source/vst/utility/testing.h
             source/vst/utility/vst2persistence.h
             source/vst/utility/vst2persistence.cpp
             source/vst/vstaudioeffect.cpp
@@ -88,6 +94,11 @@ if(VST_SDK)
             source/vst/vstrepresentation.h
     )
 endif(VST_SDK)
+
+target_compile_features(sdk
+    PUBLIC
+        cxx_std_14
+)
 
 # add dependencies
 target_link_libraries(sdk 

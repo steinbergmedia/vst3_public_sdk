@@ -37,6 +37,12 @@
 
 #import "public.sdk/samples/vst-hosting/editorhost/source/platform/mac/window.h"
 
+#import <Cocoa/Cocoa.h>
+
+#if !__has_feature(objc_arc)
+#error this file needs to be compiled with automatic reference counting enabled
+#endif
+
 using namespace Steinberg::Vst;
 
 //------------------------------------------------------------------------
@@ -44,9 +50,11 @@ using namespace Steinberg::Vst;
 #if __i386__
 {
 	std::shared_ptr<EditorHost::Window> _window;
+	NSWindow* _nsWindow;
 }
 #endif
 @property (readonly) std::shared_ptr<EditorHost::Window> window;
+@property (strong, readwrite) NSWindow* nsWindow;
 
 - (id)initWithWindow:(std::shared_ptr<EditorHost::Window>)window;
 @end
@@ -55,6 +63,13 @@ using namespace Steinberg::Vst;
 namespace Steinberg {
 namespace Vst {
 namespace EditorHost {
+
+//------------------------------------------------------------------------
+struct Window::Impl
+{
+	WindowControllerPtr controller;
+	VSTSDK_WindowDelegate* nsWindowDelegate {nullptr};
+};
 
 //------------------------------------------------------------------------
 WindowPtr Window::make (const std::string& name, Size size, bool resizeable,
@@ -67,20 +82,29 @@ WindowPtr Window::make (const std::string& name, Size size, bool resizeable,
 }
 
 //------------------------------------------------------------------------
+Window::Window ()
+{
+	impl = std::unique_ptr<Impl> (new Impl);
+}
+
+//------------------------------------------------------------------------
 bool Window::init (const std::string& name, Size size, bool resizeable,
                    const WindowControllerPtr& controller)
 {
-	this->controller = controller;
+	impl->controller = controller;
 	NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask;
 	if (resizeable)
 		styleMask |= NSResizableWindowMask;
 	auto contentRect =
 	    NSMakeRect (0., 0., static_cast<CGFloat> (size.width), static_cast<CGFloat> (size.height));
-	nsWindow = [[NSWindow alloc] initWithContentRect:contentRect
+	impl->nsWindowDelegate = [[VSTSDK_WindowDelegate alloc] initWithWindow:shared_from_this ()];
+	auto nsWindow = [[NSWindow alloc] initWithContentRect:contentRect
 	                                       styleMask:styleMask
 	                                         backing:NSBackingStoreBuffered
 	                                           defer:YES];
-	[nsWindow setDelegate:[[VSTSDK_WindowDelegate alloc] initWithWindow:shared_from_this ()]];
+	[nsWindow setDelegate:impl->nsWindowDelegate];
+	nsWindow.releasedWhenClosed = NO;
+	impl->nsWindowDelegate.nsWindow = nsWindow;
 	[nsWindow center];
 	return true;
 }
@@ -93,19 +117,22 @@ Window::~Window () noexcept
 //------------------------------------------------------------------------
 void Window::show ()
 {
-	controller->onShow (*this);
+	auto nsWindow = impl->nsWindowDelegate.nsWindow;
+	impl->controller->onShow (*this);
 	[nsWindow makeKeyAndOrderFront:nil];
 }
 
 //------------------------------------------------------------------------
 void Window::close ()
 {
+	auto nsWindow = impl->nsWindowDelegate.nsWindow;
 	[nsWindow close];
 }
 
 //------------------------------------------------------------------------
 void Window::resize (Size newSize)
 {
+	auto nsWindow = impl->nsWindowDelegate.nsWindow;
 	auto r = [nsWindow contentRectForFrameRect:nsWindow.frame];
 	auto diff = newSize.height - r.size.height;
 	r.size.width = newSize.width;
@@ -119,6 +146,7 @@ void Window::resize (Size newSize)
 //------------------------------------------------------------------------
 Size Window::getContentSize ()
 {
+	auto nsWindow = impl->nsWindowDelegate.nsWindow;
 	auto r = [nsWindow contentRectForFrameRect:nsWindow.frame];
 	return {static_cast<Coord> (r.size.width), static_cast<Coord> (r.size.height)};
 }
@@ -126,7 +154,21 @@ Size Window::getContentSize ()
 //------------------------------------------------------------------------
 NativePlatformWindow Window::getNativePlatformWindow () const
 {
-	return {kPlatformTypeNSView, [nsWindow contentView]};
+	auto nsWindow = impl->nsWindowDelegate.nsWindow;
+	return {kPlatformTypeNSView, (__bridge void*) ([nsWindow contentView])};
+}
+
+//------------------------------------------------------------------------
+WindowControllerPtr Window::getController () const
+{
+	return impl->controller;
+}
+
+//------------------------------------------------------------------------
+void Window::windowClosed ()
+{
+	impl->controller->onClose (*this);
+	impl->nsWindowDelegate = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -179,8 +221,9 @@ NativePlatformWindow Window::getNativePlatformWindow () const
 //------------------------------------------------------------------------
 - (void)windowWillClose:(nonnull NSNotification*)notification
 {
-	self.window->getController ()->onClose (*self.window);
+	self.window->windowClosed ();
 	self->_window = nullptr;
+	self->_nsWindow = nullptr;
 }
 
 @end

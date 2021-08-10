@@ -286,11 +286,11 @@ namespace {
 std::pair<size_t, size_t> rangeOfScaleFactor (const std::string& name)
 {
 	auto result = std::make_pair (std::string::npos, std::string::npos);
-	size_t xIndex = name.find_last_of ("x");
+	size_t xIndex = name.find_last_of ('x');
 	if (xIndex == std::string::npos)
 		return result;
 
-	size_t indicatorIndex = name.find_last_of ("_");
+	size_t indicatorIndex = name.find_last_of ('_');
 	if (indicatorIndex == std::string::npos)
 		return result;
 	if (xIndex < indicatorIndex)

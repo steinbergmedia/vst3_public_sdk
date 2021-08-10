@@ -43,12 +43,14 @@
 
 #include <algorithm>
 
+//-----------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 
 //-----------------------------------------------------------------------------
 PlugInterfaceSupport::PlugInterfaceSupport ()
 {
+	FUNKNOWN_CTOR
 	// add minimum set
 
 	//---VST 3.0.0--------------------------------
@@ -121,5 +123,8 @@ bool PlugInterfaceSupport::removePlugInterfaceSupported (const TUID _iid)
 	       mFUIDArray.end ();
 }
 
-}
-} // namespace
+IMPLEMENT_FUNKNOWN_METHODS (PlugInterfaceSupport, IPlugInterfaceSupport, IPlugInterfaceSupport::iid)
+
+//-----------------------------------------------------------------------------
+} // Vst
+} // Steinberg

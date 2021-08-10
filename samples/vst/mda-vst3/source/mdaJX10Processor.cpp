@@ -108,7 +108,7 @@ JX10Processor::~JX10Processor ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API JX10Processor::initialize (FUnknown* context)
 {
-	tresult res = BaseProcessor::initialize (context);
+	tresult res = Base::initialize (context);
 	if (res == kResultTrue)
 	{
 		addEventInput (USTRING("MIDI in"), 1);
@@ -122,21 +122,20 @@ tresult PLUGIN_API JX10Processor::initialize (FUnknown* context)
 		}
 
 		//initialise...
-		for(int32 v=0; v<NVOICES; v++) 
+		for(int32 v=0; v<synthData.numVoices; v++) 
 		{
-			memset (&voice[v], 0, sizeof (VOICE));
-			voice[v].dp   = voice[v].dp2   = 1.0f;
-			voice[v].saw  = voice[v].p     = voice[v].p2    = 0.0f;
-			voice[v].env  = voice[v].envd  = voice[v].envl  = 0.0f;
-			voice[v].fenv = voice[v].fenvd = voice[v].fenvl = 0.0f;
-			voice[v].f0   = voice[v].f1    = voice[v].f2    = 0.0f;
-			voice[v].note = 0;
+			memset (&synthData.voice[v], 0, sizeof (VOICE));
+			synthData.voice[v].dp   = synthData.voice[v].dp2   = 1.0f;
+			synthData.voice[v].saw  = synthData.voice[v].p     = synthData.voice[v].p2    = 0.0f;
+			synthData.voice[v].env  = synthData.voice[v].envd  = synthData.voice[v].envl  = 0.0f;
+			synthData.voice[v].fenv = synthData.voice[v].fenvd = synthData.voice[v].fenvl = 0.0f;
+			synthData.voice[v].f0   = synthData.voice[v].f1    = synthData.voice[v].f2    = 0.0f;
+			synthData.voice[v].note = 0;
 		}
-		notes[0] = EVENTS_DONE;
 		lfo = modwhl = filtwhl = press = fzip = 0.0f; 
 		rezwhl = pbend = ipbend = 1.0f;
 		volume = 0.0005f;
-		K = mode = lastnote = sustain = activevoices = 0;
+		K = mode = lastnote = synthData.sustain = synthData.activevoices = 0;
 		noise = 22222;
 		
 		recalculate ();
@@ -147,23 +146,28 @@ tresult PLUGIN_API JX10Processor::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API JX10Processor::terminate ()
 {
-	return BaseProcessor::terminate ();
+	return Base::terminate ();
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API JX10Processor::setActive (TBool state)
 {
 	if (state)
+	{
+		synthData.init ();
+		for (auto& v : synthData.voice)
+			clearVoice (v);
 		recalculate ();
+	}
 
-	return BaseProcessor::setActive (state);
+	return Base::setActive (state);
 }
 
 //-----------------------------------------------------------------------------
 void JX10Processor::setParameter (ParamID index, ParamValue newValue, int32 sampleOffset)
 {
 	if (index < NPARAMS)
-		BaseProcessor::setParameter (index, newValue, sampleOffset);
+		Base::setParameter (index, newValue, sampleOffset);
 	else if (index == BaseController::kPresetParam) // program change
 	{
 		currentProgram = std::min<int32> (kNumPrograms - 1, (int32)(newValue * kNumPrograms));
@@ -228,7 +232,7 @@ void JX10Processor::doProcessing (ProcessData& data)
 	float* out1 = data.outputs[0].channelBuffers32[0];
 	float* out2 = data.outputs[0].channelBuffers32[1];
 
-	int32 event=0, frame=0, frames, v;
+	int32 frame=0, frames, v;
 	float oL, oR, e, vib, pwm, pb=pbend, ipb=ipbend, gl=glide;
 	float x, y, hpf=0.997f, min=1.0f, w=0.0f, ww=noisemix;
 	float ff, fe=filtenv, fq=filtq * rezwhl, fx=1.97f-0.85f*fq, fz=fzip;
@@ -240,18 +244,19 @@ void JX10Processor::doProcessing (ProcessData& data)
 	pwm = 1.0f + vib * (modwhl + pwmdep);           //below triggers on k was too cheap!
 	vib = 1.0f + vib * (modwhl + vibrato);
 
-	if (activevoices>0 || notes[event]<sampleFrames)
+	synthData.eventPos = 0;
+	if (synthData.activevoices > 0 || synthData.hasEvents ())
 	{    
 		while (frame<sampleFrames)
 		{
-			frames = notes[event++];
+			frames = synthData.events[synthData.eventPos].sampleOffset;
 			if (frames>sampleFrames) frames = sampleFrames;
 			frames -= frame;
 			frame += frames;
 
 			while (--frames>=0)
 			{
-				VOICE *V = voice;
+				VOICE *V = synthData.voice.data ();
 				oL = oR = 0.0f;
 
 				noise = (noise * 196314165) + 907633515;
@@ -270,7 +275,7 @@ void JX10Processor::doProcessing (ProcessData& data)
 					k = KMAX;
 				}
 
-				for(v=0; v<NVOICES; v++)  //for each voice
+				for(v=0; v<synthData.numVoices; v++)  //for each voice
 				{ 
 					e = V->env;
 					if (e > SILENCE)
@@ -369,21 +374,19 @@ void JX10Processor::doProcessing (ProcessData& data)
 
 			if (frame<sampleFrames)
 			{
-				int32 note = notes[event++];
-				int32 vel  = notes[event++];
-				int32 noteID = notes[event++];
-				noteOn (note, vel, noteID);
+				noteEvent (synthData.events[synthData.eventPos]);
+				++synthData.eventPos;
 			}
 		}
 
-		activevoices = NVOICES;
-		for(v=0; v<NVOICES; v++)
+		synthData.activevoices = synthData.numVoices;
+		for(v=0; v<synthData.numVoices; v++)
 		{
-			if (voice[v].env<SILENCE)  //choke voices
+			if (synthData.voice[v].env<SILENCE)  //choke voices
 			{
-				voice[v].env = voice[v].envl = 0.0f;
-				voice[v].f0 = voice[v].f1 = voice[v].f2 = 0.0f;
-				activevoices--;
+				synthData.voice[v].env = synthData.voice[v].envl = 0.0f;
+				synthData.voice[v].f0 = synthData.voice[v].f1 = synthData.voice[v].f2 = 0.0f;
+				synthData.activevoices--;
 			}
 		}
 	}
@@ -393,51 +396,24 @@ void JX10Processor::doProcessing (ProcessData& data)
 		memset (out1, 0, sampleFrames * sizeof (float));
 		memset (out2, 0, sampleFrames * sizeof (float));
 	}
-	notes[0] = EVENTS_DONE;  //mark events buffer as done
 	fzip = fz;
 	K = k;
 }
 
 //-----------------------------------------------------------------------------
-void JX10Processor::processEvents (IEventList* events)
+void JX10Processor::preProcess ()
 {
-	if (events)
-	{
-		int32 eventPos = 0;
-		int32 count = events->getEventCount ();
-		for (int32 i = 0; i < count; i++)
-		{
-			Event e;
-			events->getEvent (i, e);
-			switch (e.type)
-			{
-				case Event::kNoteOnEvent:
-				{
-					notes[eventPos++] = e.sampleOffset;
-					notes[eventPos++] = e.noteOn.pitch;
-					notes[eventPos++] = e.noteOn.velocity * 127;
-					notes[eventPos++] = e.noteOn.noteId;
-					break;
-				}
-				case Event::kNoteOffEvent:
-				{
-					notes[eventPos++] = e.sampleOffset;
-					notes[eventPos++] = e.noteOff.pitch;
-					notes[eventPos++] = 0;
-					notes[eventPos++] = e.noteOn.noteId;
-					break;
-				}
-				default:
-					continue;
-			}
-			if (eventPos > EVENTBUFFER) eventPos -= 3; //discard events if buffer full!!
-		}
-		notes[eventPos] = EVENTS_DONE;
-	}
+	synthData.clearEvents ();
 }
 
 //-----------------------------------------------------------------------------
-void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
+void JX10Processor::processEvent (const Event& e)
+{
+	synthData.processEvent (e);
+}
+
+//-----------------------------------------------------------------------------
+void JX10Processor::noteEvent (const Event& event)
 {
 	float p, l=100.0f; //louder than any envelope!
 	int32  v=0, tmp, held=0;
@@ -446,82 +422,85 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 	bool _glide = !(mode == 0 || mode == 3);
 	bool legato = (mode == 1 || mode == 5);
 
-	if (velocity>0) //note on
+	if (event.type == Event::kNoteOnEvent)
 	{
+		auto& note = event.noteOn;
+		float velocity = note.velocity * 127;
 		if (veloff) velocity = 80;
 
 		if (!polyMode) //monophonic
 		{
-			if (voice[0].note > 0) //legato pitch change
+			if (synthData.voice[0].noteID != EndNoteID) //legato pitch change
 			{
-				for(tmp= (NVOICES-1); tmp>0; tmp--)  //queue any held notes
+				for(tmp= (synthData.numVoices-1); tmp>0; tmp--)  //queue any held notes
 				{
-					voice[tmp].note = voice[tmp - 1].note;
+					synthData.voice[tmp].note = synthData.voice[tmp - 1].note;
+					synthData.voice[tmp].noteID = synthData.voice[tmp - 1].noteID;
 				}
-				p = tune * (float)exp (-0.05776226505 * ((double)note + ANALOG * (double)v));
+				p = tune * (float)exp (-0.05776226505 * ((double)note.pitch + ANALOG * (double)v));
 				while (p<3.0f || (p * detune)<3.0f) p += p;
-				voice[v].target = p;
-				if ((_glide)==0) voice[v].period = p;
-				voice[v].fc = (float)exp (filtvel * (float)(velocity - 64)) / p;
-				voice[v].env += SILENCE + SILENCE; ///was missed out below if returned?
-				voice[v].note = note;
-				voice[v].noteID = noteID;
-				voice[v].snaVolume = 1.f;
-				voice[v].snaPanLeft = voice[v].snaPanRight = 1.f;
-				voice[v].snaPitchbend = 1.f;
+				synthData.voice[0].target = p;
+				if ((_glide)==0) synthData.voice[v].period = p;
+				synthData.voice[0].fc = (float)exp (filtvel * (float)(velocity - 64)) / p;
+				synthData.voice[0].env += SILENCE + SILENCE; ///was missed out below if returned?
+				synthData.voice[0].note = note.pitch;
+				synthData.voice[0].noteID = note.noteId;
+				synthData.voice[0].snaVolume = 1.f;
+				synthData.voice[0].snaPanLeft = synthData.voice[v].snaPanRight = 1.f;
+				synthData.voice[0].snaPitchbend = 1.f;
 				return;
 			}
 		}
 		else //polyphonic 
 		{
-			for(tmp=0; tmp<NVOICES; tmp++)  //replace quietest voice not in attack
+			for(tmp=0; tmp<synthData.numVoices; tmp++)  //replace quietest voice not in attack
 			{
-				if (voice[tmp].note > 0) held++;
-				if (voice[tmp].env<l && voice[tmp].envl<2.0f) { l=voice[tmp].env;  v=tmp; }
+				if (synthData.voice[tmp].note > 0) held++;
+				if (synthData.voice[tmp].env<l && synthData.voice[tmp].envl<2.0f) { l=synthData.voice[tmp].env;  v=tmp; }
 			}
 		}  
-		p = tune * (float)exp (-0.05776226505 * ((double)note + ANALOG * (double)v));
+		p = tune * (float)exp (-0.05776226505 * ((double)note.pitch + ANALOG * (double)v));
 		while (p<3.0f || (p * detune)<3.0f) p += p;
-		voice[v].target = p;
-		voice[v].detune = detune;
+		synthData.voice[v].target = p;
+		synthData.voice[v].detune = detune;
 
 		tmp = 0;
 		if (_glide || legato)
 		{
-			if ((_glide) || held) tmp = note - lastnote; //glide
+			if ((_glide) || held) tmp = note.pitch - lastnote; //glide
 		}
-		voice[v].period = p * (float)pow (1.059463094359, (double)tmp - glidedisp);
-		if (voice[v].period<3.0f) voice[v].period = 3.0f; //limit min period
+		synthData.voice[v].period = p * (float)pow (1.059463094359, (double)tmp - glidedisp);
+		if (synthData.voice[v].period<3.0f) synthData.voice[v].period = 3.0f; //limit min period
 
-		voice[v].note = lastnote = note;
-		voice[v].noteID = noteID;
+		synthData.voice[v].note = lastnote = note.pitch;
+		synthData.voice[v].noteID = note.noteId;
 
-		voice[v].fc = (float)exp (filtvel * (float)(velocity - 64)) / p; //filter tracking
+		synthData.voice[v].fc = (float)exp (filtvel * (float)(velocity - 64)) / p; //filter tracking
 
-		voice[v].lev = voltrim * volume * (0.004f * (float)((velocity + 64) * (velocity + 64)) - 8.0f);
-		voice[v].lev2 = voice[v].lev * oscmix;
+		synthData.voice[v].lev = voltrim * volume * (0.004f * (float)((velocity + 64) * (velocity + 64)) - 8.0f);
+		synthData.voice[v].lev2 = synthData.voice[v].lev * oscmix;
 
 		if (params[20]<0.5f) //force 180 deg phase difference for PWM
 		{
-			if (voice[v].dp>0.0f)
+			if (synthData.voice[v].dp>0.0f)
 			{
-				p = voice[v].pmax + voice[v].pmax - voice[v].p;
-				voice[v].dp2 = -voice[v].dp;
+				p = synthData.voice[v].pmax + synthData.voice[v].pmax - synthData.voice[v].p;
+				synthData.voice[v].dp2 = -synthData.voice[v].dp;
 			}
 			else
 			{
-				p = voice[v].p;
-				voice[v].dp2 = voice[v].dp;
+				p = synthData.voice[v].p;
+				synthData.voice[v].dp2 = synthData.voice[v].dp;
 			}
-			voice[v].p2 = voice[v].pmax2 = p + PI * voice[v].period;
+			synthData.voice[v].p2 = synthData.voice[v].pmax2 = p + PI * synthData.voice[v].period;
 
-			voice[v].dc2 = 0.0f;
-			voice[v].sin02 = voice[v].sin12 = voice[v].sinx2 = 0.0f;
+			synthData.voice[v].dc2 = 0.0f;
+			synthData.voice[v].sin02 = synthData.voice[v].sin12 = synthData.voice[v].sinx2 = 0.0f;
 		}
 
 		if (!polyMode) //monophonic retriggering
 		{
-			voice[v].env += SILENCE + SILENCE;
+			synthData.voice[v].env += SILENCE + SILENCE;
 		}
 		else
 		{
@@ -532,60 +511,65 @@ void JX10Processor::noteOn (int32 note, int32 velocity, int32 noteID)
 			//  voice[v].fenv = 0.0f;
 			//}
 			//else 
-			voice[v].env += SILENCE + SILENCE; //anti-glitching trick
+			synthData.voice[v].env += SILENCE + SILENCE; //anti-glitching trick
 		}
-		voice[v].envl  = 2.0f;
-		voice[v].envd  = att;
-		voice[v].fenvl = 2.0f;
-		voice[v].fenvd = fatt;
-		voice[v].snaVolume = 1.f;
-		voice[v].snaPanLeft = voice[v].snaPanRight = 1.f;
-		voice[v].snaPitchbend = 1.f;
+		synthData.voice[v].envl  = 2.0f;
+		synthData.voice[v].envd  = att;
+		synthData.voice[v].fenvl = 2.0f;
+		synthData.voice[v].fenvd = fatt;
+		synthData.voice[v].snaVolume = 1.f;
+		synthData.voice[v].snaPanLeft = synthData.voice[v].snaPanRight = 1.f;
+		synthData.voice[v].snaPitchbend = 1.f;
 	}
 	else //note off
 	{
-		if ((!polyMode) && (voice[0].note==note)) //monophonic (and current note)
+		auto& note = event.noteOff;
+		if ((!polyMode) && (synthData.voice[0].noteID==note.noteId)) //monophonic (and current note)
 		{
-			for(v= (NVOICES-1); v>0; v--) 
+			for(v= (synthData.numVoices-1); v>0; v--) 
 			{
-				if (voice[v].note>0) held = v; //any other notes queued?
+				if (synthData.voice[v].noteID!=EndNoteID) held = v; //any other notes queued?
 			}
 			if (held>0)
 			{
-				voice[v].note = voice[held].note;
-				voice[held].note = 0;
+				synthData.voice[v].note = synthData.voice[held].note;
+				synthData.voice[v].noteID  = synthData.voice[held].noteID;
+				clearVoice (synthData.voice[held]);
 
-				p = tune * (float)exp (-0.05776226505 * ((double)voice[v].note + ANALOG * (double)v));
+				p = tune * (float)exp (-0.05776226505 * ((double)synthData.voice[v].note + ANALOG * (double)v));
 				while (p<3.0f || (p * detune)<3.0f) p += p;
-				voice[v].target = p;
-				if ((_glide || legato)==0) voice[v].period = p;
-				voice[v].fc = 1.0f / p;
+				synthData.voice[v].target = p;
+				if ((_glide || legato)==0) synthData.voice[v].period = p;
+				synthData.voice[v].fc = 1.0f / p;
 			}
 			else
 			{
-				voice[v].envl  = 0.0f;
-				voice[v].envd  = rel;
-				voice[v].fenvl = 0.0f;
-				voice[v].fenvd = frel;
-				voice[v].note  = 0;
+				clearVoice (synthData.voice[v]);
 			}
 		}
 		else //polyphonic
 		{
-			for(v=0; v<NVOICES; v++) if (voice[v].note==note) //any voices playing that note?
+			for(v=0; v<synthData.numVoices; v++) if (synthData.voice[v].noteID==note.noteId) //any voices playing that note?
 			{
-				if (sustain==0)
+				if (synthData.sustain==0)
 				{
-					voice[v].envl  = 0.0f;
-					voice[v].envd  = rel;
-					voice[v].fenvl = 0.0f;
-					voice[v].fenvd = frel;
-					voice[v].note  = 0;
+					clearVoice (synthData.voice[v]);
 				}
-				else voice[v].note = SUSTAIN;
+				else synthData.voice[v].note = SustainNoteID;
 			}
 		}
 	}
+}
+
+//------------------------------------------------------------------------
+void JX10Processor::clearVoice (VOICE& v)
+{
+	v.envl  = 0.0f;
+	v.envd  = rel;
+	v.fenvl = 0.0f;
+	v.fenvd = frel;
+	v.note  = 0;
+	v.noteID  = EndNoteID;
 }
 
 //-----------------------------------------------------------------------------

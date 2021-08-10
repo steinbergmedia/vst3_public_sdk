@@ -36,14 +36,17 @@
 
 #pragma once
 
-#include "public.sdk/source/vst/vsteditcontroller.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
+#include "public.sdk/source/vst/vsteditcontroller.h"
+#include "pluginterfaces/vst/ivstparameterfunctionname.h"
 
 namespace Steinberg {
 namespace Panner {
 
 //-----------------------------------------------------------------------------
-class PlugController : public Vst::EditController, public VSTGUI::VST3EditorDelegate
+class PlugController : public Vst::EditController,
+                       public VSTGUI::VST3EditorDelegate,
+                       public Vst::IParameterFunctionName
 {
 public:
 //------------------------------------------------------------------------
@@ -61,6 +64,16 @@ public:
 	//---from EditController-----
 	IPlugView* PLUGIN_API createView (const char* name) SMTG_OVERRIDE;
 	tresult PLUGIN_API setComponentState (IBStream* state) SMTG_OVERRIDE;
+
+	//---from IParameterFunctionName----
+	tresult PLUGIN_API getParameterIDFromFunctionName (Vst::UnitID unitID, FIDString functionName,
+	                                                   Vst::ParamID& paramID) override;
+
+	OBJ_METHODS (PlugController, Vst::EditController)
+	DEFINE_INTERFACES
+		DEF_INTERFACE (Vst::IParameterFunctionName)
+	END_DEFINE_INTERFACES (Vst::EditController)
+	DELEGATE_REFCOUNT (Vst::EditController)
 };
 
 //------------------------------------------------------------------------

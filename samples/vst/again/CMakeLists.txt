@@ -153,7 +153,7 @@ if(SMTG_ADD_VSTGUI)
     endif(SMTG_MAC)
 
     # do not build AGain VST 2 by default
-    option(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION "Legacy: Create the VST2 version of the Sample Plug-in AGain, be sure that you have copied the VST2 interfaces into the folder VST_SDK/VST3_SDK/pluginterfaces/vst2.x" OFF)
+    option(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION "Legacy: Create the VST2 version of the Sample Plug-in AGain, be sure that you have copied the VST2 interfaces into the folder VST_SDK/vst3sdk/pluginterfaces/vst2.x" OFF)
     if(SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION)
         message(STATUS "[SMTG] SMTG_CREATE_VST2_AGAIN_SAMPLE_VERSION is set. A VST 2 version of the plug-in will be created (just rename the generated file from .vst3 to .dll (win) or .vst (mac)).")
         if(XCODE)

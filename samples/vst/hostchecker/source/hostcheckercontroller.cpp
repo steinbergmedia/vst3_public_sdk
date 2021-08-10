@@ -199,7 +199,7 @@ bool MyVST3Editor::beforeSizeChange (const CRect& newSize, const CRect& oldSize)
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize)
+tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize)
 {
 	inOnsize = true;
 	if (!inOpen)
@@ -224,14 +224,14 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::canResize ()
+tresult PLUGIN_API MyVST3Editor::canResize ()
 {
 	hostController->addFeatureLog (kLogIdIPlugViewcanResizeSupported);
 	return mCanResize ? kResultTrue : kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::checkSizeConstraint (Steinberg::ViewRect* _rect)
+tresult PLUGIN_API MyVST3Editor::checkSizeConstraint (Steinberg::ViewRect* _rect)
 {
 	hostController->addFeatureLog (kLogIdIPlugViewcheckSizeConstraintSupported);
 	return VST3Editor::checkSizeConstraint (_rect);
@@ -286,7 +286,7 @@ tresult PLUGIN_API MyVST3Editor::setFrame (IPlugFrame* _frame)
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::attached (void* parent, FIDString type)
+tresult PLUGIN_API MyVST3Editor::attached (void* parent, FIDString type)
 {
 	if (mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewattachedWithoutRemoved);
@@ -296,7 +296,7 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::attached (void* parent, FIDString ty
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::removed ()
+tresult PLUGIN_API MyVST3Editor::removed ()
 {
 	if (!mAttached)
 		hostController->addFeatureLog (kLogIdIPlugViewremovedWithoutAttached);
@@ -306,15 +306,14 @@ Steinberg::tresult PLUGIN_API MyVST3Editor::removed ()
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::setContentScaleFactor (ScaleFactor factor)
+tresult PLUGIN_API MyVST3Editor::setContentScaleFactor (ScaleFactor factor)
 {
 	hostController->addFeatureLog (kLogIdIPlugViewsetContentScaleFactorSupported);
 	return VST3Editor::setContentScaleFactor (factor);
 }
 
 //-----------------------------------------------------------------------------
-Steinberg::tresult PLUGIN_API MyVST3Editor::findParameter (int32 xPos, int32 yPos,
-                                                           ParamID& resultTag)
+tresult PLUGIN_API MyVST3Editor::findParameter (int32 xPos, int32 yPos, ParamID& resultTag)
 {
 	hostController->addFeatureLog (kLogIdIParameterFinderSupported);
 	return VST3Editor::findParameter (xPos, yPos, resultTag);
@@ -351,6 +350,11 @@ void MyVST3Editor::valueChanged (CControl* pControl)
 //-----------------------------------------------------------------------------
 HostCheckerController::HostCheckerController ()
 {
+	mScoreMap.emplace (kLogIdRestartParamValuesChangedSupported, 2);
+	mScoreMap.emplace (kLogIdRestartParamTitlesChangedSupported, 2);
+	mScoreMap.emplace (kLogIdRestartNoteExpressionChangedSupported, 1);
+	mScoreMap.emplace (kLogIdRestartKeyswitchChangedSupported, 1);
+
 	mScoreMap.emplace (kLogIdIComponentHandler2Supported, 2);
 	mScoreMap.emplace (kLogIdIComponentHandler2SetDirtySupported, 2);
 	mScoreMap.emplace (kLogIdIComponentHandler2RequestOpenEditorSupported, 2);
@@ -477,6 +481,15 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("TriggerProgress"), STR16 (""), 1, 0,
 		                         ParameterInfo::kNoFlags, kTriggerProgressTag);
 
+		parameters.addParameter (STR16 ("KeyswitchChanged"), STR16 (""), 1, 0,
+		                         ParameterInfo::kIsHidden, kRestartKeyswitchChangedTag);
+		parameters.addParameter (STR16 ("NoteExpressionChanged"), STR16 (""), 1, 0,
+		                         ParameterInfo::kIsHidden, kRestartNoteExpressionChangedTag);
+		parameters.addParameter (STR16 ("ParamValuesChanged"), STR16 (""), 1, 0,
+		                         ParameterInfo::kIsHidden, kRestartParamValuesChangedTag);
+		parameters.addParameter (STR16 ("ParamTitlesChanged"), STR16 (""), 1, 0,
+		                         ParameterInfo::kIsHidden, kRestartParamTitlesChangedTag);
+
 		parameters.addParameter (STR16 ("ParamWhichCouldBeHidden"), STR16 (""), 0, 0,
 		                         ParameterInfo::kCanAutomate, kParamWhichCouldBeHiddenTag,
 		                         kUnit2Id);
@@ -484,8 +497,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		                         kTriggerHiddenTag);
 
 		parameters.addParameter (STR16 ("Copy2Clipboard"), STR16 (""), 1, 0,
-		                         ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden,
-		                         kCopy2ClipboardTag);
+		                         ParameterInfo::kIsHidden, kCopy2ClipboardTag);
 
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{
@@ -796,6 +808,62 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 			componentHandler->restartComponent (kLatencyChanged);
 	}
 	//--- ----------------------------------------
+	else if (tag == kRestartKeyswitchChangedTag)
+	{
+		if (value > 0.)
+		{
+			if (componentHandler->restartComponent (kKeyswitchChanged) == kResultTrue)
+			{
+				addFeatureLog (kLogIdRestartKeyswitchChangedSupported);
+			}
+			mNumKeyswitch++;
+			if (mNumKeyswitch > 10)
+				mNumKeyswitch = 0;
+			EditControllerEx1::setParamNormalized (tag, value);
+			value = 0;
+		}
+	}
+	//--- ----------------------------------------
+	else if (tag == kRestartNoteExpressionChangedTag)
+	{
+		if (value > 0.)
+		{
+			if (componentHandler->restartComponent (kNoteExpressionChanged) == kResultTrue)
+			{
+				addFeatureLog (kLogIdRestartNoteExpressionChangedSupported);
+			}
+			EditControllerEx1::setParamNormalized (tag, value);
+			value = 0;
+		}
+	}
+	//--- ----------------------------------------
+	else if (tag == kRestartParamValuesChangedTag)
+	{
+		if (value > 0.)
+		{
+			if (componentHandler->restartComponent (kParamValuesChanged) == kResultTrue)
+			{
+				addFeatureLog (kLogIdRestartParamValuesChangedSupported);
+			}
+			EditControllerEx1::setParamNormalized (tag, value);
+			value = 0;
+		}
+	}
+	//--- ----------------------------------------
+	else if (tag == kRestartParamTitlesChangedTag)
+	{
+		if (value > 0.)
+		{
+			if (componentHandler->restartComponent (kParamTitlesChanged) == kResultTrue)
+			{
+				addFeatureLog (kLogIdRestartParamTitlesChangedSupported);
+			}
+			EditControllerEx1::setParamNormalized (tag, value);
+			value = 0;
+		}
+	}
+
+	//--- ----------------------------------------
 	else if (tag == kCopy2ClipboardTag)
 	{
 		if (mDataSource && value > 0.)
@@ -967,16 +1035,13 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 			ParameterInfo paramInfo = {};
 			if (getParameterInfo (paramIdx, paramInfo) == kResultOk)
 			{
-				IPtr<IMessage> newMsg = owned (allocateMessage ());
-				if (newMsg)
+				if (auto newMsg = owned (allocateMessage ()))
 				{
 					newMsg->setMessageID ("Parameter");
-					IAttributeList* attr = newMsg->getAttributes ();
-					if (attr)
+					if (IAttributeList* attr = newMsg->getAttributes ())
 					{
 						attr->setInt ("ID", paramInfo.id);
 					}
-
 					sendMessage (newMsg);
 				}
 			}
@@ -985,12 +1050,10 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 		FUnknownPtr<IAudioProcessor> proc (other);
 		if (proc)
 		{
-			IPtr<IMessage> newMsg = owned (allocateMessage ());
-			if (newMsg)
+			if (auto newMsg = owned (allocateMessage ()))
 			{
 				newMsg->setMessageID ("LogEvent");
-				IAttributeList* attr = newMsg->getAttributes ();
-				if (attr)
+				if (IAttributeList* attr = newMsg->getAttributes ())
 				{
 					attr->setInt ("ID", kLogIdProcessorControllerConnection);
 					attr->setInt ("Count", 1);
@@ -1241,27 +1304,40 @@ int32 PLUGIN_API HostCheckerController::getNoteExpressionCount (int32 /*busIndex
 	}
 
 	addFeatureLog (kLogIdINoteExpressionControllerSupported);
-	return 0;
+	return 1;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (int32 /*busIndex*/,
                                                                  int16 /*channel*/,
-                                                                 int32 /*noteExpressionIndex*/,
-                                                                 NoteExpressionTypeInfo& /*info*/)
+                                                                 int32 noteExpressionIndex,
+                                                                 NoteExpressionTypeInfo& info)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionInfo"),
 	                          THREAD_CHECK_EXIT))
 	{
 		addFeatureLog (kLogIdgetNoteExpressionInfoCalledinWrongThread);
 	}
+	if (noteExpressionIndex == 0)
+	{
+		UString (info.title, USTRINGSIZE (info.title)).assign (USTRING ("Volume"));
+		UString (info.shortTitle, USTRINGSIZE (info.shortTitle)).assign (USTRING ("Vol"));
+		UString (info.units, USTRINGSIZE (info.units)).assign (USTRING ("dB"));
+		info.typeId = kVolumeTypeID;
+		info.unitId = -1;
+		info.valueDesc;
+		info.associatedParameterId = -1;
+		info.flags = 0;
+
+		return kResultTrue;
+	}
 	return kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
-    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/,
-    NoteExpressionValue /*valueNormalized*/, String128 /*string*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID id,
+    NoteExpressionValue valueNormalized, String128 string)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionStringByValue"),
@@ -1269,14 +1345,23 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
 	{
 		addFeatureLog (kLogIdgetNoteExpressionStringByValueCalledinWrongThread);
 	}
+	addFeatureLog (kLogIdGetNoteExpressionStringByValueSupported);
 
+	if (id == kVolumeTypeID)
+	{
+		char text[32];
+		sprintf (text, "%d", (int32) (100 * valueNormalized + 0.5));
+		Steinberg::UString (string, 128).fromAscii (text);
+
+		return kResultTrue;
+	}
 	return kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
-    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID /*id*/, const TChar* /*string*/,
-    NoteExpressionValue& /*valueNormalized*/)
+    int32 /*busIndex*/, int16 /*channel*/, NoteExpressionTypeID id, const TChar* string,
+    NoteExpressionValue& valueNormalized)
 {
 	if (!threadChecker->test (
 	        THREAD_CHECK_MSG ("HostCheckerController::getNoteExpressionValueByString"),
@@ -1284,14 +1369,25 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionValueByString (
 	{
 		addFeatureLog (kLogIdgetNoteExpressionValueByStringCalledinWrongThread);
 	}
+	addFeatureLog (kLogIdGetNoteExpressionValueByStringSupported);
+
+	if (id == kVolumeTypeID)
+	{
+		String wrapper ((TChar*)string);
+		double tmp = 0.0;
+		if (wrapper.scanFloat (tmp))
+		{
+			valueNormalized = tmp / 100.;
+			return kResultTrue;
+		}
+	}
 
 	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 /*busIndex*/,
-                                                                int16 /*channel*/,
-                                                                PhysicalUIMapList& /*list*/)
+tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 busIndex, int16 channel,
+                                                                PhysicalUIMapList& list)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getPhysicalUIMapping"),
 	                          THREAD_CHECK_EXIT))
@@ -1300,7 +1396,17 @@ tresult PLUGIN_API HostCheckerController::getPhysicalUIMapping (int32 /*busIndex
 	}
 
 	addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
-	return kResultTrue;
+
+	if (busIndex == 0 && channel == 0)
+	{
+		for (uint32 i = 0; i < list.count; ++i)
+		{
+			if (kPUIXMovement == list.map[i].physicalUITypeID)
+				list.map[i].noteExpressionTypeID = kVolumeTypeID;
+		}
+		return kResultTrue;
+	}
+	return kResultFalse;
 }
 
 //--- IKeyswitchController ---------------------------
@@ -1314,22 +1420,41 @@ int32 PLUGIN_API HostCheckerController::getKeyswitchCount (int32 /*busIndex*/, i
 	}
 
 	addFeatureLog (kLogIdIKeyswitchControllerSupported);
-	return kResultTrue;
+	return mNumKeyswitch;
 }
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerController::getKeyswitchInfo (int32 /*busIndex*/, int16 /*channel*/,
-                                                            int32 /*keySwitchIndex*/,
-                                                            KeyswitchInfo& /*info*/)
+                                                            int32 keySwitchIndex,
+                                                            KeyswitchInfo& info)
 {
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerController::getKeyswitchInfo"),
 	                          THREAD_CHECK_EXIT))
 	{
 		addFeatureLog (kLogIdgetKeyswitchInfoCalledinWrongThread);
 	}
-
 	addFeatureLog (kLogIdIKeyswitchControllerSupported);
-	return kResultTrue;
+	if (keySwitchIndex < mNumKeyswitch)
+	{
+		String indexStr;
+		indexStr.printInt64 (keySwitchIndex + int64 (1));
+
+		info.typeId = kNoteOnKeyswitchTypeID;
+		UString title (info.title, USTRINGSIZE (info.title));
+		title.assign (USTRING ("Accentuation "));
+		title.append (indexStr);
+		UString shortTitle (info.shortTitle, USTRINGSIZE (info.shortTitle));
+		shortTitle.assign (USTRING ("Acc"));
+		shortTitle.append (indexStr);
+
+		info.keyswitchMin = 2 * keySwitchIndex;
+		info.keyswitchMax = info.keyswitchMin + 1;
+		info.keyRemapped = -1;
+		info.unitId = -1;
+		info.flags = 0;
+		return kResultTrue;
+	}
+	return kResultFalse;
 }
 
 //------------------------------------------------------------------------
