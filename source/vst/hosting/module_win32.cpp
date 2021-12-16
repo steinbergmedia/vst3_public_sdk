@@ -428,6 +428,13 @@ Module::PathList Module::getModulePaths ()
 {
 	// find plug-ins located in common/VST3
 	PathList list;
+	if (auto knownFolder = getKnownFolder (FOLDERID_UserProgramFilesCommon))
+	{
+		filesystem::path p (*knownFolder);
+		p.append ("VST3");
+		findModules (p, list);
+	}	
+
 	if (auto knownFolder = getKnownFolder (FOLDERID_ProgramFilesCommon))
 	{
 		filesystem::path p (*knownFolder);

@@ -264,7 +264,7 @@ struct WindowController : WindowControllerAdapter,
 #else
 		static constexpr auto pathSeparator = '/';
 #endif
-		size_t sepPos = path.find_last_of (unixPathSeparator);
+		size_t sepPos = path.find_last_of (pathSeparator);
 		if (sepPos == std::string::npos)
 			return {};
 		return {path.substr (sepPos + 1)};

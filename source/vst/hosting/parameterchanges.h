@@ -96,8 +96,8 @@ public:
 	//------------------------------------------------------------------------
 	DECLARE_FUNKNOWN_METHODS
 protected:
-	std::vector<ParameterValueQueue*> queues;
-	int32 usedQueueCount;
+	std::vector<IPtr<ParameterValueQueue>> queues;
+	int32 usedQueueCount {0};
 };
 
 

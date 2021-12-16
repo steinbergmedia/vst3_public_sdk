@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID ImageController::uid (0x5653456D, 0x6461496D, 0x64612069, 0x6D616765);
-#else
-//-----------------------------------------------------------------------------
-FUID ImageController::uid (0x18E85131, 0x09CE429D, 0x83E6621D, 0x74EF40FD);
-#endif
-
 //-----------------------------------------------------------------------------
 ImageController::ImageController ()
 {

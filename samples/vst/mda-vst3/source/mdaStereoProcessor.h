@@ -39,7 +39,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new StereoProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461536D, 0x64612073, 0x74657265);
+#else
+	inline static DECLARE_UID (uid, 0xDB1EB642, 0x4838483D, 0xA7C7E5D2, 0x3686E943);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

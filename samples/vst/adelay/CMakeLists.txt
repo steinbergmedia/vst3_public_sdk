@@ -20,14 +20,14 @@ set_target_properties(${target}
 )
 target_compile_features(${target}
     PUBLIC
-        cxx_std_14
+        cxx_std_17
 )
 target_link_libraries(${target}
     PRIVATE
         sdk
 )
 if(SMTG_MAC)
-    smtg_set_bundle(${target}
+    smtg_target_set_bundle(${target}
     	BUNDLE_IDENTIFIER "com.steinberg.vst3.adelay"
     	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
     )

@@ -44,13 +44,14 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-/** Implementation's example of IPlugInterfaceSupport.
+/** Example implementation of IPlugInterfaceSupport.
 \ingroup hostingBase
 */
 class PlugInterfaceSupport : public IPlugInterfaceSupport
 {
 public:
 	PlugInterfaceSupport ();
+	virtual ~PlugInterfaceSupport () = default;
 
 	//--- IPlugInterfaceSupport ---------
 	tresult PLUGIN_API isPlugInterfaceSupported (const TUID _iid) SMTG_OVERRIDE;

@@ -21,14 +21,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID BandistoController::uid (0x5653456D, 0x6461446D, 0x64612062, 0x616E6469);
-#else
-//-----------------------------------------------------------------------------
-FUID BandistoController::uid (0x302EA341, 0xB6AC46C6, 0xB54D65E5, 0x95E63FAB);
-#endif
-
 //-----------------------------------------------------------------------------
 BandistoController::BandistoController ()
 {

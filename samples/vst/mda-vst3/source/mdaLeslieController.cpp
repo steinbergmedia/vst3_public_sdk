@@ -22,14 +22,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID LeslieController::uid (0x5653456D, 0x6461486D, 0x6461206C, 0x65736C69);
-#else
-//-----------------------------------------------------------------------------
-FUID LeslieController::uid (0x3AC7BB1E, 0xE8C74788, 0x8D29C9BF, 0x9D9A51F8);
-#endif
-
 //-----------------------------------------------------------------------------
 LeslieController::LeslieController ()
 {

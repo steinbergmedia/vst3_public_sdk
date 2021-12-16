@@ -40,6 +40,7 @@
 #include "public.sdk/source/vst/hosting/plugprovider.h"
 #include "public.sdk/source/vst/testsuite/vststructsizecheck.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "public.sdk/source/vst/utility/testing.h"
 #include "base/source/fcommandline.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
@@ -210,6 +211,7 @@ constexpr auto optTestComponentPath = "test-component";
 constexpr auto optListInstalledPlugIns = "list";
 constexpr auto optListPlugInSnapshots = "snapshots";
 constexpr auto optCID = "cid";
+constexpr auto optSelftest = "selftest";
 
 //------------------------------------------------------------------------
 } // anonymous
@@ -251,7 +253,10 @@ void PLUGIN_API Validator::addErrorMessage (const tchar* msg)
 	if (errorStream)
 	{
 		auto str = VST3::StringConvert::convert (msg);
-		*errorStream << "ERROR: " << str << "\n";
+		if (addErrorWarningTextToOutput)
+			*errorStream << "ERROR: " << str << "\n";
+		else
+			*errorStream << str << "\n";
 	}
 }
 
@@ -261,7 +266,10 @@ void PLUGIN_API Validator::addMessage (const tchar* msg)
 	if (infoStream)
 	{
 		auto str = VST3::StringConvert::convert (msg);
-		*infoStream << "Info:  " << str << "\n";
+		if (addErrorWarningTextToOutput)
+			*infoStream << "Info:  " << str << "\n";
+		else
+			*infoStream << str << "\n";
 	}
 }
 
@@ -284,8 +292,12 @@ tresult PLUGIN_API Validator::createInstance (TUID cid, TUID iid, void** obj)
 	}
 	else if (classID == IAttributeList::iid && interfaceID == IAttributeList::iid)
 	{
-		*obj = new HostAttributeList;
-		return kResultTrue;
+		if (auto al = HostAttributeList::make ())
+		{
+			*obj = al.take ();
+			return kResultTrue;
+		}
+		return kOutOfMemory;
 	}
 	*obj = nullptr;
 	return kResultFalse;
@@ -318,6 +330,7 @@ int Validator::run ()
 	      "[path] Path to an additional component which includes custom tests",
 	      Description::kString},
 	     {optListInstalledPlugIns, "Show all installed Plug-Ins", Description::kBool},
+	     {optSelftest, "Run a selftest", Description::kBool},
 	     {optListPlugInSnapshots, "List snapshots from all installed Plug-Ins",
 	      Description::kBool}});
 
@@ -336,6 +349,23 @@ int Validator::run ()
 	{
 		printAllSnapshots (infoStream);
 		return 0;
+	}
+	else if (valueMap.count (optSelftest))
+	{
+		addErrorWarningTextToOutput = false;
+		auto testFactoryInstance = owned (createTestFactoryInstance (nullptr));
+		FUnknownPtr<ITestFactory> testFactory (testFactoryInstance);
+		if (testFactory)
+		{
+			std::cout << "Running validator selftest:\n\n";
+			IPtr<TestSuite> testSuite = owned (new TestSuite (""));
+			if (testFactory->createTests (nullptr, testSuite) == kResultTrue)
+				runTestSuite (testSuite, nullptr);
+			std::cout << "Executed " << (numTestsFailed + numTestsPassed) << " Tests.\n";
+			std::cout << numTestsFailed << " failed test(s).\n";
+			return numTestsFailed == 0 ? 0 : 1;
+		}
+		return 1;
 	}
 	else if (valueMap.hasError () || valueMap.count (optHelp) || files.empty ())
 	{

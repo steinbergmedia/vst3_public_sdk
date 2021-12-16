@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new ShepardController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461686D, 0x64612073, 0x68657061);
+#else
+	inline static DECLARE_UID (uid, 0xDF150F07, 0xCF294A32, 0xB2A04BC5, 0xE49C4A13);
+#endif
 };
 
 }}} // namespaces

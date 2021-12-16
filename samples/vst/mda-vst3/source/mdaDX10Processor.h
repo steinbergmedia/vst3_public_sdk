@@ -52,7 +52,13 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new DX10Processor; }
-	static FUID uid;
+//-----------------------------------------------------------------------------
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653544D, 0x4441786D, 0x64612064, 0x78313000);
+#else
+	inline static DECLARE_UID (uid, 0xF8713648, 0xE2444174, 0x8AAA3B62, 0xA77F9E2D);
+#endif
+
 //-----------------------------------------------------------------------------
 
 	static float programParams[][NPARAMS];

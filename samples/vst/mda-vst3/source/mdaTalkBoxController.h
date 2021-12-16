@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new TalkBoxController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461266D, 0x64612074, 0x616C6B62);
+#else
+	inline static DECLARE_UID (uid, 0x64F420A3, 0xC25242A7, 0xAE8AAE63, 0xD0DC1C2D);
+#endif
 };
 
 }}} // namespaces

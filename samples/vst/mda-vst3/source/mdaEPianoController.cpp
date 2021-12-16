@@ -22,14 +22,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID EPianoController::uid (0x5653454D, 0x4441656D, 0x64612065, 0x7069616E);
-#else
-//-----------------------------------------------------------------------------
-FUID EPianoController::uid (0xDA4F8237, 0x290441D4, 0xAF96E580, 0xE22C01FF);
-#endif
-
 //-----------------------------------------------------------------------------
 EPianoController::EPianoController ()
 {

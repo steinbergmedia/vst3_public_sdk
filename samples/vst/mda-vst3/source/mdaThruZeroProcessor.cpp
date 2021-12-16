@@ -25,14 +25,6 @@ namespace mda {
 
 #define BUFMAX   2048
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID ThruZeroProcessor::uid (0x5653546D, 0x64615A6D, 0x64612074, 0x6872757A);
-#else
-//-----------------------------------------------------------------------------
-FUID ThruZeroProcessor::uid (0xE7B8149A, 0x63A54BF8, 0x82B6A95D, 0x94A3F6EE);
-#endif
-
 //-----------------------------------------------------------------------------
 ThruZeroProcessor::ThruZeroProcessor ()
 {

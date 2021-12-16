@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID SpecMeterController::uid (0x5653456D, 0x64613F6D, 0x64612073, 0x7065636D);
-#else
-//-----------------------------------------------------------------------------
-FUID SpecMeterController::uid (0xA47D4D56, 0x58AE42CD, 0x8EA0714B, 0x39CD3FC0);
-#endif
-
 //-----------------------------------------------------------------------------
 SpecMeterController::SpecMeterController ()
 {

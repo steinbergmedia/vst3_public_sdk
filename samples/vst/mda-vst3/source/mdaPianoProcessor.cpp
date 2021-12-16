@@ -27,14 +27,6 @@ namespace mda {
 
 #define SILENCE 0.0001f  //voice choking
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID PianoProcessor::uid (0x5653544D, 0x4441706D, 0x64612070, 0x69616E6F);
-#else
-//-----------------------------------------------------------------------------
-FUID PianoProcessor::uid (0xA77EA27C, 0x1F184322, 0xBBD2AD93, 0x73A2B7A0);
-#endif
-
 //-----------------------------------------------------------------------------
 float PianoProcessor::programParams[][NPARAMS] = { 
 	{0.500f, 0.500f, 0.500f, 0.5f, 0.803f, 0.251f, 0.376f, 0.500f, 0.330f, 0.500f, 0.246f, 0.500f},

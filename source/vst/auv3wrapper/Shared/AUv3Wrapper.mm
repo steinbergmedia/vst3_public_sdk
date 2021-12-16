@@ -54,8 +54,9 @@
 #import "pluginterfaces/vst/vsttypes.h"
 
 #import <array>
-#import <cassert>
 #import <atomic>
+#import <cassert>
+#import <map>
 #import <pthread/pthread.h>
 
 #if TARGET_OS_IPHONE

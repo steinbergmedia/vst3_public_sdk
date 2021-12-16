@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new StereoController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461536D, 0x64612073, 0x74657265);
+#else
+	inline static DECLARE_UID (uid, 0x6280A3B7, 0x7B54468B, 0x837A3580, 0x042B7A14);
+#endif
 };
 
 }}} // namespaces

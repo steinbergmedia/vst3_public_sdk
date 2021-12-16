@@ -190,7 +190,7 @@ public:
 	ComponentResult GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, UInt32 &outDataSize, Boolean &outWritable) SMTG_OVERRIDE;
 	ComponentResult GetProperty (AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, void* outData) SMTG_OVERRIDE;
 	ComponentResult SetProperty (AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, const void* inData, UInt32 inDataSize) SMTG_OVERRIDE;
-	bool CanScheduleParameters() const; // Not in the base class anymore in newer CoreAudio SDKs
+	bool CanScheduleParameters() const SMTG_OVERRIDE;
 
 	Float64 GetLatency () SMTG_OVERRIDE;
 	Float64 GetTailTime () SMTG_OVERRIDE;
@@ -289,6 +289,8 @@ protected:
 	int32 midiOutCount; // currently only 0 or 1 supported
 	MIDIOutputCallbackHelper mCallbackHelper;
 	EventList outputEvents;
+
+	bool isOfflineRender;
 
 private:
 	void buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units) const;

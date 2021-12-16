@@ -34,17 +34,19 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
             vstgui_support
             aaxwrapper
     )
-
-    smtg_add_vst3_resource(${target} "../again/resource/again.uidesc")
-    smtg_add_vst3_resource(${target} "../again/resource/background.png")
-    smtg_add_vst3_resource(${target} "../again/resource/slider_background.png")
-    smtg_add_vst3_resource(${target} "../again/resource/slider_handle.png")
-    smtg_add_vst3_resource(${target} "../again/resource/slider_handle_2.0x.png")
-    smtg_add_vst3_resource(${target} "../again/resource/vu_on.png")
-    smtg_add_vst3_resource(${target} "../again/resource/vu_off.png")
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            ../again/resource/again.uidesc
+            ../again/resource/background.png
+            ../again/resource/slider_background.png
+            ../again/resource/slider_handle.png
+            ../again/resource/slider_handle_2.0x.png
+            ../again/resource/vu_on.png
+            ../again/resource/vu_off.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.again-aax"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../again/mac/Info.plist" PREPROCESS
         )

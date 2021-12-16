@@ -1,8 +1,16 @@
 
 set(validator_sources
+    ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
+    ${SDK_ROOT}/public.sdk/source/main/moduleinit.cpp
+    ${SDK_ROOT}/public.sdk/source/main/moduleinit.h
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/connectionproxytest.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/eventlisttest.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/hostclassestest.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/parameterchangestest.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/pluginterfacesupporttest.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/hosting/test/processdatatest.cpp
     ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp
     ${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h
-    ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/bus/busactivation.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/bus/busactivation.h
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/bus/busconsistency.cpp
@@ -72,6 +80,8 @@ set(validator_sources
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/vststructsizecheck.h
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/vsttestsuite.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/vsttestsuite.h
+    ${SDK_ROOT}/public.sdk/source/vst/utility/testing.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/utility/testing.h
     source/main.cpp
     source/usediids.cpp
     source/validator.cpp
@@ -116,7 +126,8 @@ target_link_libraries(${target}
     PRIVATE
         sdk_hosting
 )
-smtg_setup_universal_binary(${target})
+smtg_target_codesign(${target})
+smtg_target_setup_universal_binary(${target})
 if(APPLE AND NOT XCODE)
     find_library(COCOA_FRAMEWORK Cocoa)
     target_link_libraries(${target}
@@ -124,3 +135,8 @@ if(APPLE AND NOT XCODE)
             ${COCOA_FRAMEWORK}
     )
 endif(APPLE AND NOT XCODE)
+
+#####################################################
+add_custom_command(TARGET ${target} POST_BUILD
+	COMMAND $<TARGET_FILE:${target}> "-selftest"
+)

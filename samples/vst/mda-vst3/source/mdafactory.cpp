@@ -14,7 +14,6 @@
  *
  */
 
-#include "public.sdk/source/main/pluginfactory.h"
 #include "mdaAmbienceController.h"
 #include "mdaBandistoController.h"
 #include "mdaBeatBoxController.h"
@@ -52,16 +51,19 @@
 #include "helpers.h"
 #include "version.h"
 
+#include "public.sdk/source/main/pluginfactory_constexpr.h"
+
 //-----------------------------------------------------------------------------
 #define kVersionString	FULL_VERSION_STR
 
+using namespace Steinberg;
 using namespace Steinberg::Vst;
 
-BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
+BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail, 68)
 
 //-----------------------------------------------------------------------------
 // -- Ambience
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::AmbienceProcessor::uid),
+DEF_CLASS  (mda::AmbienceProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Ambience",
@@ -69,9 +71,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::AmbienceProcessor::uid),
 			Vst::PlugType::kFxReverb,
 			kVersionString,
 			kVstVersionString,
-			mda::AmbienceProcessor::createInstance)
+			mda::AmbienceProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::AmbienceController::uid),
+DEF_CLASS  (mda::AmbienceController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Ambience",
@@ -79,12 +81,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::AmbienceController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::AmbienceController::createInstance)
+			mda::AmbienceController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Bandisto
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BandistoProcessor::uid),
+DEF_CLASS  (mda::BandistoProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Bandisto",
@@ -92,9 +94,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BandistoProcessor::uid),
 			Vst::PlugType::kFxDistortion,
 			kVersionString,
 			kVstVersionString,
-			mda::BandistoProcessor::createInstance)
+			mda::BandistoProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BandistoController::uid),
+DEF_CLASS  (mda::BandistoController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Bandisto",
@@ -102,12 +104,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BandistoController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::BandistoController::createInstance)
+			mda::BandistoController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- BeatBox
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BeatBoxProcessor::uid),
+DEF_CLASS  (mda::BeatBoxProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda BeatBox",
@@ -115,9 +117,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BeatBoxProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::BeatBoxProcessor::createInstance)
+			mda::BeatBoxProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BeatBoxController::uid),
+DEF_CLASS  (mda::BeatBoxController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda BeatBox",
@@ -125,12 +127,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::BeatBoxController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::BeatBoxController::createInstance)
+			mda::BeatBoxController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Combo
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ComboProcessor::uid),
+DEF_CLASS  (mda::ComboProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Combo",
@@ -138,9 +140,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ComboProcessor::uid),
 			Vst::PlugType::kFxDistortion,
 			kVersionString,
 			kVstVersionString,
-			mda::ComboProcessor::createInstance)
+			mda::ComboProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ComboController::uid),
+DEF_CLASS  (mda::ComboController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Combo",
@@ -148,12 +150,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ComboController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::ComboController::createInstance)
+			mda::ComboController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- DeEsser
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DeEsserProcessor::uid),
+DEF_CLASS  (mda::DeEsserProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda DeEsser",
@@ -161,9 +163,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DeEsserProcessor::uid),
 			Vst::PlugType::kFxMastering,
 			kVersionString,
 			kVstVersionString,
-			mda::DeEsserProcessor::createInstance)
+			mda::DeEsserProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DeEsserController::uid),
+DEF_CLASS  (mda::DeEsserController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda DeEsser",
@@ -171,12 +173,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DeEsserController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DeEsserController::createInstance)
+			mda::DeEsserController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Degrade
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DegradeProcessor::uid),
+DEF_CLASS  (mda::DegradeProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Degrade",
@@ -184,9 +186,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DegradeProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::DegradeProcessor::createInstance)
+			mda::DegradeProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DegradeController::uid),
+DEF_CLASS  (mda::DegradeController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Degrade",
@@ -194,12 +196,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DegradeController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DegradeController::createInstance)
+			mda::DegradeController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Delay
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DelayProcessor::uid),
+DEF_CLASS  (mda::DelayProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Delay",
@@ -207,9 +209,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DelayProcessor::uid),
 			Vst::PlugType::kFxDelay,
 			kVersionString,
 			kVstVersionString,
-			mda::DelayProcessor::createInstance)
+			mda::DelayProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DelayController::uid),
+DEF_CLASS  (mda::DelayController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Delay",
@@ -217,12 +219,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DelayController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DelayController::createInstance)
+			mda::DelayController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Detune
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DetuneProcessor::uid),
+DEF_CLASS  (mda::DetuneProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Detune",
@@ -230,9 +232,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DetuneProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::DetuneProcessor::createInstance)
+			mda::DetuneProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DetuneController::uid),
+DEF_CLASS  (mda::DetuneController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Detune",
@@ -240,12 +242,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DetuneController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DetuneController::createInstance)
+			mda::DetuneController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Dither
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DitherProcessor::uid),
+DEF_CLASS  (mda::DitherProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Dither",
@@ -253,9 +255,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DitherProcessor::uid),
 			Vst::PlugType::kFxMastering,
 			kVersionString,
 			kVstVersionString,
-			mda::DitherProcessor::createInstance)
+			mda::DitherProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DitherController::uid),
+DEF_CLASS  (mda::DitherController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Dither",
@@ -263,12 +265,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DitherController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DitherController::createInstance)
+			mda::DitherController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- DubDelay
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DubDelayProcessor::uid),
+DEF_CLASS  (mda::DubDelayProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda DubDelay",
@@ -276,9 +278,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DubDelayProcessor::uid),
 			Vst::PlugType::kFxDelay,
 			kVersionString,
 			kVstVersionString,
-			mda::DubDelayProcessor::createInstance)
+			mda::DubDelayProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DubDelayController::uid),
+DEF_CLASS  (mda::DubDelayController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda DubDelay",
@@ -286,12 +288,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DubDelayController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DubDelayController::createInstance)
+			mda::DubDelayController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- DX10
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DX10Processor::uid),
+DEF_CLASS  (mda::DX10Processor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda DX10",
@@ -299,9 +301,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DX10Processor::uid),
 			Vst::PlugType::kInstrumentSynth,
 			kVersionString,
 			kVstVersionString,
-			mda::DX10Processor::createInstance)
+			mda::DX10Processor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DX10Controller::uid),
+DEF_CLASS  (mda::DX10Controller::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda DX10",
@@ -309,12 +311,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DX10Controller::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DX10Controller::createInstance)
+			mda::DX10Controller::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Dynamics
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DynamicsProcessor::uid),
+DEF_CLASS  (mda::DynamicsProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Dynamics",
@@ -322,9 +324,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DynamicsProcessor::uid),
 			Vst::PlugType::kFxDynamics,
 			kVersionString,
 			kVstVersionString,
-			mda::DynamicsProcessor::createInstance)
+			mda::DynamicsProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DynamicsController::uid),
+DEF_CLASS  (mda::DynamicsController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Dynamics",
@@ -332,12 +334,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::DynamicsController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::DynamicsController::createInstance)
+			mda::DynamicsController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- EPiano
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::EPianoProcessor::uid),
+DEF_CLASS  (mda::EPianoProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda EPiano",
@@ -345,9 +347,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::EPianoProcessor::uid),
 			Vst::PlugType::kInstrumentSynth,
 			kVersionString,
 			kVstVersionString,
-			mda::EPianoProcessor::createInstance)
+			mda::EPianoProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::EPianoController::uid),
+DEF_CLASS  (mda::EPianoController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda EPiano",
@@ -355,12 +357,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::EPianoController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::EPianoController::createInstance)
+			mda::EPianoController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Image
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ImageProcessor::uid),
+DEF_CLASS  (mda::ImageProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Image",
@@ -368,9 +370,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ImageProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::ImageProcessor::createInstance)
+			mda::ImageProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ImageController::uid),
+DEF_CLASS  (mda::ImageController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Image",
@@ -378,12 +380,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ImageController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::ImageController::createInstance)
+			mda::ImageController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- JX10
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::JX10Processor::uid),
+DEF_CLASS  (mda::JX10Processor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda JX10",
@@ -391,9 +393,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::JX10Processor::uid),
 			Vst::PlugType::kInstrumentSynth,
 			kVersionString,
 			kVstVersionString,
-			mda::JX10Processor::createInstance)
+			mda::JX10Processor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::JX10Controller::uid),
+DEF_CLASS  (mda::JX10Controller::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda JX10",
@@ -401,12 +403,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::JX10Controller::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::JX10Controller::createInstance)
+			mda::JX10Controller::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Leslie
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LeslieProcessor::uid),
+DEF_CLASS  (mda::LeslieProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Leslie",
@@ -414,9 +416,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LeslieProcessor::uid),
 			Vst::PlugType::kFxModulation,
 			kVersionString,
 			kVstVersionString,
-			mda::LeslieProcessor::createInstance)
+			mda::LeslieProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LeslieController::uid),
+DEF_CLASS  (mda::LeslieController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Leslie",
@@ -424,12 +426,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LeslieController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::LeslieController::createInstance)
+			mda::LeslieController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Limiter
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LimiterProcessor::uid),
+DEF_CLASS  (mda::LimiterProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Limiter",
@@ -437,9 +439,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LimiterProcessor::uid),
 			Vst::PlugType::kFxDynamics,
 			kVersionString,
 			kVstVersionString,
-			mda::LimiterProcessor::createInstance)
+			mda::LimiterProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LimiterController::uid),
+DEF_CLASS  (mda::LimiterController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Limiter",
@@ -447,12 +449,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LimiterController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::LimiterController::createInstance)
+			mda::LimiterController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Loudness
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LoudnessProcessor::uid),
+DEF_CLASS  (mda::LoudnessProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Loudness",
@@ -460,9 +462,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LoudnessProcessor::uid),
 			Vst::PlugType::kFxDynamics,
 			kVersionString,
 			kVstVersionString,
-			mda::LoudnessProcessor::createInstance)
+			mda::LoudnessProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LoudnessController::uid),
+DEF_CLASS  (mda::LoudnessController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Loudness",
@@ -470,12 +472,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::LoudnessController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::LoudnessController::createInstance)
+			mda::LoudnessController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- MultiBand
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::MultiBandProcessor::uid),
+DEF_CLASS  (mda::MultiBandProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda MultiBand",
@@ -483,9 +485,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::MultiBandProcessor::uid),
 			Vst::PlugType::kFxDynamics,
 			kVersionString,
 			kVstVersionString,
-			mda::MultiBandProcessor::createInstance)
+			mda::MultiBandProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::MultiBandController::uid),
+DEF_CLASS  (mda::MultiBandController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda MultiBand",
@@ -493,12 +495,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::MultiBandController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::MultiBandController::createInstance)
+			mda::MultiBandController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Overdrive
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::OverdriveProcessor::uid),
+DEF_CLASS  (mda::OverdriveProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Overdrive",
@@ -506,9 +508,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::OverdriveProcessor::uid),
 			Vst::PlugType::kFxDistortion,
 			kVersionString,
 			kVstVersionString,
-			mda::OverdriveProcessor::createInstance)
+			mda::OverdriveProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::OverdriveController::uid),
+DEF_CLASS  (mda::OverdriveController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Overdrive",
@@ -516,12 +518,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::OverdriveController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::OverdriveController::createInstance)
+			mda::OverdriveController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Piano
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::PianoProcessor::uid),
+DEF_CLASS  (mda::PianoProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Piano",
@@ -529,9 +531,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::PianoProcessor::uid),
 			Vst::PlugType::kInstrumentSynth,
 			kVersionString,
 			kVstVersionString,
-			mda::PianoProcessor::createInstance)
+			mda::PianoProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::PianoController::uid),
+DEF_CLASS  (mda::PianoController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Piano",
@@ -539,12 +541,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::PianoController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::PianoController::createInstance)
+			mda::PianoController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- RePsycho
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RePsychoProcessor::uid),
+DEF_CLASS  (mda::RePsychoProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda RePsycho!",
@@ -552,9 +554,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RePsychoProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::RePsychoProcessor::createInstance)
+			mda::RePsychoProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RePsychoController::uid),
+DEF_CLASS  (mda::RePsychoController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda RePsycho!",
@@ -562,12 +564,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RePsychoController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::RePsychoController::createInstance)
+			mda::RePsychoController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- RezFilter
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RezFilterProcessor::uid),
+DEF_CLASS  (mda::RezFilterProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda RezFilter",
@@ -575,9 +577,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RezFilterProcessor::uid),
 			Vst::PlugType::kFxFilter,
 			kVersionString,
 			kVstVersionString,
-			mda::RezFilterProcessor::createInstance)
+			mda::RezFilterProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RezFilterController::uid),
+DEF_CLASS  (mda::RezFilterController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda RezFilter",
@@ -585,12 +587,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RezFilterController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::RezFilterController::createInstance)
+			mda::RezFilterController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- RingMod
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RingModProcessor::uid),
+DEF_CLASS  (mda::RingModProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda RingMod",
@@ -598,9 +600,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RingModProcessor::uid),
 			Vst::PlugType::kFxModulation,
 			kVersionString,
 			kVstVersionString,
-			mda::RingModProcessor::createInstance)
+			mda::RingModProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RingModController::uid),
+DEF_CLASS  (mda::RingModController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda RingMod",
@@ -608,12 +610,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RingModController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::RingModController::createInstance)
+			mda::RingModController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Round Panner
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RoundPanProcessor::uid),
+DEF_CLASS  (mda::RoundPanProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Round Panner",
@@ -621,9 +623,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RoundPanProcessor::uid),
 			Vst::PlugType::kFxModulation,
 			kVersionString,
 			kVstVersionString,
-			mda::RoundPanProcessor::createInstance)
+			mda::RoundPanProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RoundPanController::uid),
+DEF_CLASS  (mda::RoundPanController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Round Panner",
@@ -631,12 +633,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::RoundPanController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::RoundPanController::createInstance)
+			mda::RoundPanController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Shepard
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ShepardProcessor::uid),
+DEF_CLASS  (mda::ShepardProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Shepard",
@@ -644,9 +646,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ShepardProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::ShepardProcessor::createInstance)
+			mda::ShepardProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ShepardController::uid),
+DEF_CLASS  (mda::ShepardController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Shepard",
@@ -654,12 +656,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ShepardController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::ShepardController::createInstance)
+			mda::ShepardController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Splitter
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SplitterProcessor::uid),
+DEF_CLASS  (mda::SplitterProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Splitter",
@@ -667,9 +669,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SplitterProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::SplitterProcessor::createInstance)
+			mda::SplitterProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SplitterController::uid),
+DEF_CLASS  (mda::SplitterController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Splitter",
@@ -677,12 +679,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SplitterController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::SplitterController::createInstance)
+			mda::SplitterController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Stereo Simulator
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::StereoProcessor::uid),
+DEF_CLASS  (mda::StereoProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Stereo Simulator",
@@ -690,9 +692,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::StereoProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::StereoProcessor::createInstance)
+			mda::StereoProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::StereoController::uid),
+DEF_CLASS  (mda::StereoController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Stereo Simulator",
@@ -700,12 +702,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::StereoController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::StereoController::createInstance)
+			mda::StereoController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Sub-Bass Synthesizer
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SubSynthProcessor::uid),
+DEF_CLASS  (mda::SubSynthProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Sub-Bass Synthesizer",
@@ -713,9 +715,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SubSynthProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::SubSynthProcessor::createInstance)
+			mda::SubSynthProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SubSynthController::uid),
+DEF_CLASS  (mda::SubSynthController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Sub-Bass Synthesizer",
@@ -723,12 +725,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SubSynthController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::SubSynthController::createInstance)
+			mda::SubSynthController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- TalkBox
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TalkBoxProcessor::uid),
+DEF_CLASS  (mda::TalkBoxProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda TalkBox",
@@ -736,9 +738,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TalkBoxProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::TalkBoxProcessor::createInstance)
+			mda::TalkBoxProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TalkBoxController::uid),
+DEF_CLASS  (mda::TalkBoxController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda TalkBox",
@@ -746,12 +748,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TalkBoxController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::TalkBoxController::createInstance)
+			mda::TalkBoxController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- TestTone
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TestToneProcessor::uid),
+DEF_CLASS  (mda::TestToneProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda TestTone",
@@ -759,9 +761,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TestToneProcessor::uid),
 			Vst::PlugType::kFxGenerator,
 			kVersionString,
 			kVstVersionString,
-			mda::TestToneProcessor::createInstance)
+			mda::TestToneProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TestToneController::uid),
+DEF_CLASS  (mda::TestToneController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda TestTone",
@@ -769,12 +771,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TestToneController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::TestToneController::createInstance)
+			mda::TestToneController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Thru-Zero Flanger
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ThruZeroProcessor::uid),
+DEF_CLASS  (mda::ThruZeroProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Thru-Zero Flanger",
@@ -782,9 +784,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ThruZeroProcessor::uid),
 			Vst::PlugType::kFxModulation,
 			kVersionString,
 			kVstVersionString,
-			mda::ThruZeroProcessor::createInstance)
+			mda::ThruZeroProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ThruZeroController::uid),
+DEF_CLASS  (mda::ThruZeroController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Thru-Zero Flanger",
@@ -792,12 +794,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::ThruZeroController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::ThruZeroController::createInstance)
+			mda::ThruZeroController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- Tracker
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TrackerProcessor::uid),
+DEF_CLASS  (mda::TrackerProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda Tracker",
@@ -805,9 +807,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TrackerProcessor::uid),
 			Vst::PlugType::kFx,
 			kVersionString,
 			kVstVersionString,
-			mda::TrackerProcessor::createInstance)
+			mda::TrackerProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TrackerController::uid),
+DEF_CLASS  (mda::TrackerController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda Tracker",
@@ -815,12 +817,12 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::TrackerController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::TrackerController::createInstance)
+			mda::TrackerController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 
 //-----------------------------------------------------------------------------
 // -- SpecMeter
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SpecMeterProcessor::uid),
+DEF_CLASS  (mda::SpecMeterProcessor::uid,
 			PClassInfo::kManyInstances,
 			kVstAudioEffectClass,
 			"mda SpecMeter",
@@ -828,9 +830,9 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SpecMeterProcessor::uid),
 			Vst::PlugType::kFxAnalyzer,
 			kVersionString,
 			kVstVersionString,
-			mda::SpecMeterProcessor::createInstance)
+			mda::SpecMeterProcessor::createInstance, nullptr)
 
-DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SpecMeterController::uid),
+DEF_CLASS  (mda::SpecMeterController::uid,
 			PClassInfo::kManyInstances,
 			kVstComponentControllerClass,
 			"mda SpecMeter",
@@ -838,7 +840,7 @@ DEF_CLASS2 (INLINE_UID_FROM_FUID (mda::SpecMeterController::uid),
 			"",
 			kVersionString,
 			kVstVersionString,
-			mda::SpecMeterController::createInstance)
+			mda::SpecMeterController::createInstance, nullptr)
 //-----------------------------------------------------------------------------
 END_FACTORY
 

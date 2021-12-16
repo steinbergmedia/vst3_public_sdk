@@ -35,13 +35,13 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         #--------------------------------------------------------------------------------------------------------
         # macOS target
         #--------------------------------------------------------------------------------------------------------
-        smtg_add_auv3(again_auv3_macos "macOS" "AGain AUV3 macOS" "com.steinberg.sdk.auv3.againmac" audiounitconfig.h "macOS/again.entitlements" "${again_mac_app_sources}" "${again_mac_app_ui_resources}" "macOS/Resources/Info.plist" "Shared/Info.plist" again)
+        smtg_add_auv3_app(again_auv3_macos "macOS" "AGain AUV3 macOS" "com.steinberg.sdk.auv3.againmac" audiounitconfig.h "macOS/again.entitlements" "${again_mac_app_sources}" "${again_mac_app_ui_resources}" "macOS/Resources/Info.plist" "Shared/Info.plist" again)
 
         #--------------------------------------------------------------------------------------------------------
         # iOS target
         #--------------------------------------------------------------------------------------------------------
         if(SMTG_IOS_DEVELOPMENT_TEAM)
-            smtg_add_auv3(again_auv3_ios "iOS" "AGain AUV3 iOS" "com.steinberg.sdk.auv3.againios" "audiounitconfig.h" "iOS/again.entitlements" "${again_ios_app_sources}" "${again_ios_app_ui_resources}" "iOS/Resources/Info.plist" "Shared/Info.plist" again_ios)
-        endif()
-    endif()
-endif()
+            smtg_add_auv3_app(again_auv3_ios "iOS" "AGain AUV3 iOS" "com.steinberg.sdk.auv3.againios" "audiounitconfig.h" "iOS/again.entitlements" "${again_ios_app_sources}" "${again_ios_app_ui_resources}" "iOS/Resources/Info.plist" "Shared/Info.plist" again_ios)
+        endif(SMTG_IOS_DEVELOPMENT_TEAM)
+    endif(XCODE)
+endif(SMTG_MAC AND SMTG_ADD_VSTGUI)

@@ -164,7 +164,7 @@ bool PLUGIN_API NoteExpressionTest::run (ITestResult* testResult)
 				}
 				else
 				{
-					for (int32 i = 0; i < maxPUI; i++)
+					for (uint32 i = 0; i < maxPUI; i++)
 					{
 						addMessage (testResult,
 						            printf ("Note Expression PhysicalUIMapping: %d => %d",

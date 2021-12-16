@@ -59,6 +59,7 @@ public:
 	//---Internal Methods-------
 	/** Sets the controller Class ID associated to its component. */
 	void setControllerClass (const FUID& cid) { controllerClass = cid; }
+	void setControllerClass (const TUID& cid) { controllerClass = FUID::fromTUID (cid); }
 
 	/** Removes all Audio Busses. */
 	tresult removeAudioBusses ();

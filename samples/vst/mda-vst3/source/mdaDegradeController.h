@@ -49,7 +49,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DegradeController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461436D, 0x64612064, 0x65677261);
+#else
+	inline static DECLARE_UID (uid, 0x2C3AC40E, 0xA7754992, 0x87FE2BD7, 0x77829B03);
+#endif
 };
 
 }}} // namespaces

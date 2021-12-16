@@ -22,14 +22,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID ThruZeroController::uid (0x5653456D, 0x64615A6D, 0x64612074, 0x6872757A);
-#else
-//-----------------------------------------------------------------------------
-FUID ThruZeroController::uid (0x4A552BC9, 0x3F484476, 0x87608F28, 0xE34736DE);
-#endif
-
 //-----------------------------------------------------------------------------
 ThruZeroController::ThruZeroController ()
 {

@@ -48,7 +48,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DitherController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461646D, 0x64612064, 0x69746865);
+#else
+	inline static DECLARE_UID (uid, 0xE54A7007, 0x068149B4, 0xAEAF955C, 0x54760DBF);
+#endif
 };
 
 }}} // namespaces

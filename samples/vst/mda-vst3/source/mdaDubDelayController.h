@@ -52,7 +52,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DubDelayController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461626D, 0x64612064, 0x75626465);
+#else
+	inline static DECLARE_UID (uid, 0x812A9763, 0xA27F4D74, 0x8A272139, 0x6F1D35BB);
+#endif
 };
 
 }}} // namespaces

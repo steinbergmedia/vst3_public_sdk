@@ -24,9 +24,6 @@ namespace Vst {
 namespace mda {
 
 //-----------------------------------------------------------------------------
-FUID AmbienceProcessor::uid (0xAF799E3A, 0xC94B444A, 0xB5B24FD5, 0xD3E3F9E4);
-
-//-----------------------------------------------------------------------------
 AmbienceProcessor::AmbienceProcessor ()
 : buf1 (nullptr)
 , buf2 (nullptr)

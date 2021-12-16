@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new ThruZeroController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64615A6D, 0x64612074, 0x6872757A);
+#else
+	inline static DECLARE_UID (uid, 0x4A552BC9, 0x3F484476, 0x87608F28, 0xE34736DE);
+#endif
 };
 
 }}} // namespaces

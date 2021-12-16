@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DeEsserController::uid (0x5653456D, 0x6461736D, 0x64612064, 0x652D6573);
-#else
-//-----------------------------------------------------------------------------
-FUID DeEsserController::uid (0x370BA963, 0xE2D54BF8, 0x8D6838FA, 0x1567C8DD);
-#endif
-
 //-----------------------------------------------------------------------------
 DeEsserController::DeEsserController ()
 {

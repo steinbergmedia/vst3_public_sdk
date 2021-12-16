@@ -35,7 +35,7 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new AmbienceController; }
-	static FUID uid;
+	inline static DECLARE_UID (uid, 0x0D9DD331, 0xCCF044FF, 0xB7DCB8B9, 0xDF977096);
 };
 
 }}} // namespaces

@@ -40,7 +40,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new LimiterProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x64614C6D, 0x6461206C, 0x696D6974);
+#else
+	inline static DECLARE_UID (uid, 0xE13C8DA0, 0x72DE4A97, 0xA0890C28, 0x0BDA61F8);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

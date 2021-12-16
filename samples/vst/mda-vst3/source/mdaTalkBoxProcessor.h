@@ -39,7 +39,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new TalkBoxProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461266D, 0x64612074, 0x616C6B62);
+#else
+	inline static DECLARE_UID (uid, 0xF235EEE4, 0x92084883, 0xAD5C8632, 0x34DFE073);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

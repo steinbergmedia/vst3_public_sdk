@@ -36,21 +36,26 @@ if(SMTG_ADD_VSTGUI)
             sdk
             vstgui_support
     )
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            resource/note_expression_synth.uidesc
+            resource/about.png
+            resource/background.png
+            resource/groupframe.png
+            resource/knob.png
+            resource/knob2.png
+            "resource/knob big.png"
+            resource/vst3_logo_small.png
+    )
 
-    smtg_add_vst3_resource(${target} "resource/note_expression_synth.uidesc")
-    smtg_add_vst3_resource(${target} "resource/about.png")
-    smtg_add_vst3_resource(${target} "resource/background.png")
-    smtg_add_vst3_resource(${target} "resource/groupframe.png")
-    smtg_add_vst3_resource(${target} "resource/knob.png")
-    smtg_add_vst3_resource(${target} "resource/knob2.png")
-    smtg_add_vst3_resource(${target} "resource/knob big.png")
-    smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
-    
-    smtg_add_vst3_snapshot(${target} "resource/41466D9BB0654576B641098F686371B3_snapshot.png")
-    smtg_add_vst3_snapshot(${target} "resource/41466D9BB0654576B641098F686371B3_snapshot_2.0x.png")
+    smtg_target_add_plugin_snapshots(${target}
+        RESOURCES
+            resource/41466D9BB0654576B641098F686371B3_snapshot.png
+            resource/41466D9BB0654576B641098F686371B3_snapshot_2.0x.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.note-expression-synth"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist"
         	PREPROCESS
@@ -64,7 +69,7 @@ if(SMTG_ADD_VSTGUI)
 
     if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target noteexpressionsynth_ios)
-        smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${target}" "${noteexpressionsynth_sources}")
+        smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${noteexpressionsynth_sources}")
 
         set_target_properties(${target}
             PROPERTIES
@@ -86,16 +91,18 @@ if(SMTG_ADD_VSTGUI)
                 "-framework ImageIO" 
                 "-framework MobileCoreServices" 
         )
-
-        smtg_add_vst3_resource(${target} "resource/note_expression_synth.uidesc")
-        smtg_add_vst3_resource(${target} "resource/about.png")
-        smtg_add_vst3_resource(${target} "resource/background.png")
-        smtg_add_vst3_resource(${target} "resource/groupframe.png")
-        smtg_add_vst3_resource(${target} "resource/knob.png")
-        smtg_add_vst3_resource(${target} "resource/knob2.png")
-        smtg_add_vst3_resource(${target} "resource/knob big.png")
-        smtg_add_vst3_resource(${target} "resource/vst3_logo_small.png")
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
+        smtg_target_add_plugin_resources(${target}
+            RESOURCES
+                resource/note_expression_synth.uidesc
+                resource/about.png
+                resource/background.png
+                resource/groupframe.png
+                resource/knob.png
+                resource/knob2.png
+                resource/knob big.png
+                resource/vst3_logo_small.png
+        )
+        smtg_target_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
         target_sources(${target}
             PRIVATE 
                 "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp"

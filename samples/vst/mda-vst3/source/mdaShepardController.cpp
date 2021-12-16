@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID ShepardController::uid (0x5653456D, 0x6461686D, 0x64612073, 0x68657061);
-#else
-//-----------------------------------------------------------------------------
-FUID ShepardController::uid (0xDF150F07, 0xCF294A32, 0xB2A04BC5, 0xE49C4A13);
-#endif
-
 //-----------------------------------------------------------------------------
 ShepardController::ShepardController ()
 {

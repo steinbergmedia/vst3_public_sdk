@@ -25,14 +25,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DitherProcessor::uid (0x5653546D, 0x6461646D, 0x64612064, 0x69746865);
-#else
-//-----------------------------------------------------------------------------
-FUID DitherProcessor::uid (0xA155F267, 0xA6954095, 0xAFD8BFB1, 0x9E4F2293);
-#endif
-
 //-----------------------------------------------------------------------------
 DitherProcessor::DitherProcessor ()
 {

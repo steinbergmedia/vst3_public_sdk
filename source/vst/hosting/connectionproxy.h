@@ -36,7 +36,6 @@
 
 #pragma once
 
-#include "base/source/fobject.h"
 #include "pluginterfaces/vst/ivstmessage.h"
 #include "public.sdk/source/common/threadchecker.h"
 
@@ -47,11 +46,11 @@ namespace Vst {
 /** Helper for creating and initializing component.
 \ingroup Helper */
 //------------------------------------------------------------------------
-class ConnectionProxy : public FObject, public IConnectionPoint
+class ConnectionProxy : public IConnectionPoint
 {
 public:
 	ConnectionProxy (IConnectionPoint* srcConnection);
-	~ConnectionProxy () override;
+	virtual ~ConnectionProxy ();
 
 	//--- from IConnectionPoint
 	tresult PLUGIN_API connect (IConnectionPoint* other) override;
@@ -60,10 +59,8 @@ public:
 
 	bool disconnect ();
 
-	OBJ_METHODS (ConnectionProxy, FObject)
-	REFCOUNT_METHODS (FObject)
-	DEF_INTERFACES_1 (IConnectionPoint, FObject)
-
+//------------------------------------------------------------------------
+	DECLARE_FUNKNOWN_METHODS
 protected:
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
 

@@ -53,22 +53,29 @@ if(SMTG_ADD_VSTGUI)
             sdk
             vstgui_support
     )
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            resource/again.uidesc
+            resource/background.png
+            resource/slider_background.png
+            resource/slider_handle.png
+            resource/slider_handle_2.0x.png
+            resource/vu_on.png
+            resource/vu_off.png
+    )
 
-    smtg_add_vst3_resource(${target} "resource/again.uidesc")
-    smtg_add_vst3_resource(${target} "resource/background.png")
-    smtg_add_vst3_resource(${target} "resource/slider_background.png")
-    smtg_add_vst3_resource(${target} "resource/slider_handle.png")
-    smtg_add_vst3_resource(${target} "resource/slider_handle_2.0x.png")
-    smtg_add_vst3_resource(${target} "resource/vu_on.png")
-    smtg_add_vst3_resource(${target} "resource/vu_off.png")
-
-    smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot.png")
-    smtg_add_vst3_snapshot(${target} "resource/84E8DE5F92554F5396FAE4133C935A18_snapshot_2.0x.png")
-    smtg_add_vst3_snapshot(${target} "resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot.png")
-    smtg_add_vst3_snapshot(${target} "resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot_2.0x.png")
+    smtg_target_add_plugin_snapshots (${target}
+        RESOURCES
+            resource/84E8DE5F92554F5396FAE4133C935A18_snapshot.png
+            resource/84E8DE5F92554F5396FAE4133C935A18_snapshot_2.0x.png
+            resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot.png
+            resource/41347FD6FED64094AFBB12B7DBA1D441_snapshot_2.0x.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS)
+        smtg_target_set_bundle(${target}
+            INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS
+        )
     elseif(SMTG_WIN)
         target_sources(${target}
             PRIVATE
@@ -78,7 +85,7 @@ if(SMTG_ADD_VSTGUI)
 
     if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
         set(target again_ios)
-        smtg_add_ios_vst3plugin("${SMTG_CODE_SIGN_IDENTITY_IOS}" ${target} "${target}" "${again_sources}")
+        smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${again_sources}")
         set_target_properties(${target}
             PROPERTIES
                 ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
@@ -100,15 +107,18 @@ if(SMTG_ADD_VSTGUI)
                 "-framework MobileCoreServices" 
         )
 
-        smtg_add_vst3_resource(${target} "resource/again.uidesc")
-        smtg_add_vst3_resource(${target} "resource/background.png")
-        smtg_add_vst3_resource(${target} "resource/slider_background.png")
-        smtg_add_vst3_resource(${target} "resource/slider_handle.png")
-        smtg_add_vst3_resource(${target} "resource/slider_handle_2.0x.png")
-        smtg_add_vst3_resource(${target} "resource/vu_on.png")
-        smtg_add_vst3_resource(${target} "resource/vu_off.png")
+        smtg_target_add_plugin_resources(${target}
+            RESOURCES
+                resource/again.uidesc
+                resource/background.png
+                resource/slider_background.png
+                resource/slider_handle.png
+                resource/slider_handle_2.0x.png
+                resource/vu_on.png
+                resource/vu_off.png
+        )
 
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
 	    	BUNDLE_IDENTIFIER "com.steinberg.vst3.again"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS
         )
@@ -132,16 +142,19 @@ if(SMTG_ADD_VSTGUI)
             vstgui_support
     )
 
-    smtg_add_vst3_resource(${targetsimple} "resource/again.uidesc")
-    smtg_add_vst3_resource(${targetsimple} "resource/background.png")
-    smtg_add_vst3_resource(${targetsimple} "resource/slider_background.png")
-    smtg_add_vst3_resource(${targetsimple} "resource/slider_handle.png")
-    smtg_add_vst3_resource(${targetsimple} "resource/slider_handle_2.0x.png")
-    smtg_add_vst3_resource(${targetsimple} "resource/vu_on.png")
-    smtg_add_vst3_resource(${targetsimple} "resource/vu_off.png")
+    smtg_target_add_plugin_resources(${targetsimple}
+        RESOURCES
+            resource/again.uidesc
+            resource/background.png
+            resource/slider_background.png
+            resource/slider_handle.png
+            resource/slider_handle_2.0x.png
+            resource/vu_on.png
+            resource/vu_off.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${targetsimple}
+        smtg_target_set_bundle(${targetsimple}
 	        BUNDLE_IDENTIFIER "com.steinberg.vst3.again-simple"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/mac/Info.plist" PREPROCESS
         )

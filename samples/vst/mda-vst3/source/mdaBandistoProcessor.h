@@ -36,7 +36,13 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new BandistoProcessor; }
-	static FUID uid;
+
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461446D, 0x64612062, 0x616E6469);
+#else
+	inline static DECLARE_UID (uid, 0x79F1CDBB, 0x1F004396, 0x947E35BA, 0x22B4FA6D);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new LoudnessController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64616C6D, 0x6461206C, 0x6F75646E);
+#else
+	inline static DECLARE_UID (uid, 0x9184DDF5, 0x6A2B4C5B, 0xA51BF670, 0x2A8B1BB0);
+#endif
 };
 
 }}} // namespaces

@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID PianoController::uid (0x5653454D, 0x4441706D, 0x64612070, 0x69616E6F);
-#else
-//-----------------------------------------------------------------------------
-FUID PianoController::uid (0xBAC8AA21, 0x216D4754, 0xA7639173, 0xE3BB5F7A);
-#endif
-
 //-----------------------------------------------------------------------------
 PianoController::PianoController ()
 {

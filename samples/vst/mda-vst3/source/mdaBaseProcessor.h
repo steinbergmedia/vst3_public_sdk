@@ -39,7 +39,7 @@ protected:
 	virtual void doProcessing (ProcessData& data) = 0;
 	virtual void preProcess () {}
 	virtual bool bypassProcessing (ProcessData& data);
-	virtual void processEvent (const Event& event) {}
+	virtual void processEvent (const Event& /*event*/) {}
 	virtual void checkSilence (ProcessData& data);
 	virtual void setBypass (bool state, int32 sampleOffset);
 	virtual bool processParameterChanges (IParameterChanges* changes);

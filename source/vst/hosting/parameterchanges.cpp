@@ -43,8 +43,7 @@ namespace Vst {
 IMPLEMENT_FUNKNOWN_METHODS (ParameterChanges, IParameterChanges, IParameterChanges::iid)
 IMPLEMENT_FUNKNOWN_METHODS (ParameterValueQueue, IParamValueQueue, IParamValueQueue::iid)
 
-
-const int32 kQueueReservedPoints = 5;
+constexpr int32 kQueueReservedPoints = 5;
 
 //-----------------------------------------------------------------------------
 ParameterValueQueue::ParameterValueQueue (ParamID paramID) 
@@ -107,7 +106,7 @@ tresult PLUGIN_API ParameterValueQueue::addPoint (int32 sampleOffset, ParamValue
 	// need new point
 	ParameterQueueValue queueValue (value, sampleOffset);
 	if (destIndex == static_cast<int32> (values.size ()))
-		values.push_back (queueValue);
+		values.emplace_back (queueValue);
 	else
 		values.insert (values.begin () + destIndex, queueValue);
 
@@ -120,7 +119,6 @@ tresult PLUGIN_API ParameterValueQueue::addPoint (int32 sampleOffset, ParamValue
 // ParameterChanges
 //-----------------------------------------------------------------------------
 ParameterChanges::ParameterChanges (int32 maxParameters)
-: usedQueueCount (0)
 {
 	FUNKNOWN_CTOR
 	setMaxParameters (maxParameters);
@@ -129,8 +127,6 @@ ParameterChanges::ParameterChanges (int32 maxParameters)
 //-----------------------------------------------------------------------------
 ParameterChanges::~ParameterChanges ()
 {
-	setMaxParameters (0);
-
 	FUNKNOWN_DTOR
 }
 
@@ -142,15 +138,14 @@ void ParameterChanges::setMaxParameters (int32 maxParameters)
 
 	while (static_cast<int32> (queues.size ()) < maxParameters)
 	{
-		auto* valueQueue = new ParameterValueQueue (0xffffffff);
-		queues.push_back (valueQueue);
+		queues.emplace_back (owned (new ParameterValueQueue (kNoParamId)));
 	}
 
 	while (static_cast<int32> (queues.size ()) > maxParameters)
 	{
-		queues.back ()->release ();
 		queues.pop_back ();
 	}
+
 	if (usedQueueCount > maxParameters)
 		usedQueueCount = maxParameters;
 }
@@ -196,8 +191,8 @@ IParamValueQueue* PLUGIN_API ParameterChanges::addParameterData (const ParamID& 
 	}
 	else
 	{
-		valueQueue = new ParameterValueQueue (pid);
-		queues.push_back (valueQueue);
+		queues.emplace_back (owned (new ParameterValueQueue (pid)));
+		valueQueue = queues.back ();
 	}
 	
 	index = usedQueueCount;

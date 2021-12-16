@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID BeatBoxController::uid (0x5653456D, 0x6461476D, 0x64612062, 0x65617462);
-#else
-//-----------------------------------------------------------------------------
-FUID BeatBoxController::uid (0x7A668F2F, 0x42834CCF, 0xA4856D36, 0x891466F7);
-#endif
-
 //-----------------------------------------------------------------------------
 BeatBoxController::BeatBoxController ()
 {

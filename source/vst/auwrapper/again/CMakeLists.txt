@@ -9,7 +9,7 @@ if(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
         Info.plist
     )
     add_library(${target} MODULE ${${target}_sources})
-    smtg_setup_universal_binary(${target})
+    smtg_target_setup_universal_binary(${target})
     set_target_properties(${target}
         PROPERTIES
             ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
@@ -24,7 +24,7 @@ if(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH AND SMTG_ADD_VSTGUI)
             LIBRARY_OUTPUT_DIRECTORY ${VST3_OUTPUT_DIR}
     )
     target_link_libraries(${target} PRIVATE auwrapper)
-    smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/Info.plist" PREPROCESS)
+    smtg_target_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/Info.plist" PREPROCESS)
 
     set(outputdir ${VST3_OUTPUT_DIR}/$<CONFIG>)
 

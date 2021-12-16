@@ -39,7 +39,7 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new AmbienceProcessor; }
-	static FUID uid;
+	inline static DECLARE_UID (uid, 0xAF799E3A, 0xC94B444A, 0xB5B24FD5, 0xD3E3F9E4);
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

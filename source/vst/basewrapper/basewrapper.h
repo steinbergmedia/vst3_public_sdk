@@ -163,6 +163,8 @@ public:
 
 //-------------------------------------------------------------------------------------------------------
 protected:
+	void term ();
+
 	virtual void setupParameters ();
 	virtual void setupProcessTimeInfo () = 0;
 	virtual void processOutputEvents () {}

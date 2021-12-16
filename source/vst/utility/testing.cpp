@@ -230,7 +230,7 @@ FUnknown* createTestFactoryInstance (void*)
 //------------------------------------------------------------------------
 const FUID& getTestFactoryUID ()
 {
-	static FUID uid (0x70AA33A3, 0x1AE74B24, 0xB726F784, 0xB706C080);
+	static FUID uid = FUID::fromTUID (TestFactoryUID);
 	return uid;
 }
 

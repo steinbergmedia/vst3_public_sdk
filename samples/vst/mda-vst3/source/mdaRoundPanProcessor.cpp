@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID RoundPanProcessor::uid (0x5653546D, 0x6461506D, 0x64612072, 0x6F756E64);
-#else
-//-----------------------------------------------------------------------------
-FUID RoundPanProcessor::uid (0x2BEB5541, 0xE9384235, 0x8AAAE0AE, 0xB555BF75);
-#endif
-
 //-----------------------------------------------------------------------------
 RoundPanProcessor::RoundPanProcessor ()
 {

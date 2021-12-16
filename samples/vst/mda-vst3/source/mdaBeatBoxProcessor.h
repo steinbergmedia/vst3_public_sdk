@@ -36,7 +36,13 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new BeatBoxProcessor; }
-	static FUID uid;
+
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461476D, 0x64612062, 0x65617462);
+#else
+	inline static DECLARE_UID (uid, 0x9E6A6E95, 0x9B734440, 0x97D787BE, 0xBBDDD831);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

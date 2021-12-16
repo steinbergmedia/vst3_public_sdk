@@ -26,7 +26,7 @@ target_link_libraries(${target}
     PRIVATE
         base
 )
-smtg_setup_universal_binary(${target})
+smtg_target_setup_universal_binary(${target})
 
 target_compile_features(aaxwrapper
     PUBLIC

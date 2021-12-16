@@ -47,7 +47,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new PianoProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653544D, 0x4441706D, 0x64612070, 0x69616E6F);
+#else
+	inline static DECLARE_UID (uid, 0xA77EA27C, 0x1F184322, 0xBBD2AD93, 0x73A2B7A0);
+#endif
+
 //-----------------------------------------------------------------------------
 
 	enum {

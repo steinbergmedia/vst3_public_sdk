@@ -27,14 +27,6 @@ namespace mda {
 #define ORD_MAX           50
 #define TWO_PI     6.28318530717958647692528676655901f
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID TalkBoxProcessor::uid (0x5653546D, 0x6461266D, 0x64612074, 0x616C6B62);
-#else
-//-----------------------------------------------------------------------------
-FUID TalkBoxProcessor::uid (0xF235EEE4, 0x92084883, 0xAD5C8632, 0x34DFE073);
-#endif
-
 //-----------------------------------------------------------------------------
 TalkBoxProcessor::TalkBoxProcessor ()
 {

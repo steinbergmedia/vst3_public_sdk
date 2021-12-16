@@ -43,7 +43,7 @@ namespace Vst {
 //------------------------------------------------------------------------
 // HostProcessData
 //------------------------------------------------------------------------
-HostProcessData::~HostProcessData ()
+HostProcessData::~HostProcessData () noexcept
 {
 	unprepare ();
 }
@@ -74,6 +74,7 @@ bool HostProcessData::prepare (IComponent& component, int32 bufferSamples,
 			outputs[i].silenceFlags = 0;
 		}
 	}
+	symbolicSampleSize = _symbolicSampleSize;
 
 	return true;
 }
@@ -89,7 +90,7 @@ void HostProcessData::unprepare ()
 
 //------------------------------------------------------------------------
 bool HostProcessData::checkIfReallocationNeeded (IComponent& component, int32 bufferSamples,
-                                                 int32 _symbolicSampleSize)
+                                                 int32 _symbolicSampleSize) const
 {
 	if (channelBufferOwner != (bufferSamples > 0))
 		return true;

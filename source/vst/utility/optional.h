@@ -48,14 +48,14 @@ template <typename T>
 struct Optional
 {
 	Optional () noexcept : valid (false) {}
-	explicit Optional (const T& v) noexcept : value (v), valid (true) {}
-	Optional (T&& v) noexcept : value (std::move (v)), valid (true) {}
+	explicit Optional (const T& v) noexcept : _value (v), valid (true) {}
+	Optional (T&& v) noexcept : _value (std::move (v)), valid (true) {}
 
 	Optional (Optional&& other) noexcept { *this = std::move (other); }
 	Optional& operator= (Optional&& other) noexcept
 	{
 		valid = other.valid;
-		value = std::move (other.value);
+		_value = std::move (other._value);
 		return *this;
 	}
 
@@ -68,37 +68,49 @@ struct Optional
 	const T& operator* () const noexcept
 	{
 		checkValid ();
-		return value;
+		return _value;
 	}
 
 	const T* operator-> () const noexcept
 	{
 		checkValid ();
-		return &value;
+		return &_value;
 	}
 
 	T& operator* () noexcept
 	{
 		checkValid ();
-		return value;
+		return _value;
 	}
 
 	T* operator-> () noexcept
 	{
 		checkValid ();
-		return &value;
+		return &_value;
+	}
+
+	T&& value () noexcept
+	{
+		checkValid ();
+		return move (_value);
+	}
+
+	const T& value () const noexcept
+	{
+		checkValid ();
+		return _value;
 	}
 
 	void swap (T& other) noexcept
 	{
 		checkValid ();
 		auto tmp = std::move (other);
-		other = std::move (value);
-		value = std::move (tmp);
+		other = std::move (_value);
+		_value = std::move (tmp);
 	}
 
 private:
-	T value {};
+	T _value {};
 	bool valid;
 
 #if !defined(NDEBUG)

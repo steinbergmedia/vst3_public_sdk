@@ -24,7 +24,7 @@ target_link_libraries(${target}
 )
 
 if(SMTG_MAC)
-	smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
+	smtg_target_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS)
 elseif(SMTG_WIN)
 	target_sources(${target}
 		PRIVATE

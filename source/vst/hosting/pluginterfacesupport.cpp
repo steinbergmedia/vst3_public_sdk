@@ -119,8 +119,12 @@ void PlugInterfaceSupport::addPlugInterfaceSupported (const TUID _iid)
 //-----------------------------------------------------------------------------
 bool PlugInterfaceSupport::removePlugInterfaceSupported (const TUID _iid)
 {
-	return std::remove (mFUIDArray.begin (), mFUIDArray.end (), FUID::fromTUID (_iid)) !=
-	       mFUIDArray.end ();
+	auto uid = FUID::fromTUID (_iid);
+	auto it = std::find (mFUIDArray.begin (), mFUIDArray.end (), uid);
+	if (it  == mFUIDArray.end ())
+		return false;
+	mFUIDArray.erase (it);
+	return true;
 }
 
 IMPLEMENT_FUNKNOWN_METHODS (PlugInterfaceSupport, IPlugInterfaceSupport, IPlugInterfaceSupport::iid)

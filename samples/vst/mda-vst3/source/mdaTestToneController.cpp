@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID TestToneController::uid (0x5653456D, 0x6461546D, 0x64612074, 0x65737474);
-#else
-//-----------------------------------------------------------------------------
-FUID TestToneController::uid (0x2FE2D7CB, 0x074C4CF3, 0xAF3608D9, 0xCB3A8E7C);
-#endif
-
 //------------------------------------------------------------------------
 namespace {
 

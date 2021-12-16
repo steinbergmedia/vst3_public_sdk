@@ -84,14 +84,6 @@ float JX10Processor::programParams[kNumPrograms][NPARAMS] = {
 	{0.5f, 0.41f, 0.23f, 0.45f, 0.77f, 0.0f, 0.4f, 0.65f, 0.95f, 0.0f, 0.5f, 0.33f, 0.5f, 0.0f, 0.25f, 0.0f, 0.7f, 0.65f, 0.18f, 0.32f, 1.0f, 0.0f, 0.06f, 0.5f},
 };
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID JX10Processor::uid (0x5653544D, 0x44416A6D, 0x6461206A, 0x78313000);
-#else
-//-----------------------------------------------------------------------------
-FUID JX10Processor::uid (0x82CD49DE, 0x13D743BA, 0xABDAC299, 0x1CE06F7C);
-#endif
-
 //-----------------------------------------------------------------------------
 JX10Processor::JX10Processor ()
 : currentProgram (0)

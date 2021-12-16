@@ -324,6 +324,8 @@ Vst2Wrapper::~Vst2Wrapper ()
 	delete mVst2OutputEvents;
 	mVst2OutputEvents = nullptr;
 
+	BaseWrapper::term (); // termination of objects might still need data destroyed in _DeinitModule()
+
 	_DeinitModule ();
 }
 
@@ -1842,7 +1844,7 @@ AudioEffect* Vst2Wrapper::create (IPluginFactory* factory, const TUID vst3Compon
 		
 	if (wrapper->init () == false)
 	{
-		wrapper->release ();
+		wrapper->release (); // includes _DeinitModule()
 		return nullptr;
 	}
 			

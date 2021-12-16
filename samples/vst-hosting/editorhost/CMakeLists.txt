@@ -96,7 +96,7 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
             sdk_hosting
             ${editorhost_PLATFORM_LIBS}
     )
-    smtg_setup_universal_binary(${target})
+    smtg_target_setup_universal_binary(${target})
     if (APP_PROPERTIES)
         set_target_properties(${target}
             PROPERTIES

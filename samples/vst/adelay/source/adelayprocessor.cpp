@@ -53,7 +53,7 @@ ADelayProcessor::ADelayProcessor ()
 , mBufferPos (0)
 , mBypass (false)
 {
-	setControllerClass (ADelayControllerUID);
+	setControllerClass (FUID::fromTUID (ADelayControllerUID));
 }
 
 //-----------------------------------------------------------------------------

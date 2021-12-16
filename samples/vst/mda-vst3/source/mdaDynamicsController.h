@@ -53,7 +53,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DynamicsController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64614E6D, 0x64612064, 0x796E616D);
+#else
+	inline static DECLARE_UID (uid, 0xDB1EC488, 0x88364B93, 0xB66C365C, 0x904C6D62);
+#endif
 };
 
 }}} // namespaces

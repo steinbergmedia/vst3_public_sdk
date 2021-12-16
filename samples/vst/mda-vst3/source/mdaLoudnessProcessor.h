@@ -40,7 +40,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new LoudnessProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x64616C6D, 0x6461206C, 0x6F75646E);
+#else
+	inline static DECLARE_UID (uid, 0xF2351D3C, 0xA6E94D47, 0x9E17EB3B, 0x6F30BA7C);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

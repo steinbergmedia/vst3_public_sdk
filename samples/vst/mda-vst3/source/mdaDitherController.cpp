@@ -22,14 +22,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DitherController::uid (0x5653456D, 0x6461646D, 0x64612064, 0x69746865);
-#else
-//-----------------------------------------------------------------------------
-FUID DitherController::uid (0xE54A7007, 0x068149B4, 0xAEAF955C, 0x54760DBF);
-#endif
-
 //-----------------------------------------------------------------------------
 DitherController::DitherController ()
 {

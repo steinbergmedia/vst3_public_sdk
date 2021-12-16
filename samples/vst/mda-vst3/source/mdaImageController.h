@@ -46,7 +46,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new ImageController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461496D, 0x64612069, 0x6D616765);
+#else
+	inline static DECLARE_UID (uid, 0x18E85131, 0x09CE429D, 0x83E6621D, 0x74EF40FD);
+#endif
 };
 
 }}} // namespaces

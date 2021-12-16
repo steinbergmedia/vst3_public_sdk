@@ -58,6 +58,8 @@ NSDataIBStream::NSDataIBStream (NSData* data, bool hideAttributes)
 , hideAttributes (hideAttributes)
 {
 	FUNKNOWN_CTOR
+	if (!hideAttributes)
+		attrList = HostAttributeList::make ();
 #if !ARC_ENABLED
 	[data retain];
 #endif
@@ -169,7 +171,7 @@ tresult PLUGIN_API NSDataIBStream::getFileName (String128 name)
 //------------------------------------------------------------------------
 IAttributeList* PLUGIN_API NSDataIBStream::getAttributes ()
 {
-	return hideAttributes ? 0 : &attrList;
+	return attrList;
 }
 
 //------------------------------------------------------------------------

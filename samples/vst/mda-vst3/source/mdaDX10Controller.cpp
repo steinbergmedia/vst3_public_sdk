@@ -59,13 +59,6 @@ static const char* presetNames[] =
 };
 
 //-----------------------------------------------------------------------------
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-FUID DX10Controller::uid (0x5653454D, 0x4441786D, 0x64612064, 0x78313000);
-#else
-FUID DX10Controller::uid (0x7EC0F00D, 0x92E142C7, 0x97056433, 0x30FFF119);
-#endif
-
-//-----------------------------------------------------------------------------
 DX10Controller::DX10Controller ()
 {
 	addBypassParameter = false;

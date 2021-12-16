@@ -39,7 +39,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new JX10Controller; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653454D, 0x44416A6D, 0x6461206A, 0x78313000);
+#else
+	inline static DECLARE_UID (uid, 0x91E8798D, 0xEDE644C9, 0xB9EB444B, 0x5F0A8AA7);
+#endif
 };
 
 }}} // namespaces

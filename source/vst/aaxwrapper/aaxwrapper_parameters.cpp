@@ -47,10 +47,10 @@
 #include "AAX_CNumberDisplayDelegate.h"
 #include "AAX_CUnitDisplayDelegateDecorator.h"
 
-#include "pluginterfaces/vst/ivstaudioprocessor.h"
-#include "pluginterfaces/base/futils.h"
-#include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "../hosting/hostclasses.h"
+#include "pluginterfaces/base/futils.h"
+#include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 
 using namespace Steinberg;
 using namespace Steinberg::Vst;
@@ -845,7 +845,7 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 				    mWrapper->mController);
 				if (iChannelContextInfoListener)
 				{
-					auto* list = NEW Vst::HostAttributeList ();
+					auto list = Vst::HostAttributeList::make ();
 					String string;
 					string.fromUTF8 (mChannelName.data ());
 
@@ -853,7 +853,6 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 					list->setInt (Vst::ChannelContext::kChannelNameLengthKey, string.length ());
 
 					iChannelContextInfoListener->setChannelContextInfos (list);
-					delete list;
 				}
 			}
 			break;

@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again_sampleaccurate/source/asa_factory.cpp
+// Filename    : public.sdk/samples/vst/again_sampleaccurate/source/agsa_factory.cpp
 // Created by  : Steinberg, 04/2021
 // Description : AGain with Sample Accurate Parameter Changes
 //

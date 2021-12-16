@@ -24,14 +24,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID RezFilterProcessor::uid (0x5653546D, 0x6461466D, 0x64612072, 0x657A6669);
-#else
-//-----------------------------------------------------------------------------
-FUID RezFilterProcessor::uid (0x86983C01, 0x8D684E3F, 0xBA2816C2, 0x03A1450D);
-#endif
-
 //-----------------------------------------------------------------------------
 RezFilterProcessor::RezFilterProcessor ()
 {

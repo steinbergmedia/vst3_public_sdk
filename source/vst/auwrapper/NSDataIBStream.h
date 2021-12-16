@@ -68,7 +68,7 @@ public:
 protected:
 	NSData* data;
 	int64 currentPos;
-	HostAttributeList attrList;
+	IPtr<IAttributeList> attrList;
 	bool hideAttributes;
 };
 

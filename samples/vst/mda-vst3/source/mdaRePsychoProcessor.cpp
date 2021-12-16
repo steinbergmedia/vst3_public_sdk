@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID RePsychoProcessor::uid (0x5653546D, 0x6461596D, 0x64612072, 0x65707379);
-#else
-//-----------------------------------------------------------------------------
-FUID RePsychoProcessor::uid (0xC20CCF82, 0x90574B71, 0x98AE3FE1, 0x240C2704);
-#endif
-
 //-----------------------------------------------------------------------------
 RePsychoProcessor::RePsychoProcessor ()
 {

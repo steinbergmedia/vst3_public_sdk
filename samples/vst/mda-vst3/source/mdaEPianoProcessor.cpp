@@ -36,14 +36,6 @@ float EPianoProcessor::programParams[][NPARAMS] = {
 	{ 0.500f, 0.500f, 0.500f, 0.500f, 0.750f, 0.650f, 0.250f, 0.500f, 0.50f, 0.500f, 0.246f, 0.000f }
 };
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID EPianoProcessor::uid (0x5653544D, 0x4441656D, 0x64612065, 0x7069616E);
-#else
-//-----------------------------------------------------------------------------
-FUID EPianoProcessor::uid (0xFED93DB8, 0x5E81448F, 0xA3B14028, 0x879FA824);
-#endif
-
 //-----------------------------------------------------------------------------
 EPianoProcessor::EPianoProcessor ()
 : currentProgram (0)

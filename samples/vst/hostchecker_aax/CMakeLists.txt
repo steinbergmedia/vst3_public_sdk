@@ -48,12 +48,15 @@ if(SMTG_AAX_SDK_PATH AND SMTG_ADD_VSTGUI)
             aaxwrapper
     )
 
-    smtg_add_vst3_resource(${target} ../hostchecker/resource/hostchecker.uidesc)
-    smtg_add_vst3_resource(${target} ../hostchecker/resource/bypass.png)
-    smtg_add_vst3_resource(${target} ../hostchecker/resource/knob.png)
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            ../hostchecker/resource/hostchecker.uidesc
+            ../hostchecker/resource/bypass.png
+            ../hostchecker/resource/knob.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.hostchecker-aax"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../hostchecker/resource/info.plist" PREPROCESS)
     elseif(SMTG_WIN)

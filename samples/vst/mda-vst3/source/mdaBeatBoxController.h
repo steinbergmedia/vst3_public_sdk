@@ -55,7 +55,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new BeatBoxController; }
-	static FUID uid;
+
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461476D, 0x64612062, 0x65617462);
+#else
+	inline static DECLARE_UID (uid, 0x7A668F2F, 0x42834CCF, 0xA4856D36, 0x891466F7);
+#endif
 };
 
 }}} // namespaces

@@ -41,7 +41,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new TestToneController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461546D, 0x64612074, 0x65737474);
+#else
+	inline static DECLARE_UID (uid, 0x2FE2D7CB, 0x074C4CF3, 0xAF3608D9, 0xCB3A8E7C);
+#endif
+
 private:
 	ParamID pid (TestToneParam p) const { return static_cast<ParamID> (p); }
 	TestToneParam param (ParamID p) const { return static_cast<TestToneParam> (p); }

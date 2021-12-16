@@ -40,7 +40,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new PianoController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653454D, 0x4441706D, 0x64612070, 0x69616E6F);
+#else
+	inline static DECLARE_UID (uid, 0xBAC8AA21, 0x216D4754, 0xA7639173, 0xE3BB5F7A);
+#endif
 };
 
 }}} // namespaces

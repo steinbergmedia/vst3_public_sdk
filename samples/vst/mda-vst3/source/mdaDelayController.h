@@ -49,7 +49,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DelayController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461796D, 0x64612064, 0x656C6179);
+#else
+	inline static DECLARE_UID (uid, 0xF9AB9778, 0xEF1943F2, 0x86F911A3, 0x50C7AACB);
+#endif
 };
 
 }}} // namespaces

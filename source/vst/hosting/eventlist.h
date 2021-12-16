@@ -42,7 +42,7 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-/** Implementation's example of IEventList.
+/** Example implementation of IEventList.
 \ingroup sdkBase
 */
 class EventList : public IEventList
@@ -51,21 +51,21 @@ public:
 	EventList (int32 maxSize = 50);
 	virtual ~EventList ();
 
-	void clear () { fillCount = 0; }
-
 	int32 PLUGIN_API getEventCount () SMTG_OVERRIDE { return fillCount; }
 	tresult PLUGIN_API getEvent (int32 index, Event& e) SMTG_OVERRIDE;
 	tresult PLUGIN_API addEvent (Event& e) SMTG_OVERRIDE;
 
-	Event* getEventByIndex (int32 index);
 	void setMaxSize (int32 maxSize);
+	void clear () { fillCount = 0; }
+
+	Event* getEventByIndex (int32 index) const;
 
 //------------------------------------------------------------------------
 	DECLARE_FUNKNOWN_METHODS
 protected:
-	Event* events;
-	int32 maxSize;
-	int32 fillCount;
+	Event* events {nullptr};
+	int32 maxSize {0};
+	int32 fillCount {0};
 };
 
 //------------------------------------------------------------------------

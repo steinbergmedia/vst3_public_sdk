@@ -36,8 +36,15 @@
 
 #include "validator.h"
 
+void* moduleHandle = nullptr;
+extern bool InitModule ();
+extern bool DeinitModule ();
+
 //------------------------------------------------------------------------
 int main (int argc, char* argv[])
 {
-	return Steinberg::Vst::Validator (argc, argv).run ();
+	InitModule ();
+	auto result = Steinberg::Vst::Validator (argc, argv).run ();
+	DeinitModule ();
+	return result;
 }

@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new TrackerController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64614A6D, 0x64612074, 0x7261636B);
+#else
+	inline static DECLARE_UID (uid, 0xBBF731F0, 0x94A848F0, 0xAEE9C5F6, 0x5DA3D3BA);
+#endif
 };
 
 }}} // namespaces

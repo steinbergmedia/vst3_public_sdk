@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new OverdriveController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64614F6D, 0x6461206F, 0x76657264);
+#else
+	inline static DECLARE_UID (uid, 0x6E19D9A6, 0x81594A9D, 0x8730820A, 0x2AF52AC4);
+#endif
 };
 
 }}} // namespaces

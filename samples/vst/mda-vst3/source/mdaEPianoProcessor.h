@@ -47,7 +47,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new EPianoProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653544D, 0x4441656D, 0x64612065, 0x7069616E);
+#else
+	inline static DECLARE_UID (uid, 0xFED93DB8, 0x5E81448F, 0xA3B14028, 0x879FA824);
+#endif
+
 //-----------------------------------------------------------------------------
 
 	static float programParams[][12];

@@ -4,7 +4,7 @@
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/utility/mpeprocessor.h
 // Created by  : Steinberg, 07/2017
-// Description : VST 3 AUv3Wrapper
+// Description : VST 3 MIDI-MPE decomposer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -52,36 +52,92 @@ using Velocity = float;
 using NormalizedValue = double;
 
 //------------------------------------------------------------------------
-enum class Controller
+/** MPE per note controller enumeration */
+enum class Controller : uint32_t
 {
+	/** Pressure MPE controller */
 	Pressure,
+	/** X / horizontal MPE controller */
 	X,
+	/** Y / vertical MPE controller */
 	Y,
+	/** no MPE controller */
 	None
 };
 
 //------------------------------------------------------------------------
 struct Handler
 {
+	/** Generate a new noteID
+	 *
+	 * called by the processor for a new NoteID. The handler has to make sure that the noteID is
+	 * not used again until the releaseNoteID method is called.
+	 *
+	 * 	@param outNoteID on return contains the new noteID if this call succeed
+	 * 	@return true if outNoteID was filled with a new noteID
+	 */
 	virtual bool generateNewNoteID (NoteID& outNoteID) = 0;
+
+	/** Release a noteID
+	 *
+	 *	called by the processor when the NoteID is no longer used.
+	 *
+	 *	@param noteID the noteID not longer in use
+	 */
 	virtual void releaseNoteID (NoteID noteID) = 0;
 
+	/** A note on was transmitted
+	 *
+	 *	@param noteID unique note identifier
+	 *	@param pitch note pitch
+	 *	@param velocity note on velocity
+	 */
 	virtual void onMPENoteOn (NoteID noteID, Pitch pitch, Velocity velocity) = 0;
+
+	/** A note off was transmitted
+	 *
+	 *	@param noteID unique note identifier
+	 *	@param pitch note pitch
+	 *	@param velocity note off velocity
+	 */
 	virtual void onMPENoteOff (NoteID noteID, Pitch pitch, Velocity velocity) = 0;
+
+	/** A new per note controller change was transmitted
+	 *
+	 *	@param noteID unique note identifier
+	 *	@param cc the MIDI controller which changed
+	 *	@param value the value of the change in the range [0..1]
+	 */
 	virtual void onMPEControllerChange (NoteID noteID, Controller cc, NormalizedValue value) = 0;
 
+	/** Non MPE MIDI input data was transmitted
+	 *
+	 *	@param data MIDI data buffer
+	 *	@param dataSize size of the MIDI data buffer in bytes
+	 */
 	virtual void onOtherInput (const uint8_t* data, size_t dataSize) = 0;
+
+	/** Sysex MIDI data was transmitted
+	 *
+	 *	@param data Sysex data buffer
+	 *	@param dataSize size of sysex data buffer in bytes
+	 */
 	virtual void onSysexInput (const uint8_t* data, size_t dataSize) = 0;
 
 	// error handling
+	/** called when the handler did not return a new note ID */
 	virtual void errorNoteDroppedBecauseNoNoteID (Pitch pitch) = 0;
+	/** the internal note stack for this channel is full, happens on too many note ons per channel */
 	virtual void errorNoteDroppedBecauseNoteStackFull (Channel channel, Pitch pitch) = 0;
+	/** called when the internal data has no reference to this note off */
 	virtual void errorNoteForNoteOffNotFound (Channel channel, Pitch pitch) = 0;
+	/** called when a program change was received inside the MPE zone which is a protocol violation */
 	virtual void errorProgramChangeReceivedInMPEZone () = 0;
 };
 
 //------------------------------------------------------------------------
-enum InputMIDIMessage
+/** Input MIDI Message enumeration */
+enum InputMIDIMessage : uint32_t
 {
 	MIDICC_0 = 0,
 	MIDICC_127 = 127,
@@ -91,6 +147,7 @@ enum InputMIDIMessage
 };
 
 //------------------------------------------------------------------------
+/** MPE setup structure */
 struct Setup
 {
 	Channel masterChannel {0};
@@ -102,6 +159,11 @@ struct Setup
 };
 
 //------------------------------------------------------------------------
+/** MPE Decompose Processor
+ *
+ *	decomposes MPE MIDI messages
+ *
+ */
 class Processor
 {
 public:
@@ -109,9 +171,25 @@ public:
 	~Processor () noexcept;
 
 	const Setup& getSetup () const;
+	/** change the MPE setup
+	 *
+	 *	make sure that MIDI processing is stopped while this is called.
+	 *
+	 *	@param setup new setup
+	 */
 	void changeSetup (const Setup& setup);
+	/** reset all notes
+	 *
+	 *	All playing notes will be stopped and note identifiers are released.
+	 *
+	 */
 	void reset ();
 
+	/** feed new native MIDI data
+	 *
+	 *	@param data MIDI data buffer
+	 *	@param dataSize data buffer size in bytes
+	 */
 	void processMIDIInput (const uint8_t* data, size_t dataSize);
 
 private:

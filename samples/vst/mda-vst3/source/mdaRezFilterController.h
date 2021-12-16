@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new RezFilterController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461466D, 0x64612072, 0x657A6669);
+#else
+	inline static DECLARE_UID (uid, 0xEB05C9E8, 0xD99E4797, 0x83E6F33E, 0x90D9378B);
+#endif
 };
 
 }}} // namespaces

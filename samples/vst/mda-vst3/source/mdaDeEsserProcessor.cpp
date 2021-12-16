@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DeEsserProcessor::uid (0x5653546D, 0x6461736D, 0x64612064, 0x652D6573);
-#else
-//-----------------------------------------------------------------------------
-FUID DeEsserProcessor::uid (0x174FD6D1, 0x856E4641, 0xBFB9851A, 0x1C544725);
-#endif
-
 //-----------------------------------------------------------------------------
 DeEsserProcessor::DeEsserProcessor ()
 {

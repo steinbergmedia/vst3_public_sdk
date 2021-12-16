@@ -40,14 +40,19 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
+IMPLEMENT_FUNKNOWN_METHODS (ConnectionProxy, IConnectionPoint, IConnectionPoint::iid)
+
+//------------------------------------------------------------------------
 ConnectionProxy::ConnectionProxy (IConnectionPoint* srcConnection)
 : srcConnection (srcConnection) // share it
 {
+	FUNKNOWN_CTOR
 }
 
 //------------------------------------------------------------------------
 ConnectionProxy::~ConnectionProxy ()
 {
+	FUNKNOWN_DTOR
 }
 
 //------------------------------------------------------------------------
@@ -87,7 +92,7 @@ tresult PLUGIN_API ConnectionProxy::notify (IMessage* message)
 {
 	if (dstConnection)
 	{
-		// TODO we should test if we are in UI main thread else postpone the message
+		// We discard the message if we are not in the UI main thread
 		if (threadChecker && threadChecker->test ())
 			return dstConnection->notify (message);
 	}
@@ -99,5 +104,8 @@ bool ConnectionProxy::disconnect ()
 {
 	return disconnect (dstConnection) == kResultTrue;
 }
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // Vst
+} // Steinberg
+

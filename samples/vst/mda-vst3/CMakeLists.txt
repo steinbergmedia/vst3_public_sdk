@@ -161,8 +161,12 @@ target_link_libraries(${target}
     PRIVATE
         sdk
 )
+target_compile_features(${target}
+    PUBLIC
+        cxx_std_17
+)
 if(SMTG_MAC)
-    smtg_set_bundle(${target}
+    smtg_target_set_bundle(${target}
     	BUNDLE_IDENTIFIER "mda.plugins.vst3"
     	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/mda-vst3-Info.plist" PREPROCESS
     )

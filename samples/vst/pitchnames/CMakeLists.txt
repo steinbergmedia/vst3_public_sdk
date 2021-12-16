@@ -21,10 +21,13 @@ if(SMTG_ADD_VSTGUI)
             vstgui_support
     )
 
-    smtg_add_vst3_resource(${target} "resource/pitchnames.uidesc")
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            resource/pitchnames.uidesc
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.pitchnames"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
         )

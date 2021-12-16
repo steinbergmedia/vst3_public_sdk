@@ -32,7 +32,7 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         #--------------------------------------------------------------------------------------------------------
         # macOS targets
         #--------------------------------------------------------------------------------------------------------
-        smtg_add_auv3(notexpsynth_auv3_macos
+        smtg_add_auv3_app(notexpsynth_auv3_macos
             "macOS"
             "notexpsynth AUV3 macOS"
             "com.steinberg.sdk.auv3.notexpsynthmac"
@@ -49,7 +49,7 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         # iOS targets
         #--------------------------------------------------------------------------------------------------------
         if(SMTG_IOS_DEVELOPMENT_TEAM)
-            smtg_add_auv3(notexpsynth_auv3_ios
+            smtg_add_auv3_app(notexpsynth_auv3_ios
                 "iOS"
                 "notexpsynth AUV3 iOS"
                 "com.steinberg.sdk.auv3.notexpsynthios"
@@ -65,6 +65,6 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
             set_target_properties(${AUV3_APP_TARGET} PROPERTIES
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
             )
-        endif()
-    endif()
-endif()
+        endif(SMTG_IOS_DEVELOPMENT_TEAM)
+    endif(XCODE)
+endif(SMTG_MAC AND SMTG_ADD_VSTGUI)

@@ -49,7 +49,11 @@ public:
 	};
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new SpecMeterController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64613F6D, 0x64612073, 0x7065636D);
+#else
+	inline static DECLARE_UID (uid, 0xA47D4D56, 0x58AE42CD, 0x8EA0714B, 0x39CD3FC0);
+#endif
 };
 
 }}} // namespaces

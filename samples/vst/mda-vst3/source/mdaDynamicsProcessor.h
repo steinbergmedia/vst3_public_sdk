@@ -40,7 +40,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new DynamicsProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x64614E6D, 0x64612064, 0x796E616D);
+#else
+	inline static DECLARE_UID (uid, 0x9CCF20FE, 0x76CD489C, 0xA9D7EA13, 0xB489CA55);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

@@ -52,7 +52,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new TestToneProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461546D, 0x64612074, 0x65737474);
+#else
+	inline static DECLARE_UID (uid, 0x0AF801E5, 0x0B0D4D9B, 0xBB657671, 0xAC8F7847);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

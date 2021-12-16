@@ -307,7 +307,7 @@ public:
 
 	//---from Vst::IStreamAttributes-----
 	tresult PLUGIN_API getFileName (String128 /*name*/) SMTG_OVERRIDE { return kNotImplemented; }
-	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return &attrList; }
+	IAttributeList* PLUGIN_API getAttributes () SMTG_OVERRIDE { return attrList; }
 
 //------------------------------------------------------------------------
 	DELEGATE_REFCOUNT (MemoryStream)
@@ -318,7 +318,7 @@ public:
 	}
 
 protected:
-	HostAttributeList attrList;
+	IPtr<IAttributeList> attrList {HostAttributeList::make ()};
 };
 
 //------------------------------------------------------------------------
@@ -357,6 +357,12 @@ BaseWrapper::BaseWrapper (SVST3Config& config)
 
 //------------------------------------------------------------------------
 BaseWrapper::~BaseWrapper ()
+{
+	term ();
+}
+
+//------------------------------------------------------------------------
+void BaseWrapper::term ()
 {
 	mTimer = nullptr;
 
@@ -398,10 +404,13 @@ BaseWrapper::~BaseWrapper ()
 	mUnitInfo = nullptr;
 	mMidiMapping = nullptr;
 
-	if (mMidiCCMapping[0])
+	if (mMidiCCMapping[0][0])
 		for (int32 b = 0; b < kMaxMidiMappingBusses; b++)
 			for (int32 i = 0; i < 16; i++)
+			{
 				delete mMidiCCMapping[b][i];
+				mMidiCCMapping[b][i] = nullptr;
+			}
 
 	mEditor = nullptr;
 	mController = nullptr;
@@ -1445,8 +1454,12 @@ tresult PLUGIN_API BaseWrapper::createInstance (TUID cid, TUID iid, void** obj)
 	}
 	else if (classID == IAttributeList::iid && interfaceID == IAttributeList::iid)
 	{
-		*obj = new HostAttributeList;
-		return kResultTrue;
+		if (auto al = HostAttributeList::make ())
+		{
+			*obj = al.take ();
+			return kResultTrue;
+		}
+		return kOutOfMemory;
 	}
 	*obj = nullptr;
 	return kResultFalse;

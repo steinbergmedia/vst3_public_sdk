@@ -59,7 +59,7 @@ static Steinberg::ModuleInitializer InitVSTGUI ([] () {
 	Vst::setupVSTGUIBundleSupport (getPlatformModuleHandle ());
 #endif // SMTG_MODULE_IS_BUNDLE
 });
-
+static Steinberg::ModuleTerminator TermVSTGUI ([] () { VSTGUI::exit (); });
 #else
 
 #if SMTG_OS_MACOS

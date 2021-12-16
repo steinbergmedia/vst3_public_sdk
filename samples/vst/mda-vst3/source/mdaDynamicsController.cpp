@@ -20,14 +20,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DynamicsController::uid (0x5653456D, 0x64614E6D, 0x64612064, 0x796E616D);
-#else
-//-----------------------------------------------------------------------------
-FUID DynamicsController::uid (0xDB1EC488, 0x88364B93, 0xB66C365C, 0x904C6D62);
-#endif
-
 //-----------------------------------------------------------------------------
 DynamicsController::DynamicsController ()
 {

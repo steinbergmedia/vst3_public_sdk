@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID StereoProcessor::uid (0x5653546D, 0x6461536D, 0x64612073, 0x74657265);
-#else
-//-----------------------------------------------------------------------------
-FUID StereoProcessor::uid (0xDB1EB642, 0x4838483D, 0xA7C7E5D2, 0x3686E943);
-#endif
-
 //-----------------------------------------------------------------------------
 StereoProcessor::StereoProcessor ()
 {

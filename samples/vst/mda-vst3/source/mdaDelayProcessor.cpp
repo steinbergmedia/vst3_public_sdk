@@ -23,14 +23,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DelayProcessor::uid (0x5653546D, 0x6461796D, 0x64612064, 0x656C6179);
-#else
-//-----------------------------------------------------------------------------
-FUID DelayProcessor::uid (0xE5041336, 0xE9434B28, 0xB7B01267, 0x95F0C32F);
-#endif
-
 //-----------------------------------------------------------------------------
 DelayProcessor::DelayProcessor ()
 : buffer(nullptr)

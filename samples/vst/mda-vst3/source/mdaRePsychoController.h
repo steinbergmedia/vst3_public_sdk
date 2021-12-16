@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new RePsychoController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461596D, 0x64612072, 0x65707379);
+#else
+	inline static DECLARE_UID (uid, 0x4C14E332, 0xE185463B, 0x98732E82, 0x944786C5);
+#endif
 };
 
 }}} // namespaces

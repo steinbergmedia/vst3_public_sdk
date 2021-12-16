@@ -39,13 +39,15 @@ if(SMTG_ADD_VSTGUI)
             sdk
             vstgui_support
     )
-
-    smtg_add_vst3_resource(${target} resource/hostchecker.uidesc)
-    smtg_add_vst3_resource(${target} resource/bypass.png)
-    smtg_add_vst3_resource(${target} resource/knob.png)
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            resource/hostchecker.uidesc
+            resource/bypass.png
+            resource/knob.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.hostchecker"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/info.plist" PREPROCESS
         )

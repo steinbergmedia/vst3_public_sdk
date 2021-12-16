@@ -39,7 +39,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new LeslieProcessor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653546D, 0x6461486D, 0x6461206C, 0x65736C69);
+#else
+	inline static DECLARE_UID (uid, 0xFBD3AD80, 0x9E2847E0, 0xB87CDEC3, 0x5C0469B1);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;

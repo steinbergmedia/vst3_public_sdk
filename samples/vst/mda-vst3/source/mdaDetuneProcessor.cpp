@@ -25,14 +25,6 @@ namespace mda {
 
 #define BUFMAX   4096
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID DetuneProcessor::uid (0x5653546D, 0x6461746D, 0x64612064, 0x6574756E);
-#else
-//-----------------------------------------------------------------------------
-FUID DetuneProcessor::uid (0x4CCBED11, 0xE28346A6, 0xA91EC86C, 0x9E85EDF8);
-#endif
-
 //-----------------------------------------------------------------------------
 DetuneProcessor::DetuneProcessor ()
 {

@@ -22,14 +22,6 @@ namespace Steinberg {
 namespace Vst {
 namespace mda {
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID SubSynthController::uid (0x5653456D, 0x6461426D, 0x64612073, 0x75626261);
-#else
-//-----------------------------------------------------------------------------
-FUID SubSynthController::uid (0xB33B6220, 0xFC224015, 0xB76118AD, 0x4F34A0D8);
-#endif
-
 //-----------------------------------------------------------------------------
 SubSynthController::SubSynthController ()
 {

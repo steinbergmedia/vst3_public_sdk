@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new MultiBandController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64614D6D, 0x6461206D, 0x756C7469);
+#else
+	inline static DECLARE_UID (uid, 0x9C79B3F9, 0xD9C949CB, 0xA961571A, 0xFE118C95);
+#endif
 };
 
 }}} // namespaces

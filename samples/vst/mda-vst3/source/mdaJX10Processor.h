@@ -50,7 +50,12 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IAudioProcessor*)new JX10Processor; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653544D, 0x44416A6D, 0x6461206A, 0x78313000);
+#else
+	inline static DECLARE_UID (uid, 0x82CD49DE, 0x13D743BA, 0xABDAC299, 0x1CE06F7C);
+#endif
+
 //-----------------------------------------------------------------------------
 protected:
 	struct VOICE  //voice state

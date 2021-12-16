@@ -36,6 +36,7 @@
 
 #include "module.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "public.sdk/source/vst/utility/optional.h"
 #include <sstream>
 #include <utility>
 
@@ -141,6 +142,7 @@ uint32_t PluginFactory::classCount () const noexcept
 PluginFactory::ClassInfos PluginFactory::classInfos () const noexcept
 {
 	auto count = classCount ();
+	Optional<FactoryInfo> factoryInfo;
 	ClassInfos classes;
 	classes.reserve (count);
 	auto f3 = Steinberg::FUnknownPtr<Steinberg::IPluginFactory3> (factory);
@@ -158,7 +160,11 @@ PluginFactory::ClassInfos PluginFactory::classInfos () const noexcept
 			classes.emplace_back (ci);
 		auto& classInfo = classes.back ();
 		if (classInfo.vendor ().empty ())
-			classInfo.get ().vendor = info ().vendor ();
+		{
+			if (!factoryInfo)
+				factoryInfo = Optional<FactoryInfo> (info ());
+			classInfo.get ().vendor = factoryInfo->vendor ();
+		}
 	}
 	return classes;
 }

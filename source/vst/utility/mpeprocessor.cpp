@@ -4,7 +4,7 @@
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/utility/mpeprocessor.cpp
 // Created by  : Steinberg, 07/2017
-// Description : VST 3 AUv3Wrapper
+// Description : VST 3 MIDI-MPE decomposer
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -65,7 +65,8 @@ struct ChannelData
 //------------------------------------------------------------------------
 struct Processor::Impl
 {
-	using ChannelDataList = std::array<ChannelData, 16>;
+	static constexpr auto NumMIDIChannels = 16u;
+	using ChannelDataList = std::array<ChannelData, NumMIDIChannels>;
 
 	Handler* delegate {nullptr};
 	Setup setup;

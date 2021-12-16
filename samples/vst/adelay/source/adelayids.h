@@ -46,8 +46,8 @@ enum {
 };
 
 // unique class ids
-static const FUID ADelayProcessorUID (0x0CDBB669, 0x85D548A9, 0xBFD83719, 0x09D24BB3);
-static const FUID ADelayControllerUID (0x038E7FA9, 0x629A4EAA, 0x8541B889, 0x18E8952C);
+static DECLARE_UID (ADelayProcessorUID, 0x0CDBB669, 0x85D548A9, 0xBFD83719, 0x09D24BB3);
+static DECLARE_UID (ADelayControllerUID, 0x038E7FA9, 0x629A4EAA, 0x8541B889, 0x18E8952C);
 
 //------------------------------------------------------------------------
 } // namespace Vst

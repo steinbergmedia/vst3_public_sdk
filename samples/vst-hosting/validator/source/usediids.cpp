@@ -45,8 +45,5 @@
 #include "pluginterfaces/test/itest.h"
 
 namespace Steinberg {
-DEF_CLASS_IID (ITest)
-DEF_CLASS_IID (ITestFactory)
 DEF_CLASS_IID (ITestResult)
-DEF_CLASS_IID (ITestSuite)
 }

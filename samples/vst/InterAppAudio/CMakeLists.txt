@@ -51,7 +51,7 @@ if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
         )
         set(prefix_header ${SDK_ROOT}/public.sdk/samples/vst/InterAppAudio/InterAppAudioExample/InterAppAudioExample-Prefix.pch)
         add_executable(${target} ${${target}_sources} ${${target}_xib_resources})
-        smtg_set_platform_ios(${target})
+        smtg_target_set_platform_ios(${target})
         target_compile_options(${target} 
             PUBLIC
                 -DVSTGUI_LIVE_EDITING=0
@@ -82,20 +82,20 @@ if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
                 "-framework GLKit"
                 "-framework CoreText"
         )
-        smtg_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../note_expression_synth/resource/InterAppAudio/NoteExpressionSynthExample.plist" PREPROCESS)
+        smtg_target_set_bundle(${target} INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/../note_expression_synth/resource/InterAppAudio/NoteExpressionSynthExample.plist" PREPROCESS)
         target_include_directories(${target}
             PUBLIC
                 ${ROOT}/vstgui4
         )
 
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/about.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/background.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/groupframe.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob big.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob2.png")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/note_expression_synth.uidesc")
-        smtg_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/vst3_logo_small.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/about.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/background.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/groupframe.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob big.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/knob2.png")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/note_expression_synth.uidesc")
+        smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/vst3_logo_small.png")
     else()
         message("[SMTG] * To enable building the InterAppAudio NoteExpressionSynth example for iOS you need to set the SMTG_IOS_DEVELOPMENT_TEAM and use the Xcode generator")
     endif(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)

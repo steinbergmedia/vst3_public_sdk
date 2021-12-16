@@ -21,7 +21,7 @@ target_link_libraries(${target}
         sdk
 )
 if(SMTG_MAC)
-    smtg_set_bundle(${target}
+    smtg_target_set_bundle(${target}
     	BUNDLE_IDENTIFIER "com.steinberg.vst3.prefetchablesupport"
     	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
     )

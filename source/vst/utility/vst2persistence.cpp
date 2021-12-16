@@ -399,7 +399,7 @@ IO::Error streamSizeWriter (StreamT& stream, Proc proc)
 		return endPos.error;
 	auto size = (endPos.bytes - startPos.bytes) - 4;
 	auto typeSize = static_cast<SizeT> (size);
-	if (size != typeSize)
+	if (size != static_cast<uint64_t> (typeSize))
 		return IO::Error::Unknown;
 	res = stream.seek (IO::SeekMode::Set, startPos.bytes);
 	if (!res)

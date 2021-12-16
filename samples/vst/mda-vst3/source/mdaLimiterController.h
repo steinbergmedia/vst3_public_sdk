@@ -40,7 +40,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new LimiterController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x64614C6D, 0x6461206C, 0x696D6974);
+#else
+	inline static DECLARE_UID (uid, 0x886C856F, 0x7C164A28, 0x9AD212A9, 0x857386A0);
+#endif
 };
 
 }}} // namespaces

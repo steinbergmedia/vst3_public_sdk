@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new RingModController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461526D, 0x64612072, 0x696E676D);
+#else
+	inline static DECLARE_UID (uid, 0x3D03E713, 0xED334913, 0x8D47116B, 0x1B6045CB);
+#endif
 };
 
 }}} // namespaces

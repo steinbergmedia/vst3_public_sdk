@@ -24,18 +24,24 @@ if(SMTG_ADD_VSTGUI)
             vstgui_support
     )
 
-    smtg_add_vst3_resource(${target} "resource/plug.uidesc")
-    smtg_add_vst3_resource(${target} "resource/background.png")
-    smtg_add_vst3_resource(${target} "resource/animation_knob.png")
-    smtg_add_vst3_resource(${target} "resource/background_2x.png")
-    smtg_add_vst3_resource(${target} "resource/background_3x.png")
-    smtg_add_vst3_resource(${target} "resource/animation_knob_3x.png")
+    smtg_target_add_plugin_resources(${target}
+        RESOURCES
+            resource/plug.uidesc
+            resource/background.png
+            resource/animation_knob.png
+            resource/background_2x.png
+            resource/background_3x.png
+            resource/animation_knob_3x.png
+    )
 
-    smtg_add_vst3_snapshot(${target} "resource/A2EAF7DB320640F48EDE380DDF89562C_snapshot.png")
-    smtg_add_vst3_snapshot(${target} "resource/A2EAF7DB320640F48EDE380DDF89562C_snapshot_2.0x.png")
+    smtg_target_add_plugin_snapshots(${target}
+        RESOURCES
+            resource/A2EAF7DB320640F48EDE380DDF89562C_snapshot.png
+            resource/A2EAF7DB320640F48EDE380DDF89562C_snapshot_2.0x.png
+    )
 
     if(SMTG_MAC)
-        smtg_set_bundle(${target}
+        smtg_target_set_bundle(${target}
         	BUNDLE_IDENTIFIER "com.steinberg.vst3.panner"
         	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
         )

@@ -120,6 +120,7 @@ protected:
 
 	int32 numTestsFailed {0};
 	int32 numTestsPassed {0};
+	bool addErrorWarningTextToOutput {true};
 
 	std::ostream* infoStream {nullptr};
 	std::ostream* errorStream {nullptr};

@@ -38,7 +38,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new SplitterController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461376D, 0x64612073, 0x706C6974);
+#else
+	inline static DECLARE_UID (uid, 0xD3766521, 0x24EF4691, 0xAB7CD29D, 0xB855BF1F);
+#endif
 };
 
 }}} // namespaces

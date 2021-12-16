@@ -52,7 +52,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new LeslieController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461486D, 0x6461206C, 0x65736C69);
+#else
+	inline static DECLARE_UID (uid, 0x3AC7BB1E, 0xE8C74788, 0x8D29C9BF, 0x9D9A51F8);
+#endif
 };
 
 }}} // namespaces

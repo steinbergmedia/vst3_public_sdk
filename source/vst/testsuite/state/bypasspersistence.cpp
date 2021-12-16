@@ -62,7 +62,7 @@ bool PLUGIN_API BypassPersistenceTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	if (bypassId == -1)
+	if (bypassId == kNoParamId)
 	{
 		testResult->addMessage (STR ("This plugin does not have a bypass parameter!!!"));
 		return true;

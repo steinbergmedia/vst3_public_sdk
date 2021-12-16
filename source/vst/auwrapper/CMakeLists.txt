@@ -16,7 +16,7 @@ if(SMTG_MAC)
             STATIC
                 ${${target}_sources}
         )
-        smtg_setup_universal_binary(${target})
+        smtg_target_setup_universal_binary(${target})
         set_target_properties(${target}
             PROPERTIES
                 ${SDK_IDE_LIBS_FOLDER}

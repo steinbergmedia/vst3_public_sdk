@@ -132,7 +132,11 @@ validator manually and let it check your plug-in.
 //------------------------------------------------------------------------
 /** create a Test Factory instance */
 FUnknown* createTestFactoryInstance (void*);
-/** get the test factory unique ID */
+
+/** the test factory class ID */
+static const DECLARE_UID (TestFactoryUID, 0x70AA33A3, 0x1AE74B24, 0xB726F784, 0xB706C080);
+
+/** get the test factory class ID */
 const FUID& getTestFactoryUID ();
 
 /** simple test function */
@@ -182,6 +186,30 @@ inline constexpr bool maxDiff (const T& lhs, const T& rhs, const T& maxDiff) noe
 {
 	return std::abs (lhs - rhs) <= maxDiff;
 }
+
+#ifndef SMTG_DISABLE_VST_TEST_MACROS
+
+#ifndef SMTG_MAKE_STRING_PRIVATE_DONT_USE
+#define SMTG_MAKE_STRING_PRIVATE_DONT_USE(x) #x
+#define SMTG_MAKE_STRING(x) SMTG_MAKE_STRING_PRIVATE_DONT_USE (x)
+#endif // SMTG_MAKE_STRING_PRIVATE_DONT_USE
+
+#define EXPECT(condition)                                                     \
+	{                                                                         \
+		if (!(condition))                                                     \
+		{                                                                     \
+			testResult->addErrorMessage (STR (__FILE__ ":" SMTG_MAKE_STRING ( \
+			    __LINE__) ": error: " SMTG_MAKE_STRING (condition)));         \
+			return false;                                                     \
+		}                                                                     \
+	}
+
+#define EXPECT_TRUE(condition) EXPECT (condition)
+#define EXPECT_FALSE(condition) EXPECT (!condition)
+#define EXPECT_EQ(var1, var2) EXPECT ((var1 == var2))
+#define EXPECT_NE(var1, var2) EXPECT ((var1 != var2))
+
+#endif // SMTG_DISABLE_VST_TEST_MACROS
 
 //------------------------------------------------------------------------
 } // Test

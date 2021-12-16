@@ -25,14 +25,6 @@ namespace mda {
 
 #define SILENCE 0.00000001f
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
-//-----------------------------------------------------------------------------
-FUID SpecMeterProcessor::uid (0x5653546D, 0x64613F6D, 0x64612073, 0x7065636D);
-#else
-//-----------------------------------------------------------------------------
-FUID SpecMeterProcessor::uid (0x67B9A082, 0xCF0B4BAC, 0x907AA8B7, 0x1D855F94);
-#endif
-
 //-----------------------------------------------------------------------------
 SpecMeterProcessor::SpecMeterProcessor ()
 {

@@ -43,10 +43,10 @@ namespace Vst {
 IMPLEMENT_FUNKNOWN_METHODS (EventList, IEventList, IEventList::iid)
 
 //-----------------------------------------------------------------------------
-EventList::EventList (int32 maxSize) : events (nullptr), maxSize (maxSize), fillCount (0)
+EventList::EventList (int32 inMaxSize)
 {
 	FUNKNOWN_CTOR
-	setMaxSize (maxSize);
+	setMaxSize (inMaxSize);
 }
 
 //-----------------------------------------------------------------------------
@@ -57,24 +57,25 @@ EventList::~EventList ()
 }
 
 //-----------------------------------------------------------------------------
-void EventList::setMaxSize (int32 _maxSize)
+void EventList::setMaxSize (int32 newMaxSize)
 {
 	if (events)
 	{
 		delete[] events;
 		events = nullptr;
+		fillCount = 0;
 	}
-	if (_maxSize > 0)
-		events = new Event[_maxSize];
-	maxSize = _maxSize;
+	if (newMaxSize > 0)
+		events = new Event[newMaxSize];
+	maxSize = newMaxSize;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API EventList::getEvent (int32 index, Event& e)
 {
-	if (fillCount > index)
+	if (auto event = getEventByIndex (index))
 	{
-		memcpy (&e, &events[index], sizeof (Event));
+		memcpy (&e, event, sizeof (Event));
 		return kResultTrue;
 	}
 	return kResultFalse;
@@ -93,7 +94,7 @@ tresult PLUGIN_API EventList::addEvent (Event& e)
 }
 
 //-----------------------------------------------------------------------------
-Event* EventList::getEventByIndex (int32 index)
+Event* EventList::getEventByIndex (int32 index) const
 {
 	if (index < fillCount)
 		return &events[index];

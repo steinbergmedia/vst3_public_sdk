@@ -47,7 +47,11 @@ public:
 
 //-----------------------------------------------------------------------------
 	static FUnknown* createInstance (void*) { return (IEditController*)new DetuneController; }
-	static FUID uid;
+#ifdef SMTG_MDA_VST2_COMPATIBILITY
+	inline static DECLARE_UID (uid, 0x5653456D, 0x6461746D, 0x64612064, 0x6574756E);
+#else
+	inline static DECLARE_UID (uid, 0xCE5E213E, 0xE1B74D02, 0x92FF66C6, 0x3DCF27C8);
+#endif
 };
 
 }}} // namespaces
