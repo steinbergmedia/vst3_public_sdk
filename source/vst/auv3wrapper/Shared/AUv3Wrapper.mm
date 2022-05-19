@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -2468,7 +2468,7 @@ using namespace Vst;
 			        infoDict[@"NSExtension"][@"NSExtensionAttributes"][@"AudioComponents"][0])
 			{
 				id type = infoDict[@"type"];
-				id subType = infoDict[@"subType"];
+				id subType = infoDict[@"subtype"];
 				id manu = infoDict[@"manufacturer"];
 
 				AudioComponentDescription desc {};

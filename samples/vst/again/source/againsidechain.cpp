@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -45,7 +45,7 @@
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"	// for use of IStreamAttributes
 
-#include <stdio.h>
+#include <cstdio>
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
 namespace Steinberg {
@@ -287,9 +287,9 @@ SampleType AGainWithSideChain::processAudioWithSideChain (SampleType** in, Sampl
 	for (int32 i = 0; i < numChannels; i++)
 	{
 		int32 samples = sampleFrames;
-		SampleType* ptrIn = (SampleType*)in[i];
-		SampleType* ptrAuxIn = (SampleType*)aux[0];
-		SampleType* ptrOut = (SampleType*)out[i];
+		auto* ptrIn = (SampleType*)in[i];
+		auto* ptrAuxIn = (SampleType*)aux[0];
+		auto* ptrOut = (SampleType*)out[i];
 		SampleType tmp;
 		while (--samples >= 0)
 		{

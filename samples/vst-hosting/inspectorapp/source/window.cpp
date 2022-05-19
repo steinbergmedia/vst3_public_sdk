@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -52,10 +52,34 @@
 #include "vstgui/uidescription/iuidescription.h"
 #include "vstgui/uidescription/uiattributes.h"
 #include "public.sdk/source/vst/hosting/module.h"
+#include "public.sdk/source/vst/moduleinfo/moduleinfo.h"
+#include "public.sdk/source/vst/moduleinfo/moduleinfocreator.h"
+#include "public.sdk/source/vst/moduleinfo/moduleinfoparser.h"
 #include <cassert>
+#include <fstream>
 
 //------------------------------------------------------------------------
 namespace VST3Inspector {
+namespace {
+
+//------------------------------------------------------------------------
+std::string loadFile (const std::string& path)
+{
+	std::ifstream file (path, std::ios_base::in | std::ios_base::binary);
+	if (!file.is_open ())
+		return {};
+	auto size = file.seekg (0, std::ios_base::end).tellg ();
+	file.seekg (0, std::ios_base::beg);
+	std::string data;
+	data.resize (size);
+	file.read (data.data (), data.size ());
+	if (file.bad ())
+		return {};
+	return data;
+}
+
+//------------------------------------------------------------------------
+} // anonymous
 
 using namespace VSTGUI;
 using namespace VSTGUI::Standalone;
@@ -181,10 +205,11 @@ struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 		return controller->createView (attributes, description);
 	}
 
-	void setSnapshot (const Module::Snapshot* newSnapshot)
+	void setSnapshot (const std::string& moduleBasePath,
+	                  const ModuleInfo::SnapshotList* newSnapshot)
 	{
-		snapshot = newSnapshot ? *newSnapshot : Module::Snapshot ();
-		if (snapshot.images.empty ())
+		snapshot = newSnapshot ? *newSnapshot : ModuleInfo::SnapshotList ();
+		if (snapshot.empty ())
 		{
 			imageView->setBackground (nullptr);
 			imageView->setViewSize ({});
@@ -193,9 +218,10 @@ struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 		{
 			SharedPointer<CBitmap> bitmap;
 			const auto& factory = getPlatformFactory ();
-			for (const auto& imageDesc : snapshot.images)
+			for (const auto& imageDesc : snapshot)
 			{
-				if (auto pb = factory.createBitmapFromPath (imageDesc.path.data ()))
+				if (auto pb = factory.createBitmapFromPath (
+				        (moduleBasePath + "/" + imageDesc.path).data ()))
 				{
 					pb->setScaleFactor (imageDesc.scaleFactor);
 					if (bitmap)
@@ -205,14 +231,17 @@ struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 				}
 			}
 			imageView->setBackground (bitmap);
-			auto viewSize = imageView->getViewSize ();
-			viewSize.setSize (bitmap->getSize ());
-			imageView->setViewSize (viewSize);
+			if (bitmap)
+			{
+				auto viewSize = imageView->getViewSize ();
+				viewSize.setSize (bitmap->getSize ());
+				imageView->setViewSize (viewSize);
+			}
 		}
 	}
 
 	SharedPointer<CView> imageView;
-	Module::Snapshot snapshot;
+	ModuleInfo::SnapshotList snapshot;
 };
 
 //------------------------------------------------------------------------
@@ -287,8 +316,9 @@ struct WindowController : WindowControllerAdapter,
 			           }
 			           return lhs < rhs;
 		           });
-		modules.clear ();
-		modules.resize (modulePathList.size ());
+		moduleInfos.clear ();
+		moduleInfos.resize (modulePathList.size ());
+
 		IStringListValue::StringList nameList;
 		for (const auto& path : modulePathList)
 		{
@@ -334,9 +364,22 @@ struct WindowController : WindowControllerAdapter,
 		}
 		return flagsString;
 	}
+
+	std::string createSubCategoryString (const ModuleInfo::ClassInfo& info) const
+	{
+		std::string result;
+		for (const auto& cat : info.subCategories)
+		{
+			if (result.empty () == false)
+				result += "|";
+			result += cat;
+		}
+		return result;
+	}
+
 	void onClassInfoSelection (uint32_t index)
 	{
-		if (index >= currentClassInfos.size ())
+		if (index >= moduleInfos[currentSelectedModule].classes.size ())
 		{
 			setStringValue (ClassInfoClassID, "");
 			setStringValue (ClassInfoCategoryID, "");
@@ -348,34 +391,44 @@ struct WindowController : WindowControllerAdapter,
 			setStringValue (ClassInfoCardinalityID, "");
 			setStringValue (ClassInfoClassFlagsID, "");
 			if (snapShotController)
-				snapShotController->setSnapshot (nullptr);
+				snapShotController->setSnapshot ("", nullptr);
 			return;
 		}
-		const auto& cl = currentClassInfos[index];
-		setStringValue (ClassInfoClassID, cl.ID ().toString ());
-		setStringValue (ClassInfoCategoryID, cl.category ());
-		setStringValue (ClassInfoNameID, cl.name ());
-		setStringValue (ClassInfoVendorID, cl.vendor ());
-		setStringValue (ClassInfoVersionID, cl.version ());
-		setStringValue (ClassInfoSDKVersionID, cl.sdkVersion ());
-		setStringValue (ClassInfoSubCategoriesID, cl.subCategoriesString ());
-		if (cl.cardinality () == Steinberg::PClassInfo::ClassCardinality::kManyInstances)
+		const auto& cl = moduleInfos[currentSelectedModule].classes[index];
+		setStringValue (ClassInfoClassID, cl.cid);
+		setStringValue (ClassInfoCategoryID, cl.category);
+		setStringValue (ClassInfoNameID, cl.name);
+		setStringValue (ClassInfoVendorID, cl.vendor);
+		setStringValue (ClassInfoVersionID, cl.version);
+		setStringValue (ClassInfoSDKVersionID, cl.sdkVersion);
+		setStringValue (ClassInfoSubCategoriesID, createSubCategoryString (cl));
+		if (cl.cardinality == Steinberg::PClassInfo::ClassCardinality::kManyInstances)
 			setStringValue (ClassInfoCardinalityID, "");
 		else
-			setStringValue (ClassInfoCardinalityID, std::to_string (cl.cardinality ()));
-		setStringValue (ClassInfoClassFlagsID, createFlagsString (cl.classFlags ()));
+			setStringValue (ClassInfoCardinalityID, std::to_string (cl.cardinality));
+		setStringValue (ClassInfoClassFlagsID, createFlagsString (cl.flags));
 		if (snapShotController)
+			snapShotController->setSnapshot (modulePathList[currentSelectedModule], &cl.snapshots);
+	}
+
+	void updateModuleInfo (uint32_t index)
+	{
+		const auto& modulePath = modulePathList[index];
+		if (auto moduleInfoPath = Module::getModuleInfoPath (modulePath))
 		{
-			const Module::Snapshot* selectedSnapshot = nullptr;
-			for (auto& snapshot : currentModuleSnapshots)
+			auto moduleJson = loadFile (*moduleInfoPath);
+			if (auto moduleInfo = ModuleInfoLib::parseJson (moduleJson, nullptr))
 			{
-				if (snapshot.uid == cl.ID ())
-				{
-					selectedSnapshot = &snapshot;
-					break;
-				}
+				moduleInfos[index] = *moduleInfo;
 			}
-			snapShotController->setSnapshot (selectedSnapshot);
+		}
+		else
+		{
+			std::string errorDesc;
+			if (auto module = Module::create (modulePath, errorDesc))
+			{
+				moduleInfos[index] = ModuleInfoLib::createModuleInfo (*module.get (), true);
+			}
 		}
 	}
 
@@ -383,43 +436,27 @@ struct WindowController : WindowControllerAdapter,
 	{
 		if (index >= modulePathList.size ())
 			return;
-
-		currentClassInfos.clear ();
-		const auto& modulePath = modulePathList[index];
-		std::string errorDesc;
-		currentModule = modules[index];
-		if (!currentModule)
+		currentSelectedModule = index;
+		if (moduleInfos[index].name.empty ())
 		{
-			currentModule = Module::create (modulePath, errorDesc);
-			if (!currentModule)
-			{
-				AlertBoxConfig alert;
-				alert.headline = "Can not load Module.";
-				alert.description = "The module at path :" + modulePath + " could not be loaded.";
-				if (!errorDesc.empty ())
-					alert.description += "\n" + errorDesc;
-				IApplication::instance ().showAlertBox (alert);
-				currentModule = std::make_shared<InvalidModule> ();
-			}
-			modules[index] = currentModule;
+			updateModuleInfo (index);
 		}
-		const auto& factory = currentModule->getFactory ();
+		const auto& moduleInfo = moduleInfos[index];
+		const auto& modulePath = modulePathList[index];
 		setStringValue (ModulePathID, modulePath);
-		setStringValue (FactoryVendorID, factory.info ().vendor ());
-		setStringValue (FactoryUrlID, factory.info ().url ());
-		setStringValue (FactoryEMailID, factory.info ().email ());
-		setStringValue (FactoryFlagsID, createFlagsString (factory.info ().flags ()));
-		currentClassInfos = factory.classInfos ();
+		setStringValue (FactoryVendorID, moduleInfo.factoryInfo.vendor);
+		setStringValue (FactoryUrlID, moduleInfo.factoryInfo.url);
+		setStringValue (FactoryEMailID, moduleInfo.factoryInfo.email);
+		setStringValue (FactoryFlagsID, createFlagsString (moduleInfo.factoryInfo.flags));
 		IStringListValue::StringList classInfoList;
-		for (auto& classInfo : currentClassInfos)
+		for (const auto& classInfo : moduleInfo.classes)
 		{
-			classInfoList.emplace_back (classInfo.name ());
+			classInfoList.emplace_back (classInfo.name);
 		}
 		if (auto value = values.get<IStringListValue> (ClassInfoListID))
 		{
 			value->updateStringList (classInfoList);
 		}
-		currentModuleSnapshots = Module::getSnapshots (modulePath);
 		// select first class info
 		if (auto value = values.get (ClassInfoListID))
 			Value::performSingleEdit (*value, 0.);
@@ -448,13 +485,11 @@ private:
 	ValuePtr modulePathListValue;
 	SharedPointer<SnapshotController> snapShotController;
 
-	using ModuleList = std::vector<Module::Ptr>;
+	using ModuleInfoList = std::vector<ModuleInfo>;
 
 	Module::PathList modulePathList;
-	Module::Ptr currentModule;
-	PluginFactory::ClassInfos currentClassInfos;
-	Module::SnapshotList currentModuleSnapshots;
-	ModuleList modules;
+	ModuleInfoList moduleInfos;
+	uint32_t currentSelectedModule {0};
 };
 
 //------------------------------------------------------------------------

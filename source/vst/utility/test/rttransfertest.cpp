@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -123,7 +123,7 @@ ModuleInitializer InitStateTransferTests ([] () {
 		helper.transferObject_ui (std::move (list));
 		bool success = false;
 		constexpr double one = 1.;
-		helper.accessTransferObject_rt ([&] (const auto& list) {
+		helper.accessTransferObject_rt ([&success, one = one] (const auto& list) {
 			if (list.size () == 1)
 			{
 				if (list[0].first == 0)

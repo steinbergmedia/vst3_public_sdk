@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -70,7 +70,7 @@ void PLUGIN_API EditorSizeController::update (FUnknown* changedUnknown, int32 /*
 	auto* param = FCast<Parameter> (changedUnknown);
 	if (param && param->getInfo ().id == kSizeParamTag)
 	{
-		size_t index = static_cast<size_t> (param->toPlain (param->getNormalized ()));
+		auto index = static_cast<size_t> (param->toPlain (param->getNormalized ()));
 		if (sizeFunc)
 			sizeFunc (kSizeFactors.at (index));
 	}

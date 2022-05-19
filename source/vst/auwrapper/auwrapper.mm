@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -1905,9 +1905,9 @@ ComponentResult AUWrapper::StopNote (MusicDeviceGroupID inGroupID, NoteInstanceI
 	UInt32 pitch = inNoteInstanceID & 0xFF;
 	Event e = {};
 	e.type = Event::kNoteOffEvent;
-	e.noteOn.pitch = pitch;
-	e.noteOn.velocity = 0;
-	e.noteOn.noteId = inNoteInstanceID;
+	e.noteOff.pitch = pitch;
+	e.noteOff.velocity = 0;
+	e.noteOff.noteId = inNoteInstanceID;
 	e.sampleOffset = inOffsetSampleFrame;
 
 	// The Group ID is the channel with a standard midi device

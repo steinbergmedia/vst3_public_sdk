@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Helpers
-// Filename    : public.sdk/source/vst/hosting/uid.h
+// Filename    : public.sdk/source/vst/utility/uid.h
 // Created by  : Steinberg, 08/2016
 // Description : UID
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -66,7 +66,9 @@ struct UID
 	constexpr size_t size () const noexcept;
 
 	std::string toString (bool comFormat = defaultComFormat) const noexcept;
-	static Optional<UID> fromString (const std::string& str,
+
+	template<typename StringT>
+	static Optional<UID> fromString (const StringT& str,
 	                                 bool comFormat = defaultComFormat) noexcept;
 
 	static UID fromTUID (const TUID _uid) noexcept;
@@ -222,7 +224,8 @@ inline std::string UID::toString (bool comFormat) const noexcept
 }
 
 //------------------------------------------------------------------------
-inline Optional<UID> UID::fromString (const std::string& str, bool comFormat) noexcept
+template<typename StringT>
+inline Optional<UID> UID::fromString (const StringT& str, bool comFormat) noexcept
 {
 	if (str.length () != 32)
 		return {};

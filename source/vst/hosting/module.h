@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -180,6 +180,8 @@ public:
 	static Ptr create (const std::string& path, std::string& errorDescription);
 	static PathList getModulePaths ();
 	static SnapshotList getSnapshots (const std::string& modulePath);
+	/** get the path to the module info json file if it exists */
+	static Optional<std::string> getModuleInfoPath (const std::string& modulePath);
 
 	const std::string& getName () const noexcept { return name; }
 	const std::string& getPath () const noexcept { return path; }

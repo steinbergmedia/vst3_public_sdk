@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -70,7 +70,7 @@ namespace Vst {
 enum
 {
 	// for Parameters
-	kParam1Tag = 1000,
+	kProcessingLoadTag = 1000,
 	kGeneratePeaksTag,
 	kLatencyTag,
 	kBypassTag,
@@ -254,8 +254,8 @@ protected:
 
 	struct ScoreEntry
 	{
-		ScoreEntry (float factor = 1) : factor (factor) {}
-		float factor {1};
+		ScoreEntry (float factor = 1.f) : factor (factor) {}
+		float factor {1.f};
 		bool use {false};
 	};
 

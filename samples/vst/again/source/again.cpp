@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -476,7 +476,7 @@ tresult PLUGIN_API AGain::notify (IMessage* message)
 	if (!message)
 		return kInvalidArgument;
 
-	if (!strcmp (message->getMessageID (), "BinaryMessage"))
+	if (strcmp (message->getMessageID (), "BinaryMessage") == 0)
 	{
 		const void* data;
 		uint32 size;

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -79,7 +79,7 @@ CCoord EventLogDataBrowserSource::dbGetCurrentColumnWidth (int32_t index, CDataB
 	static const int32 countWidth = 80;
 	if (index == kType)
 		return typeWidth;
-	else if (index == kCount)
+	if (index == kCount)
 		return countWidth;
 
 	return browser->getWidth () - (typeWidth + countWidth);
@@ -284,8 +284,7 @@ bool EventLogDataBrowserSource::updateLog (const LogEvent& logEvent, bool increm
 		tmpEvent.count += logEvent.count;
 		return true;
 	}
-	else
-		tmpEvent.count = logEvent.count;
+	tmpEvent.count = logEvent.count;
 	return bResult;
 }
 

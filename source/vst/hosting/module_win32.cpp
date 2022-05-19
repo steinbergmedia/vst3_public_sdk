@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,7 +44,7 @@
 #include <algorithm>
 #include <iostream>
 
-#if _HAS_CXX17 && defined(_MSC_VER)
+#if SMTG_CPP17
 #if __has_include(<filesystem>)
 #define USE_FILESYSTEM 1
 #elif __has_include(<experimental/filesystem>)
@@ -139,16 +139,16 @@ public:
 
 	bool load (const std::string& inPath, std::string& errorDescription) override
 	{
-		auto wideStr = StringConvert::convert (inPath);
+		filesystem::path p (inPath);
+		auto filename = p.filename ();
+		p /= "Contents";
+		p /= architectureString;
+		p /= filename;
+		auto wideStr = StringConvert::convert (p.string ());
 		mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
 		if (!mModule)
 		{
-			filesystem::path p (inPath);
-			auto filename = p.filename ();
-			p /= "Contents";
-			p /= architectureString;
-			p /= filename;
-			wideStr = StringConvert::convert (p.string ());
+			wideStr = StringConvert::convert (inPath);
 			mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
 			if (!mModule)
 			{
@@ -190,17 +190,19 @@ public:
 };
 
 //------------------------------------------------------------------------
-bool checkVST3Package (filesystem::path& p)
+bool checkVST3Package (const filesystem::path& p, filesystem::path* result = nullptr)
 {
-	auto filename = p.filename ();
-	p /= "Contents";
-	p /= architectureString;
-	p /= filename;
-	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (p.c_str ()), GENERIC_READ, FILE_SHARE_READ,
+	auto path = p;
+	path /= "Contents";
+	path /= architectureString;
+	path /= p.filename ();
+	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (path.c_str ()), GENERIC_READ, FILE_SHARE_READ,
 	                          nullptr, OPEN_EXISTING, 0, nullptr);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFile);
+		if (result)
+			*result = path;
 		return true;
 	}
 	return false;
@@ -241,7 +243,7 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 {
 #if USE_FILESYSTEM
-	return {filesystem::read_symlink (p)};
+	return {filesystem::read_symlink (p).lexically_normal ()};
 #else
 #if USE_OLE
 	Ole::instance ();
@@ -455,12 +457,40 @@ Module::PathList Module::getModulePaths ()
 }
 
 //------------------------------------------------------------------------
+Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
+{
+	auto path = getContentsDirectoryFromModuleExecutablePath (modulePath);
+	if (!path)
+	{
+		filesystem::path p;
+		if (!checkVST3Package ({modulePath}, &p))
+			return {};
+		p = p.parent_path ();
+		p = p.parent_path ();
+		path = Optional<filesystem::path> {p};
+	}
+	*path /= "moduleinfo.json";
+	if (filesystem::exists (*path))
+	{
+		return {path->generic_string ()};
+	}
+	return {};
+}
+
+//------------------------------------------------------------------------
 Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 {
 	SnapshotList result;
 	auto path = getContentsDirectoryFromModuleExecutablePath (modulePath);
 	if (!path)
-		return result;
+	{
+		filesystem::path p;
+		if (!checkVST3Package ({modulePath}, &p))
+			return result;
+		p = p.parent_path ();
+		p = p.parent_path ();
+		path = Optional<filesystem::path> (p);
+	}
 
 	*path /= "Resources";
 	*path /= "Snapshots";

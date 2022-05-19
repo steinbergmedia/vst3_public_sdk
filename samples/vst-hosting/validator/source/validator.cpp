@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,10 +38,12 @@
 #include "validator.h"
 #include "testsuite.h"
 #include "public.sdk/source/vst/hosting/plugprovider.h"
+#include "public.sdk/source/vst/testsuite/general/plugcompat.h"
 #include "public.sdk/source/vst/testsuite/vststructsizecheck.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
 #include "public.sdk/source/vst/utility/testing.h"
 #include "base/source/fcommandline.h"
+#include "pluginterfaces/base/iplugincompatibility.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
@@ -458,6 +460,7 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 	Module::Ptr testModule;
 	PlugProviderVector plugProviders;
 	TestFactoryMap testFactories;
+	IPtr<IPluginCompatibility> plugCompatibility;
 	auto testSuite = owned (new TestSuite ("Tests"));
 
 	//---create tests---------------
@@ -485,6 +488,26 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 			if (auto testFactory = factory.createInstance<ITestFactory> (classInfo.ID ()))
 			{
 				testFactories.insert (std::make_pair (classInfo.name ().data (), testFactory));
+			}
+		}
+		else if (filterClassCategory (kPluginCompatibilityClass, classInfo.category ().data ()))
+		{
+			if (plugCompatibility)
+			{
+				if (errorStream)
+				{
+					*errorStream
+					    << "Error: Factory contains multiple Plugin Compatibility classes.\n";
+				}
+				++numTestsFailed;
+			}
+			plugCompatibility = factory.createInstance<IPluginCompatibility> (classInfo.ID ());
+			if (!plugCompatibility)
+			{
+				if (errorStream)
+				{
+					*errorStream << "Error: Failed creating IPluginCompatibility instance.\n";
+				}
 			}
 		}
 	}
@@ -538,6 +561,12 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 
 	runTestSuite (testSuite,
 	              config.testSuiteName.empty () ? nullptr : config.testSuiteName.data ());
+
+	if (plugCompatibility)
+	{
+		if (!checkPluginCompatibility (module, plugCompatibility, errorStream))
+			++numTestsFailed;
+	}
 
 	if (infoStream)
 	{

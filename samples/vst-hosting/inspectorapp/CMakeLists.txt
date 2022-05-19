@@ -14,6 +14,8 @@ if(SMTG_ADD_VSTGUI AND VSTGUI_STANDALONE)
         "${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp"
         "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.h"
         "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.cpp"
+        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfoparser.cpp"
+        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfocreator.cpp"
     )
 
     set(${target}_resources

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -258,6 +258,7 @@ Module::Ptr Module::create (const std::string& path, std::string& errorDescripti
 	auto _module = std::make_shared<LinuxModule> ();
 	if (_module->load (path, errorDescription))
 	{
+		_module->path = path;
 		auto it = std::find_if (path.rbegin (), path.rend (),
 		                        [] (const std::string::value_type& c) { return c == '/'; });
 		if (it != path.rend ())
@@ -341,6 +342,18 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 		result.emplace_back (std::move (snapshot));
 	}
 	return result;
+}
+
+//------------------------------------------------------------------------
+Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
+{
+	SnapshotList result;
+	filesystem::path path (modulePath);
+	path /= "Contents";
+	path /= "moduleinfo.json";
+	if (filesystem::exists (path))
+		return {path.generic_string ()};
+	return {};
 }
 
 //------------------------------------------------------------------------

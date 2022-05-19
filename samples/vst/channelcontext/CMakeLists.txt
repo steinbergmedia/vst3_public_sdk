@@ -1,5 +1,12 @@
 
-set(channelcontext_sources
+cmake_minimum_required(VERSION 3.15.0)
+
+project(smtg-vst3-channelcontext
+    VERSION ${vstsdk_VERSION}.0
+    DESCRIPTION "Steinberg VST 3 Channel Context example"
+)
+
+smtg_add_vst3plugin(channelcontext     
     source/plug.cpp
     source/plug.h
     source/plugcids.h
@@ -10,24 +17,4 @@ set(channelcontext_sources
     source/version.h
 )
 
-set(target channelcontext)
-smtg_add_vst3plugin(${target} ${channelcontext_sources})
-set_target_properties(${target}
-    PROPERTIES
-        ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
-)
-target_link_libraries(${target}
-    PRIVATE
-        sdk
-)
-if(SMTG_MAC)
-    smtg_target_set_bundle(${target}
-    	BUNDLE_IDENTIFIER "com.steinberg.vst3.channelcontext"
-    	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
-    )
-elseif(SMTG_WIN)
-    target_sources(${target}
-        PRIVATE
-            resource/plug.rc
-    )
-endif(SMTG_MAC)
+smtg_target_setup_as_vst3_example(channelcontext)

@@ -328,7 +328,6 @@ tresult PLUGIN_API Processor::setState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
 	if (auto vst2State = VST3::tryVst2StateLoad (*state))
 	{
 		if ((vst2State->programs.empty ()) ||
@@ -346,8 +345,6 @@ tresult PLUGIN_API Processor::setState (IBStream* state)
 		stateTransfer.transferObject_ui (std::move (state));
 		return kResultTrue;
 	}
-	return kResultFalse;
-#else
 
 	IBStreamer streamer (state, kLittleEndian);
 
@@ -376,7 +373,6 @@ tresult PLUGIN_API Processor::setState (IBStream* state)
 	recalculate ();
 
 	return kResultTrue;
-	#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -385,7 +381,6 @@ tresult PLUGIN_API Processor::getState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
 	VST3::Vst2xState fxb;
 	fxb.fxUniqueID = getVst2UniqueId ();
 	fxb.fxVersion = 1;
@@ -403,7 +398,8 @@ tresult PLUGIN_API Processor::getState (IBStream* state)
 		currentProgram.values[index] = static_cast<float> (params[index]);
 	}
 	VST3::writeVst2State (fxb, *state);
-#else
+
+#if 0
 	IBStreamer streamer (state, kLittleEndian);
 
 	if (hasProgram ())

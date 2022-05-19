@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -155,14 +155,14 @@ static ModuleInitializer InitTests ([] () {
 
 		param.beginChanges (&queue);
 		bool failure = false;
-		param.advance (128, [&] (auto) {
+		param.advance (128, [&result, &failure] (auto) {
 			result->addErrorMessage (STR ("Unexpected Value"));
 			failure = true;
 		});
 		if (failure)
 			return false;
 		constexpr auto half = 0.5;
-		param.advance (514, [&] (auto value) {
+		param.advance (514, [&result, &failure, half = half] (auto value) {
 			if (Test::notEqual (value, half))
 			{
 				result->addErrorMessage (STR ("Unexpected Value"));

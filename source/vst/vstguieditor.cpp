@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -46,6 +46,11 @@
 
 #if VSTGUI_VERSION_MAJOR < 4
 #include "vstgui/vstkeycode.h"
+#endif
+
+#if VSTGUI_NEWER_THAN_4_10
+#include "vstgui/lib/events.h"
+#include "vstgui/lib/platform/iplatformframe.h"
 #endif
 
 #include "base/source/fstring.h"
@@ -252,34 +257,26 @@ CMessageResult VSTGUIEditor::notify (CBaseObject* /*sender*/, const char* messag
 	return kMessageUnknown;
 }
 
-//------------------------------------------------------------------------
-static bool translateKeyMessage (VstKeyCode& keyCode, char16 key, int16 keyMsg, int16 modifiers)
+static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifiers)
 {
-	keyCode.character = 0;
-	keyCode.virt = (unsigned char)keyMsg;
-	keyCode.modifier = 0;
+	KeyboardEvent event;
+	event.virt = static_cast<VirtualKey> (keyMsg);
 	if (key == 0)
 		key = VirtualKeyCodeToChar ((uint8)keyMsg);
 	if (key)
-	{
-		String keyStr (STR (" "));
-		keyStr.setChar16 (0, key);
-		keyStr.toMultiByte (kCP_Utf8);
-		if (keyStr.length () == 1)
-			keyCode.character = keyStr.getChar8 (0);
-	}
+		event.character = key;
 	if (modifiers)
 	{
 		if (modifiers & kShiftKey)
-			keyCode.modifier |= MODIFIER_SHIFT;
+			event.modifiers.add (ModifierKey::Shift);
 		if (modifiers & kAlternateKey)
-			keyCode.modifier |= MODIFIER_ALTERNATE;
+			event.modifiers.add (ModifierKey::Alt);
 		if (modifiers & kCommandKey)
-			keyCode.modifier |= MODIFIER_CONTROL;
+			event.modifiers.add (ModifierKey::Control);
 		if (modifiers & kControlKey)
-			keyCode.modifier |= MODIFIER_COMMAND;
+			event.modifiers.add (ModifierKey::Super);
 	}
-	return true;
+	return event;
 }
 
 //------------------------------------------------------------------------
@@ -287,6 +284,13 @@ tresult PLUGIN_API VSTGUIEditor::onKeyDown (char16 key, int16 keyMsg, int16 modi
 {
 	if (frame)
 	{
+#if VSTGUI_NEWER_THAN_4_10
+		auto event = translateKeyMessage (key, keyMsg, modifiers);
+		event.type = EventType::KeyDown;
+		frame->dispatchEvent (event);
+		if (event.consumed)
+			return kResultTrue;
+#else
 		VstKeyCode keyCode = {};
 		if (translateKeyMessage (keyCode, key, keyMsg, modifiers))
 		{
@@ -294,6 +298,7 @@ tresult PLUGIN_API VSTGUIEditor::onKeyDown (char16 key, int16 keyMsg, int16 modi
 			if (result == 1)
 				return kResultTrue;
 		}
+#endif
 	}
 	return kResultFalse;
 }
@@ -303,6 +308,13 @@ tresult PLUGIN_API VSTGUIEditor::onKeyUp (char16 key, int16 keyMsg, int16 modifi
 {
 	if (frame)
 	{
+#if VSTGUI_NEWER_THAN_4_10
+		auto event = translateKeyMessage (key, keyMsg, modifiers);
+		event.type = EventType::KeyUp;
+		frame->dispatchEvent (event);
+		if (event.consumed)
+			return kResultTrue;
+#else
 		VstKeyCode keyCode = {};
 		if (translateKeyMessage (keyCode, key, keyMsg, modifiers))
 		{
@@ -310,6 +322,7 @@ tresult PLUGIN_API VSTGUIEditor::onKeyUp (char16 key, int16 keyMsg, int16 modifi
 			if (result == 1)
 				return kResultTrue;
 		}
+#endif
 	}
 	return kResultFalse;
 }
@@ -319,10 +332,24 @@ tresult PLUGIN_API VSTGUIEditor::onWheel (float distance)
 {
 	if (frame)
 	{
+#if VSTGUI_NEWER_THAN_4_10
+		CPoint where;
+		frame->getCurrentMouseLocation (where);
+
+		MouseWheelEvent event;
+		event.mousePosition = where;
+		event.deltaY = distance;
+
+		frame->getPlatformFrame ()->getCurrentModifiers (event.modifiers);
+		frame->dispatchEvent (event);
+		if (event.consumed)
+			return kResultTrue;
+#else
 		CPoint where;
 		frame->getCurrentMouseLocation (where);
 		if (frame->onWheel (where, kMouseWheelAxisY, distance, frame->getCurrentMouseButtons ()))
 			return kResultTrue;
+#endif
 	}
 	return kResultFalse;
 }

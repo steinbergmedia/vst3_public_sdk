@@ -3,6 +3,8 @@ set(validator_sources
     ${SDK_ROOT}/public.sdk/source/common/memorystream.cpp
     ${SDK_ROOT}/public.sdk/source/main/moduleinit.cpp
     ${SDK_ROOT}/public.sdk/source/main/moduleinit.h
+    ${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfoparser.cpp
+    ${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfoparser.h
     ${SDK_ROOT}/public.sdk/source/vst/hosting/test/connectionproxytest.cpp
     ${SDK_ROOT}/public.sdk/source/vst/hosting/test/eventlisttest.cpp
     ${SDK_ROOT}/public.sdk/source/vst/hosting/test/hostclassestest.cpp
@@ -29,6 +31,8 @@ set(validator_sources
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/midilearn.h
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/midimapping.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/midimapping.h
+    ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/plugcompat.h
+    ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/plugcompat.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/scanparameters.cpp
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/scanparameters.h
     ${SDK_ROOT}/public.sdk/source/vst/testsuite/general/suspendresume.cpp
@@ -120,7 +124,7 @@ if(SDK_IDE_HOSTING_EXAMPLES_FOLDER)
 endif(SDK_IDE_HOSTING_EXAMPLES_FOLDER)
 target_compile_features(${target}
     PUBLIC
-        cxx_std_14
+        cxx_std_17
 )
 target_link_libraries(${target}
     PRIVATE

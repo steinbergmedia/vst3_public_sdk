@@ -3,13 +3,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/hostchecker/source/hostchecker.cpp
+// Filename    : public.sdk/samples/vst/hostchecker/source/hostcheckercontroller.cpp
 // Created by  : Steinberg, 04/2012
 // Description :
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -172,7 +172,7 @@ bool MyVST3Editor::beforeSizeChange (const CRect& newSize, const CRect& oldSize)
 {
 	if (!inOpen && !inOnsize)
 	{
-		if (!requestResizeGuard && newSize != oldSize)
+		if (!sizeRequest && newSize != oldSize)
 		{
 			onSizeWanted = true;
 		}
@@ -180,7 +180,7 @@ bool MyVST3Editor::beforeSizeChange (const CRect& newSize, const CRect& oldSize)
 
 	bool res = VST3Editor::beforeSizeChange (newSize, oldSize);
 
-	if (!inOpen && !inOnsize && !requestResizeGuard)
+	if (!inOpen && !inOnsize && !sizeRequest)
 	{
 		if (!res)
 			onSizeWanted = false;
@@ -204,7 +204,7 @@ tresult PLUGIN_API MyVST3Editor::onSize (Steinberg::ViewRect* newSize)
 	inOnsize = true;
 	if (!inOpen)
 	{
-		if (requestResizeGuard)
+		if (sizeRequest)
 			hostController->addFeatureLog (kLogIdIPlugViewCalledSync);
 		else if (onSizeWanted)
 			hostController->addFeatureLog (kLogIdIPlugViewCalledAsync);
@@ -350,81 +350,81 @@ void MyVST3Editor::valueChanged (CControl* pControl)
 //-----------------------------------------------------------------------------
 HostCheckerController::HostCheckerController ()
 {
-	mScoreMap.emplace (kLogIdRestartParamValuesChangedSupported, 2);
-	mScoreMap.emplace (kLogIdRestartParamTitlesChangedSupported, 2);
-	mScoreMap.emplace (kLogIdRestartNoteExpressionChangedSupported, 1);
-	mScoreMap.emplace (kLogIdRestartKeyswitchChangedSupported, 1);
+	mScoreMap.emplace (kLogIdRestartParamValuesChangedSupported, 2.f);
+	mScoreMap.emplace (kLogIdRestartParamTitlesChangedSupported, 2.f);
+	mScoreMap.emplace (kLogIdRestartNoteExpressionChangedSupported, 1.f);
+	mScoreMap.emplace (kLogIdRestartKeyswitchChangedSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIComponentHandler2Supported, 2);
-	mScoreMap.emplace (kLogIdIComponentHandler2SetDirtySupported, 2);
-	mScoreMap.emplace (kLogIdIComponentHandler2RequestOpenEditorSupported, 2);
-	mScoreMap.emplace (kLogIdIComponentHandler3Supported, 2);
-	mScoreMap.emplace (kLogIdIComponentHandlerBusActivationSupported, 1);
-	mScoreMap.emplace (kLogIdIProgressSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugInterfaceSupportSupported, 2);
-	mScoreMap.emplace (kLogIdIPlugFrameonResizeViewSupported, 2);
-	mScoreMap.emplace (kLogIdIPrefetchableSupportSupported, 1);
-	mScoreMap.emplace (kLogIdAudioPresentationLatencySamplesSupported, 1);
-	mScoreMap.emplace (kLogIdIProcessContextRequirementsSupported, 1);
+	mScoreMap.emplace (kLogIdIComponentHandler2Supported, 2.f);
+	mScoreMap.emplace (kLogIdIComponentHandler2SetDirtySupported, 2.f);
+	mScoreMap.emplace (kLogIdIComponentHandler2RequestOpenEditorSupported, 2.f);
+	mScoreMap.emplace (kLogIdIComponentHandler3Supported, 2.f);
+	mScoreMap.emplace (kLogIdIComponentHandlerBusActivationSupported, 1.f);
+	mScoreMap.emplace (kLogIdIProgressSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugInterfaceSupportSupported, 2.f);
+	mScoreMap.emplace (kLogIdIPlugFrameonResizeViewSupported, 2.f);
+	mScoreMap.emplace (kLogIdIPrefetchableSupportSupported, 1.f);
+	mScoreMap.emplace (kLogIdAudioPresentationLatencySamplesSupported, 1.f);
+	mScoreMap.emplace (kLogIdIProcessContextRequirementsSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdProcessContextPlayingSupported, 2);
-	mScoreMap.emplace (kLogIdProcessContextRecordingSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextCycleActiveSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextSystemTimeSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextContTimeSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextTimeMusicSupported, 2);
-	mScoreMap.emplace (kLogIdProcessContextBarPositionSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextCycleSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextTempoSupported, 2);
-	mScoreMap.emplace (kLogIdProcessContextTimeSigSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextChordSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextSmpteSupported, 1);
-	mScoreMap.emplace (kLogIdProcessContextClockSupported, 1);
-	mScoreMap.emplace (kLogIdCanProcessSampleSize32, 1);
-	mScoreMap.emplace (kLogIdCanProcessSampleSize64, 1);
-	mScoreMap.emplace (kLogIdGetTailSamples, 1);
-	mScoreMap.emplace (kLogIdGetLatencySamples, 2);
-	mScoreMap.emplace (kLogIdGetBusArrangements, 1);
-	mScoreMap.emplace (kLogIdSetBusArrangements, 1);
-	mScoreMap.emplace (kLogIdGetRoutingInfo, 1);
-	mScoreMap.emplace (kLogIdActivateAuxBus, 1);
-	mScoreMap.emplace (kLogIdParametersFlushSupported, 1);
-	mScoreMap.emplace (kLogIdSilentFlagsSupported, 2);
-	mScoreMap.emplace (kLogIdSilentFlagsSCSupported, 2);
+	mScoreMap.emplace (kLogIdProcessContextPlayingSupported, 2.f);
+	mScoreMap.emplace (kLogIdProcessContextRecordingSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextCycleActiveSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextSystemTimeSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextContTimeSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextTimeMusicSupported, 2.f);
+	mScoreMap.emplace (kLogIdProcessContextBarPositionSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextCycleSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextTempoSupported, 2.f);
+	mScoreMap.emplace (kLogIdProcessContextTimeSigSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextChordSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextSmpteSupported, 1.f);
+	mScoreMap.emplace (kLogIdProcessContextClockSupported, 1.f);
+	mScoreMap.emplace (kLogIdCanProcessSampleSize32, 1.f);
+	mScoreMap.emplace (kLogIdCanProcessSampleSize64, 1.f);
+	mScoreMap.emplace (kLogIdGetTailSamples, 1.f);
+	mScoreMap.emplace (kLogIdGetLatencySamples, 2.f);
+	mScoreMap.emplace (kLogIdGetBusArrangements, 1.f);
+	mScoreMap.emplace (kLogIdSetBusArrangements, 1.f);
+	mScoreMap.emplace (kLogIdGetRoutingInfo, 1.f);
+	mScoreMap.emplace (kLogIdActivateAuxBus, 1.f);
+	mScoreMap.emplace (kLogIdParametersFlushSupported, 1.f);
+	mScoreMap.emplace (kLogIdSilentFlagsSupported, 2.f);
+	mScoreMap.emplace (kLogIdSilentFlagsSCSupported, 2.f);
 
-	mScoreMap.emplace (kLogIdIEditController2Supported, 1);
-	mScoreMap.emplace (kLogIdsetKnobModeSupported, 1);
-	mScoreMap.emplace (kLogIdopenHelpSupported, 1);
-	mScoreMap.emplace (kLogIdopenAboutBoxSupported, 1);
-	mScoreMap.emplace (kLogIdIMidiMappingSupported, 1);
-	mScoreMap.emplace (kLogIdUnitSupported, 1);
-	mScoreMap.emplace (kLogIdGetUnitByBusSupported, 1);
-	mScoreMap.emplace (kLogIdChannelContextSupported, 1);
-	mScoreMap.emplace (kLogIdINoteExpressionControllerSupported, 1);
-	mScoreMap.emplace (kLogIdINoteExpressionPhysicalUIMappingSupported, 1);
-	mScoreMap.emplace (kLogIdIKeyswitchControllerSupported, 1);
-	mScoreMap.emplace (kLogIdIMidiLearnSupported, 1);
-	mScoreMap.emplace (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, 1);
+	mScoreMap.emplace (kLogIdIEditController2Supported, 1.f);
+	mScoreMap.emplace (kLogIdSetKnobModeSupported, 1.f);
+	mScoreMap.emplace (kLogIdOpenHelpSupported, 1.f);
+	mScoreMap.emplace (kLogIdOpenAboutBoxSupported, 1.f);
+	mScoreMap.emplace (kLogIdIMidiMappingSupported, 1.f);
+	mScoreMap.emplace (kLogIdUnitSupported, 1.f);
+	mScoreMap.emplace (kLogIdGetUnitByBusSupported, 1.f);
+	mScoreMap.emplace (kLogIdChannelContextSupported, 1.f);
+	mScoreMap.emplace (kLogIdINoteExpressionControllerSupported, 1.f);
+	mScoreMap.emplace (kLogIdINoteExpressionPhysicalUIMappingSupported, 1.f);
+	mScoreMap.emplace (kLogIdIKeyswitchControllerSupported, 1.f);
+	mScoreMap.emplace (kLogIdIMidiLearnSupported, 1.f);
+	mScoreMap.emplace (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIAttributeListInSetStateSupported, 1);
+	mScoreMap.emplace (kLogIdIAttributeListInSetStateSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIXmlRepresentationControllerSupported, 1);
-	mScoreMap.emplace (kLogIdIAutomationStateSupported, 1);
+	mScoreMap.emplace (kLogIdIXmlRepresentationControllerSupported, 1.f);
+	mScoreMap.emplace (kLogIdIAutomationStateSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIEditControllerHostEditingSupported, 1);
+	mScoreMap.emplace (kLogIdIEditControllerHostEditingSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIPlugViewonSizeSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewcanResizeSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewcheckSizeConstraintSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewsetFrameSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewOnWheelCalled, 1);
-	mScoreMap.emplace (kLogIdIPlugViewOnKeyDownSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewOnKeyUpSupported, 1);
-	mScoreMap.emplace (kLogIdIPlugViewOnFocusCalled, 1);
-	mScoreMap.emplace (kLogIdIPlugViewsetContentScaleFactorSupported, 1);
+	mScoreMap.emplace (kLogIdIPlugViewonSizeSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewcanResizeSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewcheckSizeConstraintSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewsetFrameSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewOnWheelCalled, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewOnKeyDownSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewOnKeyUpSupported, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewOnFocusCalled, 1.f);
+	mScoreMap.emplace (kLogIdIPlugViewsetContentScaleFactorSupported, 1.f);
 
-	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1);
-	mScoreMap.emplace (kLogIdIParameterFunctionNameSupported, 1);
+	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1.f);
+	mScoreMap.emplace (kLogIdIParameterFunctionNameSupported, 1.f);
 }
 
 //-----------------------------------------------------------------------------
@@ -458,8 +458,8 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		unit = new Unit (unitInfo);
 		addUnit (unit);
 
-		parameters.addParameter (STR16 ("Param1"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
-		                         kParam1Tag);
+		parameters.addParameter (STR16 ("Processing Load"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
+		                         kProcessingLoadTag);
 		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0,
 		                         ParameterInfo::kNoFlags, kGeneratePeaksTag);
 		parameters.addParameter (new RangeParameter (
@@ -636,6 +636,14 @@ tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 		return kResultFalse;
 
 	IBStreamer streamer (state, kLittleEndian);
+	// version
+	uint32 version;
+	streamer.readInt32u (version);
+	if (version < 1 || version > 1000)
+	{
+		version = 1;
+		streamer.seek (-4, kSeekCurrent);
+	}
 
 	float saved = 0.f;
 	if (streamer.readFloat (saved) == false)
@@ -652,6 +660,14 @@ tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 	uint32 bypass;
 	if (streamer.readInt32u (bypass) == false)
 		return kResultFalse;
+
+	float processingLoad = 0.f;
+	if (version > 1)
+	{
+		if (streamer.readFloat (processingLoad) == false)
+			return kResultFalse;
+		setParamNormalized (kProcessingLoadTag, processingLoad);
+	}
 
 	setParamNormalized (kBypassTag, bypass > 0 ? 1 : 0);
 
@@ -744,7 +760,7 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 		// return kResultTrue;
 	}
 	//--- ----------------------------------------
-	else if (tag == kParam1Tag)
+	else if (tag == kProcessingLoadTag)
 	{
 	}
 	//--- ----------------------------------------
@@ -997,17 +1013,15 @@ CView* HostCheckerController::createCustomView (UTF8StringPtr name,
 			item->second->remember ();
 			return item->second;
 		}
-		else
-		{
-			auto dataBrowser = VSTGUI::owned (new CDataBrowser (
-			    CRect (0, 0, 100, 100), mDataSource,
-			    CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
-			        CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
 
-			mDataBrowserMap.emplace (editor, dataBrowser);
-			dataBrowser->remember ();
-			return dataBrowser;
-		}
+		auto dataBrowser = VSTGUI::owned (new CDataBrowser (
+			CRect (0, 0, 100, 100), mDataSource,
+			CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
+			CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
+
+		mDataBrowserMap.emplace (editor, dataBrowser);
+		dataBrowser->remember ();
+		return dataBrowser;
 	}
 	return nullptr;
 }
@@ -1130,7 +1144,7 @@ tresult PLUGIN_API HostCheckerController::setKnobMode (KnobMode mode)
 		addFeatureLog (kLogIdsetKnobModeCalledinWrongThread);
 	}
 
-	addFeatureLog (kLogIdsetKnobModeSupported);
+	addFeatureLog (kLogIdSetKnobModeSupported);
 	return EditControllerEx1::setKnobMode (mode);
 }
 
@@ -1143,7 +1157,7 @@ tresult PLUGIN_API HostCheckerController::openHelp (TBool onlyCheck)
 		addFeatureLog (kLogIdopenHelpCalledinWrongThread);
 	}
 
-	addFeatureLog (kLogIdopenHelpSupported);
+	addFeatureLog (kLogIdOpenHelpSupported);
 	return EditControllerEx1::openHelp (onlyCheck);
 }
 
@@ -1156,7 +1170,7 @@ tresult PLUGIN_API HostCheckerController::openAboutBox (TBool onlyCheck)
 		addFeatureLog (kLogIdopenAboutBoxCalledinWrongThread);
 	}
 
-	addFeatureLog (kLogIdopenAboutBoxSupported);
+	addFeatureLog (kLogIdOpenAboutBoxSupported);
 	return EditControllerEx1::openAboutBox (onlyCheck);
 }
 
@@ -1271,7 +1285,7 @@ tresult PLUGIN_API HostCheckerController::getMidiControllerAssignment (
 
 	switch (midiControllerNumber)
 	{
-		case ControllerNumbers::kCtrlPan: id = kParam1Tag; return kResultOk;
+		case ControllerNumbers::kCtrlPan: id = kProcessingLoadTag; return kResultOk;
 		case ControllerNumbers::kCtrlExpression: id = kGeneratePeaksTag; return kResultOk;
 		case ControllerNumbers::kCtrlEffect1: id = kBypassTag; return kResultOk;
 	}
@@ -1512,7 +1526,7 @@ tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID
 
 	if (FIDStringsEqual (functionName, FunctionNameType::kDryWetMix))
 	{
-		paramID = kParam1Tag;
+		paramID = kProcessingLoadTag;
 	}
 	else
 		paramID = kNoParamId;
@@ -1591,77 +1605,76 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 		addFeatureLog (kLogIdIMidiMappingSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IEditController2::iid))
+	if (FUnknownPrivate::iidEqual (iid, IEditController2::iid))
 	{
 		addRef ();
 		*obj = static_cast<IEditController2*> (this);
 		addFeatureLog (kLogIdIEditController2Supported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
+	if (FUnknownPrivate::iidEqual (iid, IXmlRepresentationController::iid))
 	{
 		addRef ();
 		*obj = static_cast<IXmlRepresentationController*> (this);
 		addFeatureLog (kLogIdIXmlRepresentationControllerSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
+	if (FUnknownPrivate::iidEqual (iid, ChannelContext::IInfoListener::iid))
 	{
 		addRef ();
 		*obj = static_cast<ChannelContext::IInfoListener*> (this);
 		addFeatureLog (kLogIdChannelContextSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
+	if (FUnknownPrivate::iidEqual (iid, INoteExpressionController::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionController*> (this);
 		addFeatureLog (kLogIdINoteExpressionControllerSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
+	if (FUnknownPrivate::iidEqual (iid, INoteExpressionPhysicalUIMapping::iid))
 	{
 		addRef ();
 		*obj = static_cast<INoteExpressionPhysicalUIMapping*> (this);
 		addFeatureLog (kLogIdINoteExpressionPhysicalUIMappingSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IKeyswitchController::iid))
+	if (FUnknownPrivate::iidEqual (iid, IKeyswitchController::iid))
 	{
 		addRef ();
 		*obj = static_cast<IKeyswitchController*> (this);
 		addFeatureLog (kLogIdIKeyswitchControllerSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
+	if (FUnknownPrivate::iidEqual (iid, IMidiLearn::iid))
 	{
 		addRef ();
 		*obj = static_cast<IMidiLearn*> (this);
 		addFeatureLog (kLogIdIMidiLearnSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IAutomationState::iid))
+	if (FUnknownPrivate::iidEqual (iid, IAutomationState::iid))
 	{
 		addRef ();
 		*obj = static_cast<IAutomationState*> (this);
 		addFeatureLog (kLogIdIAutomationStateSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IEditControllerHostEditing::iid))
+	if (FUnknownPrivate::iidEqual (iid, IEditControllerHostEditing::iid))
 	{
 		addRef ();
 		*obj = static_cast<IEditControllerHostEditing*> (this);
 		addFeatureLog (kLogIdIEditControllerHostEditingSupported);
 		return kResultOk;
 	}
-	else if (FUnknownPrivate::iidEqual (iid, IParameterFunctionName::iid))
+	if (FUnknownPrivate::iidEqual (iid, IParameterFunctionName::iid))
 	{
 		addRef ();
 		*obj = static_cast<IParameterFunctionName*> (this);
 		addFeatureLog (kLogIdIParameterFunctionNameSupported);
 		return kResultOk;
 	}
-
 	return EditControllerEx1::queryInterface (iid, obj);
 }
 

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,7 +39,8 @@
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 
 using namespace Steinberg;
-using Steinberg::Vst::Event;
+using VstEvent = Steinberg::Vst::Event;
+using VstEventTypes = Steinberg::Vst::Event::EventTypes;
 
 namespace VSTGUI {
 
@@ -52,8 +53,8 @@ NoteTouchController::NoteTouchController (int32_t pitch, Steinberg::Vst::IInterA
 //-----------------------------------------------------------------------------
 void NoteTouchController::startNote (float velocity)
 {
-	Event e = {};
-	e.type = Event::kNoteOnEvent;
+	VstEvent e = {};
+	e.type = VstEventTypes::kNoteOnEvent;
 	e.noteOn.pitch = pitch;
 	e.noteOn.velocity = velocity;
 	if (host->scheduleEventFromUI (e) == kResultTrue)
@@ -68,8 +69,8 @@ void NoteTouchController::stopNote (float velocity)
 {
 	if (noteID != -1)
 	{
-		Event e = {};
-		e.type = Event::kNoteOffEvent;
+		VstEvent e = {};
+		e.type = VstEventTypes::kNoteOffEvent;
 		e.noteOff.noteId = noteID;
 		e.noteOff.pitch = pitch;
 		e.noteOff.velocity = velocity;
@@ -84,8 +85,8 @@ void NoteTouchController::sendNoteExpression (int32_t type, float value)
 {
 	if (type != -1 && noteID != -1)
 	{
-		Event e = {};
-		e.type = Event::kNoteExpressionValueEvent;
+		VstEvent e = {};
+		e.type = VstEventTypes::kNoteExpressionValueEvent;
 		e.noteExpressionValue.noteId = noteID;
 		e.noteExpressionValue.typeId = type;
 		if (type == Vst::kTuningTypeID)

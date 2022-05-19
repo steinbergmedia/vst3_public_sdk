@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -135,6 +135,7 @@ protected:
 	uint32 mLatency = 0;
 	uint32 mWantedLatency = 0;
 	float mGeneratePeaks = 0;
+	float mProcessingLoad = 0;
 	State mCurrentState {State::kUninitialized};
 
 	uint32 mMinimumOfInputBufferCount {0};

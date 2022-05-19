@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,6 +47,7 @@
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -362,8 +363,9 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 				mWantedLatency = value * HostChecker::kMaxLatency;
 				addLogEvent (kLogIdInformLatencyChanged);
 			}
-			else if (id == kParam1Tag)
+			else if (id == kProcessingLoadTag)
 			{
+				mProcessingLoad = value;
 			}
 			else if (id == kGeneratePeaksTag)
 			{
@@ -388,6 +390,45 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		if (data.numInputs > 1 && data.inputs[1].silenceFlags != 0)
 		{
 			addLogEvent (kLogIdSilentFlagsSCSupported);
+		}
+		// Generate Processing load
+		if (mProcessingLoad > 0)
+		{
+			int32 countLoop = mProcessingLoad * 200;
+			if (data.symbolicSampleSize == kSample32)
+			{
+				auto tmp1 = data.outputs[0].channelBuffers32[0][0];
+				for (int32 i = 0; i < data.inputs[0].numChannels; i++)
+				{
+					for (int32 s = 0; s < data.numSamples; s++)
+					{
+						auto tmp2 = data.inputs[0].channelBuffers32[i][s];
+						for (int32 loop = 0; loop < countLoop; loop++)
+						{
+							tmp2 = sinf (tmp2) * cosf (tmp2);
+						}
+						data.outputs[0].channelBuffers32[0][0] = tmp2;
+					}
+				}
+				data.outputs[0].channelBuffers32[0][0] = tmp1;
+			}
+			else // kSample64
+			{
+				auto tmp1 = data.outputs[0].channelBuffers64[0][0];
+				for (int32 i = 0; i < data.inputs[0].numChannels; i++)
+				{
+					for (int32 s = 0; s < data.numSamples; s++)
+					{
+						auto tmp2 = data.inputs[0].channelBuffers64[i][s];
+						for (int32 loop = 0; loop < countLoop; loop++)
+						{
+							tmp2 = sinf (tmp2) * cosf (tmp2);
+						}
+						data.outputs[0].channelBuffers64[0][0] = tmp2;
+					}
+				}
+				data.outputs[0].channelBuffers64[0][0] = tmp1;
+			}
 		}
 
 		// Generate output (peak at a given tempo) (overwrite the input)
@@ -641,7 +682,7 @@ tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSam
 		addLogEvent (kLogIdCanProcessSampleSize32);
 		return kResultTrue;
 	}
-	else if (symbolicSampleSize == kSample64)
+	if (symbolicSampleSize == kSample64)
 	{
 		addLogEvent (kLogIdCanProcessSampleSize64);
 		return kResultTrue;
@@ -772,6 +813,15 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 
 	IBStreamer streamer (state, kLittleEndian);
 
+	// version
+	uint32 version;
+	streamer.readInt32u (version);
+	if (version < 1 || version > 1000)
+	{
+		version = 1;
+		streamer.seek (-4, kSeekCurrent);
+	}
+
 	float saved = 0.f;
 	if (streamer.readFloat (saved) == false)
 		return kResultFalse;
@@ -787,9 +837,18 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 	uint32 bypass;
 	if (streamer.readInt32u (bypass) == false)
 		return kResultFalse;
+
+	float processingLoad = 0.f;
+	if (version > 1)
+	{
+		if (streamer.readFloat (processingLoad) == false)
+			return kResultFalse;
+	}
+
 	mBypass = bypass > 0;
 	mBypassProcessorFloat.setActive (mBypass);
 	mBypassProcessorDouble.setActive (mBypass);
+	mProcessingLoad = processingLoad;
 
 	if (latency != mLatency)
 	{
@@ -814,11 +873,14 @@ tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 
 	IBStreamer streamer (state, kLittleEndian);
 
+	// version
+	streamer.writeInt32u (2);
+
 	float toSave = 12345.67f;
 	streamer.writeFloat (toSave);
 	streamer.writeInt32u (mLatency);
 	streamer.writeInt32u (mBypass ? 1 : 0);
-
+	streamer.writeFloat  (mProcessingLoad);
 	return kResultOk;
 }
 

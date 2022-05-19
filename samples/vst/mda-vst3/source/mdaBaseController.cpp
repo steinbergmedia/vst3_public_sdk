@@ -119,7 +119,6 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 	if (!state)
 		return kResultFalse;
 
-#ifdef SMTG_MDA_VST2_COMPATIBILITY
 	if (auto vst2State = VST3::tryVst2StateLoad (*state))
 	{
 		if (vst2State->programs.empty ())
@@ -140,9 +139,6 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 		}
 		return kResultTrue;
 	}
-
-	return kResultFalse;
-#else
 
 	IBStreamer streamer (state, kLittleEndian);
 
@@ -180,7 +176,6 @@ tresult PLUGIN_API BaseController::setComponentState (IBStream* state)
 		bypassParam->setNormalized (bypassState);
 
 	return kResultTrue;
-#endif
 }
 
 //------------------------------------------------------------------------

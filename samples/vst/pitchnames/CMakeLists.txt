@@ -1,41 +1,27 @@
 
-if(SMTG_ADD_VSTGUI)
-    set(pitchnames_sources
-        source/factory.cpp
-        source/pitchnames.cpp
-        source/pitchnames.h
-        source/pitchnamesdatabrowsersource.cpp
-        source/pitchnamesdatabrowsersource.h
-        source/version.h
-    )
+if(NOT SMTG_ADD_VSTGUI)
+    return()
+endif()
 
-    set(target pitchnames)
-    smtg_add_vst3plugin(${target} ${pitchnames_sources})
-    set_target_properties(${target}
-        PROPERTIES
-        ${SDK_IDE_PLUGIN_EXAMPLES_FOLDER}
-    )
-    target_link_libraries(${target}
-        PRIVATE
-            sdk
-            vstgui_support
-    )
+cmake_minimum_required(VERSION 3.15.0)
 
-    smtg_target_add_plugin_resources(${target}
-        RESOURCES
-            resource/pitchnames.uidesc
-    )
+project(smtg-vst3-pitchnames
+    VERSION ${vstsdk_VERSION}.0
+    DESCRIPTION "Steinberg VST 3 Pitch Names example"
+)
 
-    if(SMTG_MAC)
-        smtg_target_set_bundle(${target}
-        	BUNDLE_IDENTIFIER "com.steinberg.vst3.pitchnames"
-        	INFOPLIST "${CMAKE_CURRENT_LIST_DIR}/resource/Info.plist" PREPROCESS
-        )
-    elseif(SMTG_WIN)
-        target_sources(${target}
-            PRIVATE
-                resource/pitchnames.rc
-        )
-    endif(SMTG_MAC)
+smtg_add_vst3plugin(pitchnames 
+    source/factory.cpp
+    source/pitchnames.cpp
+    source/pitchnames.h
+    source/pitchnamesdatabrowsersource.cpp
+    source/pitchnamesdatabrowsersource.h
+    source/version.h
+)
 
-endif(SMTG_ADD_VSTGUI)
+target_link_libraries(pitchnames
+    PRIVATE
+        vstgui_support
+)
+
+smtg_target_setup_as_vst3_example(pitchnames)

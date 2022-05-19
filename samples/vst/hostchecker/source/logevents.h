@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -95,10 +95,10 @@ struct LogEvent
 	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdInvalidBlockSize,				PROCESS,	LOG_ERR, PROCESS_DATA, "Block size is either < 1 or >= max block size."),\
-	LOG_DEF (kLogIdProcessPlaybackChangedDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected due to Start/Stop."),\
-	LOG_DEF (kLogIdProcessDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected during playback or pause."),\
-	LOG_DEF (kLogIdProcessPlaybackChangedContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected due to Start/Stop."),\
-	LOG_DEF (kLogIdProcessContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected during playback or pause."),\
+	LOG_DEF(kLogIdProcessPlaybackChangedDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected due to Start/Stop."),\
+	LOG_DEF(kLogIdProcessDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected during playback or pause."),\
+	LOG_DEF(kLogIdProcessPlaybackChangedContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected due to Start/Stop."),\
+	LOG_DEF(kLogIdProcessContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected during playback or pause."),\
 	\
 	LOG_DEF(kLogIdInvalidProcessContextSampleRate,	PROCESS, LOG_ERR, PROCESS_CONTEXT, "The sampleRate does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdNullPointerToChannelBuf,		PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a channel buffer is null although the index is valid."),\
@@ -181,9 +181,9 @@ struct LogEvent
 	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
 	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
 	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
-	LOG_DEF (kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
+	LOG_DEF(kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
 	\
-	LOG_DEF (kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
+	LOG_DEF(kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
 	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
 	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
@@ -221,9 +221,9 @@ struct LogEvent
 	LOG_DEF(kLogIdSilentFlagsSCSupported,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for SideChain-In supported!"), \
 	\
 	LOG_DEF(kLogIdIEditController2Supported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
-	LOG_DEF(kLogIdsetKnobModeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::setKnobMode supported!"), \
-	LOG_DEF(kLogIdopenHelpSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openHelp supported!"), \
-	LOG_DEF(kLogIdopenAboutBoxSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
+	LOG_DEF(kLogIdSetKnobModeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::setKnobMode supported!"), \
+	LOG_DEF(kLogIdOpenHelpSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openHelp supported!"), \
+	LOG_DEF(kLogIdOpenAboutBoxSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
 	\
 	LOG_DEF(kLogIdIMidiMappingSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
 	LOG_DEF(kLogIdUnitSupported,				CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
@@ -240,8 +240,8 @@ struct LogEvent
 	LOG_DEF(kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
 	\
 	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
-	LOG_DEF (kLogIdIAutomationStateSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
-	LOG_DEF (kLogIdIEditControllerHostEditingSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
+	LOG_DEF(kLogIdIAutomationStateSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
+	LOG_DEF(kLogIdIEditControllerHostEditingSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
 	LOG_DEF(kLogIdIEditControllerHostEditingMisused,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IEditControllerHostEditing::beginEdit/endEditFromHost not correctly used!"), \
 	\
 	LOG_DEF(kLogIdIPlugViewonSizeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize supported!"), \

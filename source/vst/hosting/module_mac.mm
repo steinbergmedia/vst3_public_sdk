@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -362,6 +362,27 @@ Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 	SnapshotList list;
 	getModuleSnapshots (modulePath, list);
 	return list;
+}
+
+//------------------------------------------------------------------------
+Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
+{
+	auto nsString = [NSString stringWithUTF8String:modulePath.data ()];
+	if (!nsString)
+		return {};
+	auto bundleUrl = [NSURL fileURLWithPath:nsString];
+	if (!bundleUrl)
+		return {};
+	auto contentsUrl = [bundleUrl URLByAppendingPathComponent:@"Contents"];
+	if (!contentsUrl)
+		return {};
+	auto moduleInfoUrl = [contentsUrl URLByAppendingPathComponent:@"moduleinfo.json"];
+	if (!moduleInfoUrl)
+		return {};
+	NSError* error = nil;
+	if ([moduleInfoUrl checkResourceIsReachableAndReturnError:&error])
+		return {std::string (moduleInfoUrl.fileSystemRepresentation)};
+	return {};
 }
 
 //------------------------------------------------------------------------
