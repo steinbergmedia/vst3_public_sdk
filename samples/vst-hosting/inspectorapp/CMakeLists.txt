@@ -60,7 +60,7 @@ if(SMTG_ADD_VSTGUI AND VSTGUI_STANDALONE)
 
     target_include_directories(${target}
         PRIVATE
-            "${SMTG_VSTGUI_ROOT}/vstgui4/"
+            "${SMTG_VSTGUI_SOURCE_DIR}/"
             "${SDK_ROOT}"
     )
 

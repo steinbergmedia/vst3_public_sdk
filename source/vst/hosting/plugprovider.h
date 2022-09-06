@@ -61,6 +61,8 @@ public:
 	PlugProvider (const PluginFactory& factory, ClassInfo info, bool plugIsGlobal = true);
 	~PlugProvider () override;
 
+	bool initialize ();
+
 	//--- from ITestPlugProvider ------------------
 	IComponent* PLUGIN_API getComponent () SMTG_OVERRIDE;
 	IEditController* PLUGIN_API getController () SMTG_OVERRIDE;

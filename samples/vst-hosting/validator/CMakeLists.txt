@@ -141,6 +141,8 @@ if(APPLE AND NOT XCODE)
 endif(APPLE AND NOT XCODE)
 
 #####################################################
-add_custom_command(TARGET ${target} POST_BUILD
-	COMMAND $<TARGET_FILE:${target}> "-selftest"
-)
+if(SMTG_RUN_VST_VALIDATOR)
+    add_custom_command(TARGET ${target} POST_BUILD
+	    COMMAND $<TARGET_FILE:${target}> "-selftest"
+    )
+endif(SMTG_RUN_VST_VALIDATOR)

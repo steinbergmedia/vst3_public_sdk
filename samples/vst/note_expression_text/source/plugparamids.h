@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/multiplugsupport/source/plugparamids.h
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plugparamids.h
 // Created by  : Steinberg, 12/2007
-// Description : define the parameter IDs used by multiplugsupport
+// Description : define the parameter IDs
 //
 //-----------------------------------------------------------------------------
 // LICENSE

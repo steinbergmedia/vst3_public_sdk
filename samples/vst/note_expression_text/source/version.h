@@ -4,7 +4,7 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/note_expression_text/source/version.h
 // Created by  : Steinberg, 01/2008
-// Description : Example of handle the versioning and copyright info of again plug-in 
+// Description : Example of handle the versioning and copyright info of note_expression_text plug-in 
 //				 used for the resources (RC file for example)
 //
 //-----------------------------------------------------------------------------

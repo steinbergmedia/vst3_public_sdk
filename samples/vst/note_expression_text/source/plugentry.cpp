@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/multiplugsupport/source/plugentry.cpp
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plugentry.cpp
 // Created by  : Steinberg, 02/2011
-// Description : MultiPLugSupport Example for VST 3
+// Description : note_expression_text Example for VST 3
 //
 //-----------------------------------------------------------------------------
 // LICENSE

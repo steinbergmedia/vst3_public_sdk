@@ -25,8 +25,8 @@ set(noteexpressionsynth_sources
     source/note_touch_controller.cpp
     source/note_touch_controller.h
     source/version.h
-    ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.cpp
-    ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/contrib/keyboardview.h
+    ${SMTG_VSTGUI_SOURCE_DIR}/vstgui/contrib/keyboardview.cpp
+    ${SMTG_VSTGUI_SOURCE_DIR}/vstgui/contrib/keyboardview.h
     resource/note_expression_synth.uidesc
 )
 
@@ -59,6 +59,17 @@ smtg_target_add_plugin_snapshots(noteexpressionsynth
 
 smtg_target_setup_as_vst3_example(noteexpressionsynth)
 
+# Add an AUv2 target
+if (SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+	include(SMTG_AddVST3AuV2)
+	smtg_target_add_auv2(noteexpressionsynth-au
+		BUNDLE_NAME noteexpressionsynth
+		BUNDLE_IDENTIFIER com.steinberg.vst3sdk.noteexpressionsynth.auv2
+		INFO_PLIST_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/resource/au-info.plist
+		VST3_PLUGIN_TARGET noteexpressionsynth
+	)
+endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+
 if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     set(target noteexpressionsynth_ios)
     smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${noteexpressionsynth_sources}")
@@ -69,7 +80,7 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     )
     target_include_directories(${target}
         PUBLIC
-            ${SMTG_VSTGUI_ROOT}/vstgui4
+            ${SMTG_VSTGUI_SOURCE_DIR}
     )
     target_link_libraries(${target}
         PRIVATE
@@ -100,11 +111,11 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     )
     target_sources(${target}
         PRIVATE 
-            "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp"
-            "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm"
-            "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp"
-            "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3groupcontroller.cpp"
-            "${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3padcontroller.cpp"
+            "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/vstgui_uidescription.cpp"
+            "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/vstgui_ios.mm"
+            "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/plugin-bindings/vst3editor.cpp"
+            "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/plugin-bindings/vst3groupcontroller.cpp"
+            "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/plugin-bindings/vst3padcontroller.cpp"
             "${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp"
     )
 endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)

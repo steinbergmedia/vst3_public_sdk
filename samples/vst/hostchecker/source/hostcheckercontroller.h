@@ -63,6 +63,12 @@ const int32 kMaxLatency = 8192;
 const uint32 kParamWarnCount = 8;
 const uint32 kParamWarnBitCount = 24;
 const uint32 kParamWarnStepCount = 1 << kParamWarnBitCount;
+
+const uint32 kParamUnitStruct1Count = 4;
+const uint32 kParamUnitStruct2Count = 4;
+const uint32 kParamUnitStruct3Count = 2;
+const uint32 kParamUnitStructCount =
+    2 * (kParamUnitStruct1Count * kParamUnitStruct2Count * kParamUnitStruct3Count + 1);
 }
 
 namespace Vst {
@@ -88,9 +94,13 @@ enum
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
+	kParamUnitStructStart,
+	kParamUnitStructEnd = kParamUnitStructStart + HostChecker::kParamUnitStructCount,
+
 	// for Units
 	kUnitId = 1234,
-	kUnit2Id = 1235
+	kUnit2Id = 1235,
+	kUnitParamIdStart = 2345,
 };
 
 class EditorSizeController;

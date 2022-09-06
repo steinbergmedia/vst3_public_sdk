@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again/source/plugcontroller.h
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plugcontroller.h
 // Created by  : Steinberg, 04/2005
 // Description : Note Expression Editor Example for VST 3
 //

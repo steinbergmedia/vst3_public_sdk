@@ -164,7 +164,9 @@ public:
 	~AUWrapper ();
 
 	//---ComponentBase---------------------
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 	ComponentResult	Version () SMTG_OVERRIDE;
+#endif
 	void PostConstructor () SMTG_OVERRIDE;
 
 	//---AUBase-----------------------------
@@ -184,8 +186,10 @@ public:
 	ComponentResult Render (AudioUnitRenderActionFlags &ioActionFlags, const AudioTimeStamp &inTimeStamp, UInt32 inNumberFrames) SMTG_OVERRIDE;
 	void processOutputEvents (const AudioTimeStamp &inTimeStamp);
 
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 	int GetNumCustomUIComponents () SMTG_OVERRIDE;
 	void GetUIComponentDescs (ComponentDescription* inDescArray) SMTG_OVERRIDE;
+#endif
 
 	ComponentResult GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, UInt32 &outDataSize, Boolean &outWritable) SMTG_OVERRIDE;
 	ComponentResult GetProperty (AudioUnitPropertyID inID, AudioUnitScope inScope, AudioUnitElement inElement, void* outData) SMTG_OVERRIDE;
@@ -202,11 +206,13 @@ public:
 	//---MusicDeviceBase-------------------------
 	ComponentResult StartNote (MusicDeviceInstrumentID inInstrument, MusicDeviceGroupID inGroupID, NoteInstanceID* outNoteInstanceID, UInt32 inOffsetSampleFrame, const MusicDeviceNoteParams &inParams) SMTG_OVERRIDE;
 	ComponentResult StopNote (MusicDeviceGroupID inGroupID, NoteInstanceID inNoteInstanceID, UInt32 inOffsetSampleFrame) SMTG_OVERRIDE;
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 	OSStatus GetInstrumentCount (UInt32 &outInstCount) const SMTG_OVERRIDE;
-
+#endif
 	//---AUMIDIBase------------------------------
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 	OSStatus HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8	data1, UInt8 data2, UInt32 inStartFrame) SMTG_OVERRIDE;
-	
+#endif
 	//---custom----------------------------------
 	void setControllerParameter (ParamID pid, ParamValue value);
 

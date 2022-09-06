@@ -109,7 +109,7 @@ public:
 protected:
 	ViewRect rect;
 	void* systemWindow {nullptr};
-	IPlugFrame* plugFrame {nullptr};
+	IPtr<IPlugFrame> plugFrame;
 };
 
 } // namespace

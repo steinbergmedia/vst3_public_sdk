@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2021, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -193,7 +193,7 @@ END_FACTORY
 
 // clang-format off
 #define BEGIN_FACTORY_DEF(company, url, email, noClasses)                                     \
-	struct FactoryData                                                                        \
+	struct SMTG_HIDDEN_SYMBOL FactoryData                                                     \
 	{                                                                                         \
 		static constexpr Steinberg::PFactoryInfo factoryInfo = {                              \
 		    company, url, email, Steinberg::PFactoryInfo::kUnicode};                          \

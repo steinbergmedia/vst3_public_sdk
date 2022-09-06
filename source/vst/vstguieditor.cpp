@@ -257,6 +257,8 @@ CMessageResult VSTGUIEditor::notify (CBaseObject* /*sender*/, const char* messag
 	return kMessageUnknown;
 }
 
+#if VSTGUI_NEWER_THAN_4_10
+//------------------------------------------------------------------------
 static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifiers)
 {
 	KeyboardEvent event;
@@ -278,6 +280,7 @@ static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifi
 	}
 	return event;
 }
+#endif
 
 //------------------------------------------------------------------------
 tresult PLUGIN_API VSTGUIEditor::onKeyDown (char16 key, int16 keyMsg, int16 modifiers)

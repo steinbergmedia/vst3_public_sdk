@@ -1,5 +1,11 @@
 if(SMTG_MAC)
     if (XCODE AND SMTG_COREAUDIO_SDK_PATH)
+
+		string(RANDOM LENGTH 20 CocoaId)
+		file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/au/aucocoaclassprefix.h"
+			CONTENT "#define SMTG_AUCocoaUIBase_CLASS_NAME SMTG_AUCocoaUIBase_${CocoaId}"
+		)
+
         set(target auwrapper)
         set(${target}_sources
             aucarbonview.mm
@@ -21,6 +27,10 @@ if(SMTG_MAC)
             PROPERTIES
                 ${SDK_IDE_LIBS_FOLDER}
         )
+		target_compile_features(${target}
+			PUBLIC
+				cxx_std_17
+		)
 
         target_link_libraries(${target} 
             PRIVATE 
@@ -35,10 +45,8 @@ if(SMTG_MAC)
         target_include_directories(${target}
             PRIVATE 
                 "${SMTG_COREAUDIO_SDK_PATH}/**"
+                "${CMAKE_CURRENT_BINARY_DIR}/au/"
         )
-        add_custom_command(TARGET ${target}
-            PRE_BUILD COMMAND 
-                /usr/bin/ruby "./generateCocoaClassNamePrefix.rb" "${CMAKE_CURRENT_LIST_DIR}" WORKING_DIRECTORY "${CMAKE_CURRENT_LIST_DIR}")
     else()
         message("[SMTG] * To enable building the AudioUnit wrapper, you need to use the Xcode generator and set SMTG_COREAUDIO_SDK_PATH to the path of your installation of the CoreAudio SDK!")
     endif(XCODE AND SMTG_COREAUDIO_SDK_PATH)

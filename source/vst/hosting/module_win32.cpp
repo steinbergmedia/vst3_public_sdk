@@ -154,11 +154,18 @@ public:
 			{
 				auto lastError = GetLastError ();
 				LPVOID lpMessageBuffer;
-				FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-				                nullptr, lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-				                (LPSTR)&lpMessageBuffer, 0, nullptr);
-				errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
-				LocalFree (lpMessageBuffer);
+				if (FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+				                    nullptr, lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+				                    (LPSTR)&lpMessageBuffer, 0, nullptr) > 0)
+				{
+					errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
+					LocalFree (lpMessageBuffer);
+				}
+				else
+				{
+					errorDescription =
+					    "LoadLibrary failed with error number : " + std::to_string (lastError);
+				}
 
 				return false;
 			}
@@ -236,7 +243,7 @@ Optional<std::string> getKnownFolder (REFKNOWNFOLDERID folderID)
 	PWSTR wideStr {};
 	if (FAILED (SHGetKnownFolderPath (folderID, 0, nullptr, &wideStr)))
 		return {};
-	return StringConvert::convert (wideStr);
+	return StringConvert::convert (Steinberg::wscast (wideStr));
 }
 
 //------------------------------------------------------------------------
@@ -435,7 +442,7 @@ Module::PathList Module::getModulePaths ()
 		filesystem::path p (*knownFolder);
 		p.append ("VST3");
 		findModules (p, list);
-	}	
+	}
 
 	if (auto knownFolder = getKnownFolder (FOLDERID_ProgramFilesCommon))
 	{
@@ -447,7 +454,7 @@ Module::PathList Module::getModulePaths ()
 	// find plug-ins located in VST3 (application folder)
 	WCHAR modulePath[MAX_PATH + 1];
 	GetModuleFileNameW (nullptr, modulePath, MAX_PATH);
-	auto appPath = StringConvert::convert (modulePath);
+	auto appPath = StringConvert::convert (Steinberg::wscast (modulePath));
 	filesystem::path path (appPath);
 	path = path.parent_path ();
 	path = path.append ("VST3");

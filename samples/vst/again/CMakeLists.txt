@@ -103,6 +103,16 @@ elseif(SMTG_WIN)
     )
 endif(SMTG_MAC)
 
+# Add an AUv2 target
+if (SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+	include(SMTG_AddVST3AuV2)
+	smtg_target_add_auv2(again-au
+		BUNDLE_NAME again
+		BUNDLE_IDENTIFIER com.steinberg.vst3plugin.again.audiounit
+		INFO_PLIST_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/resource/au-info.plist
+		VST3_PLUGIN_TARGET again)
+endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+
 if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     set(target again_ios)
     smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${again_sources}")
@@ -113,7 +123,7 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     )
     target_include_directories(${target}
         PUBLIC
-            ${SMTG_VSTGUI_ROOT}/vstgui4
+            ${SMTG_VSTGUI_SOURCE_DIR}
     )
     target_link_libraries(${target} 
         PRIVATE
@@ -145,9 +155,9 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     )
     target_sources(${target} 
         PRIVATE 
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_uidescription.cpp
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/vstgui_ios.mm
-            ${SMTG_VSTGUI_ROOT}/vstgui4/vstgui/plugin-bindings/vst3editor.cpp
+            ${SMTG_VSTGUI_SOURCE_DIR}/vstgui/vstgui_uidescription.cpp
+            ${SMTG_VSTGUI_SOURCE_DIR}/vstgui/vstgui_ios.mm
+            ${SMTG_VSTGUI_SOURCE_DIR}/vstgui/plugin-bindings/vst3editor.cpp
             ${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp
     )
 endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)

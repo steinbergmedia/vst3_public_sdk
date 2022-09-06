@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/multiplugsupport/source/plugcids.h
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plugcids.h
 // Created by  : Steinberg, 12/2007
-// Description : define the class IDs for multiplugsupport
+// Description : define the class IDs
 //
 //-----------------------------------------------------------------------------
 // LICENSE

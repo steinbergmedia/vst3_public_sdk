@@ -2,9 +2,9 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again/source/plug.h
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plug.h
 // Created by  : Steinberg, 04/2005
-// Description : Plug-in Example for VST SDK 3.x using IPluginCompatibility       
+// Description : Plug-in Example for VST SDK 3.x    
 //
 //-----------------------------------------------------------------------------
 // LICENSE

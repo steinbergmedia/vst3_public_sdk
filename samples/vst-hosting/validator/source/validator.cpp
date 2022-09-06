@@ -225,6 +225,7 @@ Validator::Validator (int argc, char* argv[]) : argc (argc), argv (argv)
 {
 	infoStream = &std::cout;
 	errorStream = &std::cout;
+	errorStream->setf (std::ios::unitbuf);
 
 	mPlugInterfaceSupport = owned (NEW PlugInterfaceSupport);
 

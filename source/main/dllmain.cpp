@@ -36,17 +36,12 @@
 //-----------------------------------------------------------------------------
 
 #include "pluginterfaces/base/ftypes.h"
+#include "pluginterfaces/base/fstrdefs.h"
 
 #include <windows.h>
 
 #if defined(_MSC_VER) && defined(DEVELOPMENT)
 #include <crtdbg.h>
-#endif
-
-#ifdef UNICODE
-#define tstrrchr wcsrchr
-#else
-#define tstrrchr strrchr
 #endif
 
 //------------------------------------------------------------------------
@@ -109,9 +104,9 @@ BOOL WINAPI DllMain (HINSTANCE hInst, DWORD dwReason, LPVOID /*lpvReserved*/)
 		moduleHandle = ghInst = hInst;
 
 		// gets the path of the component
-		if (GetModuleFileName (ghInst, gPath, MAX_PATH) > 0)
+		if (GetModuleFileName (ghInst, Steinberg::wscast (gPath), MAX_PATH) > 0)
 		{
-			Steinberg::tchar* bkslash = tstrrchr (gPath, TEXT ('\\'));
+			Steinberg::tchar* bkslash = Steinberg::wscast (wcsrchr (Steinberg::wscast (gPath), L'\\'));
 			if (bkslash)
 				gPath[bkslash - gPath + 1] = 0;
 		}

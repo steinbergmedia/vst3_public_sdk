@@ -127,7 +127,8 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE _hInstance)
 	cmdArgStrings.reserve (numArgs);
 	for (int i = 0; i < numArgs; ++i)
 	{
-		cmdArgStrings.push_back (VST3::StringConvert::convert (cmdArgsArray[i]));
+		cmdArgStrings.push_back (
+		    VST3::StringConvert::convert (Steinberg::wscast (cmdArgsArray[i])));
 	}
 	LocalFree (cmdArgsArray);
 
@@ -161,17 +162,13 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE _hInstance)
 int APIENTRY wWinMain (_In_ HINSTANCE instance, _In_opt_ HINSTANCE /*prevInstance*/,
                        _In_ LPWSTR lpCmdLine, _In_ int /*nCmdShow*/)
 {
-#if !SMTG_OS_WINDOWS_ARM
 	HRESULT hr = CoInitialize (nullptr);
 	if (FAILED (hr))
 		return FALSE;
-#endif
 
 	Steinberg::Vst::EditorHost::Platform::instance ().run (lpCmdLine, instance);
 
-#if !SMTG_OS_WINDOWS_ARM
 	CoUninitialize ();
-#endif
 
 	return 0;
 }

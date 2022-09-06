@@ -366,7 +366,7 @@ struct ModuleInfoJsonParser
 		{
 			auto obj = el.value ().asObject ();
 			if (!obj)
-				throw parse_error ("Expext Object here", el.value ());
+				throw parse_error ("Expect Object here", el.value ());
 
 			ModuleInfo::Compatibility compat;
 			for (const auto& objEl : *obj)
@@ -378,7 +378,7 @@ struct ModuleInfoJsonParser
 				{
 					auto oldElArr = objEl.value ().asArray ();
 					if (!oldElArr)
-						throw parse_error ("Expext Array here", objEl.value ());
+						throw parse_error ("Expect Array here", objEl.value ());
 					for (const auto& old : *oldElArr)
 					{
 						compat.oldCID.emplace_back (getText (old.value ()));
@@ -386,9 +386,9 @@ struct ModuleInfoJsonParser
 				}
 			}
 			if (compat.newCID.empty ())
-				throw parse_error ("Expext New CID here", el.value ());
+				throw parse_error ("Expect New CID here", el.value ());
 			if (compat.oldCID.empty ())
-				throw parse_error ("Expext Old CID here", el.value ());
+				throw parse_error ("Expect Old CID here", el.value ());
 			info.compatibility.emplace_back (std::move (compat));
 		}
 	}

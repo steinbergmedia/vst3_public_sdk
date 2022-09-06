@@ -99,6 +99,8 @@ private:
 			return window->queryInterface (_iid, obj);
 		return kNoInterface;
 	}
+	// we do not care here of the ref-counting. A plug-in call of release should not destroy this
+	// class!
 	uint32 PLUGIN_API addRef () override { return 1000; }
 	uint32 PLUGIN_API release () override { return 1000; }
 
@@ -137,6 +139,8 @@ private:
 	{
 		return kNoInterface;
 	}
+	// we do not care here of the ref-counting. A plug-in call of release should not destroy this
+	// class!
 	uint32 PLUGIN_API addRef () override { return 1000; }
 	uint32 PLUGIN_API release () override { return 1000; }
 };
@@ -174,6 +178,8 @@ void App::openEditor (const std::string& path, VST3::Optional<VST3::UID> effectI
 					continue;
 			}
 			plugProvider = owned (new PlugProvider (factory, classInfo, true));
+			if (plugProvider->initialize () == false)
+				plugProvider = nullptr;
 			break;
 		}
 	}

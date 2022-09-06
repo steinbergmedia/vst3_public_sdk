@@ -60,16 +60,22 @@ PlugProvider::PlugProvider (const PluginFactory& factory, ClassInfo classInfo, b
 , classInfo (classInfo)
 , plugIsGlobal (plugIsGlobal)
 {
-	if (plugIsGlobal)
-	{
-		setupPlugin (PluginContextFactory::instance ().getPluginContext ());
-	}
 }
 
 //------------------------------------------------------------------------
 PlugProvider::~PlugProvider ()
 {
 	terminatePlugin ();
+}
+
+//------------------------------------------------------------------------
+bool PlugProvider::initialize ()
+{
+	if (plugIsGlobal)
+	{
+		return setupPlugin (PluginContextFactory::instance ().getPluginContext ());
+	}
+	return true;
 }
 
 //------------------------------------------------------------------------
@@ -141,7 +147,7 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 
 		// try to create the controller part from the component
 		// (for Plug-ins which did not succeed to separate component from controller)
-		if (component->queryInterface (IEditController::iid, (void**)&controller) != kResultTrue)
+		if (res && component->queryInterface (IEditController::iid, (void**)&controller) != kResultTrue)
 		{
 			TUID controllerCID;
 
@@ -155,6 +161,15 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 					// initialize the component with our context
 					res = (controller->initialize (hostContext) == kResultOk);
 				}
+			}
+		}
+		if (!res)
+		{
+			component = nullptr;
+			controller = nullptr;
+			if (errorStream)
+			{
+				*errorStream << "Failed to initialize instance of " << classInfo.name () << "!\n";
 			}
 		}
 	}

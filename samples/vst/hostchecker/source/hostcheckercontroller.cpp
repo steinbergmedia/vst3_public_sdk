@@ -146,11 +146,10 @@ bool PLUGIN_API MyVST3Editor::open (void* parent, const PlatformType& type)
 		hostController->addFeatureLog (kLogIdIPlugViewmultipleAttachSupported);
 
 	bool res = VST3Editor::open (parent, type);
-	auto hcController = dynamic_cast<HostCheckerController*> (controller);
-	if (hcController)
+	if (hostController)
 	{
 		ViewRect rect2;
-		if (hcController->getSavedSize (rect2))
+		if (hostController->getSavedSize (rect2))
 			onSize (&rect2);
 	}
 	inOpen = false;
@@ -458,8 +457,8 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		unit = new Unit (unitInfo);
 		addUnit (unit);
 
-		parameters.addParameter (STR16 ("Processing Load"), STR16 (""), 0, 0, ParameterInfo::kCanAutomate,
-		                         kProcessingLoadTag);
+		parameters.addParameter (STR16 ("Processing Load"), STR16 (""), 0, 0,
+		                         ParameterInfo::kCanAutomate, kProcessingLoadTag);
 		parameters.addParameter (STR16 ("Generate Peaks"), STR16 (""), 0, 0,
 		                         ParameterInfo::kNoFlags, kGeneratePeaksTag);
 		parameters.addParameter (new RangeParameter (
@@ -506,6 +505,64 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 			    ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden, kProcessWarnTag + i);
 		}
 
+		auto addUnitFunc = [=] (const int32 unitId, const int32 parentUnitId, const int32 idx,
+		                        const Steinberg::tchar* name) -> bool {
+			UnitInfo unitInfo;
+			unitInfo.id = unitId;
+			unitInfo.parentUnitId = parentUnitId; // attached to the root unit
+
+			String128 index;
+			Steinberg::UString (index, 128).printInt (idx);
+			Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name))
+			    .assign (name)
+			    .append (index);
+			unitInfo.programListId = kNoProgramListId;
+			auto unit = new Unit (unitInfo);
+			return addUnit (unit);
+		};
+
+		auto addParamFunc = [=] (const int32 paramId, const int32 parentUnitId, const int32 idx,
+		                         const Steinberg::tchar* name) -> void {
+
+			String128 index;
+			Steinberg::UString (index, 128).printInt (idx);
+			String128 _name;
+			Steinberg::UString (_name, 128).assign (name).append (index);
+
+			parameters.addParameter (_name, STR16 (""), 0, 0, ParameterInfo::kNoFlags, paramId,
+			                         parentUnitId);
+		};
+
+		int32 paramTagStart = kParamUnitStructStart;
+		int32 unitIDStart = kUnitParamIdStart;
+		for (uint32 i = 0; i < HostChecker::kParamUnitStruct1Count; i++)
+		{
+			int32 parentUnitId = unitIDStart;
+			addUnitFunc (unitIDStart, kRootUnitId, i + 1, STR16 ("L1-Unit "));
+			for (uint32 k = 0; k < 2; k++)
+				addParamFunc (paramTagStart++, parentUnitId, k + 1, STR16 ("L1-Param "));
+
+			unitIDStart++;
+
+			for (uint32 j = 0; j < HostChecker::kParamUnitStruct2Count; j++)
+			{
+				int32 parentUnit2Id = unitIDStart;
+				addUnitFunc (unitIDStart, parentUnitId, j + 1, STR16 ("L2-Unit "));
+
+				for (uint32 k = 0; k < 2; k++)
+					addParamFunc (paramTagStart++, parentUnit2Id, k + 1, STR16 ("L2-Param "));
+				unitIDStart++;
+
+				for (uint32 l = 0; l < HostChecker::kParamUnitStruct3Count; l++)
+				{
+					addUnitFunc (unitIDStart, parentUnit2Id, l + 1, STR16 ("L3-Unit "));
+
+					for (uint32 k = 0; k < 2; k++)
+						addParamFunc (paramTagStart++, unitIDStart, k + 1, STR16 ("L3-Param "));
+					unitIDStart++;
+				}
+			}
+		}
 		mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
 	}
 
@@ -1014,10 +1071,10 @@ CView* HostCheckerController::createCustomView (UTF8StringPtr name,
 			return item->second;
 		}
 
-		auto dataBrowser = VSTGUI::owned (new CDataBrowser (
-			CRect (0, 0, 100, 100), mDataSource,
-			CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
-			CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
+		auto dataBrowser = VSTGUI::owned (
+		    new CDataBrowser (CRect (0, 0, 100, 100), mDataSource,
+		                      CDataBrowser::kDrawRowLines | CDataBrowser::kDrawColumnLines |
+		                          CDataBrowser::kDrawHeader | CDataBrowser::kVerticalScrollbar));
 
 		mDataBrowserMap.emplace (editor, dataBrowser);
 		dataBrowser->remember ();

@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again/source/again.cpp
+// Filename    : public.sdk/samples/vst/note_expression_text/source/plug.cpp
 // Created by  : Steinberg, 04/2005
 // Description : Plug Example for VST SDK 3.0
 //

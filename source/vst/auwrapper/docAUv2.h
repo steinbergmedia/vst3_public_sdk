@@ -41,35 +41,34 @@
 \tableofcontents
 
 \brief
-Helper Class wrapping a <b>VST 3 plug-in</b> to a Audio Unit v2 plug-in
+Helper Class wrapping a <b>VST 3 plug-in</b> to an Audio Unit v2 plug-in
 
 ***************************
 \section AUIntroduction Introduction
 ***************************
-The VST 3 SDK comes with an AudioUnit wrapper, which can wrap one VST 3 Audio Processor and Edit Controller as an AudioUnit effect/instrument.
+The VST 3 SDK comes with an AudioUnit wrapper, which wraps one VST 3 Audio Processor and Edit Controller as an AudioUnit effect/instrument.
 
-The wrapper is a small dynamic library which loads the <b>VST 3 plug-in</b>.
-As AudioUnits store some important information in their resource fork, this library must be compiled for every <b>VST 3 plug-in</b>.
+The wrapper is a small dynamic library which loads the <b>VST 3 plug-in</b>. No extra code is needed to be written.
 \n
 
 ***************************
 \section AUhowdoesitwork How does it work?
 ***************************
-- build the auwrapper project (public.sdk/source/vst/auwrapper/auwrapper.xcodeproj)
-- create a copy of the again AU wrapper example project directory (public.sdk/source/vst/auwrapper/again/)
-- rename the copy to your needs
-- edit the target settings of the project and change
-	- Product Name
-	- Library search path so that it points to the directory where libauwrapper.a exists
-	- architecture setting so that it only includes architectures the <b>VST 3 plug-in</b> supports
+to add an AUv2 to your VST3 plug-in you have to use cmake and call the cmake function:
 
-- search in the project for AUWRAPPER_CHANGE and change the settings to your needs, especially in :
-	- edit audiounitconfig.h see comments there
-	- edit Info.plist see comments there
-- edit the "Make Links Script" for easier debugging/development
-- build your project
-- done... that is all!
+@code
+	#------------------------------------------------------------------------
+	# Add an AudioUnit Version 2 target for macOS
+	# @param target                 target name
+	# @param bundle_name			name of the bundle
+	# @param bundle_identifier		bundle identifier
+	# @param info_plist_template	the info.plist file containing the needed AudioUnit keys
+	# @param vst3_plugin_target     the vst3 plugin target
+	#------------------------------------------------------------------------
+	function(smtg_target_add_auv2 target bundle_name bundle_identifier info_plist_template vst3_plugin_target)
+@endcode
 
-For the release version, you must place a copy or an alias of your <b>VST 3 plug-in</b> in the resource folder of the bundle named "plugin.vst3"
+This adds a new target to your project which builds and setup the AudioUnit. After successfully building the AU should be copied to your 
+user Library folder (Library/Audio/Components/) and ready to be used.
 
 */

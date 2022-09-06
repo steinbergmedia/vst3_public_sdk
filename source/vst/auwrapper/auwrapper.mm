@@ -184,13 +184,13 @@ public:
 		return isLoaded ();
 	}
 
-	static VST3DynLibrary* gInstance;
+	static IPtr<VST3DynLibrary> gInstance;
 
 protected:
 	bool bundleEntryCalled;
 };
 
-VST3DynLibrary* VST3DynLibrary::gInstance = 0;
+IPtr<VST3DynLibrary> VST3DynLibrary::gInstance; // keep alive until component unloaded
 
 namespace Vst {
 
@@ -711,6 +711,7 @@ IPluginFactory* AUWrapper::getFactory ()
 
 //------------------------------------------------------------------------
 // MARK: ComponentBase
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 ComponentResult AUWrapper::Version ()
 {
 	AutoreleasePool ap;
@@ -724,6 +725,7 @@ ComponentResult AUWrapper::Version ()
 	}
 	return 0xFFFFFFFF;
 }
+#endif
 
 //------------------------------------------------------------------------
 void AUWrapper::PostConstructor ()
@@ -974,6 +976,31 @@ AUElement* AUWrapper::CreateElement (AudioUnitScope scope, AudioUnitElement elem
 //------------------------------------------------------------------------
 UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 {
+	/*
+		This code expects that the Info.plist contains an array with key
+		<key>AudioUnit SupportedNumChannels</key>
+		that contains the supported AUChannelInfo informations like:
+		<array>
+			<dict>
+				<key>Outputs</key>
+				<string>2</string>
+				<key>Inputs</key>
+				<string>2</string>
+			</dict>
+			<dict>
+				<key>Outputs</key>
+				<string>0</string>
+				<key>Inputs</key>
+				<string>1</string>
+			</dict>
+			<dict>
+				<key>Outputs</key>
+				<string>1</string>
+				<key>Inputs</key>
+				<string>1</string>
+			</dict>
+		</array>
+	*/
 	static UInt32 numChannelInfos = 0;
 	static bool once = true;
 	if (once && gBundleRef)
@@ -1730,12 +1757,9 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			AutoreleasePool ap;
 
 			CFStringRef className = (CFStringRef)[[NSString alloc]
-			    initWithCString:SMTG_MAKE_STRING (SMTG_AU_PLUGIN_NAMESPACE (SMTGAUPluginCocoaView))
+			    initWithCString:SMTG_MAKE_STRING (SMTG_AUCocoaUIBase_CLASS_NAME)
 			           encoding:NSUTF8StringEncoding];
-			const char* image = class_getImageName (objc_getClass (
-			    SMTG_MAKE_STRING (SMTG_AU_PLUGIN_NAMESPACE (SMTGAUPluginCocoaView))));
-			CFBundleRef bundle = GetBundleFromExecutable (image);
-
+			CFBundleRef bundle = GetCurrentBundle ();
 			CFURLRef url = CFBundleCopyBundleURL (bundle);
 			CFRelease (bundle);
 			AudioUnitCocoaViewInfo cocoaInfo = {url, {className}};
@@ -1776,7 +1800,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 		{
 			if (VST3DynLibrary::gInstance)
 			{
-				TPtrInt ptr = (TPtrInt)VST3DynLibrary::gInstance;
+				TPtrInt ptr = (TPtrInt)VST3DynLibrary::gInstance.get();
 				*((TPtrInt*)outData) = ptr;
 				return noErr;
 			}
@@ -1788,9 +1812,11 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 	return AUWRAPPER_BASE_CLASS::GetProperty (inID, inScope, inElement, outData);
 }
 
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 //------------------------------------------------------------------------
 int AUWrapper::GetNumCustomUIComponents ()
 {
+#if !__LP64__
 	if (editController)
 	{
 		static int numUIComponents = 0;
@@ -1810,6 +1836,7 @@ int AUWrapper::GetNumCustomUIComponents ()
 		}
 		return numUIComponents;
 	}
+#endif
 	return 0;
 }
 
@@ -1852,6 +1879,7 @@ void AUWrapper::GetUIComponentDescs (ComponentDescription* inDescArray)
 	}
 #endif
 }
+#endif // #if !CA_USE_AUDIO_PLUGIN_ONLY
 
 //------------------------------------------------------------------------
 Float64 AUWrapper::GetLatency ()
@@ -1917,13 +1945,16 @@ ComponentResult AUWrapper::StopNote (MusicDeviceGroupID inGroupID, NoteInstanceI
 	return noErr;
 }
 
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 //--------------------------------------------------------------------------------------------
 OSStatus AUWrapper::GetInstrumentCount (UInt32& outInstCount) const
 {
 	outInstCount = 1;
 	return noErr;
 }
+#endif
 
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 //------------------------------------------------------------------------
 // MARK: AUMIDIBase
 //------------------------------------------------------------------------
@@ -2009,6 +2040,7 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 	}
 	return result;
 }
+#endif
 
 //------------------------------------------------------------------------
 // MARK: IComponentHandler
@@ -2537,20 +2569,29 @@ public:
 CleanupMemory _gCleanupMemory;
 CleanupMemory* gCleanupMemory = &_gCleanupMemory;
 
-#if __MAC_OS_X_VERSION_MAX_ALLOWED == 1060 // if compiling against the 10.6 sdk
-//--------------------------------------------------------------------------------------------------------------
-//MARK: COMPONENT_ENTRY(AUWrapper)
-//--------------------------------------------------------------------------------------------------------------
-extern "C" {
-ComponentResult AUWrapperEntry (ComponentParameters* params, AUWrapper* obj);
-__attribute__ ((visibility ("default"))) ComponentResult AUWrapperEntry (
-    ComponentParameters* params, AUWrapper* obj)
+static OSStatus AUWrapperMethodSetProperty (void* self, AudioUnitPropertyID inID,
+                                            AudioUnitScope inScope, AudioUnitElement inElement,
+                                            const void* inData, UInt32 inDataSize)
 {
-	return ComponentEntryPoint<AUWrapper>::Dispatch (params, obj);
-}
+	auto plugInstance = reinterpret_cast<AudioComponentPlugInInstance*> (self);
+	auto auwrapper = reinterpret_cast<AUWrapper*> (&plugInstance->mInstanceStorage);
+	if (inData && inDataSize && inID == kAudioUnitProperty_ClassInfoFromDocument)
+	{
+		if (inDataSize != sizeof (CFPropertyListRef*))
+			return kAudioUnitErr_InvalidPropertyValue;
+		if (inScope != kAudioUnitScope_Global)
+			return kAudioUnitErr_InvalidScope;
+		return auwrapper->restoreState (*(CFPropertyListRef*)inData, true);
+	}
+	OSStatus result;
+	try
+	{
+		result = auwrapper->DispatchSetProperty (inID, inScope, inElement, inData, inDataSize);
+	}
+	COMPONENT_CATCH
+	return result;
 }
 
-#else
 struct AUWrapperLookup
 {
 	static AudioComponentMethod Lookup (SInt16 selector)
@@ -2558,6 +2599,9 @@ struct AUWrapperLookup
 		// ProcessBufferLists not supported, so don't try any of the process methods
 		if (selector == kAudioUnitProcessSelect || selector == kAudioUnitProcessMultipleSelect)
 			return NULL;
+		if (selector == kAudioUnitSetPropertySelect)
+			return (AudioComponentMethod)AUWrapperMethodSetProperty;
+
 		AudioComponentMethod method = AUBaseProcessLookup::Lookup (selector);
 		if (method)
 			return method;
@@ -2597,7 +2641,6 @@ __attribute__ ((visibility ("default"))) ComponentResult AUWrapperEntry (
 	return ComponentEntryPoint<AUWrapper>::Dispatch (params, obj);
 }
 }
-#endif
 #endif
 
 //------------------------------------------------------------------------

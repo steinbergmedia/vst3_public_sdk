@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again/source/PlugController.cpp
+// Filename    : public.sdk/samples/vst/note_expression_text/source/PlugController.cpp
 // Created by  : Steinberg, 04/2005
 // Description : Plug Controller Example for VST 3
 //
@@ -131,7 +131,7 @@ tresult PLUGIN_API PlugController::notify (IMessage* message)
 	if (!message)
 		return kInvalidArgument;
 
-	if (!strcmp (message->getMessageID (), "TextMessage") && mTextLabel)
+	if (strcmp (message->getMessageID (), "TextMessage") == 0 && mTextLabel)
 	{
 		TChar string[256] = {0};
 		if (message->getAttributes ()->getString ("Text", string,

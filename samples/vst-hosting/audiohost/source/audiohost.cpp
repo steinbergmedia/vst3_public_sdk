@@ -40,6 +40,7 @@
 #include "public.sdk/source/vst/utility/stringconvert.h"
 #include "base/source/fcommandline.h"
 #include "pluginterfaces/base/funknown.h"
+#include "pluginterfaces/base/fstrdefs.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
@@ -150,7 +151,7 @@ int wmain (int argc, wchar_t* argv[])
 {
 	std::vector<std::string> cmdArgs;
 	for (int i = 1; i < argc; ++i)
-		cmdArgs.push_back (VST3::StringConvert::convert (argv[i]));
+		cmdArgs.push_back (VST3::StringConvert::convert (Steinberg::wscast (argv[i])));
 
 	Steinberg::Vst::AudioHost::gInit.app->init (cmdArgs);
 
