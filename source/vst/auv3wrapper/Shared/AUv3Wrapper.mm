@@ -1504,7 +1504,7 @@ using namespace Vst;
 			{
 				const auto& str = parameterGroups.at (i);
 				if (str == fullParamName)
-					break;
+					return i;
 
 				++groupIdx;
 			}
