@@ -42,3 +42,6 @@ PRODUCT_NAME = auwrapper
 HEADER_SEARCH_PATHS = ../../../.. $(DEVELOPER_DIR)/Examples/CoreAudio/** $(DEVELOPER_DIR)/Extras/CoreAudio/** $(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/AUViewBase/** ../../../../external.apple.coreaudio/**
 GCC_PREFIX_HEADER = auwrapper_prefix.pch
 GCC_PRECOMPILE_PREFIX_HEADER = YES
+
+CLANG_CXX_LANGUAGE_STANDARD = c++17
+CLANG_CXX_LIBRARY = libc++

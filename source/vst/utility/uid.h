@@ -201,13 +201,13 @@ inline std::string UID::toString (bool comFormat) const noexcept
 		const auto& g = reinterpret_cast<const GUID*> (_data);
 
 		char tmp[21] {};
-		sprintf (tmp, "%08X%04X%04X", g->Data1, g->Data2, g->Data3);
+		snprintf (tmp, 21, "%08X%04X%04X", g->Data1, g->Data2, g->Data3);
 		result = tmp;
 
 		for (uint32_t i = 0; i < 8; ++i)
 		{
 			char s[3] {};
-			sprintf (s, "%02X", g->Data4[i]);
+			snprintf (s, 3, "%02X", g->Data4[i]);
 			result += s;
 		}
 	}
@@ -216,7 +216,7 @@ inline std::string UID::toString (bool comFormat) const noexcept
 		for (uint32_t i = 0; i < 16; ++i)
 		{
 			char s[3] {};
-			sprintf (s, "%02X", static_cast<uint8_t> (_data[i]));
+			snprintf (s, 3, "%02X", static_cast<uint8_t> (_data[i]));
 			result += s;
 		}
 	}

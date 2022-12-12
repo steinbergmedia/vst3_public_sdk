@@ -625,7 +625,7 @@ tresult PLUGIN_API HostCheckerController::terminate ()
 }
 
 //-----------------------------------------------------------------------------
-float HostCheckerController::updateScoring (int32 iD)
+float HostCheckerController::updateScoring (int64 iD)
 {
 	float score = 0;
 	float total = 0;
@@ -1158,7 +1158,7 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 		int64 count;
 		if (message->getAttributes ()->getInt ("Count", count) != kResultOk)
 			return kResultFalse;
-		addFeatureLog (id, count, false);
+		addFeatureLog (id, static_cast<int32> (count), false);
 	}
 
 	if (FIDStringsEqual (message->getMessageID (), "Latency"))
@@ -1174,7 +1174,7 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 }
 
 //-----------------------------------------------------------------------------
-void HostCheckerController::addFeatureLog (int32 iD, int32 count, bool addToLastCount)
+void HostCheckerController::addFeatureLog (int64 iD, int32 count, bool addToLastCount)
 {
 	updateScoring (iD);
 
@@ -1188,7 +1188,7 @@ void HostCheckerController::addFeatureLog (int32 iD, int32 count, bool addToLast
 	if (mDataSource->updateLog (logEvt, addToLastCount))
 	{
 		for (auto& item : mDataBrowserMap)
-			item.second->invalidateRow (logEvt.id);
+			item.second->invalidateRow (static_cast<int32_t> (logEvt.id));
 	}
 }
 
@@ -1421,7 +1421,7 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionStringByValue (
 	if (id == kVolumeTypeID)
 	{
 		char text[32];
-		sprintf (text, "%d", (int32) (100 * valueNormalized + 0.5));
+		snprintf (text, 32, "%d", (int32) (100 * valueNormalized + 0.5));
 		Steinberg::UString (string, 128).fromAscii (text);
 
 		return kResultTrue;

@@ -74,9 +74,8 @@ if(SMTG_ADD_VST3_HOSTING_SAMPLES)
         endif(MSVC)
         if(MINGW)
             # It causes the UNICODE preprocessor macro to be predefined, and chooses Unicode-capable runtime startup code.
-            set_target_properties(${target}
-                PROPERTIES
-                    LINK_FLAGS -municode
+            set(APP_PROPERTIES
+                   LINK_FLAGS -municode
             )
         endif(MINGW)
     endif(SMTG_MAC)

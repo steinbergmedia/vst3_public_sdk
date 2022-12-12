@@ -162,7 +162,7 @@ public:
 	{
 		struct ImageDesc
 		{
-			double scaleFactor;
+			double scaleFactor {1.};
 			std::string path;
 		};
 		UID uid;

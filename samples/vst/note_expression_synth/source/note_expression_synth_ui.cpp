@@ -400,8 +400,10 @@ tresult PLUGIN_API ControllerWithUI::initialize (FUnknown* context)
 		if (addEnableMPE)
 
 		{
-			parameters.addParameter (USTRING ("Enable MPE"), nullptr, 1, 0,
-			                         ParameterInfo::kCanAutomate, kParamEnableMPE);
+			auto param = new StringListParameter (USTRING ("Enable MPE"), kParamEnableMPE);
+			param->appendString (STR ("YES"));
+			param->appendString (STR ("NO"));
+			parameters.addParameter (param);
 		}
 	}
 	return result;

@@ -559,7 +559,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			if ((*iter).fromProcessor && (*iter).count > 0)
 			{
 				int64 id = (*iter).id;
-				int32 offset = id / HostChecker::kParamWarnBitCount;
+				int64 offset = id / HostChecker::kParamWarnBitCount;
 				id = id % HostChecker::kParamWarnBitCount;
 				if (offset >= HostChecker::kParamWarnCount)
 				{
@@ -667,7 +667,7 @@ tresult PLUGIN_API HostCheckerProcessor::notify (IMessage* message)
 		int64 paramId = -1;
 		if (message->getAttributes ()->getInt ("ID", paramId) == kResultOk)
 		{
-			mHostCheck.addParameter (paramId);
+			mHostCheck.addParameter (static_cast<ParamID> (paramId));
 		}
 	}
 
@@ -880,7 +880,7 @@ tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 	streamer.writeFloat (toSave);
 	streamer.writeInt32u (mLatency);
 	streamer.writeInt32u (mBypass ? 1 : 0);
-	streamer.writeFloat  (mProcessingLoad);
+	streamer.writeFloat (mProcessingLoad);
 	return kResultOk;
 }
 

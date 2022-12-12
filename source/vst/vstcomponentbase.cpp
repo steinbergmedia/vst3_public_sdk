@@ -159,7 +159,7 @@ tresult ComponentBase::sendTextMessage (const char8* text) const
 }
 
 //------------------------------------------------------------------------
-tresult ComponentBase::sendMessageID (const char* messageID) const
+tresult ComponentBase::sendMessageID (const char8* messageID) const
 {
 	if (auto msg = owned (allocateMessage ()))
 	{

@@ -376,7 +376,7 @@ void Processor::processMIDIInput (const uint8_t* data, size_t dataSize)
 		return;
 	}
 
-	auto status = data[0] & 0xF0;
+	auto status = static_cast<uint8_t> (data[0] & 0xF0);
 	int32_t packetSize = 0;
 	switch (status)
 	{

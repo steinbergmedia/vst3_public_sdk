@@ -1445,22 +1445,9 @@ using namespace Vst;
 			[self setControllerParameter:pi.id value:pi.defaultNormalizedValue];
 
 			// add parameter to the paramArrayWithHierarchy (with hierarchy/AUParameterGroups)
-			// initialize paramArrayWithHierarchy once (if i == 0)
-			if (i == 0)
-			{
-				bool rootInitialized = false;
-				for (auto it = unitInfos.begin (); it != unitInfos.end (); ++it)
-				{
-					[paramArrayWithHierarchy addObject:[[NSMutableArray alloc] init]];
-
-					if (it->second.parentUnitId == -1)
-						rootInitialized = true;
-				}
-
-				if (!rootInitialized)
-					[paramArrayWithHierarchy addObject:[[NSMutableArray alloc] init]];
-			}
-
+			while ([paramArrayWithHierarchy count] <= groupIdx)
+  				[paramArrayWithHierarchy addObject:[[NSMutableArray alloc] init]];
+			
 			NSUInteger groupOfParam = (NSUInteger)groupIdx;
 			[[paramArrayWithHierarchy objectAtIndex:groupOfParam] addObject:sPar];
 			[overviewParams addObject:[NSNumber numberWithUnsignedLongLong:address]];
@@ -1504,7 +1491,10 @@ using namespace Vst;
 			{
 				const auto& str = parameterGroups.at (i);
 				if (str == fullParamName)
+				{
+					insertGroup = false;
 					break;
+				}
 
 				++groupIdx;
 			}

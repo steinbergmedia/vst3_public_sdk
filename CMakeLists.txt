@@ -1,7 +1,7 @@
 
 cmake_minimum_required(VERSION 3.4.3)
 
-project(smtg_public_sdk)
+project(smtg_public_sdk VERSION 1.0.0)
 
 #--sdk common----------------
 if(VST_SDK)

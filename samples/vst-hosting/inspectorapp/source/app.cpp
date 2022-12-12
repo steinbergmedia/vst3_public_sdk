@@ -49,11 +49,7 @@ using namespace VSTGUI::Standalone;
 //------------------------------------------------------------------------
 struct App : Application::DelegateAdapter, WindowListenerAdapter
 {
-	App ()
-	: Application::DelegateAdapter (
-	      {"VST3Inspector", "1.0.0", "com.steinberg.vstsdk.vst3inspector"})
-	{
-	}
+	App () : Application::DelegateAdapter ({"VST3Inspector", "1.0.0", VSTGUI_STANDALONE_APP_URI}) {}
 
 	void finishLaunching () override
 	{

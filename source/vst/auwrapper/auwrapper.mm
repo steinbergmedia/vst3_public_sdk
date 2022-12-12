@@ -2575,21 +2575,33 @@ static OSStatus AUWrapperMethodSetProperty (void* self, AudioUnitPropertyID inID
 {
 	auto plugInstance = reinterpret_cast<AudioComponentPlugInInstance*> (self);
 	auto auwrapper = reinterpret_cast<AUWrapper*> (&plugInstance->mInstanceStorage);
-	if (inData && inDataSize && inID == kAudioUnitProperty_ClassInfoFromDocument)
+	try
 	{
 		if (inDataSize != sizeof (CFPropertyListRef*))
 			return kAudioUnitErr_InvalidPropertyValue;
 		if (inScope != kAudioUnitScope_Global)
 			return kAudioUnitErr_InvalidScope;
-		return auwrapper->restoreState (*(CFPropertyListRef*)inData, true);
+
+		if (inData && inDataSize && inID == kAudioUnitProperty_ClassInfoFromDocument)
+		{
+			ca_require(inDataSize == sizeof(CFPropertyListRef *), InvalidPropertyValue);
+			ca_require(inScope == kAudioUnitScope_Global, InvalidScope);
+			return auwrapper->restoreState(*(CFPropertyListRef *)inData, true);
+		}
+		return auwrapper->DispatchSetProperty(inID, inScope, inElement, inData, inDataSize);
 	}
-	OSStatus result;
-	try
+	catch (OSStatus err)
 	{
-		result = auwrapper->DispatchSetProperty (inID, inScope, inElement, inData, inDataSize);
+		return err;
 	}
-	COMPONENT_CATCH
-	return result;
+	catch (...)
+	{
+		return -1;
+	}
+InvalidScope:
+	return kAudioUnitErr_InvalidScope;
+InvalidPropertyValue:
+	return kAudioUnitErr_InvalidPropertyValue;
 }
 
 struct AUWrapperLookup

@@ -181,7 +181,7 @@ void EventLogDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect& 
 		case kCount:
 		{
 			char txt[32];
-			sprintf (txt, "%" FORMAT_INT64A, logEvent.count);
+			snprintf (txt, 32, "%" FORMAT_INT64A, logEvent.count);
 			cellValue = txt;
 			break;
 		}

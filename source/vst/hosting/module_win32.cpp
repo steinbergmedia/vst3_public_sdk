@@ -38,33 +38,41 @@
 #include "../utility/stringconvert.h"
 #include "module.h"
 
-#include <windows.h>
 #include <shlobj.h>
+#include <windows.h>
 
 #include <algorithm>
 #include <iostream>
 
 #if SMTG_CPP17
+
 #if __has_include(<filesystem>)
 #define USE_FILESYSTEM 1
 #elif __has_include(<experimental/filesystem>)
 #define USE_FILESYSTEM 0
 #endif
-#else
+
+#else // !SMTG_CPP17
+
 #define USE_FILESYSTEM 0
-#endif
+
+#endif // SMTG_CPP17
 
 #if USE_FILESYSTEM == 1
+
 #include <filesystem>
 namespace filesystem = std::filesystem;
-#else
+
+#else // USE_FILESYSTEM == 0
+
 // The <experimental/filesystem> header is deprecated. It is superseded by the C++17 <filesystem>
 // header. You can define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING to silence the
-// warning, otherwise the build will fail in VS2020 16.3.0
+// warning, otherwise the build will fail in VS2019 16.3.0
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
 namespace filesystem = std::experimental::filesystem;
-#endif
+
+#endif // USE_FILESYSTEM
 
 #pragma comment(lib, "Shell32")
 
@@ -78,24 +86,39 @@ using ExitModuleFunc = bool (PLUGIN_API*) ();
 namespace VST3 {
 namespace Hosting {
 
+constexpr unsigned long kIPPathNameMax = 1024;
+
 //------------------------------------------------------------------------
 namespace {
 
-#if SMTG_OS_WINDOWS_ARM
-#define USE_OLE 0
-#if SMTG_PLATFORM_64
-constexpr auto architectureString = "arm_64-win";
-#else
-constexpr auto architectureString = "arm-win";
-#endif
-#else
 #define USE_OLE !USE_FILESYSTEM
+
 #if SMTG_PLATFORM_64
+
+#if SMTG_OS_WINDOWS_ARM
+
+#if SMTG_CPU_ARM_64EC
+constexpr auto architectureString = "arm64ec-win";
+constexpr auto architectureX64String = "x86_64-win";
+#else // !SMTG_CPU_ARM_64EC
+constexpr auto architectureString = "arm64-win";
+#endif // SMTG_CPU_ARM_64EC
+
+constexpr auto architectureArm64XString = "arm64x-win";
+
+#else // !SMTG_OS_WINDOWS_ARM
 constexpr auto architectureString = "x86_64-win";
-#else
+#endif // SMTG_OS_WINDOWS_ARM
+
+#else // !SMTG_PLATFORM_64
+
+#if SMTG_OS_WINDOWS_ARM
+constexpr auto architectureString = "arm-win";
+#else // !SMTG_OS_WINDOWS_ARM
 constexpr auto architectureString = "x86-win";
-#endif
-#endif
+#endif // SMTG_OS_WINDOWS_ARM
+
+#endif // SMTG_PLATFORM_64
 
 #if USE_OLE
 //------------------------------------------------------------------------
@@ -137,39 +160,66 @@ public:
 		}
 	}
 
-	bool load (const std::string& inPath, std::string& errorDescription) override
+	//--- -----------------------------------------------------------------------
+	HINSTANCE loadAsPackage (const std::string& inPath, const char* archString = architectureString)
 	{
 		filesystem::path p (inPath);
 		auto filename = p.filename ();
 		p /= "Contents";
-		p /= architectureString;
+		p /= archString;
 		p /= filename;
 		auto wideStr = StringConvert::convert (p.string ());
-		mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-		if (!mModule)
-		{
-			wideStr = StringConvert::convert (inPath);
-			mModule = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
-			if (!mModule)
-			{
-				auto lastError = GetLastError ();
-				LPVOID lpMessageBuffer;
-				if (FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-				                    nullptr, lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-				                    (LPSTR)&lpMessageBuffer, 0, nullptr) > 0)
-				{
-					errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
-					LocalFree (lpMessageBuffer);
-				}
-				else
-				{
-					errorDescription =
-					    "LoadLibrary failed with error number : " + std::to_string (lastError);
-				}
+		HINSTANCE instance = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+#if SMTG_CPU_ARM_64EC
+		if (instance == nullptr)
+			instance = loadAsPackage (inPath, architectureArm64XString);
+		if (instance == nullptr)
+			instance = loadAsPackage (inPath, architectureX64String);
+#endif
+		return instance;
+	}
 
-				return false;
+	//--- -----------------------------------------------------------------------
+	HINSTANCE loadAsDll (const std::string& inPath, std::string& errorDescription)
+	{
+		auto wideStr = StringConvert::convert (inPath);
+		HINSTANCE instance = LoadLibraryW (reinterpret_cast<LPCWSTR> (wideStr.data ()));
+		if (instance == nullptr)
+		{
+			auto lastError = GetLastError ();
+			LPVOID lpMessageBuffer {nullptr};
+			if (FormatMessageA (FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+			                    nullptr, lastError, MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
+			                    (LPSTR)&lpMessageBuffer, 0, nullptr) > 0)
+			{
+				errorDescription = "LoadLibray failed: " + std::string ((char*)lpMessageBuffer);
+				LocalFree (lpMessageBuffer);
+			}
+			else
+			{
+				errorDescription =
+				    "LoadLibrary failed with error number : " + std::to_string (lastError);
 			}
 		}
+		return instance;
+	}
+
+	//--- -----------------------------------------------------------------------
+	bool load (const std::string& inPath, std::string& errorDescription) override
+	{
+		if (filesystem::is_directory (inPath))
+		{
+			// try as package (bundle)
+			mModule = loadAsPackage (inPath);
+		}
+		else
+		{
+			// try old definition without package
+			mModule = loadAsDll (inPath, errorDescription);
+		}
+		if (mModule == nullptr)
+			return false;
+
 		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
 		if (!factoryProc)
 		{
@@ -197,14 +247,15 @@ public:
 };
 
 //------------------------------------------------------------------------
-bool checkVST3Package (const filesystem::path& p, filesystem::path* result = nullptr)
+bool openVST3Package (const filesystem::path& p, const char* archString,
+                      filesystem::path* result = nullptr)
 {
 	auto path = p;
 	path /= "Contents";
-	path /= architectureString;
+	path /= archString;
 	path /= p.filename ();
-	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (path.c_str ()), GENERIC_READ, FILE_SHARE_READ,
-	                          nullptr, OPEN_EXISTING, 0, nullptr);
+	auto hFile = CreateFileW (reinterpret_cast<LPCWSTR> (path.c_str ()), GENERIC_READ,
+	                          FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFile);
@@ -212,6 +263,22 @@ bool checkVST3Package (const filesystem::path& p, filesystem::path* result = nul
 			*result = path;
 		return true;
 	}
+	return false;
+}
+
+//------------------------------------------------------------------------
+bool checkVST3Package (const filesystem::path& p, filesystem::path* result = nullptr,
+                       const char* archString = architectureString)
+{
+	if (openVST3Package (p, archString, result))
+		return true;
+
+#if SMTG_CPU_ARM_64EC
+	if (openVST3Package (p, architectureArm64XString, result))
+		return true;
+	if (openVST3Package (p, architectureX64String, result))
+		return true;
+#endif
 	return false;
 }
 
@@ -230,8 +297,7 @@ bool isFolderSymbolicLink (const filesystem::path& p)
 		                          FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
 		if (hFile == INVALID_HANDLE_VALUE)
 			return true;
-		else
-			CloseHandle (hFile);
+		CloseHandle (hFile);
 	}
 #endif
 	return false;
@@ -251,8 +317,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 {
 #if USE_FILESYSTEM
 	return {filesystem::read_symlink (p).lexically_normal ()};
-#else
-#if USE_OLE
+#elif USE_OLE
 	Ole::instance ();
 
 	IShellLink* shellLink = nullptr;
@@ -271,14 +336,14 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 	if (!SUCCEEDED (shellLink->Resolve (nullptr, MAKELONG (SLR_NO_UI, 500))))
 		return {};
 
-	WCHAR resolvedPath[MAX_PATH];
-	if (!SUCCEEDED (shellLink->GetPath (resolvedPath, MAX_PATH, nullptr, SLGP_SHORTPATH)))
+	WCHAR resolvedPath[kIPPathNameMax];
+	if (!SUCCEEDED (shellLink->GetPath (resolvedPath, kIPPathNameMax, nullptr, SLGP_SHORTPATH)))
 		return {};
 
 	std::wstring longPath;
-	longPath.resize (MAX_PATH);
+	longPath.resize (kIPPathNameMax);
 	auto numChars =
-	    GetLongPathNameW (resolvedPath, const_cast<wchar_t*> (longPath.data ()), MAX_PATH);
+	    GetLongPathNameW (resolvedPath, const_cast<wchar_t*> (longPath.data ()), kIPPathNameMax);
 	if (!numChars)
 		return {};
 	longPath.resize (numChars);
@@ -288,9 +353,7 @@ VST3::Optional<filesystem::path> resolveShellLink (const filesystem::path& p)
 
 	return {filesystem::path (longPath)};
 #else
-	// TODO for ARM
 	return {};
-#endif
 #endif
 }
 
@@ -316,10 +379,10 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 		const auto& cpExt = finalPath.extension ();
 		if (cpExt == ext)
 		{
-			filesystem::path vstPath (finalPath);
-			if (checkVST3Package (vstPath))
+			filesystem::path result;
+			if (checkVST3Package (finalPath, &result))
 			{
-				pathList.push_back (vstPath.generic_string ());
+				pathList.push_back (result.generic_string ());
 				continue;
 			}
 		}
@@ -339,10 +402,10 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 			if ((p.status ().type () == filesystem::file_type::directory) ||
 			    isFolderSymbolicLink (p))
 			{
-				filesystem::path finalPath (p);
-				if (checkVST3Package (finalPath))
+				filesystem::path result;
+				if (checkVST3Package (p, &result))
 				{
-					pathList.push_back (finalPath.generic_u8string ());
+					pathList.push_back (result.generic_u8string ());
 					continue;
 				}
 				findFilesWithExt (cp, ext, pathList, recursive);
@@ -365,10 +428,10 @@ void findFilesWithExt (const filesystem::path& path, const std::string& ext,
 						if (filesystem::is_directory (*resolvedLink) ||
 						    isFolderSymbolicLink (*resolvedLink))
 						{
-							filesystem::path finalPath (*resolvedLink);
-							if (checkVST3Package (finalPath))
+							filesystem::path result;
+							if (checkVST3Package (*resolvedLink, &result))
 							{
-								pathList.push_back (finalPath.generic_u8string ());
+								pathList.push_back (result.generic_u8string ());
 								continue;
 							}
 							findFilesWithExt (*resolvedLink, ext, pathList, recursive);
@@ -452,8 +515,8 @@ Module::PathList Module::getModulePaths ()
 	}
 
 	// find plug-ins located in VST3 (application folder)
-	WCHAR modulePath[MAX_PATH + 1];
-	GetModuleFileNameW (nullptr, modulePath, MAX_PATH);
+	WCHAR modulePath[kIPPathNameMax];
+	GetModuleFileNameW (nullptr, modulePath, kIPPathNameMax);
 	auto appPath = StringConvert::convert (Steinberg::wscast (modulePath));
 	filesystem::path path (appPath);
 	path = path.parent_path ();
@@ -476,7 +539,9 @@ Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
 		p = p.parent_path ();
 		path = Optional<filesystem::path> {p};
 	}
+
 	*path /= "moduleinfo.json";
+
 	if (filesystem::exists (*path))
 	{
 		return {path->generic_string ()};

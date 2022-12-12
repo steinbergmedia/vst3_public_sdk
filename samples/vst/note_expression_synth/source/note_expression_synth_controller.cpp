@@ -149,7 +149,7 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		param->setPrecision (0);
 		parameters.addParameter (param);
 
-		param = new RangeParameter (USTRING("Velocity To Level"), kParamVelToLevel, USTRING("%"), 0, 100, 100);
+		param = new RangeParameter (USTRING("Velocity To Level"), kParamVelToLevel, USTRING("%"), 0, 100, 30);
 		param->setPrecision (1);
 		parameters.addParameter (param);
 
@@ -185,14 +185,16 @@ tresult PLUGIN_API Controller::initialize (FUnknown* context)
 		parameters.addParameter (filterTypeParam);
 		
 		param = new LogScaleParameter<ParamValue> (USTRING("Filter Frequency"), kParamFilterFreq, VoiceStatics::freqLogScale);
+		param->getInfo ().defaultNormalizedValue = 0.75;
 		param->setPrecision (1);
 		parameters.addParameter (param);
 
-		param = new RangeParameter (USTRING("Frequency Mod Depth"), kParamFilterFreqModDepth, USTRING("%"), -100, 100, 100);
+		param = new RangeParameter (USTRING("Frequency Mod Depth"), kParamFilterFreqModDepth, USTRING("%"), -100, 100, 20);
 		param->setPrecision (1);
 		parameters.addParameter (param);
 
 		param = parameters.addParameter (USTRING("Filter Q"), nullptr, 0, 0, ParameterInfo::kCanAutomate, kParamFilterQ);
+		param->getInfo ().defaultNormalizedValue = 0.2;
 		param->setPrecision (2);
 
 		parameters.addParameter (USTRING("Bypass SNA"), nullptr, 1, 0, ParameterInfo::kCanAutomate, kParamBypassSNA);

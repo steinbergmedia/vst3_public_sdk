@@ -224,7 +224,7 @@ public:
 		return (IEditController*)new HostCheckerController ();
 	}
 
-	void addFeatureLog (int32 iD, int32 count = 1, bool addToLastCount = true);
+	void addFeatureLog (int64 iD, int32 count = 1, bool addToLastCount = true);
 	bool getSavedSize (ViewRect& size) const
 	{
 		if (sizeFactor <= 0)
@@ -236,7 +236,7 @@ public:
 
 protected:
 	void extractCurrentInfo (EditorView* editor);
-	float updateScoring (int32 iD);
+	float updateScoring (int64 iD);
 	void onProgressTimer (VSTGUI::CVSTGUITimer*);
 
 	std::map<VSTGUI::VST3Editor*, VSTGUI::SharedPointer<VSTGUI::CDataBrowser>> mDataBrowserMap;
@@ -269,7 +269,7 @@ protected:
 		bool use {false};
 	};
 
-	using ScoreMap = std::map<uint32, ScoreEntry>;
+	using ScoreMap = std::map<int64, ScoreEntry>;
 	ScoreMap mScoreMap;
 
 	VSTGUI::CVSTGUITimer* mProgressTimer {nullptr};

@@ -80,11 +80,11 @@ void PanParameter::toString (Vst::ParamValue normValue, Vst::String128 string) c
 	char text[32];
 	if (normValue >= 0.505)
 	{
-		sprintf (text, "R %d", int32 ((normValue - 0.5f) * 200 + 0.5f));
+		snprintf (text, 32, "R %d", int32 ((normValue - 0.5f) * 200 + 0.5f));
 	}
 	else if (normValue <= 0.495)
 	{
-		sprintf (text, "L %d", int32 ((0.5f - normValue) * 200 + 0.5f));
+		snprintf (text, 32, "L %d", int32 ((0.5f - normValue) * 200 + 0.5f));
 	}
 	else
 	{
