@@ -42,7 +42,6 @@
 
 @property (assign) AUAudioUnit* currentAudioUnit;
 
-- (NSError*)loadAudioFile:(NSURL*)url;
 - (instancetype)initWithComponentType:(uint32_t)unitComponentType;
 - (void)loadAudioUnitWithComponentDescription:(AudioComponentDescription)desc
                                    completion:(void (^) (void))completionBlock;
