@@ -2435,11 +2435,15 @@ using namespace Vst;
 - (void)loadView
 {
 	SMTG_IOS_MAC_VIEW* view = [[SMTG_IOS_MAC_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
+#if TARGET_OS_IPHONE
+ 	view.autoresizingMask = UIViewAutoresizingNone;
+#else
 	view.autoresizingMask = NSViewNotSizable;
+#endif
 	view.translatesAutoresizingMaskIntoConstraints = YES;
 	[self setView:view];
 
-#if !TARGET_API_IPHONE
+#if !TARGET_OS_IPHONE
 	//-------------------------------------------
 	// workaround bug of Logic/Garageband to not listen to plug-in editor size changes and using the
 	// initial size and loading the view before creating the audio unit. (FB8971597)
@@ -2476,7 +2480,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)setFrame:(CGRect)newSize
 {
-	if (NSEqualRects (self.view.frame, newSize))
+	if (CGRectEqualToRect (self.view.frame, newSize))
 		return;
 
 	self.view.frame = newSize;
