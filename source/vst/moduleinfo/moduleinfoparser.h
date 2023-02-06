@@ -41,6 +41,7 @@
 #include <iostream>
 #include <optional>
 #include <string_view>
+#include <limits>
 
 //------------------------------------------------------------------------
 namespace Steinberg::ModuleInfoLib {
