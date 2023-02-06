@@ -39,7 +39,7 @@
 #include "jsoncxx.h"
 #include "pluginterfaces/base/ipluginbase.h"
 #include <stdexcept>
-
+#include <limits>
 //------------------------------------------------------------------------
 namespace Steinberg::ModuleInfoLib {
 namespace {
