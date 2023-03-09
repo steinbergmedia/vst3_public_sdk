@@ -349,6 +349,9 @@ bool EditControllerEx1::addUnit (Unit* unit)
 //------------------------------------------------------------------------
 tresult PLUGIN_API EditControllerEx1::getUnitInfo (int32 unitIndex, UnitInfo& info /*out*/)
 {
+	if (unitIndex < 0 || unitIndex >= static_cast<int32>(units.size()))
+		return kResultFalse;
+
 	if (Unit* unit = units.at (unitIndex))
 	{
 		info = unit->getInfo ();

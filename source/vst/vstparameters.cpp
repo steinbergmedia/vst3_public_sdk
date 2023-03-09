@@ -390,6 +390,15 @@ Parameter* ParameterContainer::addParameter (const ParameterInfo& info)
 }
 
 //------------------------------------------------------------------------
+Parameter* ParameterContainer::getParameterByIndex (int32 index) const
+{
+	if (!params || index < 0 || index >= static_cast<int32>(params->size()))
+		return nullptr;
+
+	return params->at (index);
+}
+
+//------------------------------------------------------------------------
 Parameter* ParameterContainer::getParameter (ParamID tag) const
 {
 	if (params)

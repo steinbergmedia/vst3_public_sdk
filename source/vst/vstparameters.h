@@ -212,7 +212,7 @@ public:
 	int32 getParameterCount () const { return params ? static_cast<int32> (params->size ()) : 0; }
 
 	/** Gets parameter by index. */
-	Parameter* getParameterByIndex (int32 index) const { return params ? params->at (index) : nullptr; }
+	Parameter* getParameterByIndex (int32 index) const;
 
 	/** Removes all parameters. */
 	void removeAll ()
