@@ -280,6 +280,27 @@ static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifi
 	}
 	return event;
 }
+#else
+static bool translateKeyMessage(VstKeyCode & code, char16 key, int16 keyMsg, int16 modifiers)
+{
+	code.virt = keyMsg;
+	if (key == 0)
+		key = VirtualKeyCodeToChar((uint8)keyMsg);
+	if (key)
+		code.character = key;
+	if (modifiers)
+	{
+		if (modifiers & kShiftKey)
+			code.modifier |= MODIFIER_SHIFT;
+		if (modifiers & kAlternateKey)
+			code.modifier |= MODIFIER_ALTERNATE;
+		if (modifiers & kCommandKey)
+			code.modifier |= MODIFIER_COMMAND;
+		if (modifiers & kControlKey)
+			code.modifier |= MODIFIER_CONTROL;
+	}
+	return true;
+}
 #endif
 
 //------------------------------------------------------------------------
