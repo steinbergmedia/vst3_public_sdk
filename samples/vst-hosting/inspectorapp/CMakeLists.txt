@@ -47,7 +47,6 @@ if(TARGET vstgui AND TARGET vstgui_standalone)
     ##########################################################################################
 	# 'vstgui_add_executable' links both targets 'vstgui' and 'vstgui_standalone' to 'VST3Inspector'
     vstgui_add_executable(${target} "${${target}_sources}")
-    vstgui_set_target_bundle_id(${target} "com.steinberg.vstsdk.vst3inspector")
 
     if(NOT SMTG_MAC)
         set_target_properties(${target}
