@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : plugcontroller.cpp
+// Filename    : public.sdk/samples/vst/panner/source/plugcontroller.cpp
 // Created by  : Steinberg, 02/2020
 // Description : Panner Example for VST 3
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -38,8 +38,12 @@
 #include "../include/plugids.h"
 
 #include "base/source/fstreamer.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
+
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
+
+#include <string_view>
 
 using namespace VSTGUI;
 
@@ -97,17 +101,23 @@ void PanParameter::toString (Vst::ParamValue normValue, Vst::String128 string) c
 //------------------------------------------------------------------------
 bool PanParameter::fromString (const Vst::TChar* string, Vst::ParamValue& normValue) const
 {
-	String wrapper ((Vst::TChar*)string); // do not know buffer size here!
-	if (wrapper.findFirst (STR ("C")) >= 0)
+	std::u16string_view stringView (string);
+	auto pos = stringView.find_first_of (u"C");
+	if (pos != std::string::npos)
 	{
 		normValue = 0.5;
 		return true;
 	}
 	else
 	{
-		bool left = wrapper.findFirst (STR ("L")) == 0;
-		double tmp = 0.0;
-		if (wrapper.scanFloat (tmp))
+		bool left = stringView.find_first_of (u"L") == 0;
+		bool right = stringView.find_first_of (u"R") == 0;
+		if (left || right)
+			stringView = {stringView.data () + 1, stringView.size () - 1};
+		auto string8 = VST3::StringConvert::convert (stringView.data ());
+		char* end = nullptr;
+		double tmp = strtod (string8.data (), &end);
+		if (end != string8.data ())
 		{
 			if (tmp < 0)
 			{
@@ -153,7 +163,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 //------------------------------------------------------------------------
 IPlugView* PLUGIN_API PlugController::createView (const char* _name)
 {
-	ConstString name (_name);
+	std::string_view name (_name);
 	if (name == Vst::ViewType::kEditor)
 	{
 		auto* view = new VST3Editor (this, "view", "plug.uidesc");

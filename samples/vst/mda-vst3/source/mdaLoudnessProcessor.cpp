@@ -95,7 +95,7 @@ void LoudnessProcessor::doProcessing (ProcessData& data)
 	float* out1 = data.outputs[0].channelBuffers32[0];
 	float* out2 = data.outputs[0].channelBuffers32[1];
 
-	if (data.inputs[0].silenceFlags & 3 && Z0 == 0 && Z1 == 0 && Z2 == 0 && Z3 == 0)	// don't process if input is silent
+	if ((data.inputs[0].silenceFlags & 3) && Z0 == 0 && Z1 == 0 && Z2 == 0 && Z3 == 0)	// don't process if input is silent
 	{
 		if (in1 != out1)
 			memset (out1, 0, sampleFrames * sizeof (float));

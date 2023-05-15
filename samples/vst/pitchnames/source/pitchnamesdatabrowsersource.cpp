@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -35,6 +35,7 @@
 //-----------------------------------------------------------------------------
 
 #include "pitchnamesdatabrowsersource.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "pluginterfaces/base/ustring.h"
 
 using namespace Steinberg;
@@ -122,7 +123,7 @@ void PitchNamesDataBrowserSource::dbDrawHeader (CDrawContext* context, const CRe
 	context->setFillColor (kGreyCColor);
 	context->drawRect (size, kDrawFilled);
 
-	Steinberg::String name;
+	std::string name;
 	switch (column)
 	{
 		case 0: name = "Note"; break;
@@ -130,17 +131,16 @@ void PitchNamesDataBrowserSource::dbDrawHeader (CDrawContext* context, const CRe
 	}
 	context->setFont (kNormalFont);
 	context->setFontColor (kBlackCColor);
-	context->drawString (name.text8 (), size);
+	context->drawString (name.data (), size);
 }
 
 //-----------------------------------------------------------------------------
-void PitchNamesDataBrowserSource::getPitchName (int16_t pitch, Steinberg::String& name)
+void PitchNamesDataBrowserSource::getPitchName (int16_t pitch, std::string& name)
 {
 	String128 pitchName;
 	if (pitchnames->getPitchName (0, pitch, pitchName) == kResultTrue)
 	{
-		name = pitchName;
-		name.toMultiByte (kCP_Utf8);
+		name = VST3::StringConvert::convert (pitchName);
 	}
 }
 
@@ -162,7 +162,7 @@ void PitchNamesDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect
 		context->drawRect (size, kDrawFilled);
 	}
 
-	Steinberg::String cellValue;
+	std::string cellValue;
 	switch (column)
 	{
 		case 0:
@@ -170,7 +170,8 @@ void PitchNamesDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect
 			static const char* noteNames[] = {"C",  "C#", "D",  "D#", "E",  "F",
 			                                  "F#", "G",  "G#", "A",  "A#", "B"};
 			int32_t octave = row / 12;
-			cellValue.printf ("%s%d", noteNames[row - octave * 12], octave - 2);
+			cellValue = noteNames[row - octave * 12];
+			cellValue += std::to_string (octave - 2);
 			break;
 		}
 		case 1:
@@ -184,7 +185,7 @@ void PitchNamesDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect
 	cellSize.inset (5, 0);
 	context->setFont (kNormalFontSmall);
 	context->setFontColor (kBlackCColor);
-	context->drawString (cellValue.text8 (), cellSize, kLeftText);
+	context->drawString (cellValue.data (), cellSize, kLeftText);
 }
 
 //-----------------------------------------------------------------------------
@@ -195,9 +196,9 @@ CMouseEventResult PitchNamesDataBrowserSource::dbOnMouseDown (const CPoint& /*wh
 {
 	if (buttons.isLeftButton () && buttons.isDoubleClick () && column == 1)
 	{
-		Steinberg::String pitchName;
+		std::string pitchName;
 		getPitchName ((int16_t)row, pitchName);
-		browser->beginTextEdit (CDataBrowser::Cell (row, column), pitchName.text8 ());
+		browser->beginTextEdit (CDataBrowser::Cell (row, column), pitchName.data ());
 	}
 	return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }
@@ -254,9 +255,9 @@ int32_t PitchNamesDataBrowserSource::dbOnKeyDown (const VstKeyCode& key, CDataBr
 {
 	if (key.virt == VKEY_RETURN && browser->getSelectedRow () != CDataBrowser::kNoSelection)
 	{
-		Steinberg::String pitchName;
+		std::string pitchName;
 		getPitchName ((int16_t)browser->getSelectedRow (), pitchName);
-		browser->beginTextEdit (CDataBrowser::Cell (browser->getSelectedRow (), 1), pitchName.text8 ());
+		browser->beginTextEdit (CDataBrowser::Cell (browser->getSelectedRow (), 1), pitchName.data ());
 		return 1;
 	}
 	return -1;

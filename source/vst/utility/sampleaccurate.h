@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -55,7 +55,7 @@ namespace SampleAccurate {
  *	the Parameters beginChange method should be called with the valueQueue of the parmID and then
  *	while processing the current audio block the parameter should be advanced as many samples as you
  *	would like to handle parameter changes. In the end the endChanges method must be called to
- *	cleanup internal data structures. 
+ *	cleanup internal data structures.
  *	For convenience the endChanges method can be called without a previous beginChanges call.
  */
 struct Parameter

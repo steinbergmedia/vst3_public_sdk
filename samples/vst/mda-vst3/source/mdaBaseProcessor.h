@@ -140,6 +140,7 @@ struct SynthData
 	{
 		switch (e.type)
 		{
+			//--- -------------------
 			case Event::kNoteOnEvent:
 			case Event::kNoteOffEvent:
 			{
@@ -155,6 +156,7 @@ struct SynthData
 				}
 				break;
 			}
+			//--- -------------------
 			default: return;
 		}
 	}

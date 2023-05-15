@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -48,5 +48,4 @@
                                    completion:(void (^) (void))completionBlock;
 - (BOOL)startStop;
 - (void)shutdown;
-- (NSError*)loadAudioFile:(NSURL*)url;
 @end

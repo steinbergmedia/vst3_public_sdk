@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // This Software Development Kit may not be distributed in parts or its entirety
 // without prior written agreement by Steinberg Media Technologies GmbH.
@@ -72,4 +72,4 @@ bool getTextFromClipboard (std::string& text)
 } // namespace SystemClipboard
 } // namespace Steinberg
 
-#endif
+#endif // SMTG_OS_MACOS

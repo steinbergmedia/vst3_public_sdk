@@ -2,13 +2,13 @@
 // Flags       : clang-format SMTGSequencer
 //
 // Project     : Steinberg Plug-In SDK
-// Filename    : public.sdk/source/common/systemclipboard_win32.h
+// Filename    : public.sdk/source/common/systemclipboard_win32.cpp
 // Created by  : Steinberg 04.2020
 // Description : Simple helper allowing to copy/retrieve text to/from the system clipboard
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // This Software Development Kit may not be distributed in parts or its entirety
 // without prior written agreement by Steinberg Media Technologies GmbH.
@@ -161,4 +161,4 @@ bool getTextFromClipboard (std::string& text)
 } // namespace SystemClipboard
 } // namespace Steinberg
 
-#endif
+#endif // SMTG_OS_WINDOWS

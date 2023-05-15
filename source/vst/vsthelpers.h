@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -75,7 +75,7 @@ inline tresult isProjectState (IBStream* state)
 			UString128 tmp (string);
 			char ascii[128];
 			tmp.toAscii (ascii, 128);
-			if (!strncmp (ascii, StateType::kProject, strlen (StateType::kProject)))
+			if (strncmp (ascii, StateType::kProject, strlen (StateType::kProject)) == 0)
 			{
 				return kResultTrue;
 			}

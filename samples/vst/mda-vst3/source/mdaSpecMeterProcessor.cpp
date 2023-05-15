@@ -241,7 +241,7 @@ void SpecMeterProcessor::doProcessing (ProcessData& data)
 	if (in2 != out2)
 		memcpy (out2, in2, sampleFrames * sizeof (float));
 
-	if (data.inputs[0].silenceFlags & 3 && Lpeak <= fabs (den) && Rpeak <= fabs (den))
+	if ((data.inputs[0].silenceFlags & 3) && Lpeak <= fabs (den) && Rpeak <= fabs (den))
 	{
 		data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
 		return;

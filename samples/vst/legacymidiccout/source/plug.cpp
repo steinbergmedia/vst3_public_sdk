@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -87,8 +87,7 @@ tresult PLUGIN_API Plug::initialize (FUnknown* context)
 tresult PLUGIN_API Plug::process (ProcessData& data)
 {
 	//---1) Read inputs parameter changes-----------
-	IParameterChanges* paramChanges = data.inputParameterChanges;
-	if (paramChanges)
+	if (IParameterChanges* paramChanges = data.inputParameterChanges)
 	{
 		IEventList* eventList = data.outputEvents;
 

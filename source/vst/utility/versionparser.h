@@ -7,7 +7,7 @@
 //
 //------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -114,7 +114,7 @@ public:
 		if (it == str.end ())
 			return {};
 #ifdef SMTG_VERSIONPARSER_USE_STRINGVIEW
-		str = StringType (it, std::distance (it, str.end ()));
+		str = StringType (&(*it), std::distance (it, str.end ()));
 #else
 		str = StringType (it, str.end ());
 #endif

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,7 +47,7 @@ template<class T>inline T boundTo (T minval, T maxval, T x)
 {
 	if (x < minval)
 		return minval;
-	else if (x > maxval)
+	if (x > maxval)
 		return maxval;
 	return x;
 }

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -64,7 +64,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (String ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (STR ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	//---Controller parameter - only for demo ---
 	parameters.addParameter (new RangeParameter (

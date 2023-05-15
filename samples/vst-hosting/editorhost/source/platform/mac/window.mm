@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -99,9 +99,9 @@ bool Window::init (const std::string& name, Size size, bool resizeable,
 	    NSMakeRect (0., 0., static_cast<CGFloat> (size.width), static_cast<CGFloat> (size.height));
 	impl->nsWindowDelegate = [[VSTSDK_WindowDelegate alloc] initWithWindow:shared_from_this ()];
 	auto nsWindow = [[NSWindow alloc] initWithContentRect:contentRect
-	                                       styleMask:styleMask
-	                                         backing:NSBackingStoreBuffered
-	                                           defer:YES];
+	                                            styleMask:styleMask
+	                                              backing:NSBackingStoreBuffered
+	                                                defer:YES];
 	[nsWindow setDelegate:impl->nsWindowDelegate];
 	nsWindow.releasedWhenClosed = NO;
 	impl->nsWindowDelegate.nsWindow = nsWindow;
@@ -155,7 +155,7 @@ Size Window::getContentSize ()
 NativePlatformWindow Window::getNativePlatformWindow () const
 {
 	auto nsWindow = impl->nsWindowDelegate.nsWindow;
-	return {kPlatformTypeNSView, (__bridge void*) ([nsWindow contentView])};
+	return {kPlatformTypeNSView, (__bridge void*)([nsWindow contentView])};
 }
 
 //------------------------------------------------------------------------

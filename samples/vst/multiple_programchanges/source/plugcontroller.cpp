@@ -38,6 +38,8 @@
 #include "plugparamids.h"
 
 #include "base/source/fstreamer.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
+
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
@@ -63,10 +65,10 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (String ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (STR ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	//---Create top root unit with kProgramId as id for the programList
-	addUnit (new Unit (String ("Root"), kRootUnitId, kNoParentUnitId));
+	addUnit (new Unit (STR ("Root"), kRootUnitId, kNoParentUnitId));
 
 	//---We want here kNumSlots slots with a program change per slot
 	for (int32 i = 0; i < kNumSlots; i++)
@@ -75,20 +77,20 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 		int32 kProgramListId = kProgramStartId + i;
 
 		// create a unit for the slot associated to a programList created below
-		String slotName;
-		slotName.printf ("Slot %d", i + 1);
-		addUnit (new Unit (slotName, kSlotUnitID, kRootUnitId, kProgramListId));
+		std::u16string slotName = STR ("Slot ");
+		slotName += VST3::toString (i + 1);
+		addUnit (new Unit (slotName.data (), kSlotUnitID, kRootUnitId, kProgramListId));
 
 		// create the program list: here kNumProgs entries attached to the previous created
 		// unit/slot
-		String programListName;
-		programListName.printf ("Bank %d", i + 1);
-		auto* prgList = new ProgramList (programListName, kProgramListId, kSlotUnitID);
+		std::u16string programListName = STR ("Bank ");
+		programListName += VST3::toString (i + 1);
+		auto* prgList = new ProgramList (programListName.data (), kProgramListId, kSlotUnitID);
 		for (int32 i = 0; i < kNumProgs; i++)
 		{
-			String title;
-			title.printf ("Prog %d", i + 1);
-			prgList->addProgram (title);
+			std::u16string title = STR ("Prog ");
+			title += VST3::toString (i + 1);
+			prgList->addProgram (title.data ());
 		}
 		addProgramList (prgList);
 
@@ -103,7 +105,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	}
 
 	//---Gain parameter---
-	parameters.addParameter (STR16 ("Gain"), nullptr, 0, 1.f, ParameterInfo::kCanAutomate, kGainId);
+	parameters.addParameter (STR ("Gain"), nullptr, 0, 1.f, ParameterInfo::kCanAutomate, kGainId);
 
 	return result;
 }

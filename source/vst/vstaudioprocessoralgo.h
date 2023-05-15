@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -62,6 +62,20 @@ inline uint32 getSampleFramesSizeInBytes (const ProcessSetup& processSetup, int3
 	if (processSetup.symbolicSampleSize == kSample32)
 		return numSamples * sizeof (Sample32);
 	return numSamples * sizeof (Sample64);
+}
+
+/** return the bit-mask of channels for the given number of channel
+* for example:
+* numChannels = 1 => 0b0001 (binar) = 0x01 = 1 (decimal)
+* numChannels = 2 => 0b0011 (binar) = 0x03 = 3 (decimal)
+* numChannels = 6 => 0b0011 1111 (binar) = 0x3F = 63 (decimal)
+*/
+inline uint64 getChannelMask (int32 numChannels)
+{
+	if (numChannels >= 64)
+		return kMaxInt64u;
+
+	return ((uint64)1 << numChannels) - 1;
 }
 
 namespace Algo {
@@ -214,19 +228,19 @@ inline void multiply(T* srcBuffer, T* destBuffer, int32 sampleCount, T factor)
 
 //------------------------------------------------------------------------
 /* Multiply all channels of AudioBusBuffer with a constant */
-inline void multiply32(AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, float factor)
+inline void multiply32 (AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, float factor)
 {
-	foreach32(src, dest, [&](Sample32* srcBuffer, Sample32* destBuffer, int32 /*channelIndex*/) {
-		multiply(srcBuffer, destBuffer, sampleCount, factor);
+	foreach32 (src, dest, [&](Sample32* srcBuffer, Sample32* destBuffer, int32 /*channelIndex*/) {
+		multiply (srcBuffer, destBuffer, sampleCount, factor);
 	});
 }
 
 //------------------------------------------------------------------------
 /* Multiply all channels of AudioBusBuffer with a constant */
-inline void multiply64(AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, double factor)
+inline void multiply64 (AudioBusBuffers& src, AudioBusBuffers& dest, int32 sampleCount, double factor)
 {
-	foreach64(src, dest, [&](Sample64* srcBuffer, Sample64* destBuffer, int32 /*channelIndex*/) {
-		multiply(srcBuffer, destBuffer, sampleCount, factor);
+	foreach64 (src, dest, [&] (Sample64* srcBuffer, Sample64* destBuffer, int32 /*channelIndex*/) {
+		multiply (srcBuffer, destBuffer, sampleCount, factor);
 	});
 }
 

@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -202,7 +202,7 @@ tresult PLUGIN_API PitchNamesProcessor::process (ProcessData& data)
 	{
 		for (int32 i = 0; i < data.outputs[0].numChannels; i++)
 			memset (data.outputs[0].channelBuffers32[i], 0, data.numSamples * sizeof (float));
-		data.outputs[0].silenceFlags = 0x3;
+		data.outputs[0].silenceFlags = 3;
 	}
 	return kResultOk;
 }

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -51,9 +51,11 @@
 @interface AUv3Wrapper : AUAudioUnit
 - (void)performEdit:(int)tag value:(double)value;
 - (void)syncParameterValues;
-- (void)initializeParameters;
+- (void)updateParameters;
 - (void)onTimer;
+- (void)onParamTitlesChanged;
 - (void)onNoteExpressionChanged;
+- (void)onLatencyChanged;
 - (BOOL)enableMPESupport:(BOOL)state;
 - (BOOL)setMPEInputDeviceMasterChannel:(NSInteger)masterChannel
                     memberBeginChannel:(NSInteger)memberBeginChannel

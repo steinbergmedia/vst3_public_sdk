@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -321,7 +321,7 @@ tresult PLUGIN_API Processor::process (ProcessData& data)
 		}
 		if (voiceProcessor->getActiveVoices () == 0 && data.numOutputs > 0)
 		{
-			data.outputs[0].silenceFlags = 0x11; // left and right channel are silent
+			data.outputs[0].silenceFlags = 3; // left and right channel are silent
 		}
 	}
 	return result;

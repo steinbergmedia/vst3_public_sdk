@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -81,6 +81,47 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		    testResult,
 		    STR ("Note: it could be better to use UnitInfo in order to sort Parameters (>20)."));
 	}
+	struct SUnitCount
+	{
+		int32 idx {-1};
+		int32 numParams {0};
+		std::string name;
+	};
+	std::unordered_map<int32, SUnitCount> unitIds;
+	// root unit
+	unitIds[kRootUnitId].name = "Root";
+
+	if (iUnitInfo2)
+	{
+		for (int32 ui = 0, uc = iUnitInfo2->getUnitCount (); ui < uc; ++ui)
+		{
+			UnitInfo uinfo = {};
+			if (iUnitInfo2->getUnitInfo (ui, uinfo) == kResultTrue)
+			{
+				// check if ID is already used by another unit
+				if (uinfo.id != kRootUnitId)
+				{
+					auto search = unitIds.find (uinfo.id);
+					if (search != unitIds.end ())
+					{
+						addErrorMessage (
+						    testResult,
+						    printf ("=>Unit %03d (id=%d): ID already used by idx=%03d!!!", ui,
+						            uinfo.id, search->second.idx));
+						return false;
+					}
+				}
+				std::string unitTitle;
+				unitTitle = VST3::StringConvert::convert (uinfo.name);
+				unitIds[uinfo.id] = {ui, 0, unitTitle}; // init counter
+			}
+			else
+			{
+				addErrorMessage (testResult, printf ("IUnitInfo::getUnitInfo (%d..) failed.", ui));
+				return false;
+			}
+		}
+	}
 
 	// used for ID check
 	std::unordered_map<int32, int32> paramIds;
@@ -114,8 +155,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			                         paramId, search->second));
 			return false;
 		}
-		else
-			paramIds[paramId] = i;
+		paramIds[paramId] = i;
 
 		const tchar* paramType = kEmptyString;
 		if (paramInfo.stepCount < 0)
@@ -168,7 +208,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		if (unitId >= -1)
 		{
 			FUnknownPtr<IUnitInfo> iUnitInfo (controller);
-			if (!iUnitInfo && unitId != 0)
+			if (!iUnitInfo && unitId != kRootUnitId)
 			{
 				addErrorMessage (
 				    testResult,
@@ -177,32 +217,22 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 				        kRootUnitId));
 				return false;
 			}
-			else if (iUnitInfo)
+			auto search = unitIds.find (unitId);
+			if (search != unitIds.end ())
 			{
-				bool found = false;
-				int32 uc = iUnitInfo->getUnitCount ();
-				for (int32 ui = 0; ui < uc; ++ui)
-				{
-					UnitInfo uinfo = {};
-					if (iUnitInfo->getUnitInfo (ui, uinfo) != kResultTrue)
-					{
-						addErrorMessage (testResult,
-						                 printf ("IUnitInfo::getUnitInfo (%d..) failed.", ui));
-						return false;
-					}
-					if (uinfo.id == unitId)
-						found = true;
-				}
-				if (!found && unitId != kRootUnitId)
-				{
-					addErrorMessage (
-					    testResult,
-					    printf (
-					        "=>Parameter %03d (id=%d) has a UnitID (%d), which isn't defined in IUnitInfo.",
-					        i, paramId, unitId));
-					return false;
-				}
+				unitIds[unitId].numParams++;
 			}
+			else if (unitId != kRootUnitId)
+			{
+				addErrorMessage (
+				    testResult,
+				    printf (
+				        "=>Parameter %03d (id=%d) has a UnitID (%d), which isn't defined in IUnitInfo.",
+				        i, paramId, unitId));
+				return false;
+			}
+			else // if (unitId == kRootUnitId)
+				unitIds[kRootUnitId].numParams++;
 		}
 
 		//---check for incompatible flags---------------------
@@ -299,6 +329,18 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			}
 		}
 	} // end for each parameter
+
+	for (const auto& unit : unitIds)
+	{
+		if (unit.second.numParams > 128) // 128 due to MIDI CC mapped parameter
+		{
+			addMessage (
+			    testResult,
+			    printf (
+			        "Note: This Unit (idx=%d, id=%d, name=\"%s\") has %d parameters: it could be better to split it in sub-units!.",
+			        unit.second.idx, unit.first, unit.second.name.data (), unit.second.numParams));
+		}
+	}
 
 	if (foundBypass == false)
 	{

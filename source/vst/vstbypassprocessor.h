@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -178,7 +178,7 @@ class BypassProcessor
 {
 public:
 //------------------------------------------------------------------------
-	BypassProcessor () : mActive (false), mMainIOBypass (false)
+	BypassProcessor ()
 	{
 		for (int32 i = 0; i < kMaxChannelsSupported; i++)
 		{
@@ -253,11 +253,11 @@ public:
 
 		// flush delays when turning on
 		if (state && mMainIOBypass)
-			for (int32 i = 0; i < kMaxChannelsSupported; i++)
+			for (auto &delay : mDelays)
 			{
-				if (!mDelays[i])
+				if (!delay)
 					break;
-				mDelays[i]->flush ();
+				delay->flush ();
 			}
 	}
 
@@ -406,8 +406,8 @@ protected:
 
 	Delay* mDelays[kMaxChannelsSupported];
 	
-	bool mActive;
-	bool mMainIOBypass;
+	bool mActive {false};
+	bool mMainIOBypass {false};
 };
 
 //------------------------------------------------------------------------

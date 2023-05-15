@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,12 +41,16 @@
 
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "public.sdk/source/vst/vsteventshelper.h"
-#include "base/source/fstreamer.h"
+
+#include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
+
+#include "base/source/fstreamer.h"
+
 #include <cmath>
 
 namespace Steinberg {
@@ -120,6 +124,10 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IProcessContextRequirements::iid) ==
 		    kResultTrue)
 			addLogEvent (kLogIdIProcessContextRequirementsSupported);
+	}
+	else
+	{
+		addLogEvent (kLogIdIPlugInterfaceSupportNotSupported);
 	}
 	return result;
 }
@@ -435,9 +443,9 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		if (mGeneratePeaks > 0 && data.processContext)
 		{
 			if (data.symbolicSampleSize == kSample32)
-				Algo::clear32 (data.outputs, data.numSamples);
+				Algo::clear32 (data.outputs, data.numSamples, data.numOutputs);
 			else // kSample64
-				Algo::clear64 (data.outputs, data.numSamples);
+				Algo::clear64 (data.outputs, data.numSamples, data.numOutputs);
 
 			float coef = mGeneratePeaks * mLastBlockMarkerValue;
 
@@ -493,6 +501,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			Algo::foreach (data.inputEvents, [&] (Event& event) {
 				switch (event.type)
 				{
+					//--- -------------------
 					case Event::kNoteOnEvent:
 						mNumNoteOns++;
 						if (data.symbolicSampleSize == kSample32)
@@ -512,6 +521,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 							data.outputEvents->addEvent (evtMIDICC);
 						}
 						break;
+					//--- -------------------
 					case Event::kNoteOffEvent:
 						if (data.symbolicSampleSize == kSample32)
 							data.outputs[0].channelBuffers32[1][event.sampleOffset] =
@@ -523,6 +533,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 							data.outputEvents->addEvent (event);
 						mNumNoteOns--;
 						break;
+					//--- -------------------
 					default: break;
 				}
 			});
@@ -534,8 +545,9 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			void** in = getChannelBuffersPointer (processSetup, data.inputs[0]);
 			void** out = getChannelBuffersPointer (processSetup, data.outputs[0]);
 
-			for (int32 i = 0; i < data.outputs[0].numChannels && i < data.inputs[0].numChannels;
-			     i++)
+			int32 minNum = Min (data.outputs[0].numChannels, data.inputs[0].numChannels);
+
+			for (int32 i = 0; i < minNum; i++)
 			{
 				// do not need to be copied if the buffers are the same
 				if (in[i] != out[i])
@@ -543,8 +555,13 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 					memcpy (out[i], in[i], sampleFramesSize);
 				}
 			}
-
 			data.outputs[0].silenceFlags = data.inputs[0].silenceFlags;
+
+			for (int32 i = minNum; i < data.outputs[0].numChannels; i++)
+			{
+				memset (out[i], 0, sampleFramesSize);
+				data.outputs[0].silenceFlags |= ((uint64)1 << i);
+			}
 		}
 	}
 

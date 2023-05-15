@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -291,11 +291,11 @@ tresult PLUGIN_API PlugController::setChannelContextInfos (IAttributeList* list)
 		if (list->getInt (ChannelContext::kChannelColorKey, color) == kResultTrue)
 		{
 			uint32 channelColor = (uint32)color;
-			String str;
-			str.printf ("%x%x%x%x", ChannelContext::GetAlpha (channelColor),
-						ChannelContext::GetRed (channelColor),
-						ChannelContext::GetGreen (channelColor),
-						ChannelContext::GetBlue (channelColor));
+			char str[10];
+			snprintf (str, 10, "%x%x%x%x", ChannelContext::GetAlpha (channelColor),
+			          ChannelContext::GetRed (channelColor),
+			          ChannelContext::GetGreen (channelColor),
+			          ChannelContext::GetBlue (channelColor));
 			String128 string128;
 			Steinberg::UString (string128, 128).fromAscii (str);
 			param->replaceString (0, string128);

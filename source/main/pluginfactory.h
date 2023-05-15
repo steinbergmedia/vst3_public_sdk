@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -43,7 +43,7 @@ namespace Steinberg {
 //------------------------------------------------------------------------
 /** Default Class Factory implementation.
 \ingroup sdkBase
-\see \ref classFactoryMacros 
+\see classFactoryMacros 
 */
 class CPluginFactory : public IPluginFactory3
 {

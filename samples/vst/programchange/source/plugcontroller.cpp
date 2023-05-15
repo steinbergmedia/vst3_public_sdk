@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/XX/source/plugcontroller.cpp
+// Filename    : public.sdk/samples/vst/programchange/source/plugcontroller.cpp
 // Created by  : Steinberg, 02/2016
 // Description : Plug-in Example for VST SDK 3.x using ProgramChange parameter
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,9 +37,11 @@
 #include "plugcontroller.h"
 #include "plugparamids.h"
 
+#include "public.sdk/source/vst/utility/stringconvert.h"
+#include "base/source/fstreamer.h"
+
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/futils.h"
-#include "base/source/fstreamer.h"
 #include "pluginterfaces/vst/ivstcomponent.h"
 
 namespace Steinberg {
@@ -63,19 +65,19 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	ParamValue defaultVal = 0;
 	int32 flags = ParameterInfo::kCanAutomate | ParameterInfo::kIsBypass;
 	int32 tag = kBypassId;
-	parameters.addParameter (String ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
+	parameters.addParameter (STR ("Bypass"), nullptr, stepCount, defaultVal, flags, tag);
 
 	// create top root unit with kProgramId as id for the programList
-	addUnit (new Unit (String ("Root"), kRootUnitId, kNoParentUnitId, kProgramId));
+	addUnit (new Unit (STR ("Root"), kRootUnitId, kNoParentUnitId, kProgramId));
 
 	// create the program list: here kNumProgs entries
-	auto* prgList = new ProgramList (String ("Bank"), kProgramId, kRootUnitId);
+	auto* prgList = new ProgramList (STR ("Bank"), kProgramId, kRootUnitId);
 	addProgramList (prgList);
 	for (int32 i = 0; i < kNumProgs; i++)
 	{
-		String title;
-		title.printf ("Prog %d", i + 1);
-		prgList->addProgram (title);
+		std::u16string title = STR ("Prog ");
+		title += VST3::toString (i + 1);
+		prgList->addProgram (title.data ());
 	}
 
 	//---Program Change parameter---

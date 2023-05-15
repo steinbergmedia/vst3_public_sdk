@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -96,7 +96,7 @@ tresult PLUGIN_API ParameterValueQueue::addPoint (int32 sampleOffset, ParamValue
 			index = i;
 			return kResultTrue;
 		}
-		else if (values[i].sampleOffset > sampleOffset)
+		if (values[i].sampleOffset > sampleOffset)
 		{
 			destIndex = i;
 			break;

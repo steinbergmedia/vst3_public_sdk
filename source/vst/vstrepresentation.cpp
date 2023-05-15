@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -102,7 +102,7 @@ XmlRepresentationHelper::XmlRepresentationHelper (const Vst::RepresentationInfo&
 	writer.write (string);
 	string.printf (" %s=\"%s\"", ATTR_VERSION, info.version);
 	writer.write (string);
-	if (strcmp ((char*)info.host, ""))
+	if (strcmp ((char*)info.host, "") != 0)
 	{
 		string.printf (" %s=\"%s\"", ATTR_HOST, info.host);
 		writer.write (string);

@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -90,7 +90,7 @@ struct AUView
 		using PlugFrameVar = std::optional<ObjCVariable<AUPlugFrame*>>;
 		using IsAttachedVar = std::optional<ObjCVariable<BOOL>>;
 
-		Instance (__unsafe_unretained id obj) : ObjCInstance (obj)
+		Instance (__unsafe_unretained id obj) : ObjCInstance (obj, [NSView class])
 		{
 			plugView = getVariable<IPlugView*> (VarNamePlugView);
 			editController = getVariable<Vst::IEditController*> (VarNameEditController);

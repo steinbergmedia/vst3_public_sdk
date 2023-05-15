@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -421,7 +421,7 @@ tresult PLUGIN_API ControllerWithUI::terminate ()
 //------------------------------------------------------------------------
 IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 {
-	ConstString name (_name);
+	std::string_view name (_name);
 	if (name == ViewType::kEditor)
 	{
 		FUnknownPtr<IInterAppAudioHost> interAudioApp (getHostContext ());
@@ -460,7 +460,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
                                                     const IUIDescription* /*description*/,
                                                     VST3Editor* editor)
 {
-	ConstString name (_name);
+	std::string_view name (_name);
 	if (name == "FilterPadController")
 	{
 		Parameter* freqParam = getParameterObject (kParamFilterFreq);

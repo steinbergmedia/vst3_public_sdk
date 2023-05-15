@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -279,6 +279,36 @@ static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifi
 			event.modifiers.add (ModifierKey::Super);
 	}
 	return event;
+}
+#else
+//------------------------------------------------------------------------
+static bool translateKeyMessage (VstKeyCode& keyCode, char16 key, int16 keyMsg, int16 modifiers)
+{
+	keyCode.character = 0;
+	keyCode.virt = (unsigned char)keyMsg;
+	keyCode.modifier = 0;
+	if (key == 0)
+		key = VirtualKeyCodeToChar ((uint8)keyMsg);
+	if (key)
+	{
+		String keyStr (STR (" "));
+		keyStr.setChar16 (0, key);
+		keyStr.toMultiByte (kCP_Utf8);
+		if (keyStr.length () == 1)
+			keyCode.character = keyStr.getChar8 (0);
+	}
+	if (modifiers)
+	{
+		if (modifiers & kShiftKey)
+			keyCode.modifier |= MODIFIER_SHIFT;
+		if (modifiers & kAlternateKey)
+			keyCode.modifier |= MODIFIER_ALTERNATE;
+		if (modifiers & kCommandKey)
+			keyCode.modifier |= MODIFIER_CONTROL;
+		if (modifiers & kControlKey)
+			keyCode.modifier |= MODIFIER_COMMAND;
+	}
+	return true;
 }
 #endif
 

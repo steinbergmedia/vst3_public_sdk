@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -185,6 +185,7 @@ struct LogEvent
 	\
 	LOG_DEF(kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
 	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
+	LOG_DEF(kLogIdIPlugInterfaceSupportNotSupported,CONTROL, LOG_ERR, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport not supported!"), \
 	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
 	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
 	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \

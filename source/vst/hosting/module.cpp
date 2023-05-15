@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -270,7 +270,7 @@ void ClassInfo::parseSubCategories (const std::string& str) noexcept
 	std::stringstream stream (str);
 	std::string item;
 	while (std::getline (stream, item, '|'))
-		data.subCategories.emplace_back (move (item));
+		data.subCategories.emplace_back (std::move (item));
 }
 
 //------------------------------------------------------------------------

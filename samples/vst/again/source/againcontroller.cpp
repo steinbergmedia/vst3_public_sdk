@@ -8,28 +8,28 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -42,13 +42,13 @@
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 
-#include "base/source/fstring.h"
 #include "base/source/fstreamer.h"
+#include "base/source/fstring.h"
 
 #include "vstgui/uidescription/delegationcontroller.h"
 
-#include <cstdio>
 #include <cmath>
+#include <cstdio>
 
 using namespace VSTGUI;
 
@@ -136,13 +136,13 @@ tresult PLUGIN_API AGainController::initialize (FUnknown* context)
 	Unit* unit;
 
 	// create root only if you want to use the programListId
-/*	unitInfo.id = kRootUnitId;	// always for Root Unit
-	unitInfo.parentUnitId = kNoParentUnitId;	// always for Root Unit
-	Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Root"));
-	unitInfo.programListId = kNoProgramListId;
-	
-	unit = new Unit (unitInfo);
-	addUnitInfo (unit);*/
+	/*	unitInfo.id = kRootUnitId;	// always for Root Unit
+	    unitInfo.parentUnitId = kNoParentUnitId;	// always for Root Unit
+	    Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Root"));
+	    unitInfo.programListId = kNoProgramListId;
+	    
+	    unit = new Unit (unitInfo);
+	    addUnitInfo (unit);*/
 
 	// create a unit1 for the gain
 	unitInfo.id = 1;
@@ -264,7 +264,7 @@ tresult PLUGIN_API AGainController::setState (IBStream* state)
 	}
 
 	// update our editors
-	for (auto & uiMessageController : uiMessageControllers)
+	for (auto& uiMessageController : uiMessageControllers)
 		uiMessageController->setMessageText (defaultMessageText);
 
 	return kResultTrue;
@@ -317,20 +317,20 @@ tresult PLUGIN_API AGainController::getParamStringByValue (ParamID tag, ParamVal
 	/* example, but better to use a custom Parameter as seen in GainParameter
 	switch (tag)
 	{
-		case kGainId:
-		{
-			char text[32];
-			if (valueNormalized > 0.0001)
-			{
-				sprintf (text, "%.2f", 20 * log10f ((float)valueNormalized));
-			}
-			else
-				strcpy (text, "-oo");
+	    case kGainId:
+	    {
+	        char text[32];
+	        if (valueNormalized > 0.0001)
+	        {
+	            sprintf (text, "%.2f", 20 * log10f ((float)valueNormalized));
+	        }
+	        else
+	            strcpy (text, "-oo");
 
-			Steinberg::UString (string, 128).fromAscii (text);
+	        Steinberg::UString (string, 128).fromAscii (text);
 
-			return kResultTrue;
-		}
+	        return kResultTrue;
+	    }
 	}*/
 	return EditControllerEx1::getParamStringByValue (tag, valueNormalized, string);
 }
@@ -342,17 +342,17 @@ tresult PLUGIN_API AGainController::getParamValueByString (ParamID tag, TChar* s
 	/* example, but better to use a custom Parameter as seen in GainParameter
 	switch (tag)
 	{
-		case kGainId:
-		{
-			Steinberg::UString wrapper ((TChar*)string, -1); // don't know buffer size here!
-			double tmp = 0.0;
-			if (wrapper.scanFloat (tmp))
-			{
-				valueNormalized = expf (logf (10.f) * (float)tmp / 20.f);
-				return kResultTrue;
-			}
-			return kResultFalse;
-		}
+	    case kGainId:
+	    {
+	        Steinberg::UString wrapper ((TChar*)string, -1); // don't know buffer size here!
+	        double tmp = 0.0;
+	        if (wrapper.scanFloat (tmp))
+	        {
+	            valueNormalized = expf (logf (10.f) * (float)tmp / 20.f);
+	            return kResultTrue;
+	        }
+	        return kResultFalse;
+	    }
 	}*/
 	return EditControllerEx1::getParamValueByString (tag, string, valueNormalized);
 }

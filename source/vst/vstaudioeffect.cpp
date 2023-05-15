@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -157,8 +157,7 @@ tresult PLUGIN_API AudioEffect::getBusArrangement (BusDirection dir, int32 busIn
 	BusList* busList = getBusList (kAudio, dir);
 	if (!busList || busIndex < 0 || static_cast<int32> (busList->size ()) <= busIndex)
 		return kInvalidArgument;
-	auto* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex));
-	if (audioBus)
+	if (auto* audioBus = FCast<Vst::AudioBus> (busList->at (busIndex)))
 	{
 		arr = audioBus->getArrangement ();
 		return kResultTrue;

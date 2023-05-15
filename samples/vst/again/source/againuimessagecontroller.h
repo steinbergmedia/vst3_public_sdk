@@ -38,6 +38,7 @@
 
 #include "vstgui/lib/iviewlistener.h"
 #include "vstgui/uidescription/icontroller.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -69,9 +70,7 @@ public:
 	{
 		if (!textEdit)
 			return;
-		String str (msgText);
-		str.toMultiByte (kCP_Utf8);
-		textEdit->setText (str.text8 ());
+		textEdit->setText (VST3::StringConvert::convert (msgText));
 	}
 
 private:
@@ -125,9 +124,8 @@ private:
 			textEdit->registerViewListener (this);
 
 			// initialize it content
-			String str (againController->getDefaultMessageText ());
-			str.toMultiByte (kCP_Utf8);
-			textEdit->setText (str.text8 ());
+			textEdit->setText (
+			    VST3::StringConvert::convert (againController->getDefaultMessageText ()));
 		}
 		return view;
 	}
@@ -147,12 +145,9 @@ private:
 		if (dynamic_cast<CTextEdit*> (view) == textEdit)
 		{
 			// save the last content of the text edit view
-			const UTF8String& text = textEdit->getText ();
-			String128 messageText;
-			String str;
-			str.fromUTF8 (text.data ());
-			str.copyTo (messageText, 0, 128);
-			againController->setDefaultMessageText (messageText);
+			const auto& text = textEdit->getText ();
+			auto utf16Text = VST3::StringConvert::convert (text.getString ());
+			againController->setDefaultMessageText (utf16Text.data ());
 		}
 	}
 	ControllerType* againController;

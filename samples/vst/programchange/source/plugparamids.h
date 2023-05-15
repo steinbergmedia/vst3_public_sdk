@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/XX/source/plugparamids.h
+// Filename    : public.sdk/samples/vst/programchange/source/plugparamids.h
 // Created by  : Steinberg, 02/2016
 // Description : Plug-in Example for VST SDK 3.x using ProgramChange parameter
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:

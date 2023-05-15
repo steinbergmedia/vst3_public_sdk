@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -1759,7 +1759,9 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			CFStringRef className = (CFStringRef)[[NSString alloc]
 			    initWithCString:SMTG_MAKE_STRING (SMTG_AUCocoaUIBase_CLASS_NAME)
 			           encoding:NSUTF8StringEncoding];
-			CFBundleRef bundle = GetCurrentBundle ();
+			const char* image = class_getImageName (
+			    objc_getClass (SMTG_MAKE_STRING (SMTG_AUCocoaUIBase_CLASS_NAME)));
+			CFBundleRef bundle = GetBundleFromExecutable (image);
 			CFURLRef url = CFBundleCopyBundleURL (bundle);
 			CFRelease (bundle);
 			AudioUnitCocoaViewInfo cocoaInfo = {url, {className}};
@@ -2577,11 +2579,6 @@ static OSStatus AUWrapperMethodSetProperty (void* self, AudioUnitPropertyID inID
 	auto auwrapper = reinterpret_cast<AUWrapper*> (&plugInstance->mInstanceStorage);
 	try
 	{
-		if (inDataSize != sizeof (CFPropertyListRef*))
-			return kAudioUnitErr_InvalidPropertyValue;
-		if (inScope != kAudioUnitScope_Global)
-			return kAudioUnitErr_InvalidScope;
-
 		if (inData && inDataSize && inID == kAudioUnitProperty_ClassInfoFromDocument)
 		{
 			ca_require(inDataSize == sizeof(CFPropertyListRef *), InvalidPropertyValue);

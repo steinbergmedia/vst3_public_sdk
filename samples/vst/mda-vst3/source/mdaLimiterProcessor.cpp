@@ -17,7 +17,7 @@
 #include "mdaLimiterProcessor.h"
 #include "mdaLimiterController.h"
 
-#include <math.h>
+#include <cmath>
 
 namespace Steinberg {
 namespace Vst {
@@ -41,14 +41,14 @@ tresult PLUGIN_API LimiterProcessor::initialize (FUnknown* context)
 	tresult res = BaseProcessor::initialize (context);
 	if (res == kResultTrue)
 	{
-		addAudioInput (USTRING("Stereo In"), SpeakerArr::kStereo);
-		addAudioOutput (USTRING("Stereo Out"), SpeakerArr::kStereo);
+		addAudioInput (USTRING ("Stereo In"), SpeakerArr::kStereo);
+		addAudioOutput (USTRING ("Stereo Out"), SpeakerArr::kStereo);
 
-		params[0] = (float)0.60; //thresh 		
-		params[1] = (float)0.60; //trim
-		params[2] = (float)0.15; //attack
-		params[3] = (float)0.50; //release
-		params[4] = (float)0.40; //knee
+		params[0] = (float)0.60; // thresh
+		params[1] = (float)0.60; // trim
+		params[2] = (float)0.15; // attack
+		params[3] = (float)0.50; // release
+		params[4] = (float)0.40; // knee
 
 		gain = 1.0;
 
@@ -78,24 +78,11 @@ void LimiterProcessor::checkSilence (ProcessData& /*data*/)
 void LimiterProcessor::doProcessing (ProcessData& data)
 {
 	int32 sampleFrames = data.numSamples;
-	
+
 	float* in1 = data.inputs[0].channelBuffers32[0];
 	float* in2 = data.inputs[0].channelBuffers32[1];
 	float* out1 = data.outputs[0].channelBuffers32[0];
 	float* out2 = data.outputs[0].channelBuffers32[1];
-
-	if (gain > 0.9999f && data.inputs[0].silenceFlags & 3)	// don't process if input is silent
-	{
-		if (in1 != out1)
-			memset (out1, 0, sampleFrames * sizeof (float));
-		if (in2 != out2)
-			memset (out2, 0, sampleFrames * sizeof (float));
-		data.outputs[0].silenceFlags = 3;
-		return;
-	}
-
-	data.outputs[0].silenceFlags = 0;
-
 	float g, at, re, tr, th, lev, ol, or_;
 
 	th = thresh;
@@ -104,11 +91,48 @@ void LimiterProcessor::doProcessing (ProcessData& data)
 	re = rel;
 	tr = trim;
 
-	--in1;	
-	--in2;	
+	if (data.inputs[0].silenceFlags & 3) // don't process if input (stereo=3 (first 2 bits)) is silent
+	{
+		if (in1 != out1)
+			memset (out1, 0, sampleFrames * sizeof (float));
+		if (in2 != out2)
+			memset (out2, 0, sampleFrames * sizeof (float));
+		data.outputs[0].silenceFlags = 3;
+
+		// keep computing the gain value
+		if (params[4] > 0.5) // soft knee
+		{
+			while (--sampleFrames >= 0)
+			{
+				if (g > 1)
+				{
+					g = g - at * (g - 1);
+				}
+				else
+				{
+					g = g + re * (1 - g);
+				}
+			}
+		}
+		else
+		{
+			while (--sampleFrames >= 0)
+			{
+				// only below threshold
+				g = g + (float)(re * (1.0 - g));
+			}
+		}
+		gain = g;
+		return;
+	}
+
+	data.outputs[0].silenceFlags = 0;
+
+	--in1;
+	--in2;
 	--out1;
 	--out2;
-	if (params[4]>0.5) //soft knee
+	if (params[4] > 0.5) // soft knee
 	{
 		while (--sampleFrames >= 0)
 		{
@@ -116,10 +140,17 @@ void LimiterProcessor::doProcessing (ProcessData& data)
 			or_ = *++in2;
 
 			lev = (float)(1.0 / (1.0 + th * fabs (ol + or_)));
-			if (g>lev) { g=g-at*(g-lev); } else { g=g+re*(lev-g); }
+			if (g > lev)
+			{
+				g = g - at * (g - lev);
+			}
+			else
+			{
+				g = g + re * (lev - g);
+			}
 
-			*++out1 = (ol * tr * g);	
-			*++out2 = (or_ * tr * g);	
+			*++out1 = (ol * tr * g);
+			*++out2 = (or_ * tr * g);
 		}
 	}
 	else
@@ -135,34 +166,34 @@ void LimiterProcessor::doProcessing (ProcessData& data)
 			{
 				g = g - (at * (lev - th));
 			}
-			else //below threshold
+			else // below threshold
 			{
 				g = g + (float)(re * (1.0 - g));
 			}
 
-			*++out1 = (ol * tr * g);	
-			*++out2 = (or_ * tr * g);	
+			*++out1 = (ol * tr * g);
+			*++out2 = (or_ * tr * g);
 		}
 	}
 	gain = g;
-
 }
 
 //-----------------------------------------------------------------------------
 void LimiterProcessor::recalculate ()
 {
-	if (params[4]>0.5) //soft knee
+	if (params[4] > 0.5) // soft knee
 	{
-		thresh = (float)pow (10.0, 1.0 - (2.0 * params[0]));
+		thresh = static_cast<float> (pow (10.0, 1.0 - (2.0 * params[0])));
 	}
-	else //hard knee
+	else // hard knee
 	{
-		thresh = (float)pow (10.0, (2.0 * params[0]) - 2.0);
+		thresh = static_cast<float> (pow (10.0, (2.0 * params[0]) - 2.0));
 	}
-	trim = (float)(pow (10.0, (2.0 * params[1]) - 1.0));
-	att = (float)pow (10.0, -2.0 * params[2]);
-	rel = (float)pow (10.0, -2.0 - (3.0 * params[3]));
+	trim = static_cast<float> (pow (10.0, (2.0 * params[1]) - 1.0));
+	att = static_cast<float> (pow (10.0, -2.0 * params[2]));
+	rel = static_cast<float> (pow (10.0, -2.0 - (3.0 * params[3])));
 }
 
-}}} // namespaces
-
+} // mda
+} // Vst
+} // Steinberg

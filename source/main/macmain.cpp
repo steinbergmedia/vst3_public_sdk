@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -44,7 +44,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 //------------------------------------------------------------------------
-CFBundleRef ghInst = 0;
+CFBundleRef ghInst = nullptr;
 int bundleRefCounter = 0; // counting for bundleEntry/bundleExit pairs
 void* moduleHandle = nullptr;
 #define VST_MAX_PATH 2048
@@ -85,7 +85,7 @@ bool bundleEntry (CFBundleRef ref)
 
 			// obtain the bundle path
 			CFURLRef tempURL = CFBundleCopyBundleURL (ref);
-			CFURLGetFileSystemRepresentation (tempURL, true, (UInt8*)gPath, VST_MAX_PATH);
+			CFURLGetFileSystemRepresentation (tempURL, true, reinterpret_cast<UInt8*> (gPath), VST_MAX_PATH);
 			CFRelease (tempURL);
 		}
 

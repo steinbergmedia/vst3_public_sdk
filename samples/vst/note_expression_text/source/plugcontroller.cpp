@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,6 +39,7 @@
 #include "plugparamids.h"
 #include "vstgui/lib/controls/ctextlabel.h"
 #include "vstgui/lib/cstring.h"
+#include "public.sdk/source/vst/utility/stringconvert.h"
 #include "base/source/fstreamer.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
@@ -97,7 +98,7 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 //------------------------------------------------------------------------
 IPlugView* PLUGIN_API PlugController::createView (const char* _name)
 {
-	ConstString name (_name);
+	std::string_view name (_name);
 	if (name == ViewType::kEditor)
 	{
 		return new VST3Editor (this, "Editor", "plug.uidesc");
@@ -137,10 +138,7 @@ tresult PLUGIN_API PlugController::notify (IMessage* message)
 		if (message->getAttributes ()->getString ("Text", string,
 		                                          sizeof (string) / sizeof (char16)) == kResultOk)
 		{
-			char8 cstr[256];
-			String tmp (string);
-			tmp.copyTo8 (cstr, 0, 255);
-			mTextLabel->setText (cstr);
+			mTextLabel->setText (VST3::StringConvert::convert (string));
 			return kResultOk;
 		}
 	}
