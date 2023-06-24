@@ -52,7 +52,7 @@ if(TARGET vstgui AND TARGET vstgui_standalone)
     if(NOT SMTG_MAC)
         set_target_properties(${target}
             PROPERTIES
-                RUNTIME_OUTPUT_DIRECTORY $<$<CONFIG:Debug>:${CMAKE_BINARY_DIR}/bin/Debug/>$<$<CONFIG:Release>:${CMAKE_BINARY_DIR}/bin/Release/>$<$<CONFIG:ReleaseLTO>:${CMAKE_BINARY_DIR}/bin/ReleaseLTO/>/VST3Inspector
+                RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<$<CONFIG:Debug>:bin/Debug>$<$<CONFIG:Release>:bin/Release>$<$<CONFIG:ReleaseLTO>:bin/ReleaseLTO>/VST3Inspector
         )
     endif(NOT SMTG_MAC)
 
