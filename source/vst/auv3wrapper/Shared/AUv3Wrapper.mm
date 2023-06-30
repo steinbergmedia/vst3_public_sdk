@@ -604,7 +604,7 @@ private:
 	{
 		if (!context->inputEvents)
 			return;
-		Event e = {0};
+		Event e {};
 		e.type = Event::kPolyPressureEvent;
 		e.polyPressure.channel = channel;
 		e.polyPressure.pitch = pitch;
@@ -1276,7 +1276,7 @@ using namespace Vst;
 			bus.maximumChannelCount = customFormat.channelCount;
 		}
 
-		BusInfo info = {0};
+		BusInfo info {};
 		if (component->getBusInfo (kAudio, inputOrOutput, busNum, info) == kResultTrue)
 		{
 			bus.name = createCFStringFromString128 (info.name);
@@ -1418,7 +1418,7 @@ using namespace Vst;
 	int32 parameterCount = _editcontroller->getParameterCount ();
 	for (int32 i = 0; i < parameterCount; i++)
 	{
-		ParameterInfo pi = {0};
+		ParameterInfo pi {};
 		_editcontroller->getParameterInfo (i, pi);
 
 		if (pi.flags & ParameterInfo::kIsBypass)
@@ -1580,7 +1580,7 @@ using namespace Vst;
 			int32 unitCount = unitInfo->getUnitCount ();
 			for (int32 i = 0; i < unitCount; i++)
 			{
-				UnitInfo unitInfoStruct = {0};
+				UnitInfo unitInfoStruct {};
 				if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 				{
 					if (unitId == unitInfoStruct.id)
@@ -1608,7 +1608,7 @@ using namespace Vst;
 	int32 parameterCount = _editcontroller->getParameterCount ();
 	for (int32 i = 0; i < parameterCount; i++)
 	{
-		ParameterInfo pi = {0};
+		ParameterInfo pi {};
 		_editcontroller->getParameterInfo (i, pi);
 
 		// do not register bypass
@@ -1674,7 +1674,7 @@ using namespace Vst;
 			int32 unitCount = unitInfo->getUnitCount ();
 			for (int32 i = 0; i < unitCount; i++)
 			{
-				UnitInfo unitInfoStruct = {0};
+				UnitInfo unitInfoStruct {};
 				if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 				{
 					if (programListInfo.id == unitInfoStruct.programListId)
