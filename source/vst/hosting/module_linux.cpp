@@ -143,7 +143,7 @@ public:
 		}
 	}
 
-	static Optional<Path> getSOPath (const std::string& inPath)
+	static Optional<Path> getSOPath (const std::string& inPath, const std::string& machine)
 	{
 		Path modulePath {inPath};
 		if (!filesystem::is_directory (modulePath))
@@ -155,12 +155,7 @@ public:
 		if (!filesystem::is_directory (modulePath))
 			return {};
 
-		// use the Machine Hardware Name (from uname cmd-line) as prefix for "-linux"
-		auto machine = getCurrentMachineName ();
-		if (!machine)
-			return {};
-
-		modulePath /= *machine + "-linux";
+		modulePath /= machine + "-linux";
 		if (!filesystem::is_directory (modulePath))
 			return {};
 
@@ -171,10 +166,59 @@ public:
 
 	bool load (const std::string& inPath, std::string& errorDescription) override
 	{
-		auto modulePath = getSOPath (inPath);
+		// use the Machine Hardware Name (from uname cmd-line) as prefix for "-linux"
+		auto machine = getCurrentMachineName ();
+		if (!machine)
+		{
+			errorDescription = "uname failed.";
+			return false;
+		}
+
+		errorDescription = "";
+
+#if SMTG_PLATFORM_64
+		return tryLoad (inPath, errorDescription, *machine);
+#else
+		if (tryLoad (inPath, errorDescription, *machine))
+		{
+			return true;
+		}
+
+		// 64 bit kernel may be runnig a 32 bit application, try possible options
+
+		if (*machine != "i686")
+		{
+			errorDescription += '\n';
+			if (tryLoad (inPath, errorDescription, "i686"))
+			{
+				errorDescription = "";
+				return true;
+			}
+		}
+
+		if (*machine != "i386")
+		{
+			errorDescription += '\n';
+			if (tryLoad (inPath, errorDescription, "i386"))
+			{
+				errorDescription = "";
+				return true;
+			}
+		}
+
+		return false;
+#endif
+	}
+
+	void* mModule {nullptr};
+
+private:
+	bool tryLoad (const std::string& inPath, std::string& errorDescription, const std::string& machine)
+	{
+		auto modulePath = getSOPath (inPath, machine);
 		if (!modulePath)
 		{
-			errorDescription = inPath + " is not a module directory.";
+			errorDescription += inPath + " is not a module directory (" + machine + ").";
 			return false;
 		}
 
@@ -182,7 +226,7 @@ public:
 		                  RTLD_LAZY);
 		if (!mModule)
 		{
-			errorDescription = "dlopen failed.\n";
+			errorDescription += "dlopen failed (" + machine + ").\n";
 			errorDescription += dlerror ();
 			return false;
 		}
@@ -190,42 +234,40 @@ public:
 		auto moduleEntry = getFunctionPointer<ModuleEntryFunc> ("ModuleEntry");
 		if (!moduleEntry)
 		{
-			errorDescription =
-			    "The shared library does not export the required 'ModuleEntry' function";
+			errorDescription +=
+			    "The shared library does not export the required 'ModuleEntry' function (" + machine + ").";
 			return false;
 		}
 		// ModuleExit is mandatory
 		auto moduleExit = getFunctionPointer<ModuleExitFunc> ("ModuleExit");
 		if (!moduleExit)
 		{
-			errorDescription =
-			    "The shared library does not export the required 'ModuleExit' function";
+			errorDescription +=
+			    "The shared library does not export the required 'ModuleExit' function (" + machine + ").";
 			return false;
 		}
 		auto factoryProc = getFunctionPointer<GetFactoryProc> ("GetPluginFactory");
 		if (!factoryProc)
 		{
-			errorDescription =
-			    "The shared library does not export the required 'GetPluginFactory' function";
+			errorDescription +=
+			    "The shared library does not export the required 'GetPluginFactory' function (" + machine + ").";
 			return false;
 		}
 
 		if (!moduleEntry (mModule))
 		{
-			errorDescription = "Calling 'ModuleEntry' failed";
+			errorDescription += "Calling 'ModuleEntry' failed (" + machine + ").";
 			return false;
 		}
 		auto f = Steinberg::FUnknownPtr<Steinberg::IPluginFactory> (owned (factoryProc ()));
 		if (!f)
 		{
-			errorDescription = "Calling 'GetPluginFactory' returned nullptr";
+			errorDescription += "Calling 'GetPluginFactory' returned nullptr (" + machine + ").";
 			return false;
 		}
 		factory = PluginFactory (f);
 		return true;
 	}
-
-	void* mModule {nullptr};
 };
 
 //------------------------------------------------------------------------
