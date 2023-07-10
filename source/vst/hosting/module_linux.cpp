@@ -184,7 +184,10 @@ public:
 			return true;
 		}
 
-		// 64 bit kernel may be runnig a 32 bit application, try possible options
+		// 64 bit kernel may be runnig a 32 bit application, or uname reported i386 when
+		// we should be looking for i686 or vica-versa, so let's try possible options.
+		// Note: this logic assumes that the host will never run on a CPU which actually
+		// doesn't support i686 instructions.
 
 		if (*machine != "i686")
 		{
