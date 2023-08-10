@@ -83,7 +83,7 @@ inline int8 getMIDICCOutValue (ParamValue value)
 
 //------------------------------------------------------------------------
 /** Returns pitchbend value from a PitchBend LegacyMIDICCOut Event */
-inline int16 getPitchBendValue (LegacyMIDICCOutEvent& e)
+inline int16 getPitchBendValue (const LegacyMIDICCOutEvent& e)
 {
 	return ((e.value & 0x7F)| ((e.value2 & 0x7F) << 7));
 }
@@ -99,7 +99,7 @@ inline void setPitchBendValue (LegacyMIDICCOutEvent& e, ParamValue value)
 
 //------------------------------------------------------------------------
 /** Returns normalized pitchbend value from a PitchBend LegacyMIDICCOut Event */
-inline float getNormPitchBendValue (LegacyMIDICCOutEvent& e)
+inline float getNormPitchBendValue (const LegacyMIDICCOutEvent& e)
 {
 	float val = (float)getPitchBendValue (e) / (float)0x3FFF;
 	if (val < 0)
