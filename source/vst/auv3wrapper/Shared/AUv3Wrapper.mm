@@ -2097,6 +2097,14 @@ using namespace Vst;
 	if (nil == presentPreset)
 		return;
 
+	if (!pthread_main_np())
+	{
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[self setCurrentPreset:presentPreset];
+		});
+		return;
+	}
+
 	// if it is a factory preset
 	if (presentPreset.number >= 0)
 	{
@@ -2129,6 +2137,15 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (NSDictionary<NSString*, id>*)fullState
 {
+	if (!pthread_main_np ())
+	{
+		__block NSDictionary<NSString*, id>* state;
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			state = [self fullState];
+		});
+		return state;
+	}
+
 	// should flush parameters of VST to save correct state (when not in playback mode)
 
 	NSMutableDictionary<NSString*, id>* dict = [[NSMutableDictionary<NSString*, id> alloc] init];
@@ -2169,6 +2186,14 @@ using namespace Vst;
 
 	if (newFullState == nullptr)
 		return;
+
+	if (!pthread_main_np())
+	{
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[self setFullState:newFullState];
+		});
+		return;
+	}
 
 	bool fromProject = false;
 
@@ -2234,10 +2259,19 @@ using namespace Vst;
 }
 
 //------------------------------------------------------------------------
-- (BOOL)allocateRenderResourcesAndReturnError:(NSError**)outError
+- (BOOL)allocateRenderResourcesAndReturnError:(NSError* __autoreleasing*)outError
 {
 	if (![super allocateRenderResourcesAndReturnError:outError])
 		return NO;
+
+	if (!pthread_main_np())
+	{
+		__block BOOL result = NO;
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			result = [self allocateRenderResourcesAndReturnError:outError];
+		});
+		return result;
+	}
 
 	if (![self validateChannelConfig])
 	{
@@ -2274,6 +2308,14 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)deallocateRenderResources
 {
+	if (!pthread_main_np())
+	{
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[self deallocateRenderResources];
+		});
+		return;
+	}
+
 	musicalContext = nullptr;
 	transportContext = nullptr;
 
