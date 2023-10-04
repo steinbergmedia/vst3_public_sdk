@@ -1909,7 +1909,9 @@ ComponentResult AUWrapper::StartNote (MusicDeviceInstrumentID inInstrument,
                                       NoteInstanceID* outNoteInstanceID, UInt32 inOffsetSampleFrame,
                                       const MusicDeviceNoteParams& inParams)
 {
-	NoteInstanceID noteID = ((UInt8)inParams.mPitch) | ((noteCounter++) << 8);
+	NoteInstanceID noteID = (UInt8)inParams.mPitch;
+	if (outNoteInstanceID)
+		noteID |= ((noteCounter++) << 8);
 
 	Event e = {};
 
