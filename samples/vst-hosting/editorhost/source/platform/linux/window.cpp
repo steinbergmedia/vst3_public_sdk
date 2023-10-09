@@ -37,140 +37,23 @@
 
 #include "window.h"
 
-#ifdef EDITORHOST_GTK
-#include <gtkmm.h>
-#endif
-
 #include "public.sdk/source/vst/utility/stringconvert.h"
-#include <X11/Xutil.h>
+#include "public.sdk/samples/vst-hosting/editorhost/source/platform/linux/irunloopimpl.h"
+
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
 
-#ifdef EDITORHOST_GTK
-#include <gdk/gdkx.h>
-#include <gtkmm/socket.h>
-#else
-#include "public.sdk/samples/vst-hosting/editorhost/source/platform/linux/runloop.h"
+#include <X11/Xutil.h>
 #include <X11/Xlib.h>
-#endif
 
 //------------------------------------------------------------------------
 namespace Steinberg {
 namespace Vst {
 namespace EditorHost {
 
-#ifdef EDITORHOST_GTK
-
-struct ContentView : Gtk::Fixed
-{
-	void on_size_allocate (Gtk::Allocation& allocation) override
-	{
-		Gtk::Widget::on_size_allocate (allocation);
-		for (auto child : get_children ())
-		{
-			child->size_allocate (allocation);
-		}
-	}
-};
-
-struct WindowGtk : Gtk::Window
-{
-	WindowGtk ()
-	{
-		add (container);
-		container.put (label, 0, 0);
-		container.add (socket);
-		show_all_children ();
-	}
-
-	void on_show () override
-	{
-		Gtk::Window::on_show ();
-		if (controller)
-			controller->onShow (*window);
-	}
-
-	void on_unmap () override
-	{
-		Gtk::Window::on_unmap ();
-		if (controller)
-			controller->onClose (*window);
-		if (windowClosedFunc)
-			windowClosedFunc (window);
-	}
-
-	bool on_configure_event (GdkEventConfigure* event) override
-	{
-		// TODO: does not work yet
-		Gtk::Window::on_configure_event (event);
-		return false;
-		if (controller)
-		{
-			if (currentSize.width != event->width || currentSize.height != event->height)
-			{
-				Size newSize {event->width, event->height};
-				auto size = controller->constrainSize (*window, newSize);
-				if (size != newSize)
-				{
-					resize (size.width, size.height);
-				}
-			}
-		}
-		return true;
-	}
-
-	void on_size_allocate (Gtk::Allocation& allocation) override
-	{
-		auto size = Size {allocation.get_width (), allocation.get_height ()};
-		if (size != currentSize)
-		{
-			if (controller)
-			{
-				size = controller->constrainSize (*window, size);
-				controller->onResize (*window, size);
-			}
-			currentSize = size;
-			allocation.set_width (currentSize.width);
-			allocation.set_height (currentSize.height);
-			resize (currentSize.width, currentSize.height);
-		}
-		Gtk::Window::on_size_allocate (allocation);
-	}
-
-	void checkSize ()
-	{
-		int width, height;
-		get_size (width, height);
-		if (currentSize.width != width || currentSize.height != height)
-		{
-			resize (currentSize.width, currentSize.height);
-		}
-	}
-
-	::Window getId ()
-	{
-		if (!socket.is_visible ())
-			return 0;
-		std::cout << "Socket ID: " << socket.get_id () << "\n";
-		std::cout.flush ();
-		return socket.get_id ();
-	}
-
-	X11Window::WindowClosedFunc windowClosedFunc;
-	WindowControllerPtr controller {nullptr};
-	X11Window* window {nullptr};
-	Size currentSize;
-	ContentView container;
-	Gtk::Label label {"HostLabel"};
-	Gtk::Socket socket;
-};
-#else
-
-#endif
-
 //------------------------------------------------------------------------
-struct X11Window::Impl : public Linux::IRunLoop
+struct X11Window::Impl
 {
 	Impl (X11Window* x11Window);
 	bool init (const std::string& name, Size size, bool resizeable,
@@ -182,20 +65,6 @@ struct X11Window::Impl : public Linux::IRunLoop
 	Size getSize () const;
 	void resize (Size newSize, bool force);
 
-#ifdef EDITORHOST_GTK
-	WindowGtk window;
-
-//------------------------------------------------------------------------
-	struct EventHandler
-	{
-		IPtr<Linux::IEventHandler> handler;
-		GIOChannel* ioChannel;
-	};
-
-//------------------------------------------------------------------------
-	using TimerHandler = IPtr<Linux::ITimerHandler>;
-	using TimerID = guint;
-#else
 //------------------------------------------------------------------------
 	struct XEmbedInfo
 	{
@@ -225,26 +94,9 @@ struct X11Window::Impl : public Linux::IRunLoop
 
 	using EventHandler = IPtr<Linux::IEventHandler>;
 	using TimerHandler = IPtr<Linux::ITimerHandler>;
-#endif
+
 	Size mCurrentSize {};
 	X11Window* x11Window {nullptr};
-
-	using EventHandlers = std::unordered_map<Linux::FileDescriptor, EventHandler>;
-	EventHandlers eventHandlers;
-
-	using TimerHandlers = std::unordered_map<TimerID, TimerHandler>;
-	TimerHandlers timerHandlers;
-
-	tresult PLUGIN_API registerEventHandler (Linux::IEventHandler* handler,
-	                                         Linux::FileDescriptor fd) override;
-	tresult PLUGIN_API unregisterEventHandler (Linux::IEventHandler* handler) override;
-	tresult PLUGIN_API registerTimer (Linux::ITimerHandler* handler,
-	                                  Linux::TimerInterval milliseconds) override;
-	tresult PLUGIN_API unregisterTimer (Linux::ITimerHandler* handler) override;
-
-	uint32 PLUGIN_API addRef () override { return 1000; }
-	uint32 PLUGIN_API release () override { return 1000; }
-	tresult PLUGIN_API queryInterface (const TUID, void**) override { return kNoInterface; }
 };
 
 //------------------------------------------------------------------------
@@ -312,11 +164,7 @@ Size X11Window::getContentSize ()
 //------------------------------------------------------------------------
 NativePlatformWindow X11Window::getNativePlatformWindow () const
 {
-#ifdef EDITORHOST_GTK
-	return {kPlatformTypeX11EmbedWindowID, reinterpret_cast<void*> (impl->window.getId ())};
-#else
 	return {kPlatformTypeX11EmbedWindowID, reinterpret_cast<void*> (impl->plugParentWindow)};
-#endif
 }
 
 //------------------------------------------------------------------------
@@ -324,7 +172,8 @@ tresult X11Window::queryInterface (const TUID iid, void** obj)
 {
 	if (FUnknownPrivate::iidEqual (iid, Linux::IRunLoop::iid))
 	{
-		*obj = impl.get ();
+		*obj = &(Linux::RunLoopImpl::instance ());
+		// as the run loop is a singleton it is not necessary to call a retain on that object
 		return kResultTrue;
 	}
 	return kNoInterface;
@@ -333,158 +182,7 @@ tresult X11Window::queryInterface (const TUID iid, void** obj)
 //------------------------------------------------------------------------
 void X11Window::onIdle ()
 {
-#ifdef EDITORHOST_GTK
-	impl->window.checkSize ();
-#endif
 }
-
-#ifdef EDITORHOST_GTK
-//------------------------------------------------------------------------
-X11Window::Impl::Impl (X11Window* x11Window) : x11Window (x11Window)
-{
-}
-
-//------------------------------------------------------------------------
-bool X11Window::Impl::init (const std::string& name, Size size, bool resizeable,
-                            const WindowControllerPtr& controller, Display* display,
-                            const WindowClosedFunc& windowClosedFunc)
-{
-	window.set_title (name.data ());
-	window.set_default_size (size.width, size.height);
-	window.set_resizable (resizeable);
-	window.show ();
-	window.set_visible (false);
-
-	window.window = x11Window;
-	window.controller = controller;
-	window.windowClosedFunc = windowClosedFunc;
-
-	return true;
-}
-
-//------------------------------------------------------------------------
-void X11Window::Impl::show ()
-{
-	window.set_visible (true);
-	window.show ();
-}
-
-//------------------------------------------------------------------------
-void X11Window::Impl::close ()
-{
-	window.close ();
-}
-
-//------------------------------------------------------------------------
-Size X11Window::Impl::getSize () const
-{
-	int width, height;
-	window.get_size (width, height);
-	return {width, height};
-}
-
-//------------------------------------------------------------------------
-void X11Window::Impl::resize (Size newSize, bool force)
-{
-	if (!force && mCurrentSize == newSize)
-		return;
-	window.resize (newSize.width, newSize.height);
-	mCurrentSize = newSize;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::registerEventHandler (Linux::IEventHandler* handler,
-                                                          Linux::FileDescriptor fd)
-{
-	if (!handler)
-		return kInvalidArgument;
-
-	if (eventHandlers.find (fd) != eventHandlers.end ())
-		return kInvalidArgument;
-
-	auto display = gdk_window_get_display (window.get_window ()->gobj ());
-	auto xDisplay = gdk_x11_display_get_xdisplay (display);
-	if (XConnectionNumber (xDisplay) == fd)
-	{
-		// the plug-in is using GTK as well, so no need in registering it as event handler
-		return kResultTrue;
-	}
-
-	auto ioChannel = g_io_channel_unix_new (fd);
-	g_io_add_watch (ioChannel, (GIOCondition) (G_IO_IN | G_IO_OUT | G_IO_ERR | G_IO_HUP),
-	                [] (auto* source, auto condition, auto data) {
-		                (void)condition;
-		                auto handler = reinterpret_cast<Linux::IEventHandler*> (data);
-		                handler->onFDIsSet (g_io_channel_unix_get_fd (source));
-		                return static_cast<int> (0);
-	                },
-	                handler);
-
-	eventHandlers[fd] = {handler, ioChannel};
-
-	return kResultTrue;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::unregisterEventHandler (Linux::IEventHandler* handler)
-{
-	if (!handler)
-		return kInvalidArgument;
-
-	for (auto it = eventHandlers.begin (), end = eventHandlers.end (); it != end; ++it)
-	{
-		if (it->second.handler == handler)
-		{
-			g_io_channel_unref (it->second.ioChannel);
-			eventHandlers.erase (it);
-			return kResultTrue;
-		}
-	}
-
-	return kResultFalse;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::registerTimer (Linux::ITimerHandler* handler,
-                                                   Linux::TimerInterval milliseconds)
-{
-	if (!handler || milliseconds == 0)
-		return kInvalidArgument;
-
-	auto id = g_timeout_add (milliseconds,
-	                         [] (auto data) {
-		                         auto handler = reinterpret_cast<Linux::ITimerHandler*> (data);
-		                         handler->onTimer ();
-		                         return static_cast<gboolean> (true);
-	                         },
-	                         handler);
-	timerHandlers.emplace (id, handler);
-	return kResultTrue;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::unregisterTimer (Linux::ITimerHandler* handler)
-{
-	if (!handler)
-		return kInvalidArgument;
-
-	for (auto it = timerHandlers.begin (), end = timerHandlers.end (); it != end; ++it)
-	{
-		if (it->second == handler)
-		{
-			if (auto source = g_main_context_find_source_by_id (nullptr, it->first))
-			{
-				g_source_destroy (source);
-			}
-			timerHandlers.erase (it);
-			return kResultTrue;
-		}
-	}
-
-	return kNotImplemented;
-}
-
-#else
 
 /* XEMBED messages */
 #define XEMBED_EMBEDDED_NOTIFY 0
@@ -632,79 +330,6 @@ bool X11Window::Impl::init (const std::string& name, Size size, bool resizeable,
 	    xWindow, [this] (const XEvent& e) { return handleMainWindowEvent (e); });
 
 	return true;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::registerEventHandler (Linux::IEventHandler* handler,
-                                                          Linux::FileDescriptor fd)
-{
-	if (!handler || eventHandlers.find (fd) != eventHandlers.end ())
-		return kInvalidArgument;
-
-	RunLoop::instance ().registerFileDescriptor (fd,
-	                                             [handler] (int fd) { handler->onFDIsSet (fd); });
-	eventHandlers.emplace (fd, handler);
-	return kResultTrue;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::unregisterEventHandler (Linux::IEventHandler* handler)
-{
-	if (!handler)
-		return kInvalidArgument;
-
-	for (auto it = eventHandlers.begin (), end = eventHandlers.end (); it != end; ++it)
-	{
-		if (it->second == handler)
-		{
-			RunLoop::instance ().unregisterFileDescriptor (it->first);
-			eventHandlers.erase (it);
-			return kResultTrue;
-		}
-	}
-
-	return kResultFalse;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::registerTimer (Linux::ITimerHandler* handler,
-                                                   Linux::TimerInterval milliseconds)
-{
-	if (!handler || milliseconds == 0)
-		return kInvalidArgument;
-
-	auto id = RunLoop::instance ().registerTimer (milliseconds,
-	                                              [handler] (auto) { handler->onTimer (); });
-	timerHandlers.emplace (id, handler);
-	return kResultTrue;
-}
-
-//------------------------------------------------------------------------
-tresult PLUGIN_API X11Window::Impl::unregisterTimer (Linux::ITimerHandler* handler)
-{
-	if (!handler)
-		return kInvalidArgument;
-
-	for (auto it = timerHandlers.begin (), end = timerHandlers.end (); it != end; ++it)
-	{
-		if (it->second == handler)
-		{
-			RunLoop::instance ().unregisterTimer (it->first);
-			timerHandlers.erase (it);
-			return kResultTrue;
-		}
-	}
-
-	return kNotImplemented;
-}
-
-//------------------------------------------------------------------------
-void X11Window::Impl::callPlugEventHandlers ()
-{
-	for (auto& e : eventHandlers)
-	{
-		e.second->onFDIsSet (e.first);
-	}
 }
 
 //------------------------------------------------------------------------
@@ -1015,7 +640,6 @@ bool X11Window::Impl::handlePlugEvent (const XEvent& event)
 
 	return res;
 }
-#endif
 
 //------------------------------------------------------------------------
 } // EditorHost

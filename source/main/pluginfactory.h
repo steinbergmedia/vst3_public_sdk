@@ -167,4 +167,23 @@ END_FACTORY
 #define END_FACTORY	} else gPluginFactory->addRef (); \
 	return gPluginFactory; }
 
+#define DEF_VST3_CLASS(pluginName, pluginVst3Categories, classFlags, pluginVersion, processorCID, \
+                       processorCreateFunc, controllerCID, controllerCreateFunc)                  \
+	{                                                                                             \
+		{                                                                                         \
+			const Steinberg::TUID lcid = processorCID;                                            \
+			static Steinberg::PClassInfo2 processorClass (                                        \
+			    lcid, Steinberg::PClassInfo::kManyInstances, kVstAudioEffectClass, pluginName,    \
+			    classFlags, pluginVst3Categories, 0, pluginVersion, kVstVersionString);           \
+			gPluginFactory->registerClass (&processorClass, processorCreateFunc);                 \
+		}                                                                                         \
+		{                                                                                         \
+			const Steinberg::TUID lcid = controllerCID;                                           \
+			static Steinberg::PClassInfo2 controllerClass (                                       \
+			    lcid, Steinberg::PClassInfo::kManyInstances, kVstComponentControllerClass,        \
+			    pluginName, 0, "", 0, pluginVersion, kVstVersionString);                          \
+			gPluginFactory->registerClass (&controllerClass, controllerCreateFunc);               \
+		}                                                                                         \
+	}
+
 /** @} */

@@ -2,7 +2,7 @@
 if(SMTG_MAC)
     option(SMTG_BUILD_INTERAPPAUDIO "Enable building the iOS InterAppAudio examples (deprecated)" OFF)
 
-    if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM AND SMTG_BUILD_INTERAPPAUDIO)
+    if(XCODE AND SMTG_ENABLE_IOS_TARGETS AND SMTG_BUILD_INTERAPPAUDIO)
 
         message("[SMTG] ********************************************************************************************************************************")
         message("[SMTG] * The iOS InterAppAudio wrapper is deprecated and may be removed in the next SDK update. Please switch to AudioUnit V3 on iOS. *")
@@ -47,5 +47,5 @@ if(SMTG_MAC)
                 "-framework AudioToolbox"
                 "-framework AVFoundation"
         )
-    endif(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM AND SMTG_BUILD_INTERAPPAUDIO)
+    endif(XCODE AND SMTG_ENABLE_IOS_TARGETS AND SMTG_BUILD_INTERAPPAUDIO)
 endif(SMTG_MAC)

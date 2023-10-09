@@ -98,7 +98,7 @@ public:
 	OBJ_METHODS (Parameter, FObject)
 //------------------------------------------------------------------------
 protected:
-	ParameterInfo info {0};
+	ParameterInfo info {};
 	ParamValue valueNormalized {0.};
 	int32 precision {4};
 };

@@ -58,3 +58,7 @@ if(APPLE AND NOT XCODE)
             ${COCOA_FRAMEWORK}
     )
 endif(APPLE AND NOT XCODE)
+
+if(MINGW)
+    set_target_properties(${target} PROPERTIES LINK_FLAGS "-municode")
+endif(MINGW)

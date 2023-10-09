@@ -53,7 +53,7 @@ struct AAX_CID
 	char str[10] {0};
 	AAX_CID () {}
 	AAX_CID (Steinberg::Vst::ParamID id) { set (id); }
-	void set (Steinberg::Vst::ParamID id) { sprintf (str, "p%lX", static_cast<unsigned long> (id)); }
+	void set (Steinberg::Vst::ParamID id) { snprintf (str, 10, "p%lX", static_cast<unsigned long> (id)); }
 	operator const char* () const { return str; }
 };
 

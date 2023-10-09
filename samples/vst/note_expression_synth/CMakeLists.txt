@@ -70,9 +70,10 @@ if (SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
 	)
 endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
 
-if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+if(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)
     set(target noteexpressionsynth_ios)
     smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${noteexpressionsynth_sources}")
+    smtg_target_configure_version_file(${target})
 
     set_target_properties(${target}
         PROPERTIES
@@ -96,14 +97,14 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
     )
     smtg_target_add_plugin_resources(${target}
         RESOURCES
-            resource/note_expression_synth.uidesc
-            resource/about.png
-            resource/background.png
-            resource/groupframe.png
-            resource/knob.png
-            resource/knob2.png
-            resource/knob big.png
-            resource/vst3_logo_small.png
+            "resource/note_expression_synth.uidesc"
+            "resource/about.png"
+            "resource/background.png"
+            "resource/groupframe.png"
+            "resource/knob.png"
+            "resource/knob2.png"
+            "resource/knob big.png"
+            "resource/vst3_logo_small.png"
     )
     smtg_target_set_bundle(${target}
         BUNDLE_IDENTIFIER "com.steinberg.${target}"
@@ -118,4 +119,5 @@ if(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
             "${SMTG_VSTGUI_SOURCE_DIR}/vstgui/plugin-bindings/vst3padcontroller.cpp"
             "${SDK_ROOT}/public.sdk/source/vst/vstguieditor.cpp"
     )
-endif(SMTG_MAC AND XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+	target_compile_features(${target} PUBLIC cxx_std_17)
+endif(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)

@@ -69,6 +69,8 @@ bool TestBase::setup ()
 	if (plugProvider)
 	{
 		vstPlug = plugProvider->getComponent ();
+		if (!vstPlug)
+			return false;
 		controller = plugProvider->getController ();
 
 		return activateMainIOBusses (true);

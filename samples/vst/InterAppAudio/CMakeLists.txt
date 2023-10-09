@@ -1,7 +1,7 @@
 
 # iOS target
 if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
-    if(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+    if(XCODE AND SMTG_ENABLE_IOS_TARGETS)
         set(target noteexpressionsynth_iaa_ios)
         set(${target}_xib_resources
             ${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/InterAppAudio/Images.xcassets
@@ -98,5 +98,5 @@ if(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)
         smtg_target_add_vst3_resource(${target} "${SDK_ROOT}/public.sdk/samples/vst/note_expression_synth/resource/vst3_logo_small.png")
     else()
         message("[SMTG] * To enable building the InterAppAudio NoteExpressionSynth example for iOS you need to set the SMTG_IOS_DEVELOPMENT_TEAM and use the Xcode generator")
-    endif(XCODE AND SMTG_IOS_DEVELOPMENT_TEAM)
+    endif(XCODE AND SMTG_ENABLE_IOS_TARGETS)
 endif(SMTG_MAC AND SMTG_BUILD_INTERAPPAUDIO)

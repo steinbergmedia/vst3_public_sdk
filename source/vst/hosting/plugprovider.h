@@ -38,7 +38,9 @@
 
 #include "public.sdk/source/vst/hosting/module.h"
 #include "pluginterfaces/vst/ivsttestplugprovider.h"
-#include "base/source/fobject.h"
+#include "pluginterfaces/base/funknownimpl.h"
+
+#include <ostream>
 
 namespace Steinberg {
 namespace Vst {
@@ -51,7 +53,8 @@ class ConnectionProxy;
 /** Helper for creating and initializing component.
 \ingroup Validator */
 //------------------------------------------------------------------------
-class PlugProvider : public FObject, public ITestPlugProvider2
+class PlugProvider
+: public U::Implements<U::Directly<ITestPlugProvider2>, U::Indirectly<ITestPlugProvider>>
 {
 public:
 	using ClassInfo = VST3::Hosting::ClassInfo;
@@ -77,10 +80,7 @@ public:
 	//--- from ITestPlugProvider2 ------------------
 	IPluginFactory* PLUGIN_API getPluginFactory () SMTG_OVERRIDE;
 
-	//--- ---------------------------------------------------------------------
-	OBJ_METHODS (PlugProvider, FObject)
-	REFCOUNT_METHODS (FObject)
-	DEF_INTERFACES_2(ITestPlugProvider, ITestPlugProvider2, FObject)
+	static void setErrorStream (std::ostream* stream);
 //------------------------------------------------------------------------
 protected:
 	bool setupPlugin (FUnknown* hostContext);
@@ -88,13 +88,16 @@ protected:
 	bool disconnectComponents ();
 	void terminatePlugin ();
 
+	template<typename Proc>
+	void printError (Proc p) const;
+
 	PluginFactory factory;
 	IPtr<IComponent> component;
 	IPtr<IEditController> controller;
 	ClassInfo classInfo;
 
-	OPtr<ConnectionProxy> componentCP;
-	OPtr<ConnectionProxy> controllerCP;
+	IPtr<ConnectionProxy> componentCP;
+	IPtr<ConnectionProxy> controllerCP;
 
 	bool plugIsGlobal;
 };

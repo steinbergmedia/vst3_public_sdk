@@ -6,7 +6,7 @@ project(smtg-vst3-again
     DESCRIPTION "Steinberg VST 3 AGain AAX example"
 )
 
-if(NOT SMTG_AAX_SDK_PATH OR NOT SMTG_ADD_VSTGUI)
+if(NOT SMTG_AAX_SDK_PATH OR NOT SMTG_ENABLE_VSTGUI_SUPPORT)
     return()
 endif()
 

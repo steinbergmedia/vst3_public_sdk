@@ -78,7 +78,7 @@ static CFBundleRef GetBundleFromExecutable (const char* filepath)
 {
 	// AutoreleasePool ap;
 	char* fname = strdup (filepath);
-	int pos = strlen (fname);
+	size_t pos = strlen (fname);
 	int level = 3;
 	while (level > 0 && --pos >= 0)
 	{

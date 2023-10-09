@@ -55,6 +55,7 @@
 #ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wreorder"
+#pragma clang diagnostic ignored "-Wundef-prefix"
 #endif
 
 #include "AAX_Atomic.h"

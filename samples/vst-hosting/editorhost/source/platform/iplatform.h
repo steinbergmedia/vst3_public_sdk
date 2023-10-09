@@ -59,6 +59,8 @@ public:
 	virtual void quit () = 0;
 	virtual void kill (int resultCode, const std::string& reason) = 0;
 
+	virtual FUnknown* getPluginFactoryContext () = 0;
+
 	static IPlatform& instance ();
 };
 

@@ -37,13 +37,7 @@
 
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iplatform.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/linux/window.h"
-#ifndef EDITORHOST_GTK
-#include "public.sdk/samples/vst-hosting/editorhost/source/platform/linux/runloop.h"
-#endif
-
-#ifdef EDITORHOST_GTK
-#include <gtkmm.h>
-#endif
+#include "public.sdk/samples/vst-hosting/editorhost/source/platform/linux/irunloopimpl.h"
 
 #include <chrono>
 #include <iostream>
@@ -90,6 +84,8 @@ public:
 	void quit () override;
 	void kill (int resultCode, const std::string& reason) override;
 
+	FUnknown* getPluginFactoryContext () override;
+
 	void run (const std::vector<std::string>& cmdArgs);
 
 	static const int kMinEventLoopRate = 16; // 60Hz
@@ -101,9 +97,6 @@ private:
 	ApplicationPtr application;
 	Display* xDisplay {nullptr};
 
-#ifdef EDITORHOST_GTK
-	Glib::RefPtr<Gtk::Application> app;
-#endif
 	std::vector<std::shared_ptr<X11Window>> windows;
 };
 
@@ -165,9 +158,7 @@ void Platform::quit ()
 	if (application)
 		application->terminate ();
 
-#ifndef EDITORHOST_GTK
 	RunLoop::instance ().stop ();
-#endif
 
 	recursiveGuard = false;
 }
@@ -180,15 +171,14 @@ void Platform::kill (int resultCode, const std::string& reason)
 }
 
 //------------------------------------------------------------------------
+FUnknown* Platform::getPluginFactoryContext ()
+{
+	return &Steinberg::Linux::RunLoopImpl::instance ();
+}
+
+//------------------------------------------------------------------------
 void Platform::run (const std::vector<std::string>& cmdArgs)
 {
-#ifdef EDITORHOST_GTK
-	app = Gtk::Application::create ("net.steinberg.vstsdk.editorhost");
-
-	application->init (cmdArgs);
-	eventLoop ();
-
-#else
 	// Connect to X server
 	std::string displayName (getenv ("DISPLAY"));
 	if (displayName.empty ())
@@ -206,32 +196,12 @@ void Platform::run (const std::vector<std::string>& cmdArgs)
 	eventLoop ();
 
 	XCloseDisplay (xDisplay);
-#endif
 }
 
 //------------------------------------------------------------------------
 void Platform::eventLoop ()
 {
-#ifdef EDITORHOST_GTK
-	while (!windows.empty ())
-	{
-		auto startTime = clock::now ();
-		while (gtk_events_pending ())
-		{
-			gtk_main_iteration_do (true);
-		}
-		for (auto item : windows)
-		{
-			item->onIdle ();
-		}
-		// prevent running faster than a given rate
-		auto duration = duration_cast<milliseconds> (clock::now () - startTime).count ();
-		if (duration < kMinEventLoopRate)
-			pause (kMinEventLoopRate - duration);
-	}
-#else
 	RunLoop::instance ().start ();
-#endif
 }
 
 //------------------------------------------------------------------------
@@ -243,10 +213,6 @@ void Platform::eventLoop ()
 //------------------------------------------------------------------------
 int main (int argc, char* argv[])
 {
-#ifdef EDITORHOST_GTK
-	gtk_init (&argc, &argv);
-#endif
-
 	std::vector<std::string> cmdArgs;
 	for (int i = 1; i < argc; ++i)
 		cmdArgs.push_back (argv[i]);

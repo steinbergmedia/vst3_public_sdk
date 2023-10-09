@@ -41,6 +41,7 @@
 #include "logevents.h"
 
 #include "public.sdk/source/common/threadchecker.h"
+#include "public.sdk/source/vst/utility/dataexchange.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
 #include "public.sdk/source/vst/vstbypassprocessor.h"
 #include "base/thread/include/flock.h"
@@ -50,6 +51,9 @@
 
 namespace Steinberg {
 namespace Vst {
+
+static constexpr DataExchangeBlock InvalidDataExchangeBlock = {nullptr, 0,
+                                                               InvalidDataExchangeBlockID};
 
 //-----------------------------------------------------------------------------
 class HostCheckerProcessor : public AudioEffect,
@@ -88,6 +92,9 @@ public:
 		return (IAudioProcessor*)new HostCheckerProcessor ();
 	}
 
+	tresult PLUGIN_API connect (IConnectionPoint* other) SMTG_OVERRIDE;
+	tresult PLUGIN_API disconnect (IConnectionPoint* other) SMTG_OVERRIDE;
+
 	//---IAudioPresentationLatency-------------------------
 	tresult PLUGIN_API setAudioPresentationLatencySamples (BusDirection dir, int32 busIndex,
 	                                                       uint32 latencyInSamples) SMTG_OVERRIDE;
@@ -124,18 +131,22 @@ protected:
 	void sendLogEventMessage (const LogEvent& logEvent);
 	void sendNowAllLogEvents ();
 
+	ProcessContext* getCurrentExchangeData ();
+
 	HostCheck mHostCheck;
 
 	BypassProcessor<Vst::Sample32> mBypassProcessorFloat;
 	BypassProcessor<Vst::Sample64> mBypassProcessorDouble;
 
-	float mLastBlockMarkerValue = -0.5f;
+	DataExchangeBlock mCurrentExchangeBlock {InvalidDataExchangeBlock};
 
-	int32 mNumNoteOns = 0;
-	uint32 mLatency = 0;
-	uint32 mWantedLatency = 0;
-	float mGeneratePeaks = 0;
-	float mProcessingLoad = 0;
+	float mLastBlockMarkerValue {-0.5f};
+
+	int32 mNumNoteOns {0};
+	uint32 mLatency {0};
+	uint32 mWantedLatency {0};
+	float mGeneratePeaks {0.f};
+	float mProcessingLoad {0.f};
 	State mCurrentState {State::kUninitialized};
 
 	uint32 mMinimumOfInputBufferCount {0};
@@ -150,6 +161,9 @@ protected:
 
 	Steinberg::Base::Thread::FLock msgQueueLock;
 	std::list<LogEvent*> msgQueue;
+
+	DataExchangeHandler* dataExchangeHandler {nullptr};
+	int64 mLastExchangeBlockSendSystemTime {0};
 
 	bool mBypass {false};
 	bool mSetActiveCalled {false};

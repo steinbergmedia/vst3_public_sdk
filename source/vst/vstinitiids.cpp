@@ -41,6 +41,7 @@
 #include "pluginterfaces/vst/ivstautomationstate.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "pluginterfaces/vst/ivstcontextmenu.h"
+#include "pluginterfaces/vst/ivstdataexchange.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
@@ -138,8 +139,12 @@ DEF_CLASS_IID (Vst::IProcessContextRequirements)
 DEF_CLASS_IID (Vst::IProgress)
 DEF_CLASS_IID (Vst::ITestPlugProvider2)
 
-
 //----VST 3.7.5---------------------------------
 DEF_CLASS_IID (IPluginCompatibility)
+
+//----VST 3.7.9---------------------------------
+DEF_CLASS_IID (Vst::IComponentHandlerSystemTime)
+DEF_CLASS_IID (Vst::IDataExchangeHandler)
+DEF_CLASS_IID (Vst::IDataExchangeReceiver)
 
 } // Steinberg

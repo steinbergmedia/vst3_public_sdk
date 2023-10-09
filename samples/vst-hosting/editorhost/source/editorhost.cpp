@@ -38,6 +38,7 @@
 #include "public.sdk/samples/vst-hosting/editorhost/source/editorhost.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/appinit.h"
 #include "base/source/fcommandline.h"
+#include "base/source/fdebug.h"
 #include "pluginterfaces/base/funknown.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "pluginterfaces/gui/iplugviewcontentscalesupport.h"
@@ -168,6 +169,8 @@ void App::openEditor (const std::string& path, VST3::Optional<VST3::UID> effectI
 	}
 
 	auto factory = module->getFactory ();
+	if (auto factoryHostContext = IPlatform::instance ().getPluginFactoryContext ())
+		factory.setHostContext (factoryHostContext);
 	for (auto& classInfo : factory.classInfos ())
 	{
 		if (classInfo.category () == kVstAudioEffectClass)

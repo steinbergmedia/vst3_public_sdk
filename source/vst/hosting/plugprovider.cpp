@@ -69,6 +69,16 @@ PlugProvider::~PlugProvider ()
 }
 
 //------------------------------------------------------------------------
+template<typename Proc>
+void PlugProvider::printError (Proc p) const
+{
+	if (errorStream)
+	{
+		p (*errorStream);
+	}
+}
+
+//------------------------------------------------------------------------
 bool PlugProvider::initialize ()
 {
 	if (plugIsGlobal)
@@ -136,6 +146,7 @@ tresult PLUGIN_API PlugProvider::releasePlugIn (IComponent* iComponent, IEditCon
 bool PlugProvider::setupPlugin (FUnknown* hostContext)
 {
 	bool res = false;
+	bool isSingleComponent = false;
 
 	//---create Plug-in here!--------------
 	// create its component part
@@ -144,10 +155,21 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 	{
 		// initialize the component with our context
 		res = (component->initialize (hostContext) == kResultOk);
+		if (res == false)
+		{
+			printError ([&] (std::ostream& stream) {
+				stream << "Failed to initialize component of " << classInfo.name () << "!\n";
+			});
+			return false;
+		}
 
 		// try to create the controller part from the component
 		// (for Plug-ins which did not succeed to separate component from controller)
-		if (res && component->queryInterface (IEditController::iid, (void**)&controller) != kResultTrue)
+		if (component->queryInterface (IEditController::iid, (void**)&controller) == kResultTrue)
+		{
+			isSingleComponent = true;
+		}
+		else
 		{
 			TUID controllerCID;
 
@@ -160,26 +182,38 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 				{
 					// initialize the component with our context
 					res = (controller->initialize (hostContext) == kResultOk);
+					if (res == false)
+					{
+						printError ([&] (std::ostream& stream) {
+							stream << "Failed to initialize controller of " << classInfo.name ()
+							       << "!\n";
+						});
+					}
 				}
+			}
+			else
+			{
+				printError ([&] (std::ostream& stream) {
+					stream << "Component does not provide a required controller class ID ["
+					       << classInfo.name () << "]!\n";
+				});
 			}
 		}
 		if (!res)
 		{
-			component = nullptr;
-			controller = nullptr;
-			if (errorStream)
-			{
-				*errorStream << "Failed to initialize instance of " << classInfo.name () << "!\n";
-			}
+			component.reset ();
+			controller.reset ();
 		}
 	}
 	else if (errorStream)
 	{
-		*errorStream << "Failed to create instance of " << classInfo.name () << "!\n";
+		printError ([&] (std::ostream& stream) {
+			stream << "Failed to create component instance of " << classInfo.name () << "!\n";
+		});
 	}
 
-	if (res)
-		connectComponents ();
+	if (res && !isSingleComponent)
+		return connectComponents ();
 
 	return res;
 }
@@ -197,23 +231,28 @@ bool PlugProvider::connectComponents ()
 
 	bool res = false;
 
-	componentCP = NEW ConnectionProxy (compICP);
-	controllerCP = NEW ConnectionProxy (contrICP);
+	componentCP = owned (new ConnectionProxy (compICP));
+	controllerCP = owned (new ConnectionProxy (contrICP));
 
-	if (componentCP->connect (contrICP) != kResultTrue)
+	tresult tres = componentCP->connect (contrICP);
+	if (tres != kResultTrue)
 	{
-		// TODO: Alert or what for non conformant plugin ?
+		printError ([&] (std::ostream& stream) {
+			stream << "Failed to connect the component with the controller with result code '"
+			       << tres << "'!\n";
+		});
+		return false;
 	}
-	else
+	tres = controllerCP->connect (compICP);
+	if (tres != kResultTrue)
 	{
-		if (controllerCP->connect (compICP) != kResultTrue)
-		{
-			// TODO: Alert or what for non conformant plugin ?
-		}
-		else
-			res = true;
+		printError ([&] (std::ostream& stream) {
+			stream << "Failed to connect the controller with the component with result code '"
+			       << tres << "'!\n";
+		});
+		return false;
 	}
-	return res;
+	return true;
 }
 
 //------------------------------------------------------------------------
@@ -225,8 +264,8 @@ bool PlugProvider::disconnectComponents ()
 	bool res = componentCP->disconnect ();
 	res &= controllerCP->disconnect ();
 
-	componentCP = nullptr;
-	controllerCP = nullptr;
+	componentCP.reset ();
+	controllerCP.reset ();
 
 	return res;
 }
@@ -246,8 +285,16 @@ void PlugProvider::terminatePlugin ()
 	if (controller && controllerIsComponent == false)
 		controller->terminate ();
 
-	component = nullptr;
-	controller = nullptr;
+	component.reset ();
+	controller.reset ();
 }
+
+//------------------------------------------------------------------------
+void PlugProvider::setErrorStream (std::ostream* stream)
+{
+	errorStream = stream;
 }
-} // namespaces
+
+//------------------------------------------------------------------------
+} // Vst
+} // Steinberg

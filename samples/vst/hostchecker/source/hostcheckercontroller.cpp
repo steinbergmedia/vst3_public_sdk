@@ -54,6 +54,7 @@
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 
+#include "pluginterfaces/vst/ivstdataexchange.h"
 #include <sstream>
 
 #define THREAD_CHECK_MSG(msg) "The host called '" msg "' in the wrong thread context.\n"
@@ -68,6 +69,50 @@ bool THREAD_CHECK_EXIT = true;
 
 namespace Steinberg {
 namespace Vst {
+
+class StringInt64Parameter : public Parameter
+{
+public:
+//------------------------------------------------------------------------
+	StringInt64Parameter (const TChar* title, ParamID tag, const TChar* units = nullptr,
+	                      UnitID unitID = kRootUnitId, const TChar* shortTitle = nullptr,
+	                      int32 flags = ParameterInfo::kNoFlags)
+	{
+		UString (info.title, str16BufferSize (String128)).assign (title);
+		if (units)
+			UString (info.units, str16BufferSize (String128)).assign (units);
+		if (shortTitle)
+			UString (info.shortTitle, str16BufferSize (String128)).assign (shortTitle);
+
+		info.stepCount = 0;
+		info.defaultNormalizedValue = valueNormalized = 0;
+		info.flags = flags;
+		info.id = tag;
+		info.unitId = unitID;
+	}
+	void setValue (int64 value)
+	{
+		if (mValue != value)
+		{
+			changed ();
+			mValue = value;
+		}
+	}
+
+	void toString (ParamValue _valueNormalized, String128 string) const SMTG_OVERRIDE
+	{
+		UString wrapper (string, str16BufferSize (String128));
+		if (!wrapper.printInt (mValue))
+			string[0] = 0;
+	}
+
+	OBJ_METHODS (StringInt64Parameter, Parameter)
+//------------------------------------------------------------------------
+protected:
+	StringInt64Parameter () {}
+
+	int64 mValue {0};
+};
 
 //-----------------------------------------------------------------------------
 class MyVST3Editor : public VST3Editor
@@ -424,6 +469,10 @@ HostCheckerController::HostCheckerController ()
 
 	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1.f);
 	mScoreMap.emplace (kLogIdIParameterFunctionNameSupported, 1.f);
+
+	mScoreMap.emplace (kLogIdIComponentHandlerSystemTimeSupported, 1.f);
+	mScoreMap.emplace (kLogIdIDataExchangeHandlerSupported, 1.f);
+	mScoreMap.emplace (kLogIdIDataExchangeReceiverSupported, 1.f);
 }
 
 //-----------------------------------------------------------------------------
@@ -498,6 +547,50 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("Copy2Clipboard"), STR16 (""), 1, 0,
 		                         ParameterInfo::kIsHidden, kCopy2ClipboardTag);
 
+		//---ProcessContext parameters------------------------
+		parameters.addParameter (new StringInt64Parameter (
+		    STR16 ("ProjectTimeSamples"), kProcessContextProjectTimeSamplesTag, STR16 ("Samples"),
+		    kUnitId, 0, ParameterInfo::kIsReadOnly));
+
+		parameters
+		    .addParameter (new RangeParameter (
+		        STR16 ("ProjectTimeMusic"), kProcessContextProjectTimeMusicTag, STR16 ("PPQ"), -10,
+		        kMaxInt32u, 0, 0, ParameterInfo::kIsReadOnly, kUnitId))
+		    ->setPrecision (2);
+
+		parameters
+		    .addParameter (new RangeParameter (
+		        STR16 ("BarPositionMusic"), kProcessContextBarPositionMusicTag, STR16 ("PPQ"), -64,
+		        kMaxInt32u, 0, 0, ParameterInfo::kIsReadOnly, kUnitId))
+		    ->setPrecision (0);
+
+		parameters
+		    .addParameter (new RangeParameter (STR16 ("Tempo"), kProcessContextTempoTag,
+		                                       STR16 ("BPM"), 0, 400, 120, 0,
+		                                       ParameterInfo::kIsReadOnly, kUnitId))
+		    ->setPrecision (3);
+		parameters
+		    .addParameter (new RangeParameter (STR16 ("SigNumerator"),
+		                                       kProcessContextTimeSigNumeratorTag, STR16 (""), 1,
+		                                       128, 4, 0, ParameterInfo::kIsReadOnly, kUnitId))
+		    ->setPrecision (0);
+		parameters
+		    .addParameter (new RangeParameter (STR16 ("SigDenominator"),
+		                                       kProcessContextTimeSigDenominatorTag, STR16 (""), 1,
+		                                       128, 4, 0, ParameterInfo::kIsReadOnly, kUnitId))
+		    ->setPrecision (0);
+
+		parameters.addParameter (new StringInt64Parameter (STR16 ("State"), kProcessContextStateTag,
+		                                                   STR16 (""), kUnitId, 0,
+		                                                   ParameterInfo::kIsReadOnly));
+		parameters.addParameter (
+		    new StringInt64Parameter (STR16 ("ProjectSystemTime"), kProcessContextSystemTimeTag,
+		                              STR16 ("ns"), kUnitId, 0, ParameterInfo::kIsReadOnly));
+		parameters.addParameter (new StringInt64Parameter (
+		    STR16 ("ProjectSystemTime"), kProcessContextContinousTimeSamplesTag, STR16 ("Samples"),
+		    kUnitId, 0, ParameterInfo::kIsReadOnly));
+
+		//--- ------------------------------
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{
 			parameters.addParameter (
@@ -595,6 +688,12 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IParameterFunctionName::iid) ==
 		    kResultTrue)
 			addFeatureLog (kLogIdIParameterFunctionNameSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IComponentHandlerSystemTime::iid) ==
+		    kResultTrue)
+			addFeatureLog (kLogIdIComponentHandlerSystemTimeSupported);
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IDataExchangeHandler::iid) ==
+		    kResultTrue)
+			addFeatureLog (kLogIdIDataExchangeHandlerSupported);
 	}
 	else
 	{
@@ -1174,6 +1273,9 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 		}
 	}
 
+	if (dataExchange.onMessage (message))
+		return kResultOk;
+
 	return ComponentBase::notify (message);
 }
 
@@ -1596,6 +1698,63 @@ tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID
 }
 
 //------------------------------------------------------------------------
+void PLUGIN_API HostCheckerController::queueOpened (DataExchangeUserContextID userContextID,
+                                                    uint32 blockSize,
+                                                    TBool& dispatchOnBackgroundThread)
+{
+}
+
+//------------------------------------------------------------------------
+void PLUGIN_API HostCheckerController::queueClosed (DataExchangeUserContextID userContextID)
+{
+}
+
+//------------------------------------------------------------------------
+void PLUGIN_API HostCheckerController::onDataExchangeBlocksReceived (
+    DataExchangeUserContextID userContextID, uint32 numBlocks, DataExchangeBlock* block,
+    TBool onBackgroundThread)
+{
+	// note that we should compensate the timing using a queue and the current systemTime before
+	// updating the values!
+	if (auto pc = reinterpret_cast<ProcessContext*> (block->data))
+	{
+		FUnknownPtr<IComponentHandlerSystemTime> systemTime (componentHandler);
+		if (systemTime)
+		{
+			// when the queue is implemented use this currentTime to find the correct ProcessContext
+			// to use
+			int64 currentSystemTime;
+			systemTime->getSystemTime (currentSystemTime);
+		}
+
+		if (auto val = reinterpret_cast<StringInt64Parameter*> (
+		        parameters.getParameter (kProcessContextProjectTimeSamplesTag)))
+			val->setValue (pc->projectTimeSamples);
+		if (auto val = reinterpret_cast<StringInt64Parameter*> (
+		        parameters.getParameter (kProcessContextContinousTimeSamplesTag)))
+			val->setValue (pc->continousTimeSamples);
+		if (auto val = parameters.getParameter (kProcessContextProjectTimeMusicTag))
+			val->setNormalized (val->toNormalized (pc->projectTimeMusic));
+		if (auto val = parameters.getParameter (kProcessContextBarPositionMusicTag))
+			val->setNormalized (val->toNormalized (pc->barPositionMusic));
+
+		if (auto val = parameters.getParameter (kProcessContextTempoTag))
+			val->setNormalized (val->toNormalized (pc->tempo));
+		if (auto val = parameters.getParameter (kProcessContextTimeSigNumeratorTag))
+			val->setNormalized (val->toNormalized (pc->timeSigNumerator));
+		if (auto val = parameters.getParameter (kProcessContextTimeSigDenominatorTag))
+			val->setNormalized (val->toNormalized (pc->timeSigDenominator));
+
+		if (auto val = reinterpret_cast<StringInt64Parameter*> (
+		        parameters.getParameter (kProcessContextStateTag)))
+			val->setValue (pc->state);
+		if (auto val = reinterpret_cast<StringInt64Parameter*> (
+		        parameters.getParameter (kProcessContextSystemTimeTag)))
+			val->setValue (pc->systemTime);
+	}
+}
+
+//------------------------------------------------------------------------
 void HostCheckerController::extractCurrentInfo (EditorView* editor)
 {
 	auto rect = editor->getRect ();
@@ -1734,6 +1893,13 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 		addRef ();
 		*obj = static_cast<IParameterFunctionName*> (this);
 		addFeatureLog (kLogIdIParameterFunctionNameSupported);
+		return kResultOk;
+	}
+	if (FUnknownPrivate::iidEqual (iid, IDataExchangeReceiver::iid))
+	{
+		addRef ();
+		*obj = static_cast<IDataExchangeReceiver*> (this);
+		addFeatureLog (kLogIdIDataExchangeReceiverSupported);
 		return kResultOk;
 	}
 	return EditControllerEx1::queryInterface (iid, obj);

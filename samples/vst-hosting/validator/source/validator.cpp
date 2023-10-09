@@ -50,6 +50,9 @@
 #include "pluginterfaces/vst/ivsthostapplication.h"
 #include "pluginterfaces/vst/ivstunits.h"
 
+#include "pluginterfaces/base/funknownimpl.h"
+#include "pluginterfaces/gui/iplugview.h"
+
 #if SMTG_OS_WINDOWS
 #include <conio.h>
 #include <windows.h>
@@ -200,6 +203,37 @@ void checkModuleSnapshots (const VST3::Hosting::Module::Ptr& module, std::ostrea
 		}
 	}
 }
+
+#if SMTG_OS_LINUX
+//------------------------------------------------------------------------
+struct DummyRunLoop : U::ImplementsNonDestroyable<U::Directly<Steinberg::Linux::IRunLoop>>
+{
+	using IEventHandler = Steinberg::Linux::IEventHandler;
+	using ITimerHandler = Steinberg::Linux::ITimerHandler;
+	using FileDescriptor = Steinberg::Linux::FileDescriptor;
+	using TimerInterval = Steinberg::Linux::TimerInterval;
+
+	static Steinberg::Linux::IRunLoop& instance ()
+	{
+		static DummyRunLoop drl;
+		return drl;
+	}
+	tresult PLUGIN_API registerEventHandler (IEventHandler* handler, FileDescriptor fd) override
+	{
+		return kNotImplemented;
+	}
+	tresult PLUGIN_API unregisterEventHandler (IEventHandler* handler) override
+	{
+		return kNotImplemented;
+	}
+	tresult PLUGIN_API registerTimer (ITimerHandler* handler, TimerInterval milliseconds) override
+	{
+		return kNotImplemented;
+	}
+	tresult PLUGIN_API unregisterTimer (ITimerHandler* handler) override { return kNotImplemented; }
+};
+
+#endif
 
 //------------------------------------------------------------------------
 //-- Options
@@ -433,7 +467,9 @@ int Validator::run ()
 				*errorStream << error << "\n";
 			return -1;
 		}
-
+#if SMTG_OS_LINUX
+		module->getFactory ().setHostContext (&DummyRunLoop::instance ());
+#endif
 		testModule (module, {useGlobalInstance, useExtensiveTests, customTestComponentPath,
 		                     testSuiteName, std::move (testProcessor)});
 

@@ -420,7 +420,7 @@ int32 AAXWrapper::_getChunk (void** data, bool isPreset)
 	{
 		// isPreset is always false for AAX, so we can ignore it
 		*data = mChunk.getData ();
-		return mChunk.getSize ();
+		return static_cast<int32> (mChunk.getSize ());
 	}
 	if (mainThread == getCurrentThread ())
 		return BaseWrapper::_getChunk (data, isPreset);
@@ -461,7 +461,8 @@ void AAXWrapper::onTimer (Timer* timer)
 	{
 		mSettingChunk = true;
 		FGuard guard (msgQueueLock);
-		BaseWrapper::_setChunk (mChunk.getData (), mChunk.getSize (), mWantsSetChunkIsPreset);
+		BaseWrapper::_setChunk (mChunk.getData (), static_cast<int32> (mChunk.getSize ()),
+		                        mWantsSetChunkIsPreset);
 		mWantsSetChunk = false;
 		mSettingChunk = false;
 		mWantsSetChunkIsPreset = false;
@@ -1323,7 +1324,7 @@ static AAX_Result GetPlugInDescription (AAX_IEffectDescriptor* outDescriptor,
 	AAX_ASSERT (err == AAX_SUCCESS);
 
 	// Data model
-	int32 plugIndex = pdesc - desc->mPluginDesc;
+	int32 plugIndex = static_cast<int32> (pdesc - desc->mPluginDesc);
 	fnCreateParameters* fn = nullptr;
 	switch (plugIndex)
 	{

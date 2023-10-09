@@ -62,9 +62,11 @@
 #if TARGET_OS_IPHONE
 #define SMTG_IOS_MAC_PLATFORMTYPE kPlatformTypeUIView
 #define SMTG_IOS_MAC_VIEW UIView
+#define SMTG_IOS_MAC_AutoresizingMask_NotSizable UIViewAutoresizingNone
 #else
 #define SMTG_IOS_MAC_VIEW NSView
 #define SMTG_IOS_MAC_PLATFORMTYPE kPlatformTypeNSView
+#define SMTG_IOS_MAC_AutoresizingMask_NotSizable NSViewNotSizable
 #endif
 
 extern "C" {
@@ -159,6 +161,18 @@ Steinberg::IPluginFactory* PLUGIN_API GetPluginFactory ()
 #pragma mark - Helpers from AUv2Wrapper / aucocoaview
 //------------------------------------------------------------------------
 namespace Steinberg {
+
+//------------------------------------------------------------------------
+template<typename Proc>
+bool executeOnMainThreadSync (Proc p)
+{
+	if (pthread_main_np () == 0)
+	{
+		dispatch_sync (dispatch_get_main_queue (), p);
+		return true;
+	}
+	return false;
+}
 
 //------------------------------------------------------------------------
 class AUPlugFrame final : public IPlugFrame
@@ -604,7 +618,7 @@ private:
 	{
 		if (!context->inputEvents)
 			return;
-		Event e = {0};
+		Event e {};
 		e.type = Event::kPolyPressureEvent;
 		e.polyPressure.channel = channel;
 		e.polyPressure.pitch = pitch;
@@ -1276,7 +1290,7 @@ using namespace Vst;
 			bus.maximumChannelCount = customFormat.channelCount;
 		}
 
-		BusInfo info = {0};
+		BusInfo info {};
 		if (component->getBusInfo (kAudio, inputOrOutput, busNum, info) == kResultTrue)
 		{
 			bus.name = createCFStringFromString128 (info.name);
@@ -1418,7 +1432,7 @@ using namespace Vst;
 	int32 parameterCount = _editcontroller->getParameterCount ();
 	for (int32 i = 0; i < parameterCount; i++)
 	{
-		ParameterInfo pi = {0};
+		ParameterInfo pi {};
 		_editcontroller->getParameterInfo (i, pi);
 
 		if (pi.flags & ParameterInfo::kIsBypass)
@@ -1580,7 +1594,7 @@ using namespace Vst;
 			int32 unitCount = unitInfo->getUnitCount ();
 			for (int32 i = 0; i < unitCount; i++)
 			{
-				UnitInfo unitInfoStruct = {0};
+				UnitInfo unitInfoStruct {};
 				if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 				{
 					if (unitId == unitInfoStruct.id)
@@ -1608,7 +1622,7 @@ using namespace Vst;
 	int32 parameterCount = _editcontroller->getParameterCount ();
 	for (int32 i = 0; i < parameterCount; i++)
 	{
-		ParameterInfo pi = {0};
+		ParameterInfo pi {};
 		_editcontroller->getParameterInfo (i, pi);
 
 		// do not register bypass
@@ -1674,7 +1688,7 @@ using namespace Vst;
 			int32 unitCount = unitInfo->getUnitCount ();
 			for (int32 i = 0; i < unitCount; i++)
 			{
-				UnitInfo unitInfoStruct = {0};
+				UnitInfo unitInfoStruct {};
 				if (unitInfo->getUnitInfo (i, unitInfoStruct) == kResultTrue)
 				{
 					if (programListInfo.id == unitInfoStruct.programListId)
@@ -2097,6 +2111,9 @@ using namespace Vst;
 	if (nil == presentPreset)
 		return;
 
+	if (executeOnMainThreadSync (^{ [self setCurrentPreset:presentPreset]; }))
+		return;
+
 	// if it is a factory preset
 	if (presentPreset.number >= 0)
 	{
@@ -2131,12 +2148,15 @@ using namespace Vst;
 {
 	// should flush parameters of VST to save correct state (when not in playback mode)
 
-	NSMutableDictionary<NSString*, id>* dict = [[NSMutableDictionary<NSString*, id> alloc] init];
+	__block NSDictionary<NSString*, id>* mtResult = nil;
+	if (executeOnMainThreadSync (^{ mtResult = [self fullState]; }))
+	{
+		return mtResult;
+	}
 
-	NSDictionary<NSString*, id>* superDict = [super fullState];
-
-	if (superDict != nullptr)
-		[dict addEntriesFromDictionary:superDict];
+	auto* result = [NSMutableDictionary<NSString*, id> new];
+	if (auto* superDict = [super fullState])
+		[result addEntriesFromDictionary:superDict];
 
 	NSMutableData* processorData = [[NSMutableData alloc] init];
 	NSMutableData* controllerData = [[NSMutableData alloc] init];
@@ -2157,17 +2177,19 @@ using namespace Vst;
 			[controllerData setLength:0];
 	}
 
-	[dict setObject:processorData forKey:@"Processor State"];
-	[dict setObject:controllerData forKey:@"Controller State"];
+	[result setObject:processorData forKey:@"Processor State"];
+	[result setObject:controllerData forKey:@"Controller State"];
 
-	return dict;
+	return result;
 }
 
 //------------------------------------------------------------------------
 - (void)setFullState:(NSDictionary<NSString*, id>*)newFullState
 {
-
 	if (newFullState == nullptr)
+		return;
+
+	if (executeOnMainThreadSync (^{ [self setFullState:newFullState]; }))
 		return;
 
 	bool fromProject = false;
@@ -2234,8 +2256,13 @@ using namespace Vst;
 }
 
 //------------------------------------------------------------------------
-- (BOOL)allocateRenderResourcesAndReturnError:(NSError**)outError
+- (BOOL)allocateRenderResourcesAndReturnError:(NSError* __autoreleasing*)outError
 {
+	__block BOOL result = NO;
+	if (executeOnMainThreadSync (
+	        ^{ result = [self allocateRenderResourcesAndReturnError:outError]; }))
+		return result;
+
 	if (![super allocateRenderResourcesAndReturnError:outError])
 		return NO;
 
@@ -2274,6 +2301,9 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)deallocateRenderResources
 {
+	if (executeOnMainThreadSync (^{ [self deallocateRenderResources]; }))
+		return;
+
 	musicalContext = nullptr;
 	transportContext = nullptr;
 
@@ -2465,11 +2495,11 @@ using namespace Vst;
 - (void)loadView
 {
 	SMTG_IOS_MAC_VIEW* view = [[SMTG_IOS_MAC_VIEW alloc] initWithFrame:CGRectMake (0, 0, 0, 0)];
-	view.autoresizingMask = NSViewNotSizable;
+	view.autoresizingMask = SMTG_IOS_MAC_AutoresizingMask_NotSizable;
 	view.translatesAutoresizingMaskIntoConstraints = YES;
 	[self setView:view];
 
-#if !TARGET_API_IPHONE
+#if SMTG_OS_OSX
 	//-------------------------------------------
 	// workaround bug of Logic/Garageband to not listen to plug-in editor size changes and using the
 	// initial size and loading the view before creating the audio unit. (FB8971597)
@@ -2506,7 +2536,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)setFrame:(CGRect)newSize
 {
-	if (NSEqualRects (self.view.frame, newSize))
+	if (CGRectEqualToRect (self.view.frame, newSize))
 		return;
 
 	self.view.frame = newSize;

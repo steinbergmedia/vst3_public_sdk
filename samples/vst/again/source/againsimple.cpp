@@ -51,8 +51,6 @@
 
 #include "base/source/fstreamer.h"
 
-#include "vstgui/plugin-bindings/vst3editor.h"
-
 #include <cmath>
 #include <cstdio>
 
@@ -489,7 +487,7 @@ tresult PLUGIN_API AGainSimple::setBusArrangements (SpeakerArrangement* inputs, 
 					bus->setName (STR16 ("Mono In"));
 					if (auto* busOut = FCast<AudioBus> (audioOutputs.at (0)))
 					{
-						busOut->setArrangement (inputs[0]);
+						busOut->setArrangement (outputs[0]);
 						busOut->setName (STR16 ("Mono Out"));
 					}
 				}

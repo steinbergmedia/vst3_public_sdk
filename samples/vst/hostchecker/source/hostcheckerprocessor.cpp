@@ -60,6 +60,8 @@ namespace Vst {
 
 bool THREAD_CHECK_EXIT = false;
 
+static constexpr int64 kRefreshRateForExchangePC = 40000000; // 25Hz
+
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
@@ -78,6 +80,13 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 	tresult result = AudioEffect::initialize (context);
 	if (result == kResultOk)
 	{
+		dataExchangeHandler =
+		    new DataExchangeHandler (this, [this] (auto& config, const auto& setup) {
+			    config.numBlocks = 5;
+			    config.blockSize = sizeof (ProcessContext);
+			    return true;
+		    });
+
 		if (mCurrentState != State::kUninitialized)
 			addLogEvent (kLogIdInvalidStateInitializedMissing);
 
@@ -135,6 +144,9 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::terminate ()
 {
+	delete dataExchangeHandler;
+	dataExchangeHandler = nullptr;
+
 	if (mCurrentState == State::kUninitialized)
 	{
 		// redundance
@@ -194,6 +206,22 @@ void HostCheckerProcessor::sendLogEventMessage (const LogEvent& logEvent)
 			sendMessage (message);
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+ProcessContext* HostCheckerProcessor::getCurrentExchangeData ()
+{
+	if (!dataExchangeHandler)
+		return nullptr;
+
+	auto block = dataExchangeHandler->getCurrentOrNewBlock ();
+	if (block.blockID == InvalidDataExchangeBlockID)
+		return nullptr;
+	if (mCurrentExchangeBlock != block)
+	{
+		mCurrentExchangeBlock = block;
+	}
+	return reinterpret_cast<ProcessContext*> (mCurrentExchangeBlock.data);
 }
 
 //-----------------------------------------------------------------------------
@@ -283,6 +311,25 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 
 	if (data.processContext)
 	{
+		if (dataExchangeHandler)
+		{
+			if (!dataExchangeHandler->isEnabled ())
+				dataExchangeHandler->enable (true);
+
+			if (data.processContext->systemTime - mLastExchangeBlockSendSystemTime >
+			    kRefreshRateForExchangePC)
+			{
+				mLastExchangeBlockSendSystemTime = data.processContext->systemTime;
+				if (auto pc = getCurrentExchangeData ())
+				{
+					memcpy (pc, data.processContext, sizeof (ProcessContext));
+					dataExchangeHandler->sendCurrentBlock ();
+				}
+				else
+					dataExchangeHandler->discardCurrentBlock ();
+			}
+		}
+
 		if (data.processContext->state & ProcessContext::kPlaying)
 			addLogEvent (kLogIdProcessContextPlayingSupported);
 		if (data.processContext->state & ProcessContext::kRecording)
@@ -311,9 +358,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			addLogEvent (kLogIdProcessContextSmpteSupported);
 		if (data.processContext->state & ProcessContext::kClockValid)
 			addLogEvent (kLogIdProcessContextClockSupported);
-	}
-	if (data.processContext)
-	{
+
 		if (mLastProjectTimeSamples != kMinInt64)
 		{
 			bool playbackChanged = (data.processContext->state & ProcessContext::kPlaying) !=
@@ -356,7 +401,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		mLastContinuousProjectTimeSamples = data.processContext->continousTimeSamples;
 		mLastState = data.processContext->state;
 		mLastNumSamples = data.numSamples;
-	}
+	} // (data.processContext)
 
 	Algo::foreach (data.inputParameterChanges, [&] (IParamValueQueue& paramQueue) {
 		Algo::foreachLast (paramQueue, [&] (ParamID id, int32 /*sampleOffset*/, ParamValue value) {
@@ -620,6 +665,14 @@ tresult PLUGIN_API HostCheckerProcessor::setupProcessing (ProcessSetup& setup)
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 {
+	if (dataExchangeHandler)
+	{
+		if (state)
+			dataExchangeHandler->onActivate (processSetup);
+		else
+			dataExchangeHandler->onDeactivate ();
+	}
+
 	if (!threadChecker->test (THREAD_CHECK_MSG ("HostCheckerProcessor::setActive"),
 	                          THREAD_CHECK_EXIT))
 	{
@@ -786,6 +839,24 @@ tresult PLUGIN_API HostCheckerProcessor::getBusArrangement (BusDirection dir, in
 {
 	addLogEvent (kLogIdGetBusArrangements);
 	return AudioEffect::getBusArrangement (dir, busIndex, arr);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::connect (IConnectionPoint* other)
+{
+	auto res = AudioEffect::connect (other);
+	if (dataExchangeHandler)
+		dataExchangeHandler->onConnect (other, getHostContext ());
+	return res;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerProcessor::disconnect (IConnectionPoint* other)
+{
+	if (dataExchangeHandler)
+		dataExchangeHandler->onDisconnect (other);
+
+	return AudioEffect::disconnect (other);
 }
 
 //-----------------------------------------------------------------------------

@@ -37,9 +37,6 @@
 
 #pragma once
 
-// Use X11 instead of GTK
-// #define EDITORHOST_GTK
-
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iwindow.h"
 #include <functional>
 

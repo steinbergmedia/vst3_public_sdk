@@ -1,6 +1,6 @@
 include(SMTG_AddVST3AuV3)
 
-if(SMTG_MAC AND SMTG_ADD_VSTGUI)
+if(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)
     if(XCODE)
         set(again_mac_app_sources
             "macOS/Sources/ViewController.m"
@@ -40,8 +40,8 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         #--------------------------------------------------------------------------------------------------------
         # iOS target
         #--------------------------------------------------------------------------------------------------------
-        if(SMTG_IOS_DEVELOPMENT_TEAM)
+        if(SMTG_ENABLE_IOS_TARGETS)
             smtg_add_auv3_app(again_auv3_ios "iOS" "AGain AUV3 iOS" "com.steinberg.sdk.auv3.againios" "audiounitconfig.h" "iOS/again.entitlements" "${again_ios_app_sources}" "${again_ios_app_ui_resources}" "iOS/Resources/Info.plist" "Shared/Info.plist" again_ios)
-        endif(SMTG_IOS_DEVELOPMENT_TEAM)
+        endif(SMTG_ENABLE_IOS_TARGETS)
     endif(XCODE)
-endif(SMTG_MAC AND SMTG_ADD_VSTGUI)
+endif(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)

@@ -41,11 +41,8 @@
 
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 
-#include "pluginterfaces/base/ibstream.h"
-#include "pluginterfaces/base/ustring.h" // for UString128
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
-#include "pluginterfaces/vst/vstpresetkeys.h" // for use of IStreamAttributes
 
 #include <cstdio>
 
@@ -330,7 +327,7 @@ tresult PLUGIN_API AGainWithSideChain::setBusArrangements (SpeakerArrangement* i
 				{
 					getAudioInput (0)->setArrangement (inputs[0]);
 					getAudioInput (0)->setName (STR16 ("Mono In"));
-					getAudioOutput (0)->setArrangement (inputs[0]);
+					getAudioOutput (0)->setArrangement (outputs[0]);
 					getAudioOutput (0)->setName (STR16 ("Mono Out"));
 				}
 				// check if sidechain is mono

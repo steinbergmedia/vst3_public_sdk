@@ -130,7 +130,7 @@ inline const Steinberg::Vst::TChar* toTChar (const std::u16string& str)
 
 //------------------------------------------------------------------------
 /**
- *	convert an number to an UTF-16 string
+ *	convert a number to an UTF-16 string
  *
  *	@param value number
  *	

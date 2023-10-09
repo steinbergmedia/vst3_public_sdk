@@ -268,6 +268,10 @@ struct LogEvent
 	LOG_DEF(kLogIdIParameterFinderSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IParameterFinder supported!"), \
 	LOG_DEF(kLogIdIParameterFunctionNameSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName supported!"), \
 	\
+	LOG_DEF(kLogIdIComponentHandlerSystemTimeSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandlerSystemTime supported!"), \
+	LOG_DEF(kLogIdIDataExchangeHandlerSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeHandler supported!"), \
+	LOG_DEF(kLogIdIDataExchangeReceiverSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeReceiver supported!"), \
+	\
 	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")	
 
 

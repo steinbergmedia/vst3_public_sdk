@@ -38,15 +38,19 @@
 #pragma once
 
 #include "eventlogdatabrowsersource.h"
+#include "hostcheck.h"
+#include "logevents.h"
+
+#include "vstgui/lib/cvstguitimer.h"
+#include "vstgui/plugin-bindings/vst3editor.h"
+
 #include "public.sdk/source/common/threadchecker.h"
+#include "public.sdk/source/vst/utility/dataexchange.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
 #include "public.sdk/source/vst/vsteditcontroller.h"
 
-#include "hostcheck.h"
-#include "logevents.h"
-#include "vstgui/lib/cvstguitimer.h"
-#include "vstgui/plugin-bindings/vst3editor.h"
 #include "base/source/fstring.h"
+
 #include "pluginterfaces/vst/ivstautomationstate.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
 #include "pluginterfaces/vst/ivstmidilearn.h"
@@ -91,6 +95,17 @@ enum
 	kRestartKeyswitchChangedTag,
 	kRestartParamValuesChangedTag,
 	kRestartParamTitlesChangedTag,
+
+	kProcessContextProjectTimeSamplesTag,
+	kProcessContextProjectTimeMusicTag,
+	kProcessContextTempoTag,
+	kProcessContextStateTag,
+	kProcessContextSystemTimeTag,
+	kProcessContextContinousTimeSamplesTag,
+	kProcessContextTimeSigNumeratorTag,
+	kProcessContextTimeSigDenominatorTag,
+	kProcessContextBarPositionMusicTag,
+
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 
@@ -117,7 +132,8 @@ class HostCheckerController : public EditControllerEx1,
                               public INoteExpressionController,
                               public INoteExpressionPhysicalUIMapping,
                               public IKeyswitchController,
-                              public IParameterFunctionName
+                              public IParameterFunctionName,
+                              public IDataExchangeReceiver
 {
 public:
 	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
@@ -207,6 +223,15 @@ public:
 	//---IParameterFunctionName---------------------------
 	tresult PLUGIN_API getParameterIDFromFunctionName (UnitID unitID, FIDString functionName,
 	                                                   ParamID& paramID) SMTG_OVERRIDE;
+
+	//---IDataExchangeReceiver----------------------------
+	void PLUGIN_API queueOpened (DataExchangeUserContextID userContextID, uint32 blockSize,
+	                             TBool& dispatchOnBackgroundThread) override;
+	void PLUGIN_API queueClosed (DataExchangeUserContextID userContextID) override;
+	void PLUGIN_API onDataExchangeBlocksReceived (DataExchangeUserContextID userContextID,
+	                                              uint32 numBlocks, DataExchangeBlock* block,
+	                                              TBool onBackgroundThread) override;
+
 	//--- --------------------------------------------------------------------------
 	void editorAttached (EditorView* editor) SMTG_OVERRIDE;
 	void editorRemoved (EditorView* editor) SMTG_OVERRIDE;
@@ -261,6 +286,8 @@ protected:
 	std::unique_ptr<ThreadChecker> threadChecker {ThreadChecker::create ()};
 
 	int32 mNumKeyswitch {1};
+
+	DataExchangeReceiverHandler dataExchange {this};
 
 	struct ScoreEntry
 	{

@@ -1001,7 +1001,7 @@ UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 			</dict>
 		</array>
 	*/
-	static UInt32 numChannelInfos = 0;
+	static unsigned long numChannelInfos = 0;
 	static bool once = true;
 	if (once && gBundleRef)
 	{
@@ -1043,7 +1043,7 @@ UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 	}
 	if (outInfo)
 		*outInfo = channelInfos;
-	return numChannelInfos;
+	return static_cast<UInt32> (numChannelInfos);
 }
 
 //------------------------------------------------------------------------
@@ -1270,7 +1270,7 @@ ComponentResult AUWrapper::restoreState (CFPropertyListRef inData, bool fromProj
 		NSDictionary* dict = (NSDictionary*)inData;
 
 		NSData* processorData = [dict valueForKey:@"Processor State"];
-		int processLen = [processorData length];
+		auto processLen = [processorData length];
 		if (processLen == 0)
 			return kAudioUnitErr_InvalidPropertyValue;
 

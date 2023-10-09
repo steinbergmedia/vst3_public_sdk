@@ -35,15 +35,15 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
-#include "pluginterfaces/base/ftypes.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/iplatform.h"
 #include "public.sdk/samples/vst-hosting/editorhost/source/platform/win32/window.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/ftypes.h"
 
-#include <windows.h>
+#include <algorithm>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <windows.h>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -65,6 +65,8 @@ public:
 	                        const WindowControllerPtr& controller) override;
 	void quit () override;
 	void kill (int resultCode, const std::string& reason) override;
+
+	FUnknown* getPluginFactoryContext () override;
 
 	void run (LPWSTR lpCmdLine, HINSTANCE instance);
 
@@ -115,6 +117,12 @@ void Platform::kill (int resultCode, const std::string& reason)
 	auto str = VST3::StringConvert::convert (reason);
 	MessageBox (nullptr, reinterpret_cast<LPCWSTR> (str.data ()), nullptr, MB_OK);
 	exit (resultCode);
+}
+
+//------------------------------------------------------------------------
+FUnknown* Platform::getPluginFactoryContext ()
+{
+	return nullptr;
 }
 
 //------------------------------------------------------------------------

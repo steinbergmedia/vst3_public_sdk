@@ -56,7 +56,7 @@
 
 //------------------------------------------------------------------------
 namespace Steinberg {
-FUnknown* gStandardPluginContext = NEW Vst::HostApplication ();
+FUnknown* gStandardPluginContext = new Vst::HostApplication ();
 
 namespace Vst {
 namespace AudioHost {
@@ -92,7 +92,7 @@ void App::startAudioClient (const std::string& path, VST3::Optional<VST3::UID> e
 				if (*effectID != classInfo.ID ())
 					continue;
 			}
-			plugProvider = owned (NEW PlugProvider (factory, classInfo, true));
+			plugProvider = owned (new PlugProvider (factory, classInfo, true));
 			break;
 		}
 	}

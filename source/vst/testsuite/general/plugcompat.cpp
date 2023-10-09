@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -72,11 +72,10 @@ bool checkPluginCompatibility (VST3::Hosting::Module::Ptr& module,
 	bool failure = false;
 	if (auto moduleInfoPath = VST3::Hosting::Module::getModuleInfoPath (module->getPath ()))
 	{
-		failure = true;
 		if (errorStream)
 		{
 			*errorStream
-			    << "Error: The module contains a moduleinfo.json file and the module factory exports a IPluginCompatibility class. Only one is allowed, while the moduleinfo.json one is prefered.\n";
+			    << "Warning: The module contains a moduleinfo.json file and the module factory exports a IPluginCompatibility class. The moduleinfo.json one is preferred.\n";
 		}
 	}
 	StringStream strStream;

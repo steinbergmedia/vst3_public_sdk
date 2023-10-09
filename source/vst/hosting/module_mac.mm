@@ -180,7 +180,12 @@ public:
 			{
 				std::string wd (workDir);
 				wd += "/";
-				return loadInternal (wd + path, errorDescription);
+				if (loadInternal (wd + path, errorDescription))
+				{
+					name = path;
+					return true;
+				}
+				return false;
 			}
 		}
 		return loadInternal (path, errorDescription);

@@ -92,7 +92,7 @@ struct Optional
 	T&& value () noexcept
 	{
 		checkValid ();
-		return move (_value);
+		return std::move (_value);
 	}
 
 	const T& value () const noexcept

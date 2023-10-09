@@ -67,6 +67,8 @@ public:
 	void quit () override;
 	void kill (int resultCode, const std::string& reason) override;
 
+	FUnknown* getPluginFactoryContext () override;
+
 	ApplicationPtr application;
 	bool quitRequested {false};
 };
@@ -123,6 +125,12 @@ void Platform::kill (int resultCode, const std::string& reason)
 	[alert runModal];
 
 	exit (resultCode);
+}
+
+//------------------------------------------------------------------------
+FUnknown* Platform::getPluginFactoryContext ()
+{
+	return nullptr;
 }
 
 //------------------------------------------------------------------------

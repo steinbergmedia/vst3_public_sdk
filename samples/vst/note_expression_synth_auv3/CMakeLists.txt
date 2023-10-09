@@ -1,6 +1,6 @@
 include(SMTG_AddVST3AuV3)
 
-if(SMTG_MAC AND SMTG_ADD_VSTGUI)
+if(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)
     if(XCODE)
         set(notexpsynth_mac_app_sources
             "macOS/Sources/WindowController.m"
@@ -48,7 +48,7 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
         #--------------------------------------------------------------------------------------------------------
         # iOS targets
         #--------------------------------------------------------------------------------------------------------
-        if(SMTG_IOS_DEVELOPMENT_TEAM)
+        if(SMTG_ENABLE_IOS_TARGETS)
             smtg_add_auv3_app(notexpsynth_auv3_ios
                 "iOS"
                 "notexpsynth AUV3 iOS"
@@ -65,6 +65,6 @@ if(SMTG_MAC AND SMTG_ADD_VSTGUI)
             set_target_properties(${AUV3_APP_TARGET} PROPERTIES
                 XCODE_ATTRIBUTE_ASSETCATALOG_COMPILER_APPICON_NAME AppIcon
             )
-        endif(SMTG_IOS_DEVELOPMENT_TEAM)
+        endif(SMTG_ENABLE_IOS_TARGETS)
     endif(XCODE)
-endif(SMTG_MAC AND SMTG_ADD_VSTGUI)
+endif(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)

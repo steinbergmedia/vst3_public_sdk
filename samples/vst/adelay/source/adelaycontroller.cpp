@@ -36,7 +36,6 @@
 
 #include "adelaycontroller.h"
 #include "adelayids.h"
-#include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/base/ibstream.h"
 
 #if TARGET_OS_IPHONE

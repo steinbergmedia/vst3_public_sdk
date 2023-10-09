@@ -218,7 +218,7 @@ tresult PLUGIN_API TestToneController::terminate ()
 void TestToneController::createF1Parameters ()
 {
 	f1UnusedParam =
-	    owned (new RangeParameter (STR ("F1"), pid (TestToneParam::F1), nullptr, 0., 0.));
+	    owned (new RangeParameter (STR ("F1"), pid (TestToneParam::F1)));
 	f1MIDINotesParam = owned (new IndexedParameter (
 	    STR ("F1"), nullptr, 128, 0.5, ParameterInfo::kCanAutomate, pid (TestToneParam::F1)));
 	for (auto pitch = 0; pitch < 129; ++pitch)
@@ -240,7 +240,7 @@ void TestToneController::createF1Parameters ()
 void TestToneController::createF2Parameters ()
 {
 	f2UnusedParam =
-	    owned (new RangeParameter (STR ("F2"), pid (TestToneParam::F2), nullptr, 0., 0.));
+	    owned (new RangeParameter (STR ("F2"), pid (TestToneParam::F2)));
 
 	f2FrequencyParam = owned (new IndexedParameter (
 	    STR ("F2"), nullptr, 30, 0.5, ParameterInfo::kCanAutomate, pid (TestToneParam::F2)));

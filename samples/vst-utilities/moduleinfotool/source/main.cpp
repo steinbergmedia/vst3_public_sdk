@@ -35,14 +35,14 @@
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
+#include "public.sdk/source/common/readfile.h"
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/moduleinfo/moduleinfocreator.h"
 #include "public.sdk/source/vst/moduleinfo/moduleinfoparser.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
-#include "public.sdk/source/common/readfile.h"
 #include "base/source/fcommandline.h"
-#include "pluginterfaces/vst/vsttypes.h"
 #include "pluginterfaces/base/fplatform.h"
+#include "pluginterfaces/vst/vsttypes.h"
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -324,7 +324,7 @@ int run (int argc, char* argv[])
 			auto outputFile = valueMap[optOutputPath];
 #endif
 			auto ostream = new std::ofstream (outputFile);
-			
+
 			if (ostream->is_open ())
 				outputStream = ostream;
 			else
@@ -368,7 +368,7 @@ Utf8Args toUtf8Args (int argc, wchar_t* wargv[])
 	Utf8Args utf8Args;
 	for (int i = 0; i < argc; i++)
 	{
-		auto str = reinterpret_cast<const Steinberg::Vst::TChar*>(wargv[i]);
+		auto str = reinterpret_cast<const Steinberg::Vst::TChar*> (wargv[i]);
 		utf8Args.push_back (VST3::StringConvert::convert (str));
 	}
 

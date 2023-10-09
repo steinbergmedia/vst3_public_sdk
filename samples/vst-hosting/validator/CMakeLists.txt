@@ -142,6 +142,17 @@ endif(APPLE AND NOT XCODE)
 
 #####################################################
 if(SMTG_RUN_VST_VALIDATOR)
+    ####################
+    # Workaround for Xcode 15 not allowing to add adhoc_codesign linker setting
+    ####################
+    if(SMTG_MAC AND XCODE_VERSION VERSION_GREATER_EQUAL 15)
+        add_custom_command(
+            TARGET ${target} POST_BUILD
+            COMMENT "[SMTG] Adhoc codesign workaround for Xcode 15"
+            COMMAND codesign --force --verbose --sign -
+                "$<TARGET_FILE:${target}>"
+        )
+	endif()
     add_custom_command(TARGET ${target} POST_BUILD
 	    COMMAND $<TARGET_FILE:${target}> "-selftest"
     )

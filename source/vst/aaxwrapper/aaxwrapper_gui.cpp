@@ -36,6 +36,11 @@
 
 /// \cond ignore
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundef-prefix"
+#endif
+
 #include "aaxwrapper_gui.h"
 #include "aaxwrapper.h"
 #include "aaxwrapper_parameters.h"
@@ -144,3 +149,7 @@ AAX_Result AAXWrapper_GUI::TimerWakeup ()
 	return AAX_CEffectGUI::TimerWakeup ();
 }
 /// \endcond
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
