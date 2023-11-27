@@ -43,6 +43,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <thread>
 
 //------------------------------------------------------------------------
@@ -119,23 +120,22 @@ ModuleInitializer ConnectionProxyTests ([] () {
 		EXPECT_EQ (proxy.connect (&cp2), kResultTrue);
 		EXPECT_FALSE (cp2.messageReceived);
 
-		std::condition_variable c1;
-		std::mutex m1;
-		std::mutex m2;
-		std::atomic<tresult> notifyResult {0};
+		std::condition_variable cv;
+		std::mutex m;
+		std::optional<tresult> notifyResult;
 
-		std::unique_lock<std::mutex> lm1 (m1);
-		m2.lock ();
 		std::thread thread ([&] () {
-			m2.lock ();
 			HostMessage msg;
-			notifyResult = proxy.notify (&msg);
-			c1.notify_all ();
-			m2.unlock ();
+			{
+				const std::scoped_lock sl (m);
+				notifyResult = proxy.notify (&msg);
+			}
+			cv.notify_one ();
 		});
-		m2.unlock ();
-		c1.wait (lm1);
-		EXPECT_NE (notifyResult, kResultTrue);
+
+		std::unique_lock ul (m);
+		cv.wait (ul, [&] { return notifyResult.has_value (); });
+		EXPECT_NE (*notifyResult, kResultTrue);
 		EXPECT_FALSE (cp2.messageReceived);
 		thread.join ();
 		return true;
