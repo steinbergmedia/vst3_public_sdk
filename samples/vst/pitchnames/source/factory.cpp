@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -58,7 +58,7 @@ BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 	DEF_CLASS2 (INLINE_UID_FROM_FUID(Steinberg::Vst::PitchNamesController::cid),
 				PClassInfo::kManyInstances,
 				kVstComponentControllerClass,
-				stringPluginName,		// controller name (could be the same than component name)
+				stringPluginName,		// controller name (can be the same as the component name)
 				0,						// not used here
 				"",						// not used here
 				FULL_VERSION_STR,		// Plug-in version (to be changed)

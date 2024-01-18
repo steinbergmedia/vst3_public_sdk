@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -69,6 +69,10 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 	if (result != kResultTrue)
 		return false;
 
+	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	if (!plugBase)
+		return false;
+
 	for (int32 i = 0; i < 3; ++i)
 	{
 		result = audioEffect->setupProcessing (processSetup);
@@ -83,11 +87,11 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 		if (result != kResultTrue)
 			return false;
 
-		result = vstPlug->terminate ();
+		result = plugBase->terminate ();
 		if (result != kResultTrue)
 			return false;
 
-		result = vstPlug->initialize (TestingPluginContext::get ());
+		result = plugBase->initialize (TestingPluginContext::get ());
 		if (result != kResultTrue)
 			return false;
 	}

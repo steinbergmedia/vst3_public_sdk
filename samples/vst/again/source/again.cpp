@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -174,7 +174,7 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
 		{
-			Event event;
+			Event event {};
 			if (eventList->getEvent (i, event) == kResultOk)
 			{
 				switch (event.type)

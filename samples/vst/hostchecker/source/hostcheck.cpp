@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -91,12 +91,15 @@ void HostCheck::checkAudioBuffers (Steinberg::Vst::AudioBusBuffers* buffers,
 	{
 		if (numBuffers > 0)
 		{
-			// Steinberg::int32 audioBusCount = mComponent->getBusCount (Steinberg::Vst::kAudio,
-			// dir);
 			bool isValid = minBufferCount <= numBuffers;
 			if (!isValid)
 			{
 				addLogEvent (kLogIdAudioBufNotMatchComponentBusCount);
+			}
+			// check only output, an instrument could have side chain input not activated
+			if (dir == Steinberg::Vst::BusDirections::kOutput && minBufferCount == 0)
+			{
+				addLogEvent (kLogIdNoBusActivated);
 			}
 		}
 	}

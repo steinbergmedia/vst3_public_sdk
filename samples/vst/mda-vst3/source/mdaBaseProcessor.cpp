@@ -90,7 +90,7 @@ void Processor::processEvents (IEventList* events)
 {
 	if (events)
 	{
-		Event e;
+		Event e {};
 		int32 count = events->getEventCount ();
 		for (int32 i = 0; i < count; i++)
 		{

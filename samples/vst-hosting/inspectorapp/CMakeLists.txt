@@ -1,5 +1,5 @@
 
-if(TARGET vstgui AND TARGET vstgui_standalone)
+if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES AND TARGET vstgui AND TARGET vstgui_standalone)
 
     ##########################################################################################
     set(target VST3Inspector)

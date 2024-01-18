@@ -4,36 +4,27 @@ cmake_minimum_required(VERSION 3.5.0)
 project(smtg_public_sdk VERSION 1.0.0)
 
 #--sdk common----------------
-if(VST_SDK)
-    set(VST_COMMON_SRC
-        source/vst/vstpresetfile.cpp
-        source/vst/vstpresetfile.h
-    )
-endif(VST_SDK)
 add_library(sdk_common
     STATIC
         source/common/commoniids.cpp
         source/common/openurl.cpp
         source/common/openurl.h
-        source/common/readfile.cpp
-        source/common/readfile.h
         source/common/systemclipboard.h
         source/common/systemclipboard_linux.cpp
         source/common/systemclipboard_win32.cpp
         source/common/threadchecker.h
         source/common/threadchecker_linux.cpp
         source/common/threadchecker_win32.cpp
-        ${VST_COMMON_SRC}
 )
-if(SMTG_MAC)
+if(VST_SDK)
     target_sources(sdk_common 
         PRIVATE
-            source/common/threadchecker_mac.mm
-            source/common/systemclipboard_mac.mm
+		    source/common/readfile.cpp
+            source/common/readfile.h
+            source/vst/vstpresetfile.cpp
+            source/vst/vstpresetfile.h
     )
-endif(SMTG_MAC)
-
-if(NOT VST_SDK)
+else()
     target_sources(sdk_common 
         PRIVATE
             source/common/pvaluecontainer.cpp
@@ -41,7 +32,14 @@ if(NOT VST_SDK)
             source/common/pattributes.cpp
             source/common/pattributes.h
     )
-endif(NOT VST_SDK)
+endif(VST_SDK)
+if(SMTG_MAC)
+    target_sources(sdk_common 
+        PRIVATE
+            source/common/threadchecker_mac.mm
+            source/common/systemclipboard_mac.mm
+    )
+endif(SMTG_MAC)
 
 # add dependencies
 target_link_libraries(sdk_common 
@@ -94,6 +92,7 @@ if(VST_SDK)
             source/vst/utility/audiobuffers.h
             source/vst/utility/dataexchange.cpp
             source/vst/utility/dataexchange.h
+            source/vst/utility/memoryibstream.h
             source/vst/utility/processcontextrequirements.h
             source/vst/utility/processdataslicer.h
             source/vst/utility/ringbuffer.h

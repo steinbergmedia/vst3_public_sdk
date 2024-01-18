@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -52,5 +52,5 @@
 #define stringCompanyWeb		"http://www.steinberg.net"
 #define stringCompanyEmail		"mailto:info@steinberg.de"
 #define stringCompanyName		"Steinberg Media Technologies"
-#define stringLegalCopyright	"© 2022 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2024 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

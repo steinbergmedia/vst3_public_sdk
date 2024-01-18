@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -57,7 +57,7 @@ DEF_CLASS (Steinberg::Vst::ADelayProcessorUID, Steinberg::PClassInfo::kManyInsta
 
 DEF_CLASS (Steinberg::Vst::ADelayControllerUID, Steinberg::PClassInfo::kManyInstances,
            kVstComponentControllerClass,
-           stringPluginName "Controller", // controller name (could be the same than component name)
+           stringPluginName "Controller", // controller name (can be the same as the component name)
            0, // not used here
            "", // not used here
            FULL_VERSION_STR, // Plug-in version (to be changed)

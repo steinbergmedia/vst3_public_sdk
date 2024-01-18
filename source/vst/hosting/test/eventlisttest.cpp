@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -82,13 +82,13 @@ ModuleInitializer EventListTests ([] () {
 	});
 	registerTest (TestSuiteName, STR ("Get unknown event"), [] (ITestResult* testResult) {
 		EventList eventList;
-		Event event;
+		Event event {};
 		EXPECT_NE (eventList.getEvent (0, event), kResultTrue);
 		return true;
 	});
 	registerTest (TestSuiteName, STR ("Resize"), [] (ITestResult* testResult) {
 		EventList eventList (1);
-		Event event;
+		Event event {};
 		EXPECT_NE (eventList.getEvent (0, event), kResultTrue);
 		event = {};
 		EXPECT_EQ (eventList.addEvent (event), kResultTrue);

@@ -8,28 +8,28 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE  OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ PlugProvider::~PlugProvider ()
 }
 
 //------------------------------------------------------------------------
-template<typename Proc>
+template <typename Proc>
 void PlugProvider::printError (Proc p) const
 {
 	if (errorStream)
@@ -126,7 +126,8 @@ tresult PLUGIN_API PlugProvider::getComponentUID (FUID& uid) const
 }
 
 //------------------------------------------------------------------------
-tresult PLUGIN_API PlugProvider::releasePlugIn (IComponent* iComponent, IEditController* iController)
+tresult PLUGIN_API PlugProvider::releasePlugIn (IComponent* iComponent,
+                                                IEditController* iController)
 {
 	if (iComponent)
 		iComponent->release ();
@@ -154,11 +155,23 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 	if (component)
 	{
 		// initialize the component with our context
-		res = (component->initialize (hostContext) == kResultOk);
-		if (res == false)
+		FUnknownPtr<IPluginBase> plugBase (component);
+		if (plugBase)
+		{
+			res = (plugBase->initialize (hostContext) == kResultOk);
+			if (res == false)
+			{
+				printError ([&] (std::ostream& stream) {
+					stream << "Failed to initialize component of " << classInfo.name () << "!\n";
+				});
+				return false;
+			}
+		}
+		else
 		{
 			printError ([&] (std::ostream& stream) {
-				stream << "Failed to initialize component of " << classInfo.name () << "!\n";
+				stream << "Failed to get IPluginBase from component of " << classInfo.name ()
+				       << "!\n";
 			});
 			return false;
 		}
@@ -181,13 +194,25 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 				if (controller)
 				{
 					// initialize the component with our context
-					res = (controller->initialize (hostContext) == kResultOk);
-					if (res == false)
+					FUnknownPtr<IPluginBase> plugCtrlBase (controller);
+					if (plugCtrlBase)
+					{
+						res = (plugCtrlBase->initialize (hostContext) == kResultOk);
+						if (res == false)
+						{
+							printError ([&] (std::ostream& stream) {
+								stream << "Failed to initialize controller of " << classInfo.name ()
+								       << "!\n";
+							});
+						}
+					}
+					else
 					{
 						printError ([&] (std::ostream& stream) {
-							stream << "Failed to initialize controller of " << classInfo.name ()
-							       << "!\n";
+							stream << "Failed to get IPluginBase from controller of "
+							       << classInfo.name () << "!\n";
 						});
+						return false;
 					}
 				}
 			}
@@ -279,11 +304,32 @@ void PlugProvider::terminatePlugin ()
 	if (component)
 	{
 		controllerIsComponent = FUnknownPtr<IEditController> (component).getInterface () != nullptr;
-		component->terminate ();
+
+		FUnknownPtr<IPluginBase> plugBase (component);
+		if (plugBase)
+			plugBase->terminate ();
+		else
+		{
+			printError ([&](std::ostream& stream) {
+				stream << "Failed to get IPluginBase from component of " << classInfo.name ()
+					<< "!\n";
+				});
+		}
 	}
 
 	if (controller && controllerIsComponent == false)
-		controller->terminate ();
+	{
+		FUnknownPtr<IPluginBase> plugCtrlBase (controller);
+		if (plugCtrlBase)
+			plugCtrlBase->terminate ();
+		else
+		{
+			printError ([&](std::ostream& stream) {
+				stream << "Failed to get IPluginBase from controller of " << classInfo.name ()
+					<< "!\n";
+				});
+		}
+	}
 
 	component.reset ();
 	controller.reset ();

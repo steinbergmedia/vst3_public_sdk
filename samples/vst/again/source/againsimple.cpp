@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -251,7 +251,7 @@ tresult PLUGIN_API AGainSimple::process (ProcessData& data)
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
 		{
-			Event event;
+			Event event {};
 			if (eventList->getEvent (i, event) == kResultOk)
 			{
 				switch (event.type)
@@ -712,12 +712,12 @@ BEGIN_FACTORY_DEF (stringCompanyName, stringCompanyWeb, stringCompanyEmail)
 	// its kVstAudioEffectClass component
 	DEF_CLASS2 (INLINE_UID (0xB9F9ADE1, 0xCD9C4B6D, 0xA57E61E3, 0x123535FD),
 				PClassInfo::kManyInstances,					// cardinality  
-				kVstAudioEffectClass,						// the component category (do not changed this)
+				kVstAudioEffectClass,						// the component category (do not change this)
 				"AGainSimple VST3",							// here the plug-in name (to be changed)
 				0,											// single component effects cannot be distributed so this is zero
 				"Fx",										// Subcategory for this plug-in (to be changed)
 				FULL_VERSION_STR,							// Plug-in version (to be changed)
-				kVstVersionString,							// the VST 3 SDK version (do not changed this, use always this define)
+				kVstVersionString,							// the VST 3 SDK version (do not change this, always use this define)
 				Steinberg::Vst::AGainSimple::createInstance)// function pointer called when this component should be instantiated
 
 END_FACTORY

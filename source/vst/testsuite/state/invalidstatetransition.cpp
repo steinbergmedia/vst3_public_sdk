@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -57,8 +57,12 @@ bool PLUGIN_API InvalidStateTransitionTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
+	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	if (!plugBase)
+		return false;
+
 	// created
-	tresult result = vstPlug->initialize (TestingPluginContext::get ());
+	tresult result = plugBase->initialize (TestingPluginContext::get ());
 	if (result == kResultFalse)
 		return false;
 
@@ -77,7 +81,7 @@ bool PLUGIN_API InvalidStateTransitionTest::run (ITestResult* testResult)
 		return false;
 
 	// allocated
-	result = vstPlug->initialize (TestingPluginContext::get ());
+	result = plugBase->initialize (TestingPluginContext::get ());
 	if (result == kResultOk)
 		return false;
 
@@ -86,11 +90,11 @@ bool PLUGIN_API InvalidStateTransitionTest::run (ITestResult* testResult)
 		return false;
 
 	// deallocated (initialized)
-	result = vstPlug->initialize (TestingPluginContext::get ());
+	result = plugBase->initialize (TestingPluginContext::get ());
 	if (result == kResultOk)
 		return false;
 
-	result = vstPlug->terminate ();
+	result = plugBase->terminate ();
 	if (result == kResultFalse)
 		return false;
 
@@ -99,7 +103,7 @@ bool PLUGIN_API InvalidStateTransitionTest::run (ITestResult* testResult)
 	if (result == kResultOk)
 		return false;
 
-	result = vstPlug->terminate ();
+	result = plugBase->terminate ();
 	if (result == kResultOk)
 		return false;
 

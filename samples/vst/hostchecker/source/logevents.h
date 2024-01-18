@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -105,6 +105,7 @@ struct LogEvent
 	LOG_DEF(kLogIdNullPointerToAuxChannelBuf,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a SideChain channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAudioBusBuffer,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to an audio bus buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdAudioBufNotMatchComponentBusCount,PROCESS, LOG_ERR, AUDIO_BUFFER, "Number of Audio Buffers does not match the number of busses defined by IComponent."),\
+	LOG_DEF(kLogIdNoBusActivated,				PROCESS,	LOG_ERR, AUDIO_BUFFER, "No output audio bus activated, but process is called with Audio Buffers."),\
 	LOG_DEF(kLogIdInvalidAudioBufNumOfChannels,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "An audio bus number of channels is different from the one specified by IComponent."),\
 	LOG_DEF(kLogIdUnknownEventType,				PROCESS,	LOG_ERR, EVENT_LIST, "Event has a type which is not specified."),\
 	LOG_DEF(kLogIdInvalidEventVelocityValue,	PROCESS,	LOG_ERR, EVENT_LIST, "Event velocity is either < 0.0 or > 1.0."),\
