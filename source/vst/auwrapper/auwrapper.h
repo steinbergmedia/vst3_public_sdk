@@ -212,6 +212,8 @@ public:
 	//---AUMIDIBase------------------------------
 #if !CA_USE_AUDIO_PLUGIN_ONLY
 	OSStatus HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8	data1, UInt8 data2, UInt32 inStartFrame) SMTG_OVERRIDE;
+	OSStatus HandleNoteOn (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity, UInt32 inStartFrame) SMTG_OVERRIDE;
+	OSStatus HandleNoteOff (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity, UInt32 inStartFrame) SMTG_OVERRIDE;
 #endif
 	//---custom----------------------------------
 	void setControllerParameter (ParamID pid, ParamValue value);
