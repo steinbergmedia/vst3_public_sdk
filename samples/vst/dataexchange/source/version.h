@@ -50,5 +50,5 @@
 #define stringCompanyWeb		"http://www.steinberg.net"
 #define stringCompanyEmail		"mailto:info@steinberg.de"
 #define stringCompanyName		"Steinberg Media Technologies"
-#define stringLegalCopyright	"© 2022 Steinberg Media Technologies"
+#define stringLegalCopyright	"© 2024 Steinberg Media Technologies"
 #define stringLegalTrademarks	"VST is a trademark of Steinberg Media Technologies GmbH"

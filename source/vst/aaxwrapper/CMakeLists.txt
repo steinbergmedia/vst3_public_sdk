@@ -30,7 +30,7 @@ smtg_target_setup_universal_binary(${target})
 
 target_compile_features(aaxwrapper
     PUBLIC
-        cxx_std_11
+        cxx_std_17
 )
 
 if(XCODE)

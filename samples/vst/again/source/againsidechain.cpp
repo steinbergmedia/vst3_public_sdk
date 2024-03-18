@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -64,7 +64,7 @@ tresult PLUGIN_API AGainWithSideChain::initialize (FUnknown* context)
 		return result;
 	}
 
-	// create a Mono SideChain input bus
+	// create a Mono SideChain input bus (this will be the 2cd input)
 	addAudioInput (STR16 ("Mono Aux In"), SpeakerArr::kMono, kAux, 0);
 
 	return kResultOk;
@@ -123,7 +123,7 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 		int32 numEvent = eventList->getEventCount ();
 		for (int32 i = 0; i < numEvent; i++)
 		{
-			Event event;
+			Event event {};
 			if (eventList->getEvent (i, event) == kResultOk)
 			{
 				switch (event.type)
@@ -164,6 +164,7 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 	void** auxIn = nullptr;
 
 	bool auxActive = false;
+	// check if our sidechain input is active (here our sidechain is the 2cd input)
 	if (getAudioInput (1)->isActive ())
 	{
 		auxIn = getChannelBuffersPointer (processSetup, data.inputs[1]);

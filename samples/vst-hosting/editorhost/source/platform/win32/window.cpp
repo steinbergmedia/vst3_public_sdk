@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -41,6 +41,9 @@
 
 #ifndef WM_DPICHANGED
 #define WM_DPICHANGED 0x02E0
+#endif
+#ifndef WM_GETDPISCALEDSIZE
+#define WM_GETDPISCALEDSIZE 0x02E4
 #endif
 
 //------------------------------------------------------------------------
@@ -199,10 +202,41 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 			closeImmediately ();
 			return TRUE;
 		}
+		case WM_GETDPISCALEDSIZE:
+		{
+			inDpiChangeState = true;
+			auto* proposedSize = reinterpret_cast<SIZE*> (lParam);
+			auto newScaleFactor =
+			    static_cast<double> (wParam) / static_cast<double> (USER_DEFAULT_SCREEN_DPI);
+			controller->onContentScaleFactorChanged (*this, newScaleFactor);
+			if (dpiChangedSize.width != 0 && dpiChangedSize.height != 0)
+			{
+				WINDOWINFO windowInfo {0};
+				GetWindowInfo (hwnd, &windowInfo);
+				RECT clientRect {};
+				clientRect.right = dpiChangedSize.width;
+				clientRect.bottom = dpiChangedSize.height;
+				User32Library::instance ().adjustWindowRectExForDpi (
+				    &clientRect, windowInfo.dwStyle, false, windowInfo.dwExStyle, wParam);
+				proposedSize->cx = clientRect.right - clientRect.left;
+				proposedSize->cy = clientRect.bottom - clientRect.top;
+				return TRUE;
+			}
+			return FALSE;
+		}
 		case WM_DPICHANGED:
 		{
+			if (inDpiChangeState)
+			{
+				auto* rect = reinterpret_cast<RECT*> (lParam);
+				inDpiChangeState = false;
+				dpiChangedSize = {};
+				SetWindowPos (hwnd, nullptr, rect->left, rect->top, rect->right - rect->left,
+				              rect->bottom - rect->top, SWP_NOZORDER | SWP_NOACTIVATE);
+				return 0;
+			}
 			controller->onContentScaleFactorChanged (*this, getContentScaleFactor ());
-			break;
+			return 0;
 		}
 	}
 	return DefWindowProc (hwnd, message, wParam, lParam);
@@ -231,12 +265,9 @@ float Window::getContentScaleFactor () const
 {
 	if (auto dpiForWindow = ShcoreLibrary::instance ().getDpiForWindow (hwnd))
 	{
-		return static_cast<float> (dpiForWindow->x) / 96.f;
+		return static_cast<float> (dpiForWindow->x) / static_cast<float> (USER_DEFAULT_SCREEN_DPI);
 	}
-	else
-	{
-		return 1.f;
-	}
+	return 1.f;
 }
 
 //------------------------------------------------------------------------
@@ -257,6 +288,11 @@ void Window::close ()
 //------------------------------------------------------------------------
 void Window::resize (Size newSize)
 {
+	if (inDpiChangeState)
+	{
+		dpiChangedSize = newSize;
+		return;
+	}
 	if (getContentSize () == newSize)
 		return;
 	WINDOWINFO windowInfo {0};

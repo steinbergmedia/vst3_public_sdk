@@ -1115,7 +1115,7 @@
 							"origin": "488, 58",
 							"round-rect-radius": "6",
 							"shadow-color": "~ RedCColor",
-							"size": "91, 11",
+							"size": "101, 11",
 							"style-3D-in": "true",
 							"style-3D-out": "false",
 							"style-no-draw": "false",

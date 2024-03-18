@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -56,14 +56,20 @@ bool TerminateInitializeTest::run (ITestResult* testResult)
 		return false;
 
 	printTestHeader (testResult);
+	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	if (!plugBase)
+	{
+		addErrorMessage (testResult, STR ("No IPluginBase interface available."));
+		return false;
+	}
 
 	bool result = true;
-	if (vstPlug->terminate () != kResultTrue)
+	if (plugBase->terminate () != kResultTrue)
 	{
 		addErrorMessage (testResult, STR ("IPluginBase::terminate () failed."));
 		result = false;
 	}
-	if (vstPlug->initialize (TestingPluginContext::get ()) != kResultTrue)
+	if (plugBase->initialize (TestingPluginContext::get ()) != kResultTrue)
 	{
 		addErrorMessage (testResult, STR ("IPluginBase::initialize (..) failed."));
 		result = false;

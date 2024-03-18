@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -135,7 +135,7 @@ public:
 
 	int32_t onNoteOn (NoteIndex note, double xPos, double yPos) override
 	{
-		Event e = {};
+		Event e {};
 		e.type = Event::kNoteOnEvent;
 		e.noteOn.pitch = note;
 		e.noteOn.velocity = static_cast<float> (yPos);
@@ -148,7 +148,7 @@ public:
 	}
 	void onNoteOff (NoteIndex note, int32_t noteID) override
 	{
-		Event e = {};
+		Event e {};
 		e.type = Event::kNoteOffEvent;
 		e.noteOff.noteId = noteID;
 		e.noteOff.pitch = note;
@@ -157,7 +157,7 @@ public:
 	}
 	void onNoteModulation (int32_t noteID, double xPos, double yPos) override
 	{
-		Event e = {};
+		Event e {};
 		e.type = Event::kNoteExpressionValueEvent;
 		e.noteExpressionValue.noteId = noteID;
 		e.noteExpressionValue.typeId = noteExpressionModulationID;

@@ -84,7 +84,7 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
         )
         target_compile_features(${target}
             PUBLIC
-                cxx_std_14
+                cxx_std_17
         )
         target_link_libraries(${target} 
             PRIVATE

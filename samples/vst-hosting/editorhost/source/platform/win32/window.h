@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -81,6 +81,9 @@ private:
 	WindowPtr This;
 	WindowControllerPtr controller {nullptr};
 	HWND hwnd {nullptr};
+
+	bool inDpiChangeState {false};
+	Size dpiChangedSize {};
 };
 
 //------------------------------------------------------------------------
@@ -98,6 +101,63 @@ struct DynamicLibrary
 
 private:
 	HMODULE module {nullptr};
+};
+
+#ifndef _DPI_AWARENESS_CONTEXTS_
+
+DECLARE_HANDLE (DPI_AWARENESS_CONTEXT);
+
+typedef enum DPI_AWARENESS {
+	DPI_AWARENESS_INVALID = -1,
+	DPI_AWARENESS_UNAWARE = 0,
+	DPI_AWARENESS_SYSTEM_AWARE = 1,
+	DPI_AWARENESS_PER_MONITOR_AWARE = 2
+} DPI_AWARENESS;
+
+#define DPI_AWARENESS_CONTEXT_UNAWARE ((DPI_AWARENESS_CONTEXT)-1)
+#define DPI_AWARENESS_CONTEXT_SYSTEM_AWARE ((DPI_AWARENESS_CONTEXT)-2)
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE ((DPI_AWARENESS_CONTEXT)-3)
+#define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((DPI_AWARENESS_CONTEXT)-4)
+
+#endif
+
+struct User32Library : DynamicLibrary
+{
+	static User32Library& instance ()
+	{
+		static User32Library gInstance;
+		return gInstance;
+	}
+
+	bool setProcessDpiAwarenessContext (DPI_AWARENESS_CONTEXT context) const
+	{
+		if (!setProcessDpiAwarenessContextProc)
+			return false;
+		return setProcessDpiAwarenessContextProc (context);
+	}
+
+	bool adjustWindowRectExForDpi (LPRECT lpRect, DWORD dwStyle, BOOL bMenu, DWORD dwExStyle,
+	                               UINT dpi) const
+	{
+		if (!adjustWindowRectExForDpiProc)
+			return false;
+		return adjustWindowRectExForDpiProc (lpRect, dwStyle, bMenu, dwExStyle, dpi);
+	}
+
+private:
+	using SetProcessDpiAwarenessContextProc = BOOL (WINAPI*) (DPI_AWARENESS_CONTEXT);
+	using AdjustWindowRectExForDpiProc = BOOL (WINAPI*) (LPRECT, DWORD, BOOL, DWORD, UINT);
+
+	User32Library () : DynamicLibrary ("User32.dll")
+	{
+		setProcessDpiAwarenessContextProc =
+		    getProcAddress<SetProcessDpiAwarenessContextProc> ("SetProcessDpiAwarenessContext");
+		adjustWindowRectExForDpiProc =
+		    getProcAddress<AdjustWindowRectExForDpiProc> ("AdjustWindowRectExForDpi");
+	}
+
+	SetProcessDpiAwarenessContextProc setProcessDpiAwarenessContextProc {nullptr};
+	AdjustWindowRectExForDpiProc adjustWindowRectExForDpiProc {nullptr};
 };
 
 struct ShcoreLibrary : DynamicLibrary
@@ -126,6 +186,13 @@ struct ShcoreLibrary : DynamicLibrary
 
 	HRESULT setProcessDpiAwareness (bool perMonitor = true)
 	{
+		if (perMonitor)
+		{
+			if (User32Library::instance ().setProcessDpiAwarenessContext (
+			        perMonitor ? DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 :
+			                     DPI_AWARENESS_CONTEXT_UNAWARE))
+				return true;
+		}
 		if (!setProcessDpiAwarenessProc)
 			return S_FALSE;
 		return setProcessDpiAwarenessProc (perMonitor ? PROCESS_PER_MONITOR_DPI_AWARE :

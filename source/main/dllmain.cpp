@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -80,7 +80,7 @@ SMTG_EXPORT_SYMBOL bool ExitDll ()
 {
 	if (--moduleCounter == 0)
 		return DeinitModule ();
-	else if (moduleCounter < 0)
+	if (moduleCounter < 0)
 		return false;
 	return true;
 }

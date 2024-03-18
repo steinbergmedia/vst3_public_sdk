@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -355,10 +355,6 @@ int run (int argc, char* argv[])
 //------------------------------------------------------------------------
 #if SMTG_OS_WINDOWS
 //------------------------------------------------------------------------
-#include <Windows.h>
-#include <vector>
-
-//------------------------------------------------------------------------
 using Utf8String = std::string;
 
 //------------------------------------------------------------------------
@@ -397,9 +393,14 @@ int wmain (int argc, wchar_t* wargv[])
 	char** argv = &(utf8ArgPtrs.at (0));
 	return Steinberg::ModuleInfoTool::run (argc, argv);
 }
+
 #else
+
+//------------------------------------------------------------------------
 int main (int argc, char* argv[])
 {
 	return Steinberg::ModuleInfoTool::run (argc, argv);
 }
-#endif
+
+//------------------------------------------------------------------------
+#endif // SMTG_OS_WINDOWS

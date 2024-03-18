@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -137,7 +137,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						{
 							if (eventList && !bBypass)
 							{
-								Event event;
+								Event event {};
 								Helpers::initLegacyMIDICCOutEvent (
 								    event, mControllerNum, mChannel,
 								    Helpers::getMIDICCOutValue (value));
@@ -158,7 +158,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						{
 							if (eventList && !bBypass)
 							{
-								Event event;
+								Event event {};
 								Helpers::initLegacyMIDICCOutEvent (
 								    event, kAfterTouch, mChannel,
 								    Helpers::getMIDICCOutValue (value));
@@ -178,7 +178,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						{
 							if (eventList && !bBypass)
 							{
-								Event event;
+								Event event {};
 								Helpers::initLegacyMIDICCOutEvent (
 								    event, kCtrlProgramChange, mChannel,
 								    Helpers::getMIDICCOutValue (value));
@@ -206,7 +206,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						{
 							if (eventList && !bBypass)
 							{
-								Event event;
+								Event event {};
 								Helpers::initLegacyMIDICCOutEvent (
 								    event, kCtrlPolyPressure, mChannel, mPolyPressureKey,
 								    Helpers::getMIDICCOutValue (value));
@@ -226,7 +226,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						{
 							if (eventList && !bBypass)
 							{
-								Event event;
+								Event event {};
 								Helpers::initLegacyMIDICCOutEvent (event, kPitchBend, mChannel);
 								Helpers::setPitchBendValue (event.midiCCOut, value);
 								event.sampleOffset = offsetSamples;

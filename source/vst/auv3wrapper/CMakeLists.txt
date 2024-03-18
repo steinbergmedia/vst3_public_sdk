@@ -26,7 +26,7 @@ if(SMTG_MAC)
         )
         target_compile_features(${target}
             PUBLIC
-                cxx_std_14
+                cxx_std_17
         )
         target_link_libraries(${target} 
             PRIVATE 
@@ -56,7 +56,7 @@ if(SMTG_MAC)
             smtg_target_set_platform_ios(${target})
             target_compile_features(${target}
                 PUBLIC
-                    cxx_std_14
+                    cxx_std_17
             )
             target_link_libraries(${target}
                 PRIVATE

@@ -6,12 +6,12 @@
 #// Category    : Examples
 #// Filename    : public.sdk/samples/vst/mac/make_vst3_symbolic_link.sh
 #// Created by  : Steinberg, 06/2009
-#// Description : places a symbolic link for the VST3 Plug-In into the users VST3 folder.
+#// Description : places a symbolic link for the VST 3 Plug-In into the users VST3 folder.
 //				  To be used as "Run Script" build phase in Xcode
 #//
 #//-----------------------------------------------------------------------------
 #// LICENSE
-#// (c) 2023, Steinberg Media Technologies GmbH, All Rights Reserved
+#// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
 #//-----------------------------------------------------------------------------
 #// Redistribution and use in source and binary forms, with or without modification,
 #// are permitted provided that the following conditions are met:
