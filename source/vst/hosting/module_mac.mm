@@ -289,7 +289,7 @@ void getModuleSnapshots (const std::string& path, Module::SnapshotList& result)
 	auto nsString = [NSString stringWithUTF8String:path.data ()];
 	if (!nsString)
 		return;
-	auto bundleUrl = [NSURL fileURLWithPath:nsString];
+	auto bundleUrl = [NSURL fileURLWithPath:(NSString * _Nonnull)nsString];
 	if (!bundleUrl)
 		return;
 	auto urls = [NSBundle URLsForResourcesWithExtension:@"png"
@@ -375,7 +375,7 @@ Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
 	auto nsString = [NSString stringWithUTF8String:modulePath.data ()];
 	if (!nsString)
 		return {};
-	auto bundleUrl = [NSURL fileURLWithPath:nsString];
+	auto bundleUrl = [NSURL fileURLWithPath:(NSString * _Nonnull)nsString];
 	if (!bundleUrl)
 		return {};
 	auto moduleInfoUrl = [NSBundle URLForResource:@"moduleinfo"
