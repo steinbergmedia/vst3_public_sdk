@@ -10,7 +10,11 @@ project(smtg-vst3-hostchecker
     DESCRIPTION "Steinberg VST 3 Host Checker example"
 )
 
+set(COMPATIBILITY_FILE resource/vst_compatibility.json)
+
 smtg_add_vst3plugin(hostchecker     
+    MODULEINFO_COMPATIBILITY
+        ${COMPATIBILITY_FILE}
     resource/hostchecker.uidesc
     source/cids.h
     source/editorsizecontroller.cpp

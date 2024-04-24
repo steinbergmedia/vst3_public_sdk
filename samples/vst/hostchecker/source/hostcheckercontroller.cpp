@@ -473,6 +473,8 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdIComponentHandlerSystemTimeSupported, 1.f);
 	mScoreMap.emplace (kLogIdIDataExchangeHandlerSupported, 1.f);
 	mScoreMap.emplace (kLogIdIDataExchangeReceiverSupported, 1.f);
+
+	mScoreMap.emplace (kLogIdIRemapParamIDSupported, 1.f);
 }
 
 //-----------------------------------------------------------------------------
@@ -694,6 +696,9 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		if (plugInterfaceSupport->isPlugInterfaceSupported (IDataExchangeHandler::iid) ==
 		    kResultTrue)
 			addFeatureLog (kLogIdIDataExchangeHandlerSupported);
+
+		if (plugInterfaceSupport->isPlugInterfaceSupported (IRemapParamID::iid) == kResultTrue)
+			addFeatureLog (kLogIdIRemapParamIDSupported);
 	}
 	else
 	{
@@ -796,6 +801,23 @@ tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 		return kResultFalse;
 
 	IBStreamer streamer (state, kLittleEndian);
+
+	// detect state from HostChecker or AGain
+	auto pos = streamer.tell ();
+	auto end = streamer.seek (0, FSeekMode::kSeekEnd);
+	bool stateFromAGain = (end - pos == 3 * 4);
+	streamer.seek (pos, FSeekMode::kSeekSet);
+
+	// We inform the host that we need a remapping
+	if (stateFromAGain)
+	{
+		componentHandler->restartComponent (kParamIDMappingChanged);
+
+		// we should read the AGain state here
+		// TODO
+		return kResultOk;
+	}
+
 	// version
 	uint32 version;
 	streamer.readInt32u (version);
@@ -1755,6 +1777,35 @@ void PLUGIN_API HostCheckerController::onDataExchangeBlocksReceived (
 }
 
 //------------------------------------------------------------------------
+tresult PLUGIN_API HostCheckerController::getCompatibleParamID (const TUID pluginToReplaceUID,
+                                                                Vst::ParamID oldParamID,
+                                                                Vst::ParamID& newParamID)
+{
+	addFeatureLog (kLogIdIRemapParamIDSupported);
+
+	//--- We want to replace the AGain plug-in-------
+	//--- check if the host is asking for remapping parameter of the AGain plug-in
+	static const FUID AGainProcessorUID (0x84E8DE5F, 0x92554F53, 0x96FAE413, 0x3C935A18);
+	FUID uidToCheck (FUID::fromTUID (pluginToReplaceUID));
+	if (AGainProcessorUID != uidToCheck)
+		return kResultFalse;
+
+	//--- host wants to remap from AGain------------
+	newParamID = -1;
+	switch (oldParamID)
+	{
+		//--- map the kGainId (0) to our param kGeneratePeaksTag
+		case 0:
+		{
+			newParamID = kGeneratePeaksTag;
+			break;
+		}
+	}
+	//--- return kResultTrue if the mapping happens------------
+	return (newParamID == -1) ? kResultFalse : kResultTrue;
+}
+
+//------------------------------------------------------------------------
 void HostCheckerController::extractCurrentInfo (EditorView* editor)
 {
 	auto rect = editor->getRect ();
@@ -1902,6 +1953,14 @@ tresult PLUGIN_API HostCheckerController::queryInterface (const TUID iid, void**
 		addFeatureLog (kLogIdIDataExchangeReceiverSupported);
 		return kResultOk;
 	}
+	if (FUnknownPrivate::iidEqual (iid, IRemapParamID::iid))
+	{
+		addRef ();
+		*obj = static_cast<IRemapParamID*> (this);
+		addFeatureLog (kLogIdIRemapParamIDSupported);
+		return kResultOk;
+	}
+
 	return EditControllerEx1::queryInterface (iid, obj);
 }
 

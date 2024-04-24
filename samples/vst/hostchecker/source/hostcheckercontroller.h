@@ -58,6 +58,7 @@
 #include "pluginterfaces/vst/ivstparameterfunctionname.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
+#include "pluginterfaces/vst/ivstremapparamid.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
 
 namespace Steinberg {
@@ -133,7 +134,8 @@ class HostCheckerController : public EditControllerEx1,
                               public INoteExpressionPhysicalUIMapping,
                               public IKeyswitchController,
                               public IParameterFunctionName,
-                              public IDataExchangeReceiver
+                              public IDataExchangeReceiver,
+                              public IRemapParamID
 {
 public:
 	using UTF8StringPtr = VSTGUI::UTF8StringPtr;
@@ -231,6 +233,11 @@ public:
 	void PLUGIN_API onDataExchangeBlocksReceived (DataExchangeUserContextID userContextID,
 	                                              uint32 numBlocks, DataExchangeBlock* block,
 	                                              TBool onBackgroundThread) override;
+
+	//---IRemapParamID -----------------------------------
+	tresult PLUGIN_API getCompatibleParamID (const TUID pluginToReplaceUID /*in*/,
+	                                         Vst::ParamID oldParamID /*in*/,
+	                                         Vst::ParamID& newParamID /*out*/) override;
 
 	//--- --------------------------------------------------------------------------
 	void editorAttached (EditorView* editor) SMTG_OVERRIDE;

@@ -54,6 +54,7 @@
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 #include "pluginterfaces/vst/ivstplugview.h"
 #include "pluginterfaces/vst/ivstprefetchablesupport.h"
+#include "pluginterfaces/vst/ivstremapparamid.h"
 #include "pluginterfaces/vst/ivstrepresentation.h"
 #include "pluginterfaces/vst/ivsttestplugprovider.h"
 #include "pluginterfaces/vst/ivstunits.h"
@@ -146,5 +147,8 @@ DEF_CLASS_IID (IPluginCompatibility)
 DEF_CLASS_IID (Vst::IComponentHandlerSystemTime)
 DEF_CLASS_IID (Vst::IDataExchangeHandler)
 DEF_CLASS_IID (Vst::IDataExchangeReceiver)
+
+//----VST 3.7.11---------------------------------
+DEF_CLASS_IID (Vst::IRemapParamID)
 
 } // Steinberg

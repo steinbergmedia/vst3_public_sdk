@@ -273,6 +273,8 @@ struct LogEvent
 	LOG_DEF(kLogIdIDataExchangeHandlerSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeHandler supported!"), \
 	LOG_DEF(kLogIdIDataExchangeReceiverSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeReceiver supported!"), \
 	\
+	LOG_DEF (kLogIdIRemapParamIDSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IRemapParamID supported!"), \
+	\
 	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")	
 
 

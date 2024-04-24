@@ -4,7 +4,7 @@
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/vst2wrapper/basewrapper.cpp
 // Created by  : Steinberg, 01/2009
-// Description : VST 3 -> VST 2 Wrapper
+// Description : VST 3 -> XXX Wrapper
 //
 //-----------------------------------------------------------------------------
 // LICENSE
