@@ -1960,6 +1960,36 @@ OSStatus AUWrapper::GetInstrumentCount (UInt32& outInstCount) const
 //------------------------------------------------------------------------
 // MARK: AUMIDIBase
 //------------------------------------------------------------------------
+OSStatus AUWrapper::HandleNoteOn (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity,
+								  UInt32 inStartFrame)
+{
+	Event e = {};
+	e.type = Event::kNoteOnEvent;
+	e.noteOn.channel = inChannel;
+	e.noteOn.pitch = inNoteNumber;
+	e.noteOn.velocity = inVelocity / 127.;
+	e.noteOn.noteId = -1;
+	e.sampleOffset = inStartFrame;
+
+	eventList.addEvent (e);
+	return noErr;
+}
+
+OSStatus AUWrapper::HandleNoteOff (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity,
+								   UInt32 inStartFrame)
+{
+	Event e = {};
+	e.type = Event::kNoteOffEvent;
+	e.noteOff.channel = inChannel;
+	e.noteOff.pitch = inNoteNumber;
+	e.noteOff.velocity = inVelocity / 127.;
+	e.noteOff.noteId = -1;
+	e.sampleOffset = inStartFrame;
+
+	eventList.addEvent (e);
+	return noErr;
+}
+
 OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1, UInt8 data2,
                                         UInt32 inStartFrame)
 {
