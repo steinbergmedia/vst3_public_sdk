@@ -520,7 +520,7 @@ Optional<Vst2xState> tryVst2StateLoad (Steinberg::IBStream& stream,
 	int32_t numPrograms;
 	if (!(state >> numPrograms))
 		return {};
-	if (numPrograms < 1)
+	if (numPrograms < 1 && fxMagic == bankMagic)
 		return {};
 
 	int32_t currentProgram = 0;
@@ -589,7 +589,7 @@ bool writeVst2State (const Vst2xState& state, Steinberg::IBStream& _stream,
 			    return res.error;
 		    if (!(res = (stream << state.fxVersion)))
 			    return res.error;
-		    int32_t numPrograms = writeChunk ? 1 : static_cast<int32_t> (state.programs.size ());
+		    int32_t numPrograms = writeChunk ? 0 : static_cast<int32_t> (state.programs.size ());
 		    if (!(res = (stream << numPrograms)))
 			    return res.error;
 		    if (bankVersion > 1)
