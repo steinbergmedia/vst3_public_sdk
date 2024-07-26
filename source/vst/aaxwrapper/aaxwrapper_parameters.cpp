@@ -48,6 +48,7 @@
 #include "AAX_CUnitDisplayDelegateDecorator.h"
 
 #include "../hosting/hostclasses.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstchannelcontextinfo.h"
@@ -841,9 +842,8 @@ AAX_Result AAXWrapper_Parameters::NotificationReceived (AAX_CTypeID iNotificatio
 
 			if (mWrapper->mController)
 			{
-				FUnknownPtr<Vst::ChannelContext::IInfoListener> iChannelContextInfoListener (
-				    mWrapper->mController);
-				if (iChannelContextInfoListener)
+				if (auto iChannelContextInfoListener =
+				        U::cast<Vst::ChannelContext::IInfoListener> (mWrapper->mController))
 				{
 					auto list = Vst::HostAttributeList::make ();
 					String string;

@@ -40,6 +40,7 @@
 #include "vstgui/plugin-bindings/vst3groupcontroller.h"
 #include "vstgui/plugin-bindings/vst3padcontroller.h"
 #include "base/source/fstreamer.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstinterappaudio.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
@@ -392,7 +393,7 @@ tresult PLUGIN_API ControllerWithUI::initialize (FUnknown* context)
 	{
 		parameters.addParameter (USTRING ("MIDI Learn"), nullptr, 1, 0, ParameterInfo::kCanAutomate,
 		                         kParamMIDILearn);
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (context);
+		auto mpeSupport = U::cast<IVst3WrapperMPESupport> (context);
 		bool addEnableMPE = mpeSupport;
 #if DEVELOPMENT
 		addEnableMPE = true;
@@ -424,8 +425,7 @@ IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 	std::string_view name (_name);
 	if (name == ViewType::kEditor)
 	{
-		FUnknownPtr<IInterAppAudioHost> interAudioApp (getHostContext ());
-		if (interAudioApp)
+		if (auto interAudioApp = U::cast<IInterAppAudioHost> (getHostContext ()))
 		{
 			ViewRect vr;
 			float scale;
@@ -446,8 +446,8 @@ IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 				}
 			}
 		}
-		FUnknownPtr<IVst3ToAUWrapper> auWrapper (getHostContext ());
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
+		auto auWrapper = U::cast<IVst3ToAUWrapper> (getHostContext ());
+		auto mpeSupport = U::cast<IVst3WrapperMPESupport> (getHostContext ());
 		if (auWrapper && mpeSupport)
 			return new VST3Editor (this, "EditorIPad_AUv3", "note_expression_synth.uidesc");
 		return new VST3Editor (this, "Editor", "note_expression_synth.uidesc");
@@ -475,8 +475,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 	}
 	else if (name == "InterAppAudioControlsController")
 	{
-		FUnknownPtr<IInterAppAudioHost> interAudioApp (getHostContext ());
-		if (interAudioApp)
+		if (auto interAudioApp = U::cast<IInterAppAudioHost> (getHostContext ()))
 		{
 			return new InterAppAudioControlsController (interAudioApp);
 		}
@@ -485,8 +484,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 	{
 		if (playerDelegate == nullptr)
 		{
-			FUnknownPtr<IInterAppAudioHost> interAudioApp (getHostContext ());
-			if (interAudioApp)
+			if (auto interAudioApp = U::cast<IInterAppAudioHost> (getHostContext ()))
 			{
 				playerDelegate = new InterAppAudioPlayer (interAudioApp);
 			}
@@ -508,7 +506,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 		// make sure in DEVELOPMENT mode not to remove the UI
 		bool mpeSupportNeeded = true;
 #else
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
+		auto mpeSupport = U::cast<IVst3WrapperMPESupport> (getHostContext ());
 		bool mpeSupportNeeded = mpeSupport ? true : false;
 #endif
 		return new ConditionalRemoveViewController (editor, mpeSupportNeeded);
@@ -520,8 +518,7 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 		bool midiLearnSupported = true;
 #else
 		bool midiLearnSupported = false;
-		FUnknownPtr<IPlugInterfaceSupport> pis (getHostContext ());
-		if (pis)
+		if (auto pis = U::cast<IPlugInterfaceSupport> (getHostContext ()))
 			midiLearnSupported = pis->isPlugInterfaceSupported (IMidiLearn::iid) == kResultTrue;
 #endif
 		return new ConditionalRemoveViewController (editor, midiLearnSupported);
@@ -576,8 +573,7 @@ tresult ControllerWithUI::performEdit (ParamID tag, ParamValue valueNormalized)
 	}
 	else if (tag == kParamEnableMPE)
 	{
-		FUnknownPtr<IVst3WrapperMPESupport> mpeSupport (getHostContext ());
-		if (mpeSupport)
+		if (auto mpeSupport = U::cast<IVst3WrapperMPESupport> (getHostContext ()))
 		{
 			mpeSupport->enableMPEInputProcessing (valueNormalized < 0.5);
 		}

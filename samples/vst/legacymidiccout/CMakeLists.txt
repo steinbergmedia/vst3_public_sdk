@@ -6,7 +6,7 @@ project(smtg-vst3-legacymidiccout
     DESCRIPTION "Steinberg VST 3 Legacy MIDI CC out example"
 )
 
-smtg_add_vst3plugin(legacymidiccout     
+smtg_add_vst3plugin(legacy-midicc-out     
     source/plug.cpp
     source/plug.h
     source/plugcids.h
@@ -17,4 +17,4 @@ smtg_add_vst3plugin(legacymidiccout
     source/version.h
 )
 
-smtg_target_setup_as_vst3_example(legacymidiccout)
+smtg_target_setup_as_vst3_example(legacy-midicc-out)

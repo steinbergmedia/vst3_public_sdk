@@ -59,7 +59,7 @@ struct StringStream : U::ImplementsNonDestroyable<U::Directly<IBStream>>
 		return kResultTrue;
 	}
 	tresult PLUGIN_API seek (int64, int32, int64*) override { return kNotImplemented; }
-	tresult PLUGIN_API tell (int64* pos) override { return kNotImplemented; }
+	tresult PLUGIN_API tell (int64*) override { return kNotImplemented; }
 };
 
 //------------------------------------------------------------------------

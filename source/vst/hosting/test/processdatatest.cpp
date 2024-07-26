@@ -58,16 +58,16 @@ struct TestComponent : public IComponent
 	using GetBusCountFunc = std::function<int32 (BusDirection dir)>;
 	using GetBusInfoFunc = std::function<tresult (BusDirection dir, int32 index, BusInfo& bus)>;
 
-	tresult PLUGIN_API queryInterface (const TUID _iid, void** obj) override
+	tresult PLUGIN_API queryInterface (const TUID /*_iid*/, void** /*obj*/) override
 	{
 		return kNoInterface;
 	}
 	uint32 PLUGIN_API addRef () override { return 100; }
 	uint32 PLUGIN_API release () override { return 100; }
-	tresult PLUGIN_API initialize (FUnknown* context) override { return kResultTrue; }
+	tresult PLUGIN_API initialize (FUnknown* /*context*/) override { return kResultTrue; }
 	tresult PLUGIN_API terminate () override { return kResultTrue; }
-	tresult PLUGIN_API getControllerClassId (TUID classId) override { return kNotImplemented; }
-	tresult PLUGIN_API setIoMode (IoMode mode) override { return kNotImplemented; }
+	tresult PLUGIN_API getControllerClassId (TUID /*classId*/) override { return kNotImplemented; }
+	tresult PLUGIN_API setIoMode (IoMode /*mode*/) override { return kNotImplemented; }
 	int32 PLUGIN_API getBusCount (MediaType type, BusDirection dir) override
 	{
 		if (type != MediaTypes::kAudio)
@@ -81,21 +81,21 @@ struct TestComponent : public IComponent
 			return kResultFalse;
 		return getBusInfoFunc (dir, index, bus);
 	}
-	tresult PLUGIN_API getRoutingInfo (RoutingInfo& inInfo, RoutingInfo& outInfo) override
+	tresult PLUGIN_API getRoutingInfo (RoutingInfo& /*inInfo*/, RoutingInfo& /*outInfo*/) override
 	{
 		return kNotImplemented;
 	}
-	tresult PLUGIN_API activateBus (MediaType type, BusDirection dir, int32 index,
-	                                TBool state) override
+	tresult PLUGIN_API activateBus (MediaType /*type*/, BusDirection /*dir*/, int32 /*index*/,
+	                                TBool /*state*/) override
 	{
 		return kNotImplemented;
 	}
-	tresult PLUGIN_API setActive (TBool state) override { return kNotImplemented; }
-	tresult PLUGIN_API setState (IBStream* state) override { return kNotImplemented; }
-	tresult PLUGIN_API getState (IBStream* state) override { return kNotImplemented; }
+	tresult PLUGIN_API setActive (TBool /*state*/) override { return kNotImplemented; }
+	tresult PLUGIN_API setState (IBStream* /*state*/) override { return kNotImplemented; }
+	tresult PLUGIN_API getState (IBStream* /*state*/) override { return kNotImplemented; }
 
-	GetBusCountFunc getBusCountFunc = [] (BusDirection dir) { return 0; };
-	GetBusInfoFunc getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+	GetBusCountFunc getBusCountFunc = [] (BusDirection /*dir*/) { return 0; };
+	GetBusInfoFunc getBusInfoFunc = [] (BusDirection /*dir*/, int32 /*index*/, BusInfo& /*bus*/) {
 		return kNotImplemented;
 	};
 };
@@ -145,8 +145,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	});
 	registerTest (TestSuiteName, STR ("1 in & out bus 2 channels"), [] (ITestResult* testResult) {
 		TestComponent tc;
-		tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			if (index != 0)
 				return kResultFalse;
 			bus.channelCount = 2;
@@ -166,8 +166,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	});
 	registerTest (TestSuiteName, STR ("2 in & out bus dif channels"), [] (ITestResult* testResult) {
 		TestComponent tc;
-		tc.getBusCountFunc = [] (BusDirection dir) { return 2; };
-		tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 2; };
+		tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			if (index < 0 || index > 1)
 				return kResultFalse;
 			bus.channelCount = index == 0 ? 4 : 1;
@@ -195,8 +195,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	});
 	registerTest (TestSuiteName, STR ("Set all channel buffers 32"), [] (ITestResult* testResult) {
 		TestComponent tc;
-		tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			if (index != 0)
 				return kResultFalse;
 			bus.channelCount = 2;
@@ -221,8 +221,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	});
 	registerTest (TestSuiteName, STR ("Set all channel buffers 64"), [] (ITestResult* testResult) {
 		TestComponent tc;
-		tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			if (index != 0)
 				return kResultFalse;
 			bus.channelCount = 2;
@@ -248,8 +248,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	registerTest (
 	    TestSuiteName, STR ("Set individual channel buffers 32"), [] (ITestResult* testResult) {
 		    TestComponent tc;
-		    tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		    tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		    tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		    tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			    if (index != 0)
 				    return kResultFalse;
 			    bus.channelCount = 2;
@@ -278,8 +278,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	registerTest (TestSuiteName, STR ("Set individual channel buffers 32 combined"),
 	              [] (ITestResult* testResult) {
 		              TestComponent tc;
-		              tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		              tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		              tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		              tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			              if (index != 0)
 				              return kResultFalse;
 			              bus.channelCount = 2;
@@ -307,8 +307,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	registerTest (
 	    TestSuiteName, STR ("Set individual channel buffers 64"), [] (ITestResult* testResult) {
 		    TestComponent tc;
-		    tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		    tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		    tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		    tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			    if (index != 0)
 				    return kResultFalse;
 			    bus.channelCount = 2;
@@ -337,8 +337,8 @@ ModuleInitializer HostProcessDataTests ([] () {
 	registerTest (TestSuiteName, STR ("Set individual channel buffers 64 combined"),
 	              [] (ITestResult* testResult) {
 		              TestComponent tc;
-		              tc.getBusCountFunc = [] (BusDirection dir) { return 1; };
-		              tc.getBusInfoFunc = [] (BusDirection dir, int32 index, BusInfo& bus) {
+		              tc.getBusCountFunc = [] (BusDirection /*dir*/) { return 1; };
+		              tc.getBusInfoFunc = [] (BusDirection /*dir*/, int32 index, BusInfo& bus) {
 			              if (index != 0)
 				              return kResultFalse;
 			              bus.channelCount = 2;

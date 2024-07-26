@@ -133,7 +133,7 @@ bool Window::init (const std::string& name, Size size, bool resizeable,
 	DWORD dwStyle = WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	if (resizeable)
 		dwStyle |= WS_SIZEBOX | WS_MAXIMIZEBOX;
-	auto windowTitle = VST3::StringConvert::convert (name);
+	auto windowTitle = Vst::StringConvert::convert (name);
 
 	RECT rect {0, 0, size.width, size.height};
 	AdjustWindowRectEx (&rect, dwStyle, false, exStyle);

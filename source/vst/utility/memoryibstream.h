@@ -125,7 +125,7 @@ inline tresult PLUGIN_API ResizableMemoryIBStream::seek (int64 pos, int32 mode, 
 	}
 	if (newCursor < 0)
 		return kInvalidArgument;
-	if (newCursor >= data.size ())
+	if (newCursor >= static_cast<int64> (data.size ()))
 		return kInvalidArgument;
 	if (result)
 		*result = newCursor;

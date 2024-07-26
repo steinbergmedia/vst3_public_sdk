@@ -39,6 +39,7 @@
 #include "public.sdk/source/vst/hosting/module.h"
 #include "public.sdk/source/vst/utility/processcontextrequirements.h"
 #include "public.sdk/source/vst/utility/versionparser.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -49,7 +50,7 @@ namespace {
 VST3::Optional<VST3::Version> getPluginSDKVersion (ITestPlugProvider* plugProvider,
                                                    ITestResult* testResult)
 {
-	FUnknownPtr<ITestPlugProvider2> pp2 (plugProvider);
+	auto pp2 = U::cast<ITestPlugProvider2> (plugProvider);
 	if (!pp2)
 	{
 		addErrorMessage (testResult, STR ("Internal test Error. Expected Interface not there!"));
@@ -119,8 +120,7 @@ bool PLUGIN_API ProcessContextRequirementsTest::run (ITestResult* testResult)
 		return true;
 	}
 
-	FUnknownPtr<IProcessContextRequirements> contextRequirements (audioEffect);
-	if (contextRequirements)
+	if (auto contextRequirements = U::cast<IProcessContextRequirements> (audioEffect))
 	{
 		ProcessContextRequirements req (contextRequirements->getProcessContextRequirements ());
 		addMessage (testResult, STR ("ProcessContextRequirements:"));

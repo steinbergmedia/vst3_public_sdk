@@ -132,7 +132,7 @@ tresult PLUGIN_API AGainController::initialize (FUnknown* context)
 	}
 
 	//--- Create Units-------------
-	UnitInfo unitInfo;
+	UnitInfo unitInfo {};
 	Unit* unit;
 
 	// create root only if you want to use the programListId

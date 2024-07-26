@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/general/midimapping.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include <unordered_set>
 
@@ -64,7 +65,7 @@ bool PLUGIN_API MidiMappingTest::run (ITestResult* testResult)
 		return true;
 	}
 
-	FUnknownPtr<IMidiMapping> midiMapping (controller);
+	auto midiMapping = U::cast<IMidiMapping> (controller);
 	if (!midiMapping)
 	{
 		addMessage (testResult, STR ("No MIDI Mapping interface supplied!"));

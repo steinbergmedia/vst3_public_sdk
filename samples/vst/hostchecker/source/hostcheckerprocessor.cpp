@@ -42,6 +42,7 @@
 #include "public.sdk/source/vst/vstaudioprocessoralgo.h"
 #include "public.sdk/source/vst/vsteventshelper.h"
 
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
@@ -81,7 +82,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 	if (result == kResultOk)
 	{
 		dataExchangeHandler =
-		    new DataExchangeHandler (this, [this] (auto& config, const auto& setup) {
+		    new DataExchangeHandler (this, [this] (auto& config, const auto& /*setup*/) {
 			    config.numBlocks = 5;
 			    config.blockSize = sizeof (ProcessContext);
 			    return true;
@@ -94,7 +95,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 
 		addAudioInput (USTRING ("Audio Input"), SpeakerArr::kStereo);
 		addAudioInput (USTRING ("Aux Input 1"), SpeakerArr::kStereo, kAux, 0);
-		FUnknownPtr<IVst3ToAAXWrapper> AAXContext (context);
+		auto AAXContext = U::cast<IVst3ToAAXWrapper> (context);
 		if (AAXContext == nullptr)
 		{
 			addAudioInput (USTRING ("Aux Input 2"), SpeakerArr::kMono, kAux, 0);
@@ -119,8 +120,7 @@ tresult PLUGIN_API HostCheckerProcessor::initialize (FUnknown* context)
 		mHostCheck.setComponent (this);
 	}
 
-	FUnknownPtr<IPlugInterfaceSupport> plugInterfaceSupport (context);
-	if (plugInterfaceSupport)
+	if (auto plugInterfaceSupport = U::cast<IPlugInterfaceSupport> (context))
 	{
 		addLogEvent (kLogIdIPlugInterfaceSupportSupported);
 
@@ -297,6 +297,20 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		mSetActiveCalled = false;
 		addLogEvent (kLogIdSetActiveCalledSupported);
 	}
+	if (mCheckGetLatencyCall)
+	{
+		mCheckGetLatencyCall = false;
+		if (mGetLatencyCalled)
+		{
+			if (!mGetLatencyCalledAfterSetActive)
+			{
+				addLogEvent (kLogIdGetLatencyCalledbeforeSetActive);
+			}
+		}
+		else
+			addLogEvent (kLogIdgetLatencyNotCalled);
+	}
+
 	// flush parameters case
 	if (data.numInputs == 0 && data.numOutputs == 0)
 	{
@@ -447,7 +461,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		// Generate Processing load
 		if (mProcessingLoad > 0)
 		{
-			int32 countLoop = mProcessingLoad * 200;
+			int32 countLoop = mProcessingLoad * 400;
 			if (data.symbolicSampleSize == kSample32)
 			{
 				auto tmp1 = data.outputs[0].channelBuffers32[0][0];
@@ -684,6 +698,7 @@ tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 	{
 		addLogEvent (kLogIdInvalidStateSetActiveWrong);
 	}
+	mCheckGetLatencyCall = true;
 
 	if (!state)
 	{
@@ -696,6 +711,8 @@ tresult PLUGIN_API HostCheckerProcessor::setActive (TBool state)
 		mCurrentState = State::kSetupDone;
 		mBypassProcessorFloat.reset ();
 		mBypassProcessorDouble.reset ();
+
+		mGetLatencyCalledAfterSetActive = false;
 	}
 	else
 	{
@@ -763,6 +780,11 @@ tresult PLUGIN_API HostCheckerProcessor::canProcessSampleSize (int32 symbolicSam
 //-----------------------------------------------------------------------------
 uint32 PLUGIN_API HostCheckerProcessor::getLatencySamples ()
 {
+	mCheckGetLatencyCall = true;
+	mGetLatencyCalled = true;
+
+	if (mSetActiveCalled)
+		mGetLatencyCalledAfterSetActive = true;
 	addLogEvent (kLogIdGetLatencySamples);
 	return mLatency;
 }
@@ -892,11 +914,12 @@ tresult PLUGIN_API HostCheckerProcessor::setState (IBStream* state)
 		addLogEvent (kLogIdProcessorSetStateCalledinWrongThread);
 	}
 
-	FUnknownPtr<IStreamAttributes> stream (state);
-
-	if (IAttributeList* list = stream ? stream->getAttributes () : nullptr)
+	if (auto stream = U::cast<IStreamAttributes> (state))
 	{
-		addLogEvent (kLogIdIAttributeListInSetStateSupported);
+		if (IAttributeList* list = stream->getAttributes ())
+		{
+			addLogEvent (kLogIdIAttributeListInSetStateSupported);
+		}
 	}
 
 	IBStreamer streamer (state, kLittleEndian);

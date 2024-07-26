@@ -6,7 +6,7 @@ project(smtg-vst3-channelcontext
     DESCRIPTION "Steinberg VST 3 Channel Context example"
 )
 
-smtg_add_vst3plugin(channelcontext     
+smtg_add_vst3plugin(channel-context     
     source/plug.cpp
     source/plug.h
     source/plugcids.h
@@ -17,4 +17,4 @@ smtg_add_vst3plugin(channelcontext
     source/version.h
 )
 
-smtg_target_setup_as_vst3_example(channelcontext)
+smtg_target_setup_as_vst3_example(channel-context)

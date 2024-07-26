@@ -404,8 +404,7 @@ void WindowController::onContentScaleFactorChanged (IWindow& w, float newScaleFa
 {
 	SMTG_DBPRT1 ("onContentScaleFactorChanged called (%p)\n", (void*)&w);
 
-	FUnknownPtr<IPlugViewContentScaleSupport> css (plugView);
-	if (css)
+	if (auto css = U::cast<IPlugViewContentScaleSupport> (plugView))
 	{
 		css->setContentScaleFactor (newScaleFactor);
 	}

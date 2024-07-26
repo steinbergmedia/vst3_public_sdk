@@ -70,7 +70,7 @@ static Steinberg::Vst::SystemTime::GetImplFunc makeNativeGetSystemTimeFunc ()
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
-#include <Windows.h>
+#include <windows.h>
 
 //------------------------------------------------------------------------
 struct WinmmDll
@@ -87,7 +87,8 @@ private:
 	using TimeGetTimeFunc = DWORD (WINAPI*) ();
 	WinmmDll ()
 	{
-		if (dll = LoadLibraryA ("winmm.dll"))
+		dll = LoadLibraryA ("winmm.dll");
+		if (dll)
 		{
 			func = reinterpret_cast<TimeGetTimeFunc> (GetProcAddress (dll, "timeGetTime"));
 		}

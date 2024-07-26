@@ -92,23 +92,28 @@ bool TestBase::teardown ()
 //------------------------------------------------------------------------
 bool TestBase::activateMainIOBusses (bool val)
 {
-	if (vstPlug)
-	{
-		if (auto countIn = vstPlug->getBusCount (kAudio, kInput) > 0)
-			vstPlug->activateBus (kAudio, kInput, 0, val);
-		if (auto countOut = vstPlug->getBusCount (kAudio, kOutput) > 0)
-			vstPlug->activateBus (kAudio, kOutput, 0, val);
+	if (!vstPlug)
+		return false;
 
-		return true;
+	bool result = true;
+	if (auto countIn = vstPlug->getBusCount (kAudio, kInput) > 0)
+	{
+		if (vstPlug->activateBus (kAudio, kInput, 0, val) == kResultFalse)
+			result = false;
+	}
+	if (auto countOut = vstPlug->getBusCount (kAudio, kOutput) > 0)
+	{
+		if (vstPlug->activateBus (kAudio, kOutput, 0, val) == kResultFalse)
+			result = false;
 	}
 
-	return false;
+	return result;
 }
 
 //------------------------------------------------------------------------
 void TestBase::printTestHeader (ITestResult* testResult)
 {
-	using VST3::StringConvert::convert;
+	using StringConvert::convert;
 
 	std::string str = "===";
 	str += getName ();
@@ -193,7 +198,7 @@ void addErrorMessage (ITestResult* testResult, const std::u16string& str)
 //------------------------------------------------------------------------
 std::u16string printf (const char8* format, ...)
 {
-	using VST3::StringConvert::convert;
+	using StringConvert::convert;
 
 	char8 string[1024 * 4];
 

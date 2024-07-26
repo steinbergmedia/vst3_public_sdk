@@ -35,6 +35,7 @@
 //-----------------------------------------------------------------------------
 
 #pragma once
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstattributes.h"
@@ -61,7 +62,7 @@ inline tresult isProjectState (IBStream* state)
 	if (!state)
 		return kInvalidArgument;
 
-	FUnknownPtr<IStreamAttributes> stream (state);
+	auto stream = U::cast<IStreamAttributes> (state);
 	if (!stream)
 		return kNotImplemented;
 

@@ -1,5 +1,5 @@
 
-set(target aaxwrapper)
+set(target aax_wrapper)
 set(${target}_sources
     ${SDK_ROOT}/public.sdk/source/vst/basewrapper/basewrapper.sdk.cpp
     aaxentry.cpp
@@ -28,7 +28,7 @@ target_link_libraries(${target}
 )
 smtg_target_setup_universal_binary(${target})
 
-target_compile_features(aaxwrapper
+target_compile_features(aax_wrapper
     PUBLIC
         cxx_std_17
 )

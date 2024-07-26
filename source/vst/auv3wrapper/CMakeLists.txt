@@ -15,7 +15,7 @@ if(SMTG_MAC)
         )
 
         #--------------------------------------------------------------------------------------------------------
-        set(target auv3wrappermacos)
+        set(target auv3_wrapper_macos)
         add_library(${target}
             STATIC 
                 ${auv3wrapperlib_sources}
@@ -40,7 +40,7 @@ if(SMTG_MAC)
 
         #--------------------------------------------------------------------------------------------------------
         if(SMTG_ENABLE_IOS_TARGETS)
-            set(target auv3wrapperios)
+            set(target auv3_wrapper_ios)
             add_library(${target}
                 STATIC
                     ${auv3wrapperlib_sources}

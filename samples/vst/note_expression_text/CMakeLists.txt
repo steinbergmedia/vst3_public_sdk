@@ -10,7 +10,7 @@ project(smtg-vst3-noteexpressiontext
     DESCRIPTION "Steinberg VST 3 Note Expression Text example"
 )
 
-smtg_add_vst3plugin(noteexpressiontext 
+smtg_add_vst3plugin(note-expression-text 
    source/plug.cpp
     source/plug.h
     source/plugcids.h
@@ -22,14 +22,14 @@ smtg_add_vst3plugin(noteexpressiontext
     resource/plug.uidesc
 )
 
-target_link_libraries(noteexpressiontext
+target_link_libraries(note-expression-text
     PRIVATE
         vstgui_support
 )
 
-smtg_target_add_plugin_resources(noteexpressiontext
+smtg_target_add_plugin_resources(note-expression-text
     RESOURCES
         resource/plug.uidesc
 )
 
-smtg_target_setup_as_vst3_example(noteexpressiontext)
+smtg_target_setup_as_vst3_example(note-expression-text)

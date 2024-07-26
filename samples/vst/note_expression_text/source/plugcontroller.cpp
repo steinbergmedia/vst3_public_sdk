@@ -138,7 +138,7 @@ tresult PLUGIN_API PlugController::notify (IMessage* message)
 		if (message->getAttributes ()->getString ("Text", string,
 		                                          sizeof (string) / sizeof (char16)) == kResultOk)
 		{
-			mTextLabel->setText (VST3::StringConvert::convert (string));
+			mTextLabel->setText (Vst::StringConvert::convert (string));
 			return kResultOk;
 		}
 	}

@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/noteexpression/keyswitch.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 
 //------------------------------------------------------------------------
@@ -63,7 +64,7 @@ bool PLUGIN_API KeyswitchTest::run (ITestResult* testResult)
 		return true;
 	}
 
-	FUnknownPtr<IKeyswitchController> keyswitch (controller);
+	auto keyswitch = U::cast<IKeyswitchController> (controller);
 	if (!keyswitch)
 	{
 		addMessage (testResult, STR ("No Keyswitch interface supplied!"));

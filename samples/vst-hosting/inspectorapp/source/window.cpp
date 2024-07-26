@@ -103,11 +103,12 @@ private:
 		return kResultTrue;
 	}
 	int32 PLUGIN_API countClasses () override { return 0; }
-	tresult PLUGIN_API getClassInfo (int32 index, PClassInfo* info) override
+	tresult PLUGIN_API getClassInfo (int32 /*index*/, PClassInfo* /*info*/) override
 	{
 		return kResultFalse;
 	}
-	tresult PLUGIN_API createInstance (FIDString cid, FIDString _iid, void** obj) override
+	tresult PLUGIN_API createInstance (FIDString /*cid*/, FIDString /*_iid*/,
+	                                   void** /*obj*/) override
 	{
 		return kNoInterface;
 	}
@@ -128,7 +129,10 @@ public:
 	InvalidModule () { factory = VST3::Hosting::PluginFactory (DummyFactory::instance ()); }
 
 private:
-	bool load (const std::string& path, std::string& errorDescription) override { return true; };
+	bool load (const std::string& /*path*/, std::string& /*errorDescription*/) override
+	{
+		return true;
+	};
 };
 
 //------------------------------------------------------------------------
@@ -466,7 +470,7 @@ struct WindowController : WindowControllerAdapter,
 	const ValueList& getValues () const override { return values.getValues (); }
 
 	IController* createController (const UTF8StringView& name, IController* parent,
-	                               const IUIDescription* uiDesc) override
+	                               const IUIDescription* /*uiDesc*/) override
 	{
 		if (name == "SnapshotViewController")
 		{
@@ -476,7 +480,7 @@ struct WindowController : WindowControllerAdapter,
 		return nullptr;
 	}
 
-	bool showCommandInMenu (const Interface& context, const Command& cmd) const override
+	bool showCommandInMenu (const Interface& /*context*/, const Command& /*cmd*/) const override
 	{
 		return false;
 	}

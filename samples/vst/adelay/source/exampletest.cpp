@@ -40,6 +40,7 @@
 #include "public.sdk/source/main/moduleinit.h"
 #include "public.sdk/source/vst/testsuite/vsttestsuite.h"
 #include "public.sdk/source/vst/utility/testing.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -47,11 +48,11 @@ namespace Vst {
 //------------------------------------------------------------------------
 static ModuleInitializer InitTests ([] () {
 	registerTest ("ExampleTest", nullptr, [] (FUnknown* context, ITestResult* testResult) {
-		FUnknownPtr<ITestPlugProvider> plugProvider (context);
+		auto plugProvider = U::cast<ITestPlugProvider> (context);
 		if (plugProvider)
 		{
 			auto controller = plugProvider->getController ();
-			FUnknownPtr<IDelayTestController> testController (controller);
+			auto testController = U::cast<IDelayTestController> (controller);
 			if (!controller)
 			{
 				testResult->addErrorMessage (String ("Unknown IEditController"));

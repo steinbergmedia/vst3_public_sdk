@@ -58,10 +58,6 @@ namespace Vst {
 // AGain Implementation
 //------------------------------------------------------------------------
 AGain::AGain ()
-: fGain (1.f)
-, fGainReduction (0.f)
-, fVuPPMOld (0.f)
-, currentProcessMode (-1) // -1 means not initialized
 {
 	// register its editor class (the same than used in againentry.cpp)
 	setControllerClass (AGainControllerUID);
@@ -347,8 +343,7 @@ tresult PLUGIN_API AGain::setState (IBStream* state)
 		// we are in project loading context...
 
 		// Example of using the IStreamAttributes interface
-		FUnknownPtr<IStreamAttributes> stream (state);
-		if (stream)
+		if (auto stream = U::cast<IStreamAttributes> (state))
 		{
 			if (IAttributeList* list = stream->getAttributes ())
 			{

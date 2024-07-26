@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/unit/checkunitstructure.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstunits.h"
 
 //------------------------------------------------------------------------
@@ -57,8 +58,7 @@ bool UnitStructureTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
-	if (iUnitInfo)
+	if (auto iUnitInfo = U::cast<IUnitInfo> (controller))
 	{
 		int32 unitCount = iUnitInfo->getUnitCount ();
 		if (unitCount <= 0)

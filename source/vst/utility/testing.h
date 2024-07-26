@@ -103,11 +103,10 @@ static ModuleInitializer InitMyTests ([] () {
     registerTest ("MyTests", STR ("check one two three"), [] (FUnknown* context, ITestResult*
                                                               testResult)
     {
-        FUnknownPtr<ITestPlugProvider> plugProvider (context);
-        if (plugProvider)
+        if (auto plugProvider = U::cast<ITestPlugProvider> (context))
         {
             auto controller = plugProvider->getController ();
-            FUnknownPtr<IDelayTestController> testController (controller);
+            auto testController = U::cast<IDelayTestController> (controller);
             if (!controller)
             {
                 testResult->addErrorMessage (String ("Unknown IEditController"));

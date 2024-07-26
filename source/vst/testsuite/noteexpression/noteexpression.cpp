@@ -37,6 +37,7 @@
 
 #include "public.sdk/source/vst/testsuite/noteexpression/noteexpression.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstnoteexpression.h"
 #include "pluginterfaces/vst/ivstphysicalui.h"
 
@@ -65,14 +66,14 @@ bool PLUGIN_API NoteExpressionTest::run (ITestResult* testResult)
 		return true;
 	}
 
-	FUnknownPtr<INoteExpressionController> noteExpression (controller);
+	auto noteExpression = U::cast<INoteExpressionController> (controller);
 	if (!noteExpression)
 	{
 		addMessage (testResult, STR ("No Note Expression interface supplied!"));
 		return true;
 	}
 
-	FUnknownPtr<INoteExpressionPhysicalUIMapping> noteExpressionPUIMapping (controller);
+	auto noteExpressionPUIMapping = U::cast<INoteExpressionPhysicalUIMapping> (controller);
 	if (!noteExpressionPUIMapping)
 	{
 		addMessage (testResult, STR ("No Note Expression PhysicalUIMapping interface supplied!"));
@@ -109,9 +110,8 @@ bool PLUGIN_API NoteExpressionTest::run (ITestResult* testResult)
 				NoteExpressionTypeInfo info;
 				if (noteExpression->getNoteExpressionInfo (bus, channel, i, info) == kResultTrue)
 				{
-					addMessage (testResult,
-					            printf ("Note Expression TypeID: %d [%s]", info.typeId,
-					                    VST3::StringConvert::convert (info.title).data ()));
+					addMessage (testResult, printf ("Note Expression TypeID: %d [%s]", info.typeId,
+					                                StringConvert::convert (info.title).data ()));
 					NoteExpressionTypeID id = info.typeId;
 					NoteExpressionValue valueNormalized = info.valueDesc.defaultValue;
 					String128 string;

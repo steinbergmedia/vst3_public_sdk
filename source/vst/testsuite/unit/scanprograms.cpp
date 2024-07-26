@@ -37,8 +37,10 @@
 
 #include "public.sdk/source/vst/testsuite/unit/scanprograms.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
+
 #include <memory>
 
 //------------------------------------------------------------------------
@@ -60,8 +62,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
-	if (iUnitInfo)
+	if (auto iUnitInfo = U::cast<IUnitInfo> (controller))
 	{
 		int32 programListCount = iUnitInfo->getProgramListCount ();
 		if (programListCount == 0)
@@ -105,7 +106,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 					}
 				}
 
-				auto programListName = VST3::StringConvert::convert (programListInfo.name);
+				auto programListName = StringConvert::convert (programListInfo.name);
 				if (programListName.empty ())
 				{
 					addErrorMessage (testResult, printf ("Programlist %03d (id=%d): No name!!!",
@@ -121,7 +122,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 					    printf (
 					        "Programlist %03d (id=%d): \"%s\" No programs!!! (programCount is null!)",
 					        programListIndex, programListId,
-					        VST3::StringConvert::convert (programListName).data ()));
+					        StringConvert::convert (programListName).data ()));
 					// return false;
 				}
 
@@ -144,7 +145,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 							return false;
 						}
 
-						auto programNameUTF8 = VST3::StringConvert::convert (programName);
+						auto programNameUTF8 = StringConvert::convert (programName);
 						auto msg = printf ("Programlist %03d->Program %03d: \"%s\"",
 						                   programListIndex, programIndex, programNameUTF8.data ());
 
@@ -153,10 +154,10 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 						                               PresetAttributes::kInstrument,
 						                               programInfo) == kResultOk)
 						{
-							auto programInfoUTF8 = VST3::StringConvert::convert (programInfo);
-							msg += VST3::StringConvert::convert (" (instrument = \"");
+							auto programInfoUTF8 = StringConvert::convert (programInfo);
+							msg += StringConvert::convert (" (instrument = \"");
 							msg += (const char16_t*)programInfo;
-							msg += VST3::StringConvert::convert ("\")");
+							msg += StringConvert::convert ("\")");
 						}
 
 						addMessage (testResult, msg.data ());
@@ -176,7 +177,7 @@ bool ProgramInfoTest::run (ITestResult* testResult)
 								{
 									msg = printf ("   => MIDI Pitch %d => \"", midiPitch);
 									msg += (const char16_t*)pitchName;
-									msg += VST3::StringConvert::convert ("\"");
+									msg += StringConvert::convert ("\"");
 									addMessage (testResult, msg.data ());
 								}
 							}

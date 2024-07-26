@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Validator
-// Filename    : validator.h
+// Filename    : public.sdk/samples/vst-hosting/validator/source/validator.h
 // Created by  : Steinberg, 04/2005
 // Description : VST 3 Plug-in Validator class
 //

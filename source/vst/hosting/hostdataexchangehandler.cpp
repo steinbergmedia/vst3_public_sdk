@@ -52,9 +52,6 @@
 namespace Steinberg {
 namespace Vst {
 
-DEF_CLASS_IID (IDataExchangeHandler);
-DEF_CLASS_IID (IDataExchangeReceiver);
-
 //------------------------------------------------------------------------
 struct HostDataExchangeHandler::Impl
 : U::ImplementsNonDestroyable<U::Directly<IDataExchangeHandler>>

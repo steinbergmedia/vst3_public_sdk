@@ -240,7 +240,7 @@ tresult PresetManager::loadPreset (const char* path)
 			[[NSUserDefaults standardUserDefaults] setObject:[NSString stringWithUTF8String:path]
 			                                          forKey:@"PresetManager|lastPreset"];
 			lastPreset = path;
-			FUnknownPtr<IComponent> component (plugin->getAudioProcessor ());
+			auto component = U::cast<IComponent> (plugin->getAudioProcessor ());
 			IEditController* controller = plugin->getEditController ();
 			if (component)
 			{
@@ -286,7 +286,7 @@ void PresetManager::savePreset (const char* path)
 	IBStream* stream = FileStream::open (path, "w");
 	if (stream)
 	{
-		FUnknownPtr<IComponent> component (plugin->getAudioProcessor ());
+		auto component = U::cast<IComponent> (plugin->getAudioProcessor ());
 		IEditController* controller = plugin->getEditController ();
 		if (component)
 		{

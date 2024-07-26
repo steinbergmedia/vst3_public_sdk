@@ -114,7 +114,7 @@ bool PanParameter::fromString (const Vst::TChar* string, Vst::ParamValue& normVa
 		bool right = stringView.find_first_of (u"R") == 0;
 		if (left || right)
 			stringView = {stringView.data () + 1, stringView.size () - 1};
-		auto string8 = VST3::StringConvert::convert (stringView.data ());
+		auto string8 = Vst::StringConvert::convert (stringView.data ());
 		char* end = nullptr;
 		double tmp = strtod (string8.data (), &end);
 		if (end != string8.data ())

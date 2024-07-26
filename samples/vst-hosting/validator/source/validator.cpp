@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Validator
-// Filename    : validator.cpp
+// Filename    : public.sdk/samples/vst-hosting/validator/source/validator.cpp
 // Created by  : Steinberg, 04/2005
 // Description : VST 3 Plug-in Validator class
 //
@@ -289,7 +289,7 @@ void PLUGIN_API Validator::addErrorMessage (const tchar* msg)
 {
 	if (errorStream)
 	{
-		auto str = VST3::StringConvert::convert (msg);
+		auto str = StringConvert::convert (msg);
 		if (addErrorWarningTextToOutput)
 			*errorStream << "ERROR: " << str << "\n";
 		else
@@ -302,7 +302,7 @@ void PLUGIN_API Validator::addMessage (const tchar* msg)
 {
 	if (infoStream)
 	{
-		auto str = VST3::StringConvert::convert (msg);
+		auto str = StringConvert::convert (msg);
 		if (addErrorWarningTextToOutput)
 			*infoStream << "Info:  " << str << "\n";
 		else
@@ -313,7 +313,7 @@ void PLUGIN_API Validator::addMessage (const tchar* msg)
 //------------------------------------------------------------------------
 tresult PLUGIN_API Validator::getName (String128 name)
 {
-	VST3::StringConvert::convert ("vstvalidator", name, 127);
+	StringConvert::convert ("vstvalidator", name, 127);
 	return kResultTrue;
 }
 
@@ -391,8 +391,7 @@ int Validator::run ()
 	{
 		addErrorWarningTextToOutput = false;
 		auto testFactoryInstance = owned (createTestFactoryInstance (nullptr));
-		FUnknownPtr<ITestFactory> testFactory (testFactoryInstance);
-		if (testFactory)
+		if (auto testFactory = U::cast<ITestFactory> (testFactoryInstance))
 		{
 			std::cout << "Running validator selftest:\n\n";
 			IPtr<TestSuite> testSuite = owned (new TestSuite (""));
@@ -766,7 +765,7 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 					*infoStream << "[" << name;
 					if (auto desc = testItem->getDescription ())
 					{
-						auto descStr = VST3::StringConvert::convert (desc);
+						auto descStr = StringConvert::convert (desc);
 						if (!descStr.empty ())
 							*infoStream << ": " << descStr;
 					}

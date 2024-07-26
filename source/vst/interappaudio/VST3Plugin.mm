@@ -136,8 +136,8 @@ void VST3Plugin::createProcessorAndController ()
 					editController = nullptr;
 					return;
 				}
-				FUnknownPtr<IConnectionPoint> compConnection (component);
-				FUnknownPtr<IConnectionPoint> ctrlerConnection (editController);
+				auto compConnection = U::cast<IConnectionPoint> (component);
+				auto ctrlerConnection = U::cast<IConnectionPoint> (editController);
 				if (compConnection && ctrlerConnection)
 				{
 					compConnection->connect (ctrlerConnection);
@@ -185,11 +185,11 @@ VST3Plugin::MIDIControllerToParamIDMap VST3Plugin::createMIDIControllerToParamID
 {
 	MIDIControllerToParamIDMap newMap;
 
-	FUnknownPtr<IMidiMapping> midiMapping (editController);
+	auto midiMapping = U::cast<IMidiMapping> (editController);
 	if (midiMapping)
 	{
 		uint16 channelCount = 0;
-		FUnknownPtr<IComponent> component (processor);
+		auto component = U::cast<IComponent> (processor);
 		if (component)
 		{
 			int32 busCount = component->getBusCount (kEvent, kInput);
@@ -235,7 +235,7 @@ NSData* VST3Plugin::getProcessorState ()
 	{
 		NSMutableData* data = [NSMutableData new];
 		NSMutableDataIBStream state (data);
-		FUnknownPtr<IComponent> comp (processor);
+		auto comp = U::cast<IComponent> (processor);
 		if (comp->getState (&state) == kResultTrue)
 		{
 			return data;
@@ -250,7 +250,7 @@ bool VST3Plugin::setProcessorState (NSData* data)
 	if (editController && processor)
 	{
 		NSDataIBStream stream (data);
-		FUnknownPtr<IComponent> comp (processor);
+		auto comp = U::cast<IComponent> (processor);
 		if (comp->setState (&stream) == kResultTrue)
 		{
 			stream.seek (0, IBStream::kIBSeekSet);
@@ -309,12 +309,12 @@ void VST3Plugin::willStartAudio (AudioIO* audioIO)
 	outputs[0] = SpeakerArr::kStereo;
 	processor->setBusArrangements (inputs, 1, outputs, 1);
 
-	FUnknownPtr<IComponent> comp (processor);
+	auto comp = U::cast<IComponent> (processor);
 	comp->setActive (true);
 
 	processData.prepare (*comp, setup.maxSamplesPerBlock, setup.symbolicSampleSize);
 
-	FUnknownPtr<IInterAppAudioConnectionNotification> iaaConnectionNotification (editController);
+	auto iaaConnectionNotification = U::cast<IInterAppAudioConnectionNotification> (editController);
 	if (iaaConnectionNotification)
 	{
 		iaaConnectionNotification->onInterAppAudioConnectionStateChange (
@@ -330,7 +330,7 @@ void VST3Plugin::didStopAudio (AudioIO* audioIO)
 	processor->setProcessing (false);
 	processing = false;
 
-	FUnknownPtr<IComponent> comp (processor);
+	auto comp = U::cast<IComponent> (processor);
 	comp->setActive (false);
 	timer->release ();
 	timer = nullptr;

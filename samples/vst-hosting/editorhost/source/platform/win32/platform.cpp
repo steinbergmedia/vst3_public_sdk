@@ -41,6 +41,8 @@
 #include "pluginterfaces/base/ftypes.h"
 
 #include <algorithm>
+#include <objbase.h>
+#include <shellapi.h>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -114,7 +116,7 @@ void Platform::quit ()
 //------------------------------------------------------------------------
 void Platform::kill (int resultCode, const std::string& reason)
 {
-	auto str = VST3::StringConvert::convert (reason);
+	auto str = StringConvert::convert (reason);
 	MessageBox (nullptr, reinterpret_cast<LPCWSTR> (str.data ()), nullptr, MB_OK);
 	exit (resultCode);
 }
@@ -135,8 +137,7 @@ void Platform::run (LPWSTR lpCmdLine, HINSTANCE _hInstance)
 	cmdArgStrings.reserve (numArgs);
 	for (int i = 0; i < numArgs; ++i)
 	{
-		cmdArgStrings.push_back (
-		    VST3::StringConvert::convert (Steinberg::wscast (cmdArgsArray[i])));
+		cmdArgStrings.push_back (StringConvert::convert (Steinberg::wscast (cmdArgsArray[i])));
 	}
 	LocalFree (cmdArgsArray);
 

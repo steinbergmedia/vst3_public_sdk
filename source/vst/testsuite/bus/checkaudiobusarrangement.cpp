@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/bus/checkaudiobusarrangement.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -61,8 +62,7 @@ bool CheckAudioBusArrangementTest::run (ITestResult* testResult)
 	int32 numOutputs = vstPlug->getBusCount (kAudio, kOutput);
 	int32 arrangementMismatchs = 0;
 
-	FUnknownPtr<IAudioProcessor> audioEffect (vstPlug);
-	if (audioEffect)
+	if (auto audioEffect = U::cast<IAudioProcessor> (vstPlug))
 	{
 		for (int32 i = 0; i < numInputs + numOutputs; ++i)
 		{

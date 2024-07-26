@@ -63,7 +63,7 @@ public:
 	using JackName = std::string;
 
 	JackClient () = default;
-	virtual ~JackClient ();
+	~JackClient () override;
 
 	// IMediaServer interface
 	bool registerAudioClient (IAudioClient* client) override;
@@ -106,7 +106,6 @@ private:
 int jack_on_process (jack_nframes_t nframes, void* arg)
 {
 	auto client = reinterpret_cast<JackClient*> (arg);
-
 	return client->process (nframes);
 }
 

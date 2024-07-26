@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/state/validstatetransition.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -69,11 +70,11 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 	if (result != kResultTrue)
 		return false;
 
-	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	auto plugBase = U::cast<IPluginBase> (vstPlug);
 	if (!plugBase)
 		return false;
 
-	for (int32 i = 0; i < 3; ++i)
+	for (int32 i = 0; i < 4; ++i)
 	{
 		result = audioEffect->setupProcessing (processSetup);
 		if (result != kResultTrue)
@@ -87,6 +88,9 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 		if (result != kResultTrue)
 			return false;
 
+		if (activateMainIOBusses (false) == false)
+			return false;
+
 		result = plugBase->terminate ();
 		if (result != kResultTrue)
 			return false;
@@ -94,6 +98,14 @@ bool PLUGIN_API ValidStateTransitionTest::run (ITestResult* testResult)
 		result = plugBase->initialize (TestingPluginContext::get ());
 		if (result != kResultTrue)
 			return false;
+
+		// for the last 2 steps we decide to not reenable the buses, see
+		// https://steinbergmedia.github.io/vst3_dev_portal/pages/Technical+Documentation/Change+History/3.0.0/Multiple+Dynamic+IO.html?highlight=kDefaultActive#information-about-busses
+		if (i < 2)
+		{
+			if (activateMainIOBusses (true) == false)
+				return false;
+		}
 	}
 	return true;
 }

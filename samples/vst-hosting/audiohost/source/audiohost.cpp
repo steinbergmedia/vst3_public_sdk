@@ -111,7 +111,7 @@ void App::startAudioClient (const std::string& path, VST3::Optional<VST3::UID> e
 
 	OPtr<IComponent> component = plugProvider->getComponent ();
 	OPtr<IEditController> controller = plugProvider->getController ();
-	FUnknownPtr<IMidiMapping> midiMapping (controller);
+	auto midiMapping = U::cast<IMidiMapping> (controller);
 
 	//! TODO: Query the plugProvider for a proper name which gets displayed in JACK.
 	vst3Processor = AudioClient::create ("VST 3 SDK", component, midiMapping);
@@ -151,7 +151,7 @@ int wmain (int argc, wchar_t* argv[])
 {
 	std::vector<std::string> cmdArgs;
 	for (int i = 1; i < argc; ++i)
-		cmdArgs.push_back (VST3::StringConvert::convert (Steinberg::wscast (argv[i])));
+		cmdArgs.push_back (Steinberg::Vst::StringConvert::convert (Steinberg::wscast (argv[i])));
 
 	Steinberg::Vst::AudioHost::gInit.app->init (cmdArgs);
 

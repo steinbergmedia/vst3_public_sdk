@@ -167,6 +167,9 @@ protected:
 
 	bool mBypass {false};
 	bool mSetActiveCalled {false};
+	bool mCheckGetLatencyCall {true};
+	bool mGetLatencyCalled {false};
+	bool mGetLatencyCalledAfterSetActive {false};
 };
 
 //------------------------------------------------------------------------

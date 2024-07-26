@@ -87,10 +87,12 @@ struct LogEvent
 	LOG_DEF(kLogIdInvalidStateProcessingMissing,PROCESS,	LOG_ERR, STATE, "Missing State: Activated => Processing."), \
 	LOG_DEF(kLogIdInvalidStateSetActiveWrong,	PROCESS,	LOG_ERR, STATE, "Wrong Call Order: setActive () called in a Processing State."), \
 	LOG_DEF(kLogIdInvalidStateSetProcessingWrong,PROCESS,	LOG_ERR, STATE, "Wrong Call Order: setProcessing () called in not Activated State."), \
+	LOG_DEF(kLogIdGetLatencyCalledbeforeSetActive,PROCESS,	LOG_ERR, STATE, "Wrong Call Order: getLatencySamples () should be called after each setActive (true)."), \
 	LOG_DEF(kLogIdsetActiveFalseRedundant,		PROCESS,	LOG_WARN, STATE, "Redondant Call: setActive (false)!"), \
 	LOG_DEF(kLogIdsetActiveTrueRedundant,		PROCESS,	LOG_WARN, STATE, "Redondant Call: setActive (true)!"), \
 	LOG_DEF(kLogIdsetProcessingFalseRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (false)!"), \
 	LOG_DEF(kLogIdsetProcessingTrueRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (true)!"), \
+	LOG_DEF(kLogIdgetLatencyNotCalled,			PROCESS,	LOG_WARN, STATE, "Missing Call: getLatencySamples ()!"), \
 	LOG_DEF(kLogIdProcessContextPointerNull,	PROCESS,	LOG_WARN, PROCESS_DATA, "Pointer to ProcessContext struct is null."),\
 	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
@@ -132,6 +134,7 @@ struct LogEvent
 	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null (index is valid!)"),\
 	LOG_DEF(kLogIdParametersAreNotSortedBySampleOffset, PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter changes (for a ID) are not sorted by sample offset."),\
 	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than 2 time the same sample offset."),\
+	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor."),\
 	\
 	LOG_DEF(kLogIdinitializeCalledinWrongThread,		CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::initialize is called in wrong Thread!"),\
 	LOG_DEF(kLogIdterminateCalledinWrongThread,			CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::terminate is called in wrong Thread!"),\
@@ -173,110 +176,110 @@ struct LogEvent
 	LOG_DEF(kLogIdSetActiveCalledSupported,          PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponent::setActive (true) called"), \
 	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
 	\
-	LOG_DEF (kLogIdRestartParamValuesChangedSupported,    CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamValuesChanged) supported!"), \
-	LOG_DEF (kLogIdRestartParamTitlesChangedSupported,    CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamTitlesChanged) supported!"), \
-	LOG_DEF (kLogIdRestartNoteExpressionChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kNoteExpressionChanged) supported!"), \
-	LOG_DEF (kLogIdRestartKeyswitchChangedSupported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kKeyswitchChanged) supported!"), \
-	\
-	LOG_DEF(kLogIdIComponentHandler2Supported,      CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
-	LOG_DEF(kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
-	LOG_DEF(kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
-	LOG_DEF(kLogIdIComponentHandler3Supported,		CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
-	LOG_DEF(kLogIdIComponentHandlerBusActivationSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
-	\
-	LOG_DEF(kLogIdIProgressSupported,	            CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
-	LOG_DEF(kLogIdIPlugInterfaceSupportSupported,   CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
-	LOG_DEF(kLogIdIPlugInterfaceSupportNotSupported,CONTROL, LOG_ERR, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport not supported!"), \
-	LOG_DEF(kLogIdIPlugFrameonResizeViewSupported,	CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
-	LOG_DEF(kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"),\
-	LOG_DEF(kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
-	LOG_DEF(kLogIdIProcessContextRequirementsSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IProcessContextRequirements supported!"), \
-	\
-	LOG_DEF(kLogIdProcessModeOfflineSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT,  "ProcessMode::kOffline supported!"), \
-	LOG_DEF(kLogIdProcessModeRealtimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kRealtime supported!"), \
-	LOG_DEF(kLogIdProcessModePrefetchSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kPrefetch supported!"), \
-	\
-	LOG_DEF(kLogIdProcessContextPlayingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kPlaying supported!"), \
-	LOG_DEF(kLogIdProcessContextRecordingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kRecording supported!"), \
-	LOG_DEF(kLogIdProcessContextCycleActiveSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kCycleActive supported!"), \
-	LOG_DEF(kLogIdProcessContextSystemTimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kSystemTimeValid supported!"), \
-	LOG_DEF(kLogIdProcessContextContTimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kContTimeValid supported!"), \
-	LOG_DEF(kLogIdProcessContextTimeMusicSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kProjectTimeMusicValid supported!"), \
-	LOG_DEF(kLogIdProcessContextBarPositionSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kBarPositionValid supported!"), \
-	LOG_DEF(kLogIdProcessContextCycleSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kCycleValid supported!"), \
-	LOG_DEF(kLogIdProcessContextTempoSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kTempoValid supported!"), \
-	LOG_DEF(kLogIdProcessContextTimeSigSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kTimeSigValid supported!"), \
-	LOG_DEF(kLogIdProcessContextChordSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kChordValid supported!"), \
-	LOG_DEF(kLogIdProcessContextSmpteSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kSmpteValid supported!"), \
-	LOG_DEF(kLogIdProcessContextClockSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kClockValid supported!"), \
-	\
-	LOG_DEF(kLogIdCanProcessSampleSize32,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample32 supported!"), \
-	LOG_DEF(kLogIdCanProcessSampleSize64,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample64 supported!"), \
-	LOG_DEF(kLogIdGetTailSamples,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getTailSamples supported!"), \
-	LOG_DEF(kLogIdGetLatencySamples,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getLatencySamples supported!"), \
-	LOG_DEF(kLogIdGetBusArrangements,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getBusArrangements supported!"), \
-	LOG_DEF(kLogIdSetBusArrangements,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::setBusArrangements supported!"), \
-	LOG_DEF(kLogIdGetRoutingInfo,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::getRoutingInfo supported!"), \
-	LOG_DEF(kLogIdActivateAuxBus,				PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::activateBus for SideChain supported!"), \
-	LOG_DEF(kLogIdParametersFlushSupported,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process called for flush parameter supported!"), \
-	LOG_DEF(kLogIdSilentFlagsSupported,			PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for Main Input supported!"), \
-	LOG_DEF(kLogIdSilentFlagsSCSupported,		PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for SideChain-In supported!"), \
-	\
-	LOG_DEF(kLogIdIEditController2Supported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
-	LOG_DEF(kLogIdSetKnobModeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::setKnobMode supported!"), \
-	LOG_DEF(kLogIdOpenHelpSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openHelp supported!"), \
-	LOG_DEF(kLogIdOpenAboutBoxSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
-	\
-	LOG_DEF(kLogIdIMidiMappingSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
-	LOG_DEF(kLogIdUnitSupported,				CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
-	LOG_DEF(kLogIdGetUnitByBusSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
-	LOG_DEF(kLogIdChannelContextSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
-	\
-	LOG_DEF(kLogIdINoteExpressionControllerSupported,     CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
-	LOG_DEF(kLogIdGetNoteExpressionStringByValueSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionStringByValue supported!"), \
-	LOG_DEF(kLogIdGetNoteExpressionValueByStringSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionValueByString supported!"), \
-	LOG_DEF(kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
-	LOG_DEF(kLogIdIKeyswitchControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IKeyswitchController supported!"), \
-	\
-	LOG_DEF(kLogIdIMidiLearnSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
-	LOG_DEF(kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
-	\
-	LOG_DEF(kLogIdIXmlRepresentationControllerSupported, CONTROL,  LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"),\
-	LOG_DEF(kLogIdIAutomationStateSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
-	LOG_DEF(kLogIdIEditControllerHostEditingSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
-	LOG_DEF(kLogIdIEditControllerHostEditingMisused,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IEditControllerHostEditing::beginEdit/endEditFromHost not correctly used!"), \
-	\
-	LOG_DEF(kLogIdIPlugViewonSizeSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize supported!"), \
-	LOG_DEF(kLogIdIPlugViewcanResizeSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::canResize supported!"), \
-	LOG_DEF(kLogIdIPlugViewcheckSizeConstraintSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::checkSizeConstraint supported!"), \
-	LOG_DEF(kLogIdIPlugViewsetFrameSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::setFrame supported!"), \
-	LOG_DEF(kLogIdIPlugViewOnWheelCalled,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onWheel supported!"), \
-	LOG_DEF(kLogIdIPlugViewOnKeyDownSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onKeyDown supported!"), \
-	LOG_DEF(kLogIdIPlugViewOnKeyUpSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onKeyUp supported!"), \
-	LOG_DEF(kLogIdIPlugViewOnFocusCalled,			CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onFocus supported!"), \
-	LOG_DEF(kLogIdIPlugViewsetContentScaleFactorSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugViewContentScaleSupport::setContentScaleFactor supported!"), \
-	\
-	LOG_DEF(kLogIdIPlugViewmultipleAttachSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::attached-removed called multiple time."), \
-	LOG_DEF(kLogIdIPlugViewCalledSync,				CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize is called sync during a resizeView."), \
-	LOG_DEF(kLogIdIPlugViewCalledBeforeOpen,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IPlugView::onSize is called before attached."), \
-	\
-	LOG_DEF(kLogIdIPlugViewKeyCalledBeforeAttach,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onKeyUp or onKeyDown or onWheel is called before attached!"), \
-	LOG_DEF(kLogIdIPlugViewNotCalled,				CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onSize not called after a resizeView!"), \
-	LOG_DEF(kLogIdIPlugViewCalledAsync,				CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::onSize is called async after a resizeView. Should be Sync!"), \
-	LOG_DEF(kLogIdIPlugViewattachedWithoutRemoved,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::attached is called without removed first!"), \
-	LOG_DEF(kLogIdIPlugViewremovedWithoutAttached,	CONTROL, LOG_ERR, FEATURE_SUPPORT,	"IPlugView::removed is called without attached first!"), \
-	\
-	LOG_DEF(kLogIdIParameterFinderSupported,		CONTROL, LOG_INFO, FEATURE_SUPPORT,	"IParameterFinder supported!"), \
-	LOG_DEF(kLogIdIParameterFunctionNameSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName supported!"), \
-	\
-	LOG_DEF(kLogIdIComponentHandlerSystemTimeSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandlerSystemTime supported!"), \
-	LOG_DEF(kLogIdIDataExchangeHandlerSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeHandler supported!"), \
-	LOG_DEF(kLogIdIDataExchangeReceiverSupported,	CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeReceiver supported!"), \
-	\
-	LOG_DEF (kLogIdIRemapParamIDSupported,			CONTROL, LOG_INFO, FEATURE_SUPPORT, "IRemapParamID supported!"), \
-	\
-	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor.")	
-
+	LOG_DEF (kLogIdRestartParamValuesChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamValuesChanged) supported!"), \
+		LOG_DEF (kLogIdRestartParamTitlesChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamTitlesChanged) supported!"), \
+		LOG_DEF (kLogIdRestartNoteExpressionChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kNoteExpressionChanged) supported!"), \
+		LOG_DEF (kLogIdRestartKeyswitchChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kKeyswitchChanged) supported!"), \
+		\
+		LOG_DEF (kLogIdIComponentHandler2Supported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2 supported!"), \
+		LOG_DEF (kLogIdIComponentHandler2SetDirtySupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::setDirty supported!"), \
+		LOG_DEF (kLogIdIComponentHandler2RequestOpenEditorSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler2::requestOpenEditor supported!"), \
+		LOG_DEF (kLogIdIComponentHandler3Supported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler3 (contextMenu) supported!"), \
+		LOG_DEF (kLogIdIComponentHandlerBusActivationSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandlerBusActivation supported!"), \
+		\
+		LOG_DEF (kLogIdIProgressSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IProgress supported!"), \
+		LOG_DEF (kLogIdIPlugInterfaceSupportSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport supported!"), \
+		LOG_DEF (kLogIdIPlugInterfaceSupportNotSupported, CONTROL, LOG_ERR, HOST_FEATURE_SUPPORT, "IPlugInterfaceSupport not supported!"), \
+		LOG_DEF (kLogIdIPlugFrameonResizeViewSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IPlugFrame::resizeView supported!"), \
+		LOG_DEF (kLogIdIPrefetchableSupportSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IPrefetchableSupport supported!"), \
+		LOG_DEF (kLogIdAudioPresentationLatencySamplesSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioPresentationLatency supported!"), \
+		LOG_DEF (kLogIdIProcessContextRequirementsSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IProcessContextRequirements supported!"), \
+		\
+		LOG_DEF (kLogIdProcessModeOfflineSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kOffline supported!"), \
+		LOG_DEF (kLogIdProcessModeRealtimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kRealtime supported!"), \
+		LOG_DEF (kLogIdProcessModePrefetchSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessMode::kPrefetch supported!"), \
+		\
+		LOG_DEF (kLogIdProcessContextPlayingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kPlaying supported!"), \
+		LOG_DEF (kLogIdProcessContextRecordingSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kRecording supported!"), \
+		LOG_DEF (kLogIdProcessContextCycleActiveSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kCycleActive supported!"), \
+		LOG_DEF (kLogIdProcessContextSystemTimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kSystemTimeValid supported!"), \
+		LOG_DEF (kLogIdProcessContextContTimeSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kContTimeValid supported!"), \
+		LOG_DEF (kLogIdProcessContextTimeMusicSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kProjectTimeMusicValid supported!"), \
+		LOG_DEF (kLogIdProcessContextBarPositionSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kBarPositionValid supported!"), \
+		LOG_DEF (kLogIdProcessContextCycleSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kCycleValid supported!"), \
+		LOG_DEF (kLogIdProcessContextTempoSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kTempoValid supported!"), \
+		LOG_DEF (kLogIdProcessContextTimeSigSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kTimeSigValid supported!"), \
+		LOG_DEF (kLogIdProcessContextChordSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kChordValid supported!"), \
+		LOG_DEF (kLogIdProcessContextSmpteSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kSmpteValid supported!"), \
+		LOG_DEF (kLogIdProcessContextClockSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "ProcessContext::kClockValid supported!"), \
+		\
+		LOG_DEF (kLogIdCanProcessSampleSize32, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample32 supported!"), \
+		LOG_DEF (kLogIdCanProcessSampleSize64, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::canProcessSampleSize for kSample64 supported!"), \
+		LOG_DEF (kLogIdGetTailSamples, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getTailSamples supported!"), \
+		LOG_DEF (kLogIdGetLatencySamples, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getLatencySamples supported!"), \
+		LOG_DEF (kLogIdGetBusArrangements, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::getBusArrangements supported!"), \
+		LOG_DEF (kLogIdSetBusArrangements, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::setBusArrangements supported!"), \
+		LOG_DEF (kLogIdGetRoutingInfo, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::getRoutingInfo supported!"), \
+		LOG_DEF (kLogIdActivateAuxBus, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IComponent::activateBus for SideChain supported!"), \
+		LOG_DEF (kLogIdParametersFlushSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process called for flush parameter supported!"), \
+		LOG_DEF (kLogIdSilentFlagsSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for Main Input supported!"), \
+		LOG_DEF (kLogIdSilentFlagsSCSupported, PROCESS, LOG_INFO, FEATURE_PROCESSOR_SUPPORT, "IAudioProcessor::process: silent flags for SideChain-In supported!"), \
+		\
+		LOG_DEF (kLogIdIEditController2Supported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2 supported!"), \
+		LOG_DEF (kLogIdSetKnobModeSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::setKnobMode supported!"), \
+		LOG_DEF (kLogIdOpenHelpSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openHelp supported!"), \
+		LOG_DEF (kLogIdOpenAboutBoxSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditController2::openAboutBox supported!"), \
+		\
+		LOG_DEF (kLogIdIMidiMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiMapping supported!"), \
+		LOG_DEF (kLogIdUnitSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "Unit supported!"), \
+		LOG_DEF (kLogIdGetUnitByBusSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IUnitInfo::getUnitByBus supported!"), \
+		LOG_DEF (kLogIdChannelContextSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "ChannelContext::IInfoListener supported!"), \
+		\
+		LOG_DEF (kLogIdINoteExpressionControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController supported!"), \
+		LOG_DEF (kLogIdGetNoteExpressionStringByValueSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionStringByValue supported!"), \
+		LOG_DEF (kLogIdGetNoteExpressionValueByStringSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionController::getNoteExpressionValueByString supported!"), \
+		LOG_DEF (kLogIdINoteExpressionPhysicalUIMappingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "INoteExpressionPhysicalUIMapping supported!"), \
+		LOG_DEF (kLogIdIKeyswitchControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IKeyswitchController supported!"), \
+		\
+		LOG_DEF (kLogIdIMidiLearnSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn supported!"), \
+		LOG_DEF (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IMidiLearn::onLiveMIDIControllerInput supported!"), \
+		\
+		LOG_DEF (kLogIdIXmlRepresentationControllerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "XmlRepresentation supported!"), \
+		LOG_DEF (kLogIdIAutomationStateSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IAutomationState supported!"), \
+		LOG_DEF (kLogIdIEditControllerHostEditingSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IEditControllerHostEditing supported!"), \
+		LOG_DEF (kLogIdIEditControllerHostEditingMisused, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IEditControllerHostEditing::beginEdit/endEditFromHost not correctly used!"), \
+		\
+		LOG_DEF (kLogIdIPlugViewonSizeSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onSize supported!"), \
+		LOG_DEF (kLogIdIPlugViewcanResizeSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::canResize supported!"), \
+		LOG_DEF (kLogIdIPlugViewcheckSizeConstraintSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::checkSizeConstraint supported!"), \
+		LOG_DEF (kLogIdIPlugViewsetFrameSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::setFrame supported!"), \
+		LOG_DEF (kLogIdIPlugViewOnWheelCalled, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onWheel supported!"), \
+		LOG_DEF (kLogIdIPlugViewOnKeyDownSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onKeyDown supported!"), \
+		LOG_DEF (kLogIdIPlugViewOnKeyUpSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onKeyUp supported!"), \
+		LOG_DEF (kLogIdIPlugViewOnFocusCalled, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onFocus supported!"), \
+		LOG_DEF (kLogIdIPlugViewsetContentScaleFactorSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugViewContentScaleSupport::setContentScaleFactor supported!"), \
+		\
+		LOG_DEF (kLogIdIPlugViewmultipleAttachSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::attached-removed called multiple time."), \
+		LOG_DEF (kLogIdIPlugViewCalledSync, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onSize is called sync during a resizeView."), \
+		LOG_DEF (kLogIdIPlugViewCalledBeforeOpen, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IPlugView::onSize is called before attached."), \
+		\
+		LOG_DEF (kLogIdIPlugViewKeyCalledBeforeAttach, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IPlugView::onKeyUp or onKeyDown or onWheel is called before attached!"), \
+		LOG_DEF (kLogIdIPlugViewNotCalled, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IPlugView::onSize not called after a resizeView!"), \
+		LOG_DEF (kLogIdIPlugViewCalledAsync, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IPlugView::onSize is called async after a resizeView. Should be Sync!"), \
+		LOG_DEF (kLogIdIPlugViewattachedWithoutRemoved, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IPlugView::attached is called without removed first!"), \
+		LOG_DEF (kLogIdIPlugViewremovedWithoutAttached, CONTROL, LOG_ERR, FEATURE_SUPPORT, "IPlugView::removed is called without attached first!"), \
+		\
+		LOG_DEF (kLogIdIParameterFinderSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFinder supported!"), \
+		LOG_DEF (kLogIdIParameterFunctionNameSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName supported!"), \
+		LOG_DEF (kLogIdIParameterFunctionNameDryWetSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName => kDryWetMix supported!"), \
+		LOG_DEF (kLogIdIParameterFunctionNameRandomizeSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName => kRandomize supported!"), \
+		LOG_DEF (kLogIdIParameterFunctionNameLowLatencySupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IParameterFunctionName => kLowLatency supported!"), \
+		\
+		LOG_DEF (kLogIdIComponentHandlerSystemTimeSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IComponentHandlerSystemTime supported!"), \
+		LOG_DEF (kLogIdIDataExchangeHandlerSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeHandler supported!"), \
+		LOG_DEF (kLogIdIDataExchangeReceiverSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IDataExchangeReceiver supported!"), \
+		\
+		LOG_DEF (kLogIdIRemapParamIDSupported, CONTROL, LOG_INFO, FEATURE_SUPPORT, "IRemapParamID supported!")
 
 #define LOG_ID(a, b, c, d, e) a
 #define LOG_SEVER(a, b, c, d, e) c

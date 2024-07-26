@@ -107,6 +107,9 @@ enum
 	kProcessContextTimeSigDenominatorTag,
 	kProcessContextBarPositionMusicTag,
 
+	kParamLowLatencyTag,
+	kParamRandomizeTag,
+
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,
 

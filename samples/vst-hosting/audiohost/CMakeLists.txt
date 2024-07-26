@@ -2,31 +2,11 @@
 if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
  
     include(SMTG_FindJack)
-
     if(${LIBJACK_FOUND})
         set(audiohost_sources
             "${SDK_ROOT}/public.sdk/samples/vst-hosting/editorhost/source/platform/iapplication.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/connectionproxy.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/eventlist.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/hostclasses.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/module.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/parameterchanges.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/pluginterfacesupport.h"
             "${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.cpp"
             "${SDK_ROOT}/public.sdk/source/vst/hosting/plugprovider.h"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/hosting/processdata.h"
-            "${SDK_ROOT}/public.sdk/source/vst/utility/optional.h"
-            "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.cpp"
-            "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.h"
-            "${SDK_ROOT}/public.sdk/source/vst/utility/uid.h"
-            "${SDK_ROOT}/public.sdk/source/vst/vstinitiids.cpp"
             source/audiohost.cpp
             source/audiohost.h
             source/media/audioclient.cpp
@@ -88,7 +68,7 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES)
         )
         target_link_libraries(${target} 
             PRIVATE
-                base sdk
+                sdk_hosting
                 ${audiohost_PLATFORM_LIBS}
                 ${LIBJACK_LIBRARY}
         )

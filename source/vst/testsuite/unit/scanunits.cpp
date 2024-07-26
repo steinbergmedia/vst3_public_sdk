@@ -37,6 +37,7 @@
 
 #include "public.sdk/source/vst/testsuite/unit/scanunits.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include <memory>
 
@@ -59,8 +60,7 @@ bool UnitInfoTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	FUnknownPtr<IUnitInfo> iUnitInfo (controller);
-	if (iUnitInfo)
+	if (auto iUnitInfo = U::cast<IUnitInfo> (controller))
 	{
 		int32 unitCount = iUnitInfo->getUnitCount ();
 		if (unitCount <= 0)
@@ -100,7 +100,7 @@ bool UnitInfoTest::run (ITestResult* testResult)
 					}
 				}
 
-				auto unitName = VST3::StringConvert::convert (unitInfo.name);
+				auto unitName = StringConvert::convert (unitInfo.name);
 				if (unitName.empty ())
 				{
 					addErrorMessage (testResult, printf ("Unit %03d: No name!", unitIndex));

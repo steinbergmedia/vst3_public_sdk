@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/again/source/againaax.cpp
+// Filename    : public.sdk/samples/vst/again_aax/source/againaax.cpp
 // Created by  : Steinberg, 03/2016
 // Description : AGain AAX Example for VST SDK 3
 //

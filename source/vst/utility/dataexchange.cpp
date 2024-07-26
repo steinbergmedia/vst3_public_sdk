@@ -191,7 +191,7 @@ struct MessageHandler : ITimerCallback
 		return false;
 	}
 
-	void onTimer (Timer* timer) override
+	void onTimer (Timer* /*_timer*/) override
 	{
 		void* data;
 		while (messageBuffer.pop (data))
@@ -345,7 +345,7 @@ void DataExchangeHandler::onConnect (IConnectionPoint* other, FUnknown* hostCont
 }
 
 //------------------------------------------------------------------------
-void DataExchangeHandler::onDisconnect (IConnectionPoint* other)
+void DataExchangeHandler::onDisconnect (IConnectionPoint* /*other*/)
 {
 	impl->closeQueue ();
 	impl->connectionPoint = nullptr;

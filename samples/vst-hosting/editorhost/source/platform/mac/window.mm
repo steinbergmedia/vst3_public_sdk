@@ -92,9 +92,9 @@ bool Window::init (const std::string& name, Size size, bool resizeable,
                    const WindowControllerPtr& controller)
 {
 	impl->controller = controller;
-	NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask;
+	NSUInteger styleMask = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable;
 	if (resizeable)
-		styleMask |= NSResizableWindowMask;
+		styleMask |= NSWindowStyleMaskResizable;
 	auto contentRect =
 	    NSMakeRect (0., 0., static_cast<CGFloat> (size.width), static_cast<CGFloat> (size.height));
 	impl->nsWindowDelegate = [[VSTSDK_WindowDelegate alloc] initWithWindow:shared_from_this ()];

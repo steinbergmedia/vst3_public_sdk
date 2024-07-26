@@ -140,7 +140,7 @@ void PitchNamesDataBrowserSource::getPitchName (int16_t pitch, std::string& name
 	String128 pitchName;
 	if (pitchnames->getPitchName (0, pitch, pitchName) == kResultTrue)
 	{
-		name = VST3::StringConvert::convert (pitchName);
+		name = Vst::StringConvert::convert (pitchName);
 	}
 }
 

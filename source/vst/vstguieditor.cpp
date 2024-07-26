@@ -44,10 +44,6 @@
 
 #define VSTGUI_NEEDS_INIT_LIB ((VSTGUI_VERSION_MAJOR == 4 && VSTGUI_VERSION_MINOR > 9) || (VSTGUI_VERSION_MAJOR > 4))
 
-#if VSTGUI_VERSION_MAJOR < 4
-#include "vstgui/vstkeycode.h"
-#endif
-
 #if VSTGUI_NEWER_THAN_4_10
 #include "vstgui/lib/events.h"
 #include "vstgui/lib/platform/iplatformframe.h"
@@ -131,20 +127,15 @@ tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 		return kResultTrue;
 
 #elif SMTG_OS_MACOS
+
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		return kResultTrue;
 #else
-#if MAC_CARBON
-	if (strcmp (type, kPlatformTypeHIView) == 0)
-		return kResultTrue;
-#endif
-
-#if MAC_COCOA
 	if (strcmp (type, kPlatformTypeNSView) == 0)
 		return kResultTrue;
-#endif
-#endif
+#endif // TARGET_OS_IPHONE
+
 #elif SMTG_OS_LINUX
 	if (strcmp (type, kPlatformTypeX11EmbedWindowID) == 0)
 		return kResultTrue;
@@ -156,37 +147,20 @@ tresult PLUGIN_API VSTGUIEditor::isPlatformTypeSupported (FIDString type)
 //------------------------------------------------------------------------
 tresult PLUGIN_API VSTGUIEditor::attached (void* parent, FIDString type)
 {
-#if SMTG_OS_MACOS
 	if (isPlatformTypeSupported (type) != kResultTrue)
 		return kResultFalse;
 
-#if MAC_COCOA && MAC_CARBON && !(VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1)
-	CFrame::setCocoaMode (strcmp (type, kPlatformTypeNSView) == 0);
-#endif
-#endif
-
-#if VSTGUI_VERSION_MAJOR >= 4 && VSTGUI_VERSION_MINOR >= 1
 	PlatformType platformType = PlatformType::kDefaultNative;
 #if SMTG_OS_MACOS
 #if TARGET_OS_IPHONE
 	if (strcmp (type, kPlatformTypeUIView) == 0)
 		platformType = PlatformType::kUIView;
 #else
-#if MAC_CARBON
-	if (strcmp (type, kPlatformTypeHIView) == 0)
-		platformType = PlatformType::kWindowRef;
-#endif
-
-#if MAC_COCOA
 	if (strcmp (type, kPlatformTypeNSView) == 0)
 		platformType = PlatformType::kNSView;
-#endif
-#endif
+#endif // TARGET_OS_IPHONE
 #endif // SMTG_OS_MACOS
 	if (open (parent, platformType) == true)
-#else
-	if (open (parent) == true)
-#endif
 	{
 		ViewRect vr (0, 0, (int32)frame->getWidth (), (int32)frame->getHeight ());
 		setRect (vr);
@@ -262,7 +236,8 @@ CMessageResult VSTGUIEditor::notify (CBaseObject* /*sender*/, const char* messag
 static KeyboardEvent translateKeyMessage (char16 key, int16 keyMsg, int16 modifiers)
 {
 	KeyboardEvent event;
-	event.virt = static_cast<VirtualKey> (keyMsg);
+	if (keyMsg >= 0 && keyMsg <= static_cast<int16> (VirtualKey::Equals))
+		event.virt = static_cast<VirtualKey> (keyMsg);
 	if (key == 0)
 		key = VirtualKeyCodeToChar ((uint8)keyMsg);
 	if (key)
@@ -393,15 +368,13 @@ tresult PLUGIN_API VSTGUIEditor::setFrame (IPlugFrame* frame)
 #if 0
 	if (frame)
 	{
-		FUnknownPtr<IPlugFrameIdle> frameIdle (frame);
-		if (frameIdle)
+		if (auto frameIdle = U::cast<IPlugFrameIdle> (frame))
 			frameIdle->addIdleHandler (this);
 
 	}
 	else if (plugFrame)
 	{
-		FUnknownPtr<IPlugFrameIdle> frameIdle (plugFrame);
-		if (frameIdle)
+		if (auto frameIdle = U::cast<IPlugFrameIdle> (plugFrame))
 			frameIdle->removeIdleHandler (this);
 	}
 #endif

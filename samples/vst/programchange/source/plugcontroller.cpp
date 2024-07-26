@@ -76,7 +76,7 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	for (int32 i = 0; i < kNumProgs; i++)
 	{
 		std::u16string title = STR ("Prog ");
-		title += VST3::toString (i + 1);
+		title += Vst::toString (i + 1);
 		prgList->addProgram (title.data ());
 	}
 

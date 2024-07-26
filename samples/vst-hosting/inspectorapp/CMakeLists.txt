@@ -6,16 +6,12 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES AND TARGET vstgui AND TARGET vstgui_standal
 
     ##########################################################################################
     set(${target}_sources
+        "${SDK_ROOT}/pluginterfaces/base/coreiids.cpp"
+        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfocreator.cpp"
+        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfoparser.cpp"
         "source/app.cpp"
         "source/window.cpp"
         "source/window.h"
-        "${SDK_ROOT}/pluginterfaces/base/coreiids.cpp"
-        "${SDK_ROOT}/public.sdk/source/vst/hosting/module.h"
-        "${SDK_ROOT}/public.sdk/source/vst/hosting/module.cpp"
-        "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.h"
-        "${SDK_ROOT}/public.sdk/source/vst/utility/stringconvert.cpp"
-        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfoparser.cpp"
-        "${SDK_ROOT}/public.sdk/source/vst/moduleinfo/moduleinfocreator.cpp"
     )
 
     set(${target}_resources
@@ -49,6 +45,10 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES AND TARGET vstgui AND TARGET vstgui_standal
     vstgui_add_executable(${target} "${${target}_sources}")
     vstgui_set_target_bundle_id(${target} "com.steinberg.vstsdk.vst3inspector")
 
+    target_link_libraries(${target} 
+        PRIVATE
+            sdk_hosting
+    )
     if(NOT SMTG_MAC)
         set_target_properties(${target}
             PROPERTIES
@@ -58,7 +58,6 @@ if(SMTG_ENABLE_VST3_HOSTING_EXAMPLES AND TARGET vstgui AND TARGET vstgui_standal
 
     vstgui_add_resources(${target} "${${target}_resources}")
     vstgui_set_target_infoplist(${target} "resource/Info.plist")
-    #vstgui_set_cxx_version(${target} 17)
 
     target_include_directories(${target}
         PRIVATE

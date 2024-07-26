@@ -61,7 +61,7 @@ namespace Vst {
  *
  *	@return 			allocated memory
  */
-void* aligned_alloc (size_t numBytes, uint32_t alignment)
+inline void* aligned_alloc (size_t numBytes, uint32_t alignment)
 {
 	if (alignment == 0)
 		return malloc (numBytes);
@@ -77,7 +77,7 @@ void* aligned_alloc (size_t numBytes, uint32_t alignment)
 }
 
 //------------------------------------------------------------------------
-void aligned_free (void* addr, uint32_t alignment)
+inline void aligned_free (void* addr, uint32_t alignment)
 {
 	if (alignment == 0)
 		std::free (addr);

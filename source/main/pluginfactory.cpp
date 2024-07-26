@@ -339,6 +339,7 @@ tresult PLUGIN_API CPluginFactory::setHostContext (FUnknown* context)
 	}
 	return kResultTrue;
 #else
+	(context);
 	return kNotImplemented;
 #endif
 }

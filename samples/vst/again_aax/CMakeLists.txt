@@ -29,7 +29,7 @@ set(again_sources
     ../again/resource/again.uidesc
 )
 
-set(target again_aax)
+set(target again-aax)
 smtg_add_aaxplugin(${target} ${again_sources})
 smtg_target_configure_version_file(${target})
 set_target_properties(${target}
@@ -50,7 +50,7 @@ target_link_libraries(${target}
     PRIVATE
         sdk
         vstgui_support
-        aaxwrapper
+        aax_wrapper
 )
 smtg_target_add_plugin_resources(${target}
     RESOURCES
@@ -73,7 +73,7 @@ elseif(SMTG_WIN)
         PRIVATE 
             ../again/resource/again.rc
     )
-    # remove warnings from VST2
+    # remove warnings
     if(NOT MINGW)
         add_definitions(-D_CRT_SECURE_NO_WARNINGS)
     endif(NOT MINGW)

@@ -48,6 +48,7 @@
 #include "public.sdk/source/vst/utility/stringconvert.h"
 #include "public.sdk/source/vst/vstcomponentbase.h"
 #include "public.sdk/source/vst/vstrepresentation.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/vst/ivstcontextmenu.h"
@@ -99,7 +100,7 @@ public:
 		}
 	}
 
-	void toString (ParamValue _valueNormalized, String128 string) const SMTG_OVERRIDE
+	void toString (ParamValue /*_valueNormalized*/, String128 string) const SMTG_OVERRIDE
 	{
 		UString wrapper (string, str16BufferSize (String128));
 		if (!wrapper.printInt (mValue))
@@ -470,6 +471,10 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdIParameterFinderSupported, 1.f);
 	mScoreMap.emplace (kLogIdIParameterFunctionNameSupported, 1.f);
 
+	mScoreMap.emplace (kLogIdIParameterFunctionNameDryWetSupported, 1.f);
+	mScoreMap.emplace (kLogIdIParameterFunctionNameLowLatencySupported, 1.f);
+	mScoreMap.emplace (kLogIdIParameterFunctionNameRandomizeSupported, 1.f);
+
 	mScoreMap.emplace (kLogIdIComponentHandlerSystemTimeSupported, 1.f);
 	mScoreMap.emplace (kLogIdIDataExchangeHandlerSupported, 1.f);
 	mScoreMap.emplace (kLogIdIDataExchangeReceiverSupported, 1.f);
@@ -490,7 +495,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 	if (result == kResultOk)
 	{
 		// create a unit Latency parameter
-		UnitInfo unitInfo;
+		UnitInfo unitInfo {};
 		unitInfo.id = kUnitId;
 		unitInfo.parentUnitId = kRootUnitId; // attached to the root unit
 		Steinberg::UString (unitInfo.name, USTRINGSIZE (unitInfo.name)).assign (USTRING ("Setup"));
@@ -549,10 +554,16 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		parameters.addParameter (STR16 ("Copy2Clipboard"), STR16 (""), 1, 0,
 		                         ParameterInfo::kIsHidden, kCopy2ClipboardTag);
 
+		parameters.addParameter (STR16 ("ParamRandomize"), STR16 (""), 1, 0,
+		                         ParameterInfo::kNoFlags, kParamRandomizeTag);
+
+		parameters.addParameter (STR16 ("ParamLowLatency"), STR16 (""), 1, 0,
+		                         ParameterInfo::kNoFlags, kParamLowLatencyTag);
+
 		//---ProcessContext parameters------------------------
 		parameters.addParameter (new StringInt64Parameter (
 		    STR16 ("ProjectTimeSamples"), kProcessContextProjectTimeSamplesTag, STR16 ("Samples"),
-		    kUnitId, 0, ParameterInfo::kIsReadOnly));
+		    kUnitId, nullptr, ParameterInfo::kIsReadOnly));
 
 		parameters
 		    .addParameter (new RangeParameter (
@@ -583,14 +594,14 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		    ->setPrecision (0);
 
 		parameters.addParameter (new StringInt64Parameter (STR16 ("State"), kProcessContextStateTag,
-		                                                   STR16 (""), kUnitId, 0,
+		                                                   STR16 (""), kUnitId, nullptr,
 		                                                   ParameterInfo::kIsReadOnly));
 		parameters.addParameter (
 		    new StringInt64Parameter (STR16 ("ProjectSystemTime"), kProcessContextSystemTimeTag,
-		                              STR16 ("ns"), kUnitId, 0, ParameterInfo::kIsReadOnly));
+		                              STR16 ("ns"), kUnitId, nullptr, ParameterInfo::kIsReadOnly));
 		parameters.addParameter (new StringInt64Parameter (
 		    STR16 ("ProjectSystemTime"), kProcessContextContinousTimeSamplesTag, STR16 ("Samples"),
-		    kUnitId, 0, ParameterInfo::kIsReadOnly));
+		    kUnitId, nullptr, ParameterInfo::kIsReadOnly));
 
 		//--- ------------------------------
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
@@ -602,7 +613,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 
 		auto addUnitFunc = [=] (const int32 unitId, const int32 parentUnitId, const int32 idx,
 		                        const Steinberg::tchar* name) -> bool {
-			UnitInfo unitInfo;
+			UnitInfo unitInfo {};
 			unitInfo.id = unitId;
 			unitInfo.parentUnitId = parentUnitId; // attached to the root unit
 
@@ -661,8 +672,7 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		mDataSource = VSTGUI::owned (new EventLogDataBrowserSource (this));
 	}
 
-	FUnknownPtr<IPlugInterfaceSupport> plugInterfaceSupport (context);
-	if (plugInterfaceSupport)
+	if (auto plugInterfaceSupport = U::cast<IPlugInterfaceSupport> (context))
 	{
 		addFeatureLog (kLogIdIPlugInterfaceSupportSupported);
 
@@ -764,8 +774,7 @@ void HostCheckerController::onProgressTimer (VSTGUI::CVSTGUITimer* /*timer*/)
 {
 	if (!mInProgress)
 	{
-		FUnknownPtr<IProgress> progress (componentHandler);
-		if (progress)
+		if (auto progress = U::cast<IProgress> (componentHandler))
 			progress->start (IProgress::ProgressType::UIBackgroundTask, STR ("Test Progress"),
 			                 mProgressID);
 		mInProgress = true;
@@ -781,8 +790,7 @@ void HostCheckerController::onProgressTimer (VSTGUI::CVSTGUITimer* /*timer*/)
 		{
 			setParamNormalized (kProgressValueTag, newVal);
 
-			FUnknownPtr<IProgress> progress (componentHandler);
-			if (progress)
+			if (auto progress = U::cast<IProgress> (componentHandler))
 				progress->update (mProgressID, newVal);
 		}
 	}
@@ -897,17 +905,14 @@ tresult PLUGIN_API HostCheckerController::setComponentHandler (IComponentHandler
 			addFeatureLog (kLogIdIComponentHandler2RequestOpenEditorSupported);
 	}
 
-	FUnknownPtr<IComponentHandler3> handler3 (componentHandler);
-	if (handler3)
+	if (auto handler3 = U::cast<IComponentHandler3> (componentHandler))
 		addFeatureLog (kLogIdIComponentHandler3Supported);
 
-	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (
-	    componentHandler);
-	if (componentHandlerBusActivationSupport)
+	if (auto componentHandlerBusActivationSupport =
+	        U::cast<IComponentHandlerBusActivation> (componentHandler))
 		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
 
-	FUnknownPtr<IProgress> progress (componentHandler);
-	if (progress)
+	if (auto progress = U::cast<IProgress> (componentHandler))
 		addFeatureLog (kLogIdIProgressSupported);
 
 	return res;
@@ -946,6 +951,16 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 	}
 	//--- ----------------------------------------
+	else if (tag == kParamRandomizeTag)
+	{
+		addFeatureLog (kLogIdIParameterFunctionNameRandomizeSupported);
+	}
+	//--- ----------------------------------------
+	else if (tag == kParamLowLatencyTag)
+	{
+		addFeatureLog (kLogIdIParameterFunctionNameLowLatencySupported);
+	}
+	//--- ----------------------------------------
 	else if (tag == kTriggerHiddenTag)
 	{
 		auto param = parameters.getParameter (kParamWhichCouldBeHiddenTag);
@@ -982,8 +997,7 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 			setParamNormalized (kProgressValueTag, 0);
 			mInProgress = false;
 
-			FUnknownPtr<IProgress> progress (componentHandler);
-			if (progress)
+			if (auto progress = U::cast<IProgress> (componentHandler))
 				progress->finish (mProgressID);
 		}
 	}
@@ -1071,12 +1085,11 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 			if (val)
 			{
 				s << "/* VST3 Hostname: ";
-				FUnknownPtr<IHostApplication> hostApp (hostContext);
-				if (hostApp)
+				if (auto hostApp = U::cast<IHostApplication> (hostContext))
 				{
 					Vst::String128 name;
 					if (hostApp->getName (name) == kResultTrue)
-						s << VST3::StringConvert::convert (name);
+						s << Vst::StringConvert::convert (name);
 				}
 				s << ", Scoring=";
 				s << int32 (val->getNormalized () * 100 + 0.5);
@@ -1153,9 +1166,8 @@ IPlugView* PLUGIN_API HostCheckerController::createView (FIDString name)
 		addFeatureLog (kLogIdCreateViewCalledinWrongThread);
 	}
 
-	FUnknownPtr<IComponentHandlerBusActivation> componentHandlerBusActivationSupport (
-	    componentHandler);
-	if (componentHandlerBusActivationSupport)
+	if (auto componentHandlerBusActivationSupport =
+	        U::cast<IComponentHandlerBusActivation> (componentHandler))
 		addFeatureLog (kLogIdIComponentHandlerBusActivationSupported);
 
 	if (ConstString (name) == ViewType::kEditor)
@@ -1243,8 +1255,7 @@ tresult PLUGIN_API HostCheckerController::connect (IConnectionPoint* other)
 			}
 		}
 
-		FUnknownPtr<IAudioProcessor> proc (other);
-		if (proc)
+		if (auto proc = U::cast<IAudioProcessor> (other))
 		{
 			if (auto newMsg = owned (allocateMessage ()))
 			{
@@ -1525,7 +1536,7 @@ tresult PLUGIN_API HostCheckerController::getNoteExpressionInfo (int32 /*busInde
 		info.typeId = kVolumeTypeID;
 		info.unitId = -1;
 		info.valueDesc;
-		info.associatedParameterId = -1;
+		info.associatedParameterId = kNoParamId;
 		info.flags = 0;
 
 		return kResultTrue;
@@ -1711,7 +1722,21 @@ tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID
 
 	if (FIDStringsEqual (functionName, FunctionNameType::kDryWetMix))
 	{
+		addFeatureLog (kLogIdIParameterFunctionNameDryWetSupported);
+
 		paramID = kProcessingLoadTag;
+	}
+	else if (FIDStringsEqual (functionName, FunctionNameType::kRandomize))
+	{
+		addFeatureLog (kLogIdIParameterFunctionNameRandomizeSupported);
+
+		paramID = kParamRandomizeTag;
+	}
+	else if (FIDStringsEqual (functionName, FunctionNameType::kLowLatencyMode))
+	{
+		addFeatureLog (kLogIdIParameterFunctionNameLowLatencySupported);
+
+		paramID = kParamLowLatencyTag;
 	}
 	else
 		paramID = kNoParamId;
@@ -1720,28 +1745,27 @@ tresult PLUGIN_API HostCheckerController::getParameterIDFromFunctionName (UnitID
 }
 
 //------------------------------------------------------------------------
-void PLUGIN_API HostCheckerController::queueOpened (DataExchangeUserContextID userContextID,
-                                                    uint32 blockSize,
-                                                    TBool& dispatchOnBackgroundThread)
+void PLUGIN_API HostCheckerController::queueOpened (DataExchangeUserContextID /*userContextID*/,
+                                                    uint32 /*blockSize*/,
+                                                    TBool& /*dispatchOnBackgroundThread*/)
 {
 }
 
 //------------------------------------------------------------------------
-void PLUGIN_API HostCheckerController::queueClosed (DataExchangeUserContextID userContextID)
+void PLUGIN_API HostCheckerController::queueClosed (DataExchangeUserContextID /*userContextID*/)
 {
 }
 
 //------------------------------------------------------------------------
 void PLUGIN_API HostCheckerController::onDataExchangeBlocksReceived (
-    DataExchangeUserContextID userContextID, uint32 numBlocks, DataExchangeBlock* block,
-    TBool onBackgroundThread)
+    DataExchangeUserContextID /*userContextID*/, uint32 /*numBlocks*/, DataExchangeBlock* block,
+    TBool /*onBackgroundThread*/)
 {
 	// note that we should compensate the timing using a queue and the current systemTime before
 	// updating the values!
 	if (auto pc = reinterpret_cast<ProcessContext*> (block->data))
 	{
-		FUnknownPtr<IComponentHandlerSystemTime> systemTime (componentHandler);
-		if (systemTime)
+		if (auto systemTime = U::cast<IComponentHandlerSystemTime> (componentHandler))
 		{
 			// when the queue is implemented use this currentTime to find the correct ProcessContext
 			// to use
@@ -1791,7 +1815,7 @@ tresult PLUGIN_API HostCheckerController::getCompatibleParamID (const TUID plugi
 		return kResultFalse;
 
 	//--- host wants to remap from AGain------------
-	newParamID = -1;
+	newParamID = kNoParamId;
 	switch (oldParamID)
 	{
 		//--- map the kGainId (0) to our param kGeneratePeaksTag
@@ -1802,7 +1826,7 @@ tresult PLUGIN_API HostCheckerController::getCompatibleParamID (const TUID plugi
 		}
 	}
 	//--- return kResultTrue if the mapping happens------------
-	return (newParamID == -1) ? kResultFalse : kResultTrue;
+	return (newParamID == kNoParamId) ? kResultFalse : kResultTrue;
 }
 
 //------------------------------------------------------------------------

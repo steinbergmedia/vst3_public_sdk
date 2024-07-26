@@ -37,6 +37,7 @@
 
 #include "public.sdk/source/vst/testsuite/general/scanparameters.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstunits.h"
 #include <unordered_map>
 
@@ -74,7 +75,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 
 	addMessage (testResult, printf ("This component exports %d parameter(s)", numParameters));
 
-	FUnknownPtr<IUnitInfo> iUnitInfo2 (controller);
+	auto iUnitInfo2 = U::cast<IUnitInfo> (controller);
 	if (!iUnitInfo2 && numParameters > 20)
 	{
 		addMessage (
@@ -112,7 +113,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 					}
 				}
 				std::string unitTitle;
-				unitTitle = VST3::StringConvert::convert (uinfo.name);
+				unitTitle = StringConvert::convert (uinfo.name);
 				unitIds[uinfo.id] = {ui, 0, unitTitle}; // init counter
 			}
 			else
@@ -172,8 +173,8 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		else
 			paramType = STR ("Discrete");
 
-		auto paramTitle = VST3::StringConvert::convert (paramInfo.title);
-		auto paramUnits = VST3::StringConvert::convert (paramInfo.units);
+		auto paramTitle = StringConvert::convert (paramInfo.title);
+		auto paramUnits = StringConvert::convert (paramInfo.units);
 
 		addMessage (
 		    testResult,
@@ -207,7 +208,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		}
 		if (unitId >= -1)
 		{
-			FUnknownPtr<IUnitInfo> iUnitInfo (controller);
+			auto iUnitInfo = U::cast<IUnitInfo> (controller);
 			if (!iUnitInfo && unitId != kRootUnitId)
 			{
 				addErrorMessage (
@@ -217,8 +218,8 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 				        kRootUnitId));
 				return false;
 			}
-			auto search = unitIds.find (unitId);
-			if (search != unitIds.end ())
+			auto searchUnit = unitIds.find (unitId);
+			if (searchUnit != unitIds.end ())
 			{
 				unitIds[unitId].numParams++;
 			}

@@ -199,7 +199,7 @@ struct DataExchangeController : EditController,
 					           currentAudioBufferData.peak.end (), PeakValue ());
 				}
 
-				auto sampleCounter = 0;
+				uint32 sampleCounter = 0;
 				while (sampleCounter < data.numSamples)
 				{
 					auto numSamples =

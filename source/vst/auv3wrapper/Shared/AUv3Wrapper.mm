@@ -44,6 +44,7 @@
 #import "public.sdk/source/vst/hosting/processdata.h"
 #import "public.sdk/source/vst/utility/mpeprocessor.h"
 #import "public.sdk/source/vst/utility/stringconvert.h"
+#import "pluginterfaces/base/funknownimpl.h"
 #import "pluginterfaces/gui/iplugview.h"
 #import "pluginterfaces/vst/ivsteditcontroller.h"
 #import "pluginterfaces/vst/ivstmidicontrollers.h"
@@ -249,7 +250,7 @@ public:
 
 	tresult PLUGIN_API getName (String128 name) SMTG_OVERRIDE
 	{
-		return VST3::StringConvert::convert ("VST3-AU Wrapper", name) ? kResultTrue : kResultFalse;
+		return Vst::StringConvert::convert ("VST3-AU Wrapper", name) ? kResultTrue : kResultFalse;
 	}
 
 	tresult PLUGIN_API enableMPEInputProcessing (TBool state) SMTG_OVERRIDE
@@ -439,6 +440,7 @@ IMPLEMENT_QUERYINTERFACE (ComponentHelper, IComponentHandler, IComponentHandler:
 //------------------------------------------------------------------------
 tresult PLUGIN_API ComponentHelper::beginEdit (ParamID tag)
 {
+	[auv3Wrapper beginEdit:tag];
 	return kResultTrue;
 }
 
@@ -452,6 +454,7 @@ tresult PLUGIN_API ComponentHelper::performEdit (ParamID tag, ParamValue valueNo
 //------------------------------------------------------------------------
 tresult PLUGIN_API ComponentHelper::endEdit (ParamID tag)
 {
+	[auv3Wrapper endEdit:tag];
 	return kResultTrue;
 }
 
@@ -993,8 +996,7 @@ using namespace Vst;
 	if (!self.supportsMPE)
 		return;
 
-	FUnknownPtr<INoteExpressionPhysicalUIMapping> puiMapping (_editcontroller);
-	if (puiMapping)
+	if (auto puiMapping = U::cast<INoteExpressionPhysicalUIMapping> (_editcontroller))
 	{
 		PhysicalUIMap map[3];
 		map[0].physicalUITypeID = kPUIXMovement;
@@ -1011,8 +1013,7 @@ using namespace Vst;
 			mpeHandlerContext.noteExpValueDescMap[0] = {};
 			mpeHandlerContext.noteExpValueDescMap[1] = {};
 			mpeHandlerContext.noteExpValueDescMap[2] = {};
-			FUnknownPtr<INoteExpressionController> nExpCtrler (_editcontroller);
-			if (nExpCtrler)
+			if (auto nExpCtrler = U::cast<INoteExpressionController> (_editcontroller))
 			{
 				auto count = nExpCtrler->getNoteExpressionCount (0, 0);
 				for (auto i = 0; i < count; ++i)
@@ -1063,11 +1064,11 @@ using namespace Vst;
 {
 	if (audioProcessor)
 	{
-		FUnknownPtr<IEditController> combined (audioProcessor);
+		auto combined = U::cast<IEditController> (audioProcessor);
 		if (!combined)
 		{
-			FUnknownPtr<IConnectionPoint> controllerConnectionPoint (_editcontroller);
-			FUnknownPtr<IConnectionPoint> processorConnectionPoint (audioProcessor);
+			auto controllerConnectionPoint = U::cast<IConnectionPoint> (_editcontroller);
+			auto processorConnectionPoint = U::cast<IConnectionPoint> (audioProcessor);
 			if (controllerConnectionPoint && processorConnectionPoint)
 			{
 				controllerConnectionPoint->disconnect (processorConnectionPoint);
@@ -1147,33 +1148,33 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)loadVst
 {
-	FUnknownPtr<IPluginFactory2> factory (owned (GetPluginFactory ()));
-	if (factory)
+	auto factory = U::cast<IPluginFactory2> (owned (GetPluginFactory ()));
+	if (!factory)
+		return;
+
+	// find first audio processor class
+	for (int32 i = 0; i < factory->countClasses (); i++)
 	{
-		// find first audio processor class
-		for (int32 i = 0; i < factory->countClasses (); i++)
+		PClassInfo2 ci;
+		if (factory->getClassInfo2 (i, &ci) == kResultTrue)
 		{
-			PClassInfo2 ci;
-			if (factory->getClassInfo2 (i, &ci) == kResultTrue)
+			if (strcmp (ci.category, kVstAudioEffectClass) == 0)
 			{
-				if (strcmp (ci.category, kVstAudioEffectClass) == 0)
+				IAudioProcessor* proc = nullptr;
+				if (factory->createInstance (ci.cid, IAudioProcessor::iid, (void**)&proc) ==
+					kResultTrue)
 				{
-					IAudioProcessor* proc = nullptr;
-					if (factory->createInstance (ci.cid, IAudioProcessor::iid, (void**)&proc) ==
-					    kResultTrue)
-					{
-						audioProcessor = owned (proc);
-						std::string_view plugCategory (ci.subCategories);
-						std::string_view instrumentStr ("instrument");
-						auto it = std::search (plugCategory.begin (), plugCategory.end (),
-						                       instrumentStr.begin (), instrumentStr.end (),
-						                       [] (auto ch1, auto ch2) {
-							                       return std::toupper (ch1) == std::toupper (ch2);
-						                       });
-						if (it != plugCategory.end ())
-							isInstrument = true;
-						break;
-					}
+					audioProcessor = owned (proc);
+					std::string_view plugCategory (ci.subCategories);
+					std::string_view instrumentStr ("instrument");
+					auto it = std::search (plugCategory.begin (), plugCategory.end (),
+						                    instrumentStr.begin (), instrumentStr.end (),
+						                    [] (auto ch1, auto ch2) {
+							                    return std::toupper (ch1) == std::toupper (ch2);
+						                    });
+					if (it != plugCategory.end ())
+						isInstrument = true;
+					break;
 				}
 			}
 		}
@@ -1188,8 +1189,7 @@ using namespace Vst;
 		if (audioProcessor->queryInterface (IEditController::iid, (void**)&_editcontroller) !=
 		    kResultTrue)
 		{
-			FUnknownPtr<IComponent> component (audioProcessor);
-			if (component)
+			if (auto component = U::cast<IComponent> (audioProcessor))
 			{
 				TUID ccid;
 				if (component->getControllerClassId (ccid) == kResultTrue)
@@ -1205,8 +1205,8 @@ using namespace Vst;
 							return;
 						}
 
-						FUnknownPtr<IConnectionPoint> controllerConnectionPoint (_editcontroller);
-						FUnknownPtr<IConnectionPoint> processorConnectionPoint (audioProcessor);
+						auto controllerConnectionPoint = U::cast<IConnectionPoint> (_editcontroller);
+						auto processorConnectionPoint = U::cast<IConnectionPoint> (audioProcessor);
 						if (controllerConnectionPoint && processorConnectionPoint)
 						{
 							controllerConnectionPoint->connect (processorConnectionPoint);
@@ -1238,7 +1238,7 @@ using namespace Vst;
 	{
 		_editcontroller->setComponentHandler (&componentHelper);
 
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 		int32 inputBusCount = component->getBusCount (kAudio, kInput);
 		int32 outputBusCount = component->getBusCount (kAudio, kOutput);
 
@@ -1270,7 +1270,7 @@ using namespace Vst;
 - (void)createBusses:(bool)isInput
             busCount:(int)busCount
             busArray:(NSMutableArray<AUAudioUnitBus*>*)busArray
-           component:(FUnknownPtr<IComponent>)component
+           component:(IPtr<IComponent>)component
 {
 	SpeakerArrangement sa;
 	int inputOrOutput = isInput ? kInput : kOutput;
@@ -1306,7 +1306,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (void)allocateBusBuffers
 {
-	FUnknownPtr<IComponent> component (audioProcessor);
+	auto component = U::cast<IComponent> (audioProcessor);
 
 	for (int i = 0; i < component->getBusCount (kAudio, kInput); i++)
 	{
@@ -1504,8 +1504,7 @@ using namespace Vst;
 {
 	int32 groupIdx = 0; // Zero means parameter is on top level node of parameter tree
 
-	FUnknownPtr<IUnitInfo> unitInfoController (_editcontroller);
-	if (unitInfoController)
+	if (auto unitInfoController = U::cast<IUnitInfo> (_editcontroller))
 	{
 		if (unitInfos.empty ())
 			buildUnitInfos (unitInfoController, unitInfos);
@@ -1555,7 +1554,7 @@ using namespace Vst;
 {
 	if (audioProcessor && _editcontroller)
 	{
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 
 		// after set Bus Arrangement, the channelbuffers may need to be reallocated -> hence the
 		// second prepare!
@@ -1662,7 +1661,7 @@ using namespace Vst;
 		}
 	}
 
-	FUnknownPtr<IUnitInfo> unitInfoController (_editcontroller);
+	auto unitInfoController = U::cast<IUnitInfo> (_editcontroller);
 
 	factoryPresetsVar = [[NSMutableArray<AUAudioUnitPreset*> alloc] init];
 
@@ -1785,14 +1784,33 @@ using namespace Vst;
 }
 
 //------------------------------------------------------------------------
-- (void)performEdit:(int)tag value:(double)value
+- (void)beginEdit:(int32_t)tag
 {
 	AUParameter* parameterToChange = [parameterTreeVar parameterWithAddress:tag];
+	[parameterToChange setValue:parameterToChange.value
+	                 originator:parameterObserverToken
+	                 atHostTime:0
+	                  eventType:AUParameterAutomationEventTypeTouch];
+}
 
-	if (parameterObserverToken != nullptr)
-		[parameterToChange setValue:value originator:parameterObserverToken];
-	else
-		[parameterToChange setValue:value];
+//------------------------------------------------------------------------
+- (void)endEdit:(int32_t)tag
+{
+	AUParameter* parameterToChange = [parameterTreeVar parameterWithAddress:tag];
+	[parameterToChange setValue:parameterToChange.value
+	                 originator:parameterObserverToken
+	                 atHostTime:0
+	                  eventType:AUParameterAutomationEventTypeRelease];
+}
+
+//------------------------------------------------------------------------
+- (void)performEdit:(int32_t)tag value:(double)value
+{
+	AUParameter* parameterToChange = [parameterTreeVar parameterWithAddress:tag];
+	[parameterToChange setValue:value
+	                 originator:parameterObserverToken
+	                 atHostTime:0
+	                  eventType:AUParameterAutomationEventTypeValue];
 }
 
 //------------------------------------------------------------------------
@@ -1828,7 +1846,7 @@ using namespace Vst;
 //------------------------------------------------------------------------
 - (BOOL)validateChannelConfig
 {
-	FUnknownPtr<IComponent> component (audioProcessor);
+	auto component = U::cast<IComponent> (audioProcessor);
 	int32 inputBusCount = component->getBusCount (kAudio, kInput);
 	int32 outputBusCount = component->getBusCount (kAudio, kOutput);
 	SpeakerArrangement inputs[inputBusCount];
@@ -2042,8 +2060,7 @@ using namespace Vst;
 {
 	if (_editcontroller)
 	{
-		FUnknownPtr<INoteExpressionController> nec (_editcontroller);
-		if (nec)
+		if (auto nec = U::cast<INoteExpressionController> (_editcontroller))
 			return YES;
 	}
 	return NO;
@@ -2218,14 +2235,14 @@ using namespace Vst;
 
 	std::u16string projectStr;
 	if (fromProject)
-		projectStr = VST3::StringConvert::convert (Vst::StateType::kProject);
+		projectStr = Vst::StringConvert::convert (Vst::StateType::kProject);
 	if (processorData)
 	{
 		NSDataIBStream stream (processorData);
 		if (fromProject)
 		{
 			stream.getAttributes ()->setString (Vst::PresetAttributes::kStateType,
-			                                    VST3::toTChar (projectStr));
+			                                    Vst::toTChar (projectStr));
 		}
 		FUnknownPtr<IComponent> (audioProcessor)->setState (&stream);
 	}
@@ -2241,7 +2258,7 @@ using namespace Vst;
 		if (fromProject)
 		{
 			stream.getAttributes ()->setString (Vst::PresetAttributes::kStateType,
-			                                    VST3::toTChar (projectStr));
+			                                    Vst::toTChar (projectStr));
 		}
 		_editcontroller->setState (&stream);
 
@@ -2320,8 +2337,8 @@ using namespace Vst;
 	{
 		audioProcessor->setProcessing (false);
 
-		FUnknownPtr<IComponent> component (audioProcessor);
-		component->setActive (false);
+		if (auto component = U::cast<IComponent> (audioProcessor))
+			component->setActive (false);
 	}
 
 	[super deallocateRenderResources];
@@ -2377,7 +2394,7 @@ using namespace Vst;
 
 	  if (frameCount > 0)
 	  {
-		  FUnknownPtr<IComponent> component (audioProcessor);
+		  auto component = U::cast<IComponent> (audioProcessor);
 		  int32 inputBusCount = component->getBusCount (kAudio, kInput);
 		  int32 outputBusCount = component->getBusCount (kAudio, kOutput);
 		  AudioUnitRenderActionFlags pullFlags = 0;
@@ -2559,8 +2576,7 @@ using namespace Vst;
 - (void)makePlugView
 {
 	assert (pthread_main_np () != 0);
-	FUnknownPtr<IEditController2> ec2 (editController);
-	if (ec2)
+	if (auto ec2 = U::cast<IEditController2> (editController))
 		ec2->setKnobMode (kLinearMode);
 
 	// create view

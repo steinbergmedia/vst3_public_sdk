@@ -37,7 +37,7 @@
 #include "again.h"	// for AGain
 #include "againsidechain.h"	// for AGain SideChain
 #include "againcontroller.h" // for AGainController
-#include "againcids.h"	// for class ids and categrory
+#include "againcids.h"	// for class ids and category
 #include "version.h"	// for versioning
 
 #include "public.sdk/source/main/pluginfactory.h"

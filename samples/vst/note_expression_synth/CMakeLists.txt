@@ -30,16 +30,16 @@ set(noteexpressionsynth_sources
     resource/note_expression_synth.uidesc
 )
 
-smtg_add_vst3plugin(noteexpressionsynth 
+smtg_add_vst3plugin(note-expression-synth 
     ${noteexpressionsynth_sources}
 )
 
-target_link_libraries(noteexpressionsynth
+target_link_libraries(note-expression-synth
     PRIVATE
         vstgui_support
 )
 
-smtg_target_add_plugin_resources(noteexpressionsynth
+smtg_target_add_plugin_resources(note-expression-synth
     RESOURCES
         resource/note_expression_synth.uidesc
         resource/about.png
@@ -51,27 +51,27 @@ smtg_target_add_plugin_resources(noteexpressionsynth
         resource/vst3_logo_small.png
 )
 
-smtg_target_add_plugin_snapshots(noteexpressionsynth
+smtg_target_add_plugin_snapshots(note-expression-synth
     RESOURCES
         resource/41466D9BB0654576B641098F686371B3_snapshot.png
         resource/41466D9BB0654576B641098F686371B3_snapshot_2.0x.png
 )
 
-smtg_target_setup_as_vst3_example(noteexpressionsynth)
+smtg_target_setup_as_vst3_example(note-expression-synth)
 
 # Add an AUv2 target
-if (SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+if (SMTG_MAC AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
 	include(SMTG_AddVST3AuV2)
-	smtg_target_add_auv2(noteexpressionsynth-au
+	smtg_target_add_auv2(note-expression-synth-au
 		BUNDLE_NAME noteexpressionsynth
 		BUNDLE_IDENTIFIER com.steinberg.vst3sdk.noteexpressionsynth.auv2
 		INFO_PLIST_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/resource/au-info.plist
-		VST3_PLUGIN_TARGET noteexpressionsynth
+		VST3_PLUGIN_TARGET note-expression-synth
 	)
-endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+endif(SMTG_MAC AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
 
 if(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)
-    set(target noteexpressionsynth_ios)
+    set(target note-expression-synth-ios)
     smtg_add_ios_vst3plugin(${target} "${SMTG_CODE_SIGN_IDENTITY_IOS}" "${target}" "${noteexpressionsynth_sources}")
     smtg_target_configure_version_file(${target})
 

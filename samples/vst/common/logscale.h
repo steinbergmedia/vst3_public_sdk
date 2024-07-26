@@ -194,20 +194,21 @@ template <class T>
 class LogScaleParameter : public Parameter
 {
 public:
-	LogScaleParameter (const TChar* title, ParamID tag, LogScale<T>& logScale, const TChar* units = 0, int32 flags = ParameterInfo::kCanAutomate, UnitID unitID = kRootUnitId)
-	: Parameter (title, tag, units, 0., 0, flags, unitID)
-	, logScale (logScale)
+	LogScaleParameter (const TChar* title, ParamID tag, LogScale<T>& logScale,
+	                   const TChar* units = nullptr, int32 flags = ParameterInfo::kCanAutomate,
+	                   UnitID unitID = kRootUnitId)
+	: Parameter (title, tag, units, 0., 0, flags, unitID), logScale (logScale)
 	{
 	}
 	
-	virtual void toString (ParamValue _valueNormalized, String128 string) const SMTG_OVERRIDE
+	void toString (ParamValue _valueNormalized, String128 string) const SMTG_OVERRIDE
 	{
 		UString128 wrapper;
 		wrapper.printFloat (toPlain (_valueNormalized), precision);
 		wrapper.copyTo (string, 128);
 	}
 	
-	virtual bool fromString (const TChar* string, ParamValue& _valueNormalized) const SMTG_OVERRIDE
+	bool fromString (const TChar* string, ParamValue& _valueNormalized) const SMTG_OVERRIDE
 	{
 		UString wrapper ((TChar*)string, strlen16 (string));
 		if (wrapper.scanFloat (_valueNormalized))
@@ -218,12 +219,12 @@ public:
 		return false;
 	}
 	
-	virtual ParamValue toPlain (ParamValue _valueNormalized) const SMTG_OVERRIDE
+	ParamValue toPlain (ParamValue _valueNormalized) const SMTG_OVERRIDE
 	{
 		return logScale.scale (_valueNormalized);
 	}
 	
-	virtual ParamValue toNormalized (ParamValue plainValue) const SMTG_OVERRIDE
+	ParamValue toNormalized (ParamValue plainValue) const SMTG_OVERRIDE
 	{
 		return logScale.invscale (plainValue);
 	}
@@ -231,7 +232,6 @@ public:
 	OBJ_METHODS (LogScaleParameter<T>, Parameter)
 protected:
 	LogScale<T>& logScale;
-	ParamValue multiplier;
 };
 
 //------------------------------------------------------------------------

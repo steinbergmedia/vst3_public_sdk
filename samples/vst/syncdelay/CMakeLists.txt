@@ -6,7 +6,7 @@ project(smtg-vst3-syncdelay
     DESCRIPTION "Steinberg VST 3 Sync Delay example"
 )
 
-smtg_add_vst3plugin(syncdelay     
+smtg_add_vst3plugin(sync-delay     
     source/sync.h
     source/syncdelaycontroller.cpp
     source/syncdelaycontroller.h
@@ -17,4 +17,4 @@ smtg_add_vst3plugin(syncdelay
     source/syncdelayversion.h
 )
 
-smtg_target_setup_as_vst3_example(syncdelay)
+smtg_target_setup_as_vst3_example(sync-delay)

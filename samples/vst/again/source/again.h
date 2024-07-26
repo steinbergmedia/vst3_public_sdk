@@ -50,7 +50,7 @@ class AGain : public AudioEffect
 {
 public:
 	AGain ();
-	virtual ~AGain (); // do not forget virtual here
+	~AGain () override;
 
 	//--- ---------------------------------------------------------------------
 	// create function required for plug-in factory,
@@ -106,11 +106,11 @@ protected:
 	SampleType processVuPPM (SampleType** input, int32 numChannels, int32 sampleFrames);
 
 	// our model values
-	float fGain;
-	float fGainReduction;
-	float fVuPPMOld;
+	float fGain {1.f};
+	float fGainReduction {0.f};
+	float fVuPPMOld {0.f};
 
-	int32 currentProcessMode;
+	int32 currentProcessMode {-1}; // -1 means not initialized
 
 	bool bHalfGain {false};
 	bool bBypass {false};

@@ -78,18 +78,18 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 
 		// create a unit for the slot associated to a programList created below
 		std::u16string slotName = STR ("Slot ");
-		slotName += VST3::toString (i + 1);
+		slotName += Vst::toString (i + 1);
 		addUnit (new Unit (slotName.data (), kSlotUnitID, kRootUnitId, kProgramListId));
 
 		// create the program list: here kNumProgs entries attached to the previous created
 		// unit/slot
 		std::u16string programListName = STR ("Bank ");
-		programListName += VST3::toString (i + 1);
+		programListName += Vst::toString (i + 1);
 		auto* prgList = new ProgramList (programListName.data (), kProgramListId, kSlotUnitID);
 		for (int32 i = 0; i < kNumProgs; i++)
 		{
 			std::u16string title = STR ("Prog ");
-			title += VST3::toString (i + 1);
+			title += Vst::toString (i + 1);
 			prgList->addProgram (title.data ());
 		}
 		addProgramList (prgList);

@@ -42,7 +42,7 @@ if(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)
             "${notexpsynth_mac_app_ui_resources}"
             "macOS/Resources/Info.plist"
             "Shared/Info.plist"
-            noteexpressionsynth
+            note-expression-synth
         )
 
         #--------------------------------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ if(SMTG_MAC AND SMTG_ENABLE_VSTGUI_SUPPORT)
                 "${notexpsynth_ios_app_ui_resources}"
                 "iOS/Resources/Info.plist"
                 "Shared/Info.plist"
-                noteexpressionsynth_ios
+                note-expression-synth-ios
             )
 
             set_target_properties(${AUV3_APP_TARGET} PROPERTIES

@@ -124,21 +124,21 @@ struct Parameter
 	 *	calls Proc p with the new value if the value changes
 	 */
 	template <typename Proc>
-	void advance (int32 numSamples, Proc p) noexcept;
+	void advance (int32 numSamples, Proc p);
 
 	/** Templated variant of flushChanges
 	 *
 	 *	calls Proc p with the new value if the value changes
 	 */
 	template <typename Proc>
-	void flushChanges (Proc p) noexcept;
+	void flushChanges (Proc p);
 
 	/** Templated variant of endChanges
 	 *
 	 *	calls Proc p with the new value if the value changes
 	 */
 	template <typename Proc>
-	void endChanges (Proc p) noexcept;
+	void endChanges (Proc p);
 
 private:
 	struct ValuePoint
@@ -253,7 +253,7 @@ SMTG_ALWAYS_INLINE ParamValue Parameter::endChanges () noexcept
 
 //------------------------------------------------------------------------
 template <typename Proc>
-SMTG_ALWAYS_INLINE void Parameter::advance (int32 numSamples, Proc p) noexcept
+SMTG_ALWAYS_INLINE void Parameter::advance (int32 numSamples, Proc p)
 {
 	auto originalValue = currentValue;
 	if (advance (numSamples) != originalValue)
@@ -264,7 +264,7 @@ SMTG_ALWAYS_INLINE void Parameter::advance (int32 numSamples, Proc p) noexcept
 
 //------------------------------------------------------------------------
 template <typename Proc>
-SMTG_ALWAYS_INLINE void Parameter::flushChanges (Proc p) noexcept
+SMTG_ALWAYS_INLINE void Parameter::flushChanges (Proc p)
 {
 	auto originalValue = currentValue;
 	if (flushChanges () != originalValue)
@@ -273,7 +273,7 @@ SMTG_ALWAYS_INLINE void Parameter::flushChanges (Proc p) noexcept
 
 //------------------------------------------------------------------------
 template <typename Proc>
-SMTG_ALWAYS_INLINE void Parameter::endChanges (Proc p) noexcept
+SMTG_ALWAYS_INLINE void Parameter::endChanges (Proc p)
 {
 	auto originalValue = currentValue;
 	if (endChanges () != originalValue)

@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/bus/sidechainarrangement.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -59,7 +60,7 @@ bool PLUGIN_API SideChainArrangementTest::run (ITestResult* testResult)
 
 	bool failed = false;
 
-	FUnknownPtr<IAudioProcessor> audioEffect (vstPlug);
+	auto audioEffect = U::cast<IAudioProcessor> (vstPlug);
 	if (!audioEffect)
 		return failed;
 	// get the side chain arrangements

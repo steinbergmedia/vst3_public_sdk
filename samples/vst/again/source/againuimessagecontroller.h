@@ -70,7 +70,7 @@ public:
 	{
 		if (!textEdit)
 			return;
-		textEdit->setText (VST3::StringConvert::convert (msgText));
+		textEdit->setText (StringConvert::convert (msgText));
 	}
 
 private:
@@ -125,7 +125,7 @@ private:
 
 			// initialize it content
 			textEdit->setText (
-			    VST3::StringConvert::convert (againController->getDefaultMessageText ()));
+			    StringConvert::convert (againController->getDefaultMessageText ()));
 		}
 		return view;
 	}
@@ -146,7 +146,7 @@ private:
 		{
 			// save the last content of the text edit view
 			const auto& text = textEdit->getText ();
-			auto utf16Text = VST3::StringConvert::convert (text.getString ());
+			auto utf16Text = StringConvert::convert (text.getString ());
 			againController->setDefaultMessageText (utf16Text.data ());
 		}
 	}

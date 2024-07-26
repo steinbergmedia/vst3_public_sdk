@@ -6,7 +6,7 @@ project(smtg-vst3-programchange
     DESCRIPTION "Steinberg VST 3 Programchange example"
 )
 
-smtg_add_vst3plugin(programchange 
+smtg_add_vst3plugin(program-change 
     source/plug.cpp
     source/plug.h
     source/plugcids.h
@@ -17,4 +17,4 @@ smtg_add_vst3plugin(programchange
     source/version.h
 )
 
-smtg_target_setup_as_vst3_example(programchange)
+smtg_target_setup_as_vst3_example(program-change)

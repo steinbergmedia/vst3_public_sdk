@@ -3,7 +3,7 @@
 // Project     : VST SDK
 //
 // Category    : Validator
-// Filename    : testsuite.h
+// Filename    : public.sdk/samples/vst-hosting/validator/source/testsuite.h
 // Created by  : Steinberg, 05/2019
 // Description : VST 3 Plug-in Validator test suite class
 //

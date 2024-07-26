@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/state/invalidstatetransition.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -57,7 +58,7 @@ bool PLUGIN_API InvalidStateTransitionTest::run (ITestResult* testResult)
 
 	printTestHeader (testResult);
 
-	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	auto plugBase = U::cast<IPluginBase> (vstPlug);
 	if (!plugBase)
 		return false;
 

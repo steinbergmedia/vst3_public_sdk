@@ -7,6 +7,8 @@ project(smtg_public_sdk VERSION 1.0.0)
 add_library(sdk_common
     STATIC
         source/common/commoniids.cpp
+        source/common/commonstringconvert.cpp
+        source/common/commonstringconvert.h
         source/common/openurl.cpp
         source/common/openurl.h
         source/common/systemclipboard.h

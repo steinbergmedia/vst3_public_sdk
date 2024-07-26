@@ -49,7 +49,9 @@
 
 //------------------------------------------------------------------------
 @interface AUv3Wrapper : AUAudioUnit
-- (void)performEdit:(int)tag value:(double)value;
+- (void)beginEdit:(int32_t)tag;
+- (void)endEdit:(int32_t)tag;
+- (void)performEdit:(int32_t)tag value:(double)value;
 - (void)syncParameterValues;
 - (void)updateParameters;
 - (void)onTimer;

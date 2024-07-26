@@ -40,6 +40,7 @@
 #include "public.sdk/source/vst/hosting/connectionproxy.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/keycodes.h"
 #include "pluginterfaces/gui/iplugview.h"
@@ -154,7 +155,7 @@ bool gExportProgramChangeParameters = false;
 
 //------------------------------------------------------------------------
 BaseEditorWrapper::BaseEditorWrapper (IEditController* controller)
-: mController (controller), mView (nullptr)
+: mController (controller)
 {
 }
 
@@ -289,7 +290,7 @@ void BaseEditorWrapper::_close ()
 bool BaseEditorWrapper::_setKnobMode (Vst::KnobMode val)
 {
 	bool result = false;
-	FUnknownPtr<IEditController2> editController2 (mController);
+	auto editController2 = U::cast<IEditController2> (mController);
 	if (editController2)
 		result = editController2->setKnobMode (val) == kResultTrue;
 
@@ -371,8 +372,8 @@ void BaseWrapper::term ()
 	//---Disconnect components
 	if (mComponentsConnected)
 	{
-		FUnknownPtr<IConnectionPoint> cp1 (mProcessor);
-		FUnknownPtr<IConnectionPoint> cp2 (mController);
+		auto cp1 = U::cast<IConnectionPoint> (mProcessor);
+		auto cp2 = U::cast<IConnectionPoint> (mController);
 		if (cp1 && cp2)
 		{
 			if (mProcessorConnection)
@@ -454,8 +455,8 @@ bool BaseWrapper::init ()
 		mController->setComponentHandler (this);
 
 		//---connect the 2 components
-		FUnknownPtr<IConnectionPoint> cp1 (mProcessor);
-		FUnknownPtr<IConnectionPoint> cp2 (mController);
+		auto cp1 = U::cast<IConnectionPoint> (mProcessor);
+		auto cp2 = U::cast<IConnectionPoint> (mController);
 		if (cp1 && cp2)
 		{
 			mProcessorConnection = owned (NEW ConnectionProxy (cp1));

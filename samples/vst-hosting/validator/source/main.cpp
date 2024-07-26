@@ -2,7 +2,7 @@
 // Project     : VST SDK
 //
 // Category    : Validator
-// Filename    : main.cpp
+// Filename    : public.sdk/samples/vst-hosting/validator/source/main.cpp
 // Created by  : Steinberg, 04/2005
 // Description : main entry point
 //
@@ -66,7 +66,7 @@ Utf8Args toUtf8Args (int argc, wchar_t* wargv[])
 	for (int i = 0; i < argc; i++)
 	{
 		auto str = reinterpret_cast<const Steinberg::Vst::TChar*> (wargv[i]);
-		utf8Args.push_back (VST3::StringConvert::convert (str));
+		utf8Args.push_back (Steinberg::Vst::StringConvert::convert (str));
 	}
 
 	return utf8Args;

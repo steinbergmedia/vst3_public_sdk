@@ -197,7 +197,7 @@ bool ProcessTest::setupBuffers (int32 numBusses, AudioBusBuffers* audioBuffers, 
 		return false;
 	for (int32 busIndex = 0; busIndex < numBusses; busIndex++) // buses
 	{
-		BusInfo busInfo;
+		BusInfo busInfo {};
 		if (vstPlug->getBusInfo (kAudio, dir, busIndex, busInfo) == kResultTrue)
 		{
 			if (!setupBuffers (audioBuffers[busIndex]))

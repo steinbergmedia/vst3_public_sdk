@@ -88,14 +88,14 @@ elseif(SMTG_WIN)
 endif(SMTG_MAC)
 
 # Add an AUv2 target
-if (SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+if (SMTG_MAC AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
 	include(SMTG_AddVST3AuV2)
 	smtg_target_add_auv2(again-au
 		BUNDLE_NAME again
 		BUNDLE_IDENTIFIER com.steinberg.vst3plugin.again.audiounit
 		INFO_PLIST_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/resource/au-info.plist
 		VST3_PLUGIN_TARGET again)
-endif(SMTG_MAC AND XCODE AND SMTG_COREAUDIO_SDK_PATH)
+endif(SMTG_MAC AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
 
 if(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)
     set(target again_ios)
@@ -147,7 +147,7 @@ if(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)
 	target_compile_features(${target} PUBLIC cxx_std_17)
 endif(SMTG_MAC AND XCODE AND SMTG_ENABLE_IOS_TARGETS)
 
-set(targetsimple againsimple)
+set(targetsimple again-simple)
 smtg_add_vst3plugin(${targetsimple} ${again_simple_sources})
 smtg_target_configure_version_file(${targetsimple})
 set_target_properties(${targetsimple}

@@ -48,18 +48,20 @@ Things to do :
 #include "auwrapper.h"
 #include "NSDataIBStream.h"
 #include "aucocoaview.h"
+#include "public.sdk/source/vst/hosting/eventlist.h"
+#include "public.sdk/source/vst/hosting/hostclasses.h"
+#include "public.sdk/source/vst/hosting/parameterchanges.h"
+#include "public.sdk/source/vst/hosting/processdata.h"
+#include "public.sdk/source/vst/utility/ump.h"
+#include "public.sdk/source/vst/vsteditcontroller.h"
 #include "base/source/fdynlib.h"
 #include "base/source/fstring.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/base/ustring.h"
 #include "pluginterfaces/gui/iplugview.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/vstpresetkeys.h"
 #include "pluginterfaces/vst/vsttypes.h"
-#include "public.sdk/source/vst/hosting/eventlist.h"
-#include "public.sdk/source/vst/hosting/hostclasses.h"
-#include "public.sdk/source/vst/hosting/parameterchanges.h"
-#include "public.sdk/source/vst/hosting/processdata.h"
-#include "public.sdk/source/vst/vsteditcontroller.h"
 
 #include <AudioToolbox/AudioToolbox.h>
 #if !SMTG_PLATFORM_64
@@ -70,7 +72,7 @@ Things to do :
 #include <algorithm>
 #include <objc/runtime.h>
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
+#if !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 #include "CAXException.h"
 #endif
 
@@ -130,10 +132,10 @@ public:
 #else
 			CFRelease ((CFBundleRef)instance);
 #endif
-			instance = 0;
+			instance = nullptr;
 			isloaded = false;
 		}
-		gInstance = 0;
+		gInstance = nullptr;
 	}
 
 	bool init (const tchar* path)
@@ -184,15 +186,20 @@ public:
 		return isLoaded ();
 	}
 
-	static IPtr<VST3DynLibrary> gInstance;
+	static VST3DynLibrary* gInstance;
 
 protected:
+
 	bool bundleEntryCalled;
 };
 
-IPtr<VST3DynLibrary> VST3DynLibrary::gInstance; // keep alive until component unloaded
+VST3DynLibrary* VST3DynLibrary::gInstance = nullptr;
 
 namespace Vst {
+
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+using namespace ausdk;
+#endif
 
 //--------------------------------------------------------------------------------------------
 class SpeakerArrangementBase
@@ -209,9 +216,13 @@ public:
 	{
 		switch (numChannels)
 		{
+			//--- -----------------------
 			case 1: channelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono; break;
+			//--- -----------------------
 			case 2: channelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo; break;
+			//--- -----------------------
 			case 6: channelLayout.mChannelLayoutTag = kAudioChannelLayoutTag_AudioUnit_5_1; break;
+			//--- -----------------------
 			default: return kAudioUnitErr_InvalidProperty;
 		}
 		return noErr;
@@ -253,9 +264,9 @@ public:
 		return kAudioUnitErr_InvalidProperty;
 	}
 
-	OSStatus SetStreamFormat (const CAStreamBasicDescription& desc)
+	OSStatus SetStreamFormat (const AudioStreamBasicDescription& desc)
 	{
-		OSStatus err = setNumChannels (desc.NumberChannels ());
+		OSStatus err = setNumChannels (desc.mChannelsPerFrame);
 		if (err != noErr)
 			return err;
 		return AUOutputElement::SetStreamFormat (desc);
@@ -294,9 +305,9 @@ public:
 		return kAudioUnitErr_InvalidProperty;
 	}
 
-	OSStatus SetStreamFormat (const CAStreamBasicDescription& desc)
+	OSStatus SetStreamFormat (const AudioStreamBasicDescription& desc)
 	{
-		OSStatus err = setNumChannels (desc.NumberChannels ());
+		OSStatus err = setNumChannels (desc.mChannelsPerFrame);
 		if (err != noErr)
 			return err;
 		return AUInputElement::SetStreamFormat (desc);
@@ -307,7 +318,7 @@ public:
 static CFStringRef createCFStringFromString128 (const String128& string)
 {
 	UString128 str (string);
-	return CFStringCreateWithCharacters (0, (const UniChar*)string, str.getLength ());
+	return CFStringCreateWithCharacters (nullptr, (const UniChar*)string, str.getLength ());
 }
 
 //------------------------------------------------------------------------
@@ -326,7 +337,7 @@ static CFBundleRef GetBundleFromExecutable (const char* filepath)
 	NSString* macOSStr = [execStr stringByDeletingLastPathComponent];
 	NSString* contentsStr = [macOSStr stringByDeletingLastPathComponent];
 	NSString* bundleStr = [contentsStr stringByDeletingLastPathComponent];
-	return CFBundleCreate (0, (CFURLRef)[NSURL fileURLWithPath:bundleStr isDirectory:YES]);
+	return CFBundleCreate (nullptr, (CFURLRef)[NSURL fileURLWithPath:bundleStr isDirectory:YES]);
 }
 
 //------------------------------------------------------------------------
@@ -340,18 +351,18 @@ static CFBundleRef GetCurrentBundle ()
 			return GetBundleFromExecutable (info.dli_fname);
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
-CFBundleRef AUWrapper::gBundleRef = 0;
+CFBundleRef AUWrapper::gBundleRef = nullptr;
 static CFIndex gBundleRefCount = 0;
-static AUChannelInfo* channelInfos = 0;
+static AUChannelInfo* channelInfos = nullptr;
 
 //------------------------------------------------------------------------
 static void initBundleRef ()
 {
-	if (AUWrapper::gBundleRef == 0)
+	if (AUWrapper::gBundleRef == nullptr)
 	{
 		AUWrapper::gBundleRef = GetCurrentBundle ();
 		gBundleRefCount = CFGetRetainCount (AUWrapper::gBundleRef);
@@ -366,7 +377,7 @@ static void releaseBundleRef ()
 	CFIndex currentCount = CFGetRetainCount (AUWrapper::gBundleRef);
 	CFRelease (AUWrapper::gBundleRef);
 	if (currentCount == gBundleRefCount)
-		AUWrapper::gBundleRef = 0;
+		AUWrapper::gBundleRef = nullptr;
 }
 
 //------------------------------------------------------------------------
@@ -392,20 +403,23 @@ static AUHostApplication gHostApp;
 IMPLEMENT_FUNKNOWN_METHODS (AUWrapper, IComponentHandler, IComponentHandler::iid)
 //------------------------------------------------------------------------
 AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+: AUWRAPPER_BASE_CLASS (ci, 128, 128)
+#else
 : AUWRAPPER_BASE_CLASS (ci, 0, 0)
-, audioProcessor (0)
-, editController (0)
-, midiMapping (0)
-, timer (0)
+#endif
+, audioProcessor (nullptr)
+, editController (nullptr)
+, timer (nullptr)
 , noteCounter (0)
 , sampleRate (44100)
 , bypassParamID (-1)
-, presets (0)
+, presets (nullptr)
 , numPresets (0)
 , factoryProgramChangedID (-1)
 , isInstrument (false)
 , isBypassed (false)
-, paramListenerRef (0)
+, paramListenerRef (nullptr)
 , midiOutCount (0)
 , isOfflineRender (false)
 {
@@ -414,7 +428,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 	initBundleRef ();
 
 	for (int32 i = 0; i < kMaxProgramChangeParameters; i++)
-		programChangeParameters[i] = kNoParamId;
+		programChangeInfos[i] = {};
 
 	processData.processContext = &processContext;
 	processData.inputParameterChanges = &processParamChanges;
@@ -426,7 +440,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 
 	loadVST3Module ();
 
-	FUnknownPtr<IPluginFactory2> factory (owned (getFactory ()));
+	auto factory = U::cast<IPluginFactory2> (owned (getFactory ()));
 	if (factory)
 	{
 		// find first audio processor class
@@ -456,7 +470,7 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 		    kResultTrue)
 			return;
 		
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 
 		if (audioProcessor->queryInterface (IEditController::iid, (void**)&editController) !=
 		    kResultTrue)
@@ -472,12 +486,12 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 						if (editController->initialize ((HostApplication*)&gHostApp) != kResultTrue)
 						{
 							editController->release ();
-							editController = 0;
+							editController = nullptr;
 							return;
 						}
 
-						FUnknownPtr<IConnectionPoint> controllerConnectionPoint (editController);
-						FUnknownPtr<IConnectionPoint> processorConnectionPoint (audioProcessor);
+						auto controllerConnectionPoint = U::cast<IConnectionPoint> (editController);
+						auto processorConnectionPoint = U::cast<IConnectionPoint> (audioProcessor);
 						if (controllerConnectionPoint && processorConnectionPoint)
 						{
 							controllerConnectionPoint->connect (processorConnectionPoint);
@@ -512,12 +526,12 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 			{
 				MultiChannelInputElement* element =
 				    dynamic_cast<MultiChannelInputElement*> (Inputs ().GetIOElement (inputNo));
-				if (element == 0)
+				if (element == nullptr)
 					continue;
 				if (audioProcessor->getBusArrangement (kInput, inputNo, sa) == kResultTrue)
 				{
-					CAStreamBasicDescription streamDesc (element->GetStreamFormat ());
-					streamDesc.ChangeNumberChannels (SpeakerArr::getChannelCount (sa), false);
+					AudioStreamBasicDescription streamDesc (element->GetStreamFormat ());
+					streamDesc.mChannelsPerFrame = SpeakerArr::getChannelCount (sa);
 					element->SetStreamFormat (streamDesc);
 				}
 				BusInfo info = {};
@@ -534,12 +548,12 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 			{
 				MultiChannelOutputElement* element =
 				    dynamic_cast<MultiChannelOutputElement*> (Outputs ().GetIOElement (outputNo));
-				if (element == 0)
+				if (element == nullptr)
 					continue;
 				if (audioProcessor->getBusArrangement (kOutput, outputNo, sa) == kResultTrue)
 				{
-					CAStreamBasicDescription streamDesc (element->GetStreamFormat ());
-					streamDesc.ChangeNumberChannels (SpeakerArr::getChannelCount (sa), false);
+					AudioStreamBasicDescription streamDesc (element->GetStreamFormat ());
+					streamDesc.mChannelsPerFrame = SpeakerArr::getChannelCount (sa);
 					element->SetStreamFormat (streamDesc);
 				}
 				BusInfo info = {};
@@ -560,16 +574,18 @@ AUWrapper::AUWrapper (ComponentInstanceRecord* ci)
 
 			midiOutCount = component->getBusCount (kEvent, kOutput);
 
-			editController->queryInterface (IMidiMapping::iid, (void**)&midiMapping);
-
 			transferParamChanges.setMaxParameters (500);
 			outputParamTransfer.setMaxParameters (500);
 
 			timer = Timer::create (this, 20);
 
-			FUnknownPtr<IEditController2> editController2 (editController);
+			auto editController2 = U::cast<IEditController2> (editController);
 			if (editController2)
 				editController2->setKnobMode (kLinearMode);
+			
+			midiLearn = U::cast<IMidiLearn> (editController);
+			if (midiLearn)
+				midiLearnRingBuffer.resize (8);
 		}
 	}
 }
@@ -584,11 +600,11 @@ AUWrapper::~AUWrapper ()
 		AUListenerDispose (paramListenerRef);
 	if (audioProcessor)
 	{
-		FUnknownPtr<IEditController> combined (audioProcessor);
+		auto combined = U::cast<IEditController> (audioProcessor);
 		if (!combined)
 		{
-			FUnknownPtr<IConnectionPoint> controllerConnectionPoint (editController);
-			FUnknownPtr<IConnectionPoint> processorConnectionPoint (audioProcessor);
+			auto controllerConnectionPoint = U::cast<IConnectionPoint> (editController);
+			auto processorConnectionPoint = U::cast<IConnectionPoint> (audioProcessor);
 			if (controllerConnectionPoint && processorConnectionPoint)
 			{
 				controllerConnectionPoint->disconnect (processorConnectionPoint);
@@ -596,21 +612,17 @@ AUWrapper::~AUWrapper ()
 			}
 		}
 	}
-	if (midiMapping)
-	{
-		midiMapping->release ();
-		midiMapping = 0;
-	}
+	midiLearn.reset ();
 	if (editController)
 	{
-		editController->setComponentHandler (0);
+		editController->setComponentHandler (nullptr);
 		uint32 refCount = editController->addRef ();
 		if (refCount == 2)
 			editController->terminate ();
 
 		editController->release ();
 		editController->release ();
-		editController = 0;
+		editController = nullptr;
 	}
 
 	clearParameterValueCache ();
@@ -619,7 +631,7 @@ AUWrapper::~AUWrapper ()
 	{
 		FUnknownPtr<IPluginBase> (audioProcessor)->terminate ();
 		audioProcessor->release ();
-		audioProcessor = 0;
+		audioProcessor = nullptr;
 	}
 	unloadVST3Module ();
 	releaseBundleRef ();
@@ -633,7 +645,7 @@ AUWrapper::~AUWrapper ()
 //------------------------------------------------------------------------
 void AUWrapper::loadVST3Module ()
 {
-	if (VST3DynLibrary::gInstance == 0)
+	if (VST3DynLibrary::gInstance == nullptr)
 	{
 		if (gBundleRef)
 		{
@@ -662,7 +674,7 @@ void AUWrapper::loadVST3Module ()
 					if (FSFindFolder (kLocalDomain, kAudioPlugInsFolderType, false, &fsRef) ==
 					    noErr)
 					{
-						NSURL* url = (NSURL*)CFURLCreateFromFSRef (0, &fsRef);
+						NSURL* url = (NSURL*)CFURLCreateFromFSRef (nullptr, &fsRef);
 						if (url)
 						{
 							String basePath ([[url path] UTF8String]);
@@ -675,25 +687,24 @@ void AUWrapper::loadVST3Module ()
 				}
 			}
 
-			new VST3DynLibrary ();
-			if (pluginPath.isEmpty () || !VST3DynLibrary::gInstance->init (pluginPath))
+			dynLib = owned (new VST3DynLibrary ());
+			if (pluginPath.isEmpty () || !dynLib->init (pluginPath))
 			{
-				VST3DynLibrary::gInstance->release ();
+				dynLib.reset ();
 				return;
 			}
 		}
 	}
 	else
-		VST3DynLibrary::gInstance->addRef ();
+	{
+		dynLib = VST3DynLibrary::gInstance;
+	}
 }
 
 //------------------------------------------------------------------------
 void AUWrapper::unloadVST3Module ()
 {
-	if (VST3DynLibrary::gInstance)
-	{
-		VST3DynLibrary::gInstance->release ();
-	}
+	dynLib.reset ();
 }
 
 //------------------------------------------------------------------------
@@ -706,12 +717,12 @@ IPluginFactory* AUWrapper::getFactory ()
 		if (getPlugFactory)
 			return getPlugFactory ();
 	}
-	return 0;
+	return nullptr;
 }
 
 //------------------------------------------------------------------------
 // MARK: ComponentBase
-#if !CA_USE_AUDIO_PLUGIN_ONLY
+#if !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 ComponentResult AUWrapper::Version ()
 {
 	AutoreleasePool ap;
@@ -738,8 +749,11 @@ static SpeakerArrangement numChannelsToSpeakerArrangement (UInt32 numChannels)
 {
 	switch (numChannels)
 	{
+		//--- -----------------------
 		case 1: return SpeakerArr::kMono;
+		//--- -----------------------
 		case 2: return SpeakerArr::kStereo;
+		//--- -----------------------
 		case 6: return SpeakerArr::k51;
 	}
 	return 0;
@@ -751,7 +765,7 @@ ComponentResult AUWrapper::Initialize ()
 	if (audioProcessor && editController)
 	{
 		// match speaker arrangement with AU stream format
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 		int32 inputBusCount = component->getBusCount (kAudio, kInput);
 		int32 outputBusCount = component->getBusCount (kAudio, kOutput);
 
@@ -765,10 +779,10 @@ ComponentResult AUWrapper::Initialize ()
 				int32 outChannelCount = 0;
 				if (inputBusCount > i)
 					inChannelCount =
-					    Inputs ().GetIOElement (i)->GetStreamFormat ().NumberChannels ();
+					    Inputs ().GetIOElement (i)->GetStreamFormat ().mChannelsPerFrame;
 				if (outputBusCount > i)
 					outChannelCount =
-					    Outputs ().GetIOElement (i)->GetStreamFormat ().NumberChannels ();
+					    Outputs ().GetIOElement (i)->GetStreamFormat ().mChannelsPerFrame;
 				if (!validateChannelPair (inChannelCount, outChannelCount, channelInfos,
 				                          SupportedNumChannels (0)))
 					return kAudioUnitErr_FailedInitialization;
@@ -779,15 +793,15 @@ ComponentResult AUWrapper::Initialize ()
 		SpeakerArrangement outputs[outputBusCount];
 		for (int32 element = 0; element < inputBusCount; element++)
 		{
-			const CAStreamBasicDescription desc =
+			const AudioStreamBasicDescription desc =
 			    Inputs ().GetIOElement (element)->GetStreamFormat ();
-			inputs[element] = numChannelsToSpeakerArrangement (desc.NumberChannels ());
+			inputs[element] = numChannelsToSpeakerArrangement (desc.mChannelsPerFrame);
 		}
 		for (int32 element = 0; element < outputBusCount; element++)
 		{
-			const CAStreamBasicDescription desc =
+			const AudioStreamBasicDescription desc =
 			    Outputs ().GetIOElement (element)->GetStreamFormat ();
-			outputs[element] = numChannelsToSpeakerArrangement (desc.NumberChannels ());
+			outputs[element] = numChannelsToSpeakerArrangement (desc.mChannelsPerFrame);
 		}
 		if (audioProcessor->setBusArrangements (inputs, inputBusCount, outputs, outputBusCount) !=
 		    kResultTrue)
@@ -806,11 +820,13 @@ ComponentResult AUWrapper::Initialize ()
 		ps.processMode = kRealtime;
 		audioProcessor->setupProcessing (ps);
 
+		updateMidiMappingCache ();
+
 		component->setActive (true);
 
 		audioProcessor->setProcessing (true);
 
-		if (paramListenerRef == 0)
+		if (paramListenerRef == nullptr)
 		{
 			OSStatus status = AUListenerCreateWithDispatchQueue (
 			    &paramListenerRef, 0.2, dispatch_get_main_queue (),
@@ -828,7 +844,7 @@ ComponentResult AUWrapper::Initialize ()
 				sPar.mElement = 0;
 				sPar.mScope = kAudioUnitScope_Global;
 
-				std::vector<ParameterInfo> programParameters;
+				programParameters.clear ();
 
 				// for each VST3 parameter
 				for (int32 i = 0; i < editController->getParameterCount (); i++)
@@ -843,7 +859,7 @@ ComponentResult AUWrapper::Initialize ()
 					}
 
 					sPar.mParameterID = pi.id;
-					status = AUListenerAddParameter (paramListenerRef, 0, &sPar);
+					status = AUListenerAddParameter (paramListenerRef, nullptr, &sPar);
 					SMTG_ASSERT (status == noErr)
 
 					if ((pi.flags & ParameterInfo::kIsProgramChange) != 0)
@@ -852,26 +868,7 @@ ComponentResult AUWrapper::Initialize ()
 					}
 				}
 
-				// assign programChanges
-				for (int32 midiChannel = 0; midiChannel < kMaxProgramChangeParameters;
-				     midiChannel++)
-				{
-					programChangeParameters[midiChannel] = kNoParamId;
-					UnitID unitId;
-					ProgramListID programListId;
-					if (getProgramListAndUnit (midiChannel, unitId, programListId))
-					{
-						for (int32 i = 0; i < (int32)programParameters.size (); i++)
-						{
-							const ParameterInfo& paramInfo = programParameters.at (i);
-							if (paramInfo.unitId == unitId)
-							{
-								programChangeParameters[midiChannel] = paramInfo.id;
-								break;
-							}
-						}
-					}
-				}
+				updateProgramChangesCache ();
 
 				IUnitInfo* unitInfoController = NULL;
 				// let's see if there's a preset list (take the first one)
@@ -954,24 +951,117 @@ void AUWrapper::Cleanup ()
 	{
 		audioProcessor->setProcessing (false);
 
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 		component->setActive (false);
+	}
+}
+
+//------------------------------------------------------------------------
+void AUWrapper::updateProgramChangesCache ()
+{
+	// assign programChanges
+	auto pci = std::make_unique<ProgramChangeInfoList> ();
+	for (size_t midiChannel = 0u; midiChannel < pci->size (); ++midiChannel)
+	{
+		auto& programChangeInfo = pci->at (midiChannel);
+		programChangeInfo = {};
+		UnitID unitId;
+		ProgramListID programListId;
+		if (getProgramListAndUnit (static_cast<int32> (midiChannel), unitId, programListId))
+		{
+			for (int32 i = 0; i < (int32)programParameters.size (); i++)
+			{
+				const ParameterInfo& paramInfo = programParameters.at (i);
+				if (paramInfo.unitId == unitId)
+				{
+					programChangeInfo.pid = paramInfo.id;
+					ParameterInfo paramInfo = {};
+					if (editController->getParameterInfo (paramInfo.id, paramInfo) == kResultTrue)
+					{
+						programChangeInfo.numPrograms = paramInfo.stepCount + 1;
+					}
+					break;
+				}
+			}
+		}
+	}
+	programChangeInfoTransfer.transferObject_ui (std::move (pci));
+}
+
+//------------------------------------------------------------------------
+void AUWrapper::updateMidiMappingCache ()
+{
+	if (!editController || !audioProcessor)
+		return;
+	auto midiMapping = U::cast<IMidiMapping> (editController);
+	if (!midiMapping)
+		return;
+	auto comp = U::cast<IComponent> (audioProcessor);
+	if (!comp)
+		return;
+	auto numInputs = comp->getBusCount (MediaTypes::kEvent, BusDirections::kInput);
+	if (numInputs <= 0)
+		return;
+
+	MidiMapping cache;
+	cache.busList.resize (numInputs);
+	for (auto busIndex = 0; busIndex < numInputs; ++busIndex)
+	{
+		BusInfo busInfo {};
+		if (comp->getBusInfo (MediaTypes::kEvent, BusDirections::kInput, 0, busInfo) != kResultTrue)
+			continue;
+		if (busInfo.channelCount <= 0)
+			continue;
+		cache.busList[busIndex].resize (busInfo.channelCount);
+		for (auto channelIndex = 0; channelIndex < busInfo.channelCount; ++channelIndex)
+		{
+			for (auto cc = 0; cc < ControllerNumbers::kCountCtrlNumber; ++cc)
+			{
+				ParamID pid;
+				if (midiMapping->getMidiControllerAssignment (busIndex, channelIndex, cc, pid) ==
+				    kResultTrue)
+				{
+					cache.busList[busIndex][channelIndex][cc] = pid;
+				}
+			}
+		}		
+	}
+	if (!cache.empty ())
+	{
+		midiMappingTransfer.transferObject_ui (std::make_unique<MidiMapping> (std::move (cache)));
 	}
 }
 
 //------------------------------------------------------------------------
 // MARK: AUBase
 //--------------------------------------------------------------------------------------------
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+std::unique_ptr<AUElement> AUWrapper::CreateElement (AudioUnitScope scope, AudioUnitElement element)
+{
+	switch (scope)
+	{
+		//--- -----------------------
+		case kAudioUnitScope_Output: return std::make_unique<MultiChannelOutputElement>(this);
+		//--- -----------------------
+		case kAudioUnitScope_Input: return std::make_unique<MultiChannelInputElement>(this);
+	}
+
+	return AUWRAPPER_BASE_CLASS::CreateElement (scope, element);
+}
+#else
 AUElement* AUWrapper::CreateElement (AudioUnitScope scope, AudioUnitElement element)
 {
 	switch (scope)
 	{
+		//--- -----------------------
 		case kAudioUnitScope_Output: return new MultiChannelOutputElement (this);
+		//--- -----------------------
 		case kAudioUnitScope_Input: return new MultiChannelInputElement (this);
 	}
 
 	return AUWRAPPER_BASE_CLASS::CreateElement (scope, element);
 }
+#endif // SMTG_AUWRAPPER_USES_AUSDK
 
 //------------------------------------------------------------------------
 UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
@@ -1008,7 +1098,7 @@ UInt32 AUWrapper::SupportedNumChannels (const AUChannelInfo** outInfo)
 		once = false;
 		char buffer[128];
 
-		CFStringRef processName = 0;
+		CFStringRef processName = nullptr;
 		ProcessSerialNumber psn;
 		SMTG_VERIFY_IS (GetCurrentProcess (&psn), noErr);
 		SMTG_VERIFY_IS (CopyProcessName (&psn, &processName), noErr);
@@ -1054,10 +1144,10 @@ bool AUWrapper::StreamFormatWritable (AudioUnitScope scope, AudioUnitElement ele
 
 //------------------------------------------------------------------------
 ComponentResult AUWrapper::ChangeStreamFormat (AudioUnitScope inScope, AudioUnitElement inElement,
-                                               const CAStreamBasicDescription& inPrevFormat,
-                                               const CAStreamBasicDescription& inNewFormat)
+                                               const AudioStreamBasicDescription& inPrevFormat,
+                                               const AudioStreamBasicDescription& inNewFormat)
 {
-	if (inPrevFormat.NumberChannels () == inNewFormat.NumberChannels ())
+	if (inPrevFormat.mChannelsPerFrame == inNewFormat.mChannelsPerFrame)
 	{
 		// sample rate change
 		ComponentResult res = AUWRAPPER_BASE_CLASS::ChangeStreamFormat (inScope, inElement,
@@ -1075,10 +1165,14 @@ ComponentResult AUWrapper::ChangeStreamFormat (AudioUnitScope inScope, AudioUnit
 
 	switch (inScope)
 	{
+		//--- -----------------------
 		case kAudioUnitScope_Input: element = Inputs ().GetIOElement (inElement); break;
+		//--- -----------------------
 		case kAudioUnitScope_Output: element = Outputs ().GetIOElement (inElement); break;
+		//--- -----------------------
 		case kAudioUnitScope_Global: element = Outputs ().GetIOElement (0); break;
-		default: COMPONENT_THROW (kAudioUnitErr_InvalidScope);
+		//--- -----------------------
+		default: Throw (kAudioUnitErr_InvalidScope);
 	}
 	OSStatus err = element->SetStreamFormat (inNewFormat);
 	if (err == noErr)
@@ -1094,13 +1188,12 @@ ComponentResult AUWrapper::SetConnection (const AudioUnitConnection& inConnectio
 	{
 		int32 busIndex = inConnection.destInputNumber;
 		bool active = GetInput (busIndex)->IsActive ();
-		FUnknownPtr<IComponent> component (audioProcessor);
+		auto component = U::cast<IComponent> (audioProcessor);
 		component->activateBus (kAudio, kInput, busIndex, active);
 	}
 	return result;
 }
 
-// static const UnitInfo kNoUnitInfo = {0};
 //------------------------------------------------------------------------
 void AUWrapper::buildUnitInfos (IUnitInfo* unitInfoController, UnitInfoMap& units) const
 {
@@ -1311,7 +1404,7 @@ OSStatus AUWrapper::GetPresets (CFArrayRef* outData) const
 {
 	if (presets && numPresets > 0)
 	{
-		if (outData != 0)
+		if (outData != nullptr)
 		{
 			CFMutableArrayRef presetsArray = CFArrayCreateMutable (NULL, numPresets, NULL);
 			for (int32 i = 0; i < numPresets; i++)
@@ -1345,6 +1438,10 @@ OSStatus AUWrapper::NewFactoryPresetSet (const AUPreset& inNewFactoryPreset)
 ComponentResult AUWrapper::Render (AudioUnitRenderActionFlags& ioActionFlags,
                                    const AudioTimeStamp& inTimeStamp, UInt32 inNumberFrames)
 {
+#if !AUSDK_MIDI2_AVAILABLE
+	midiMappingTransfer.accessTransferObject_rt (
+	    [&] (auto& obj) { midiMappingCache = std::move (obj); });
+#endif
 	updateProcessContext ();
 	processContext.systemTime = inTimeStamp.mHostTime;
 
@@ -1358,19 +1455,20 @@ ComponentResult AUWrapper::Render (AudioUnitRenderActionFlags& ioActionFlags,
 		AUInputElement* input = GetInput (i);
 		if (input->IsActive ())
 			input->PullInput (ioActionFlags, inTimeStamp, i, inNumberFrames);
-		processData.inputs[i].numChannels = input->GetStreamFormat ().NumberChannels ();
-		for (int32 channel = 0; channel < input->GetStreamFormat ().NumberChannels (); channel++)
+		processData.inputs[i].numChannels = input->GetStreamFormat ().mChannelsPerFrame;
+		for (int32 channel = 0; channel < input->GetStreamFormat ().mChannelsPerFrame; channel++)
 		{
 			processData.inputs[i].channelBuffers32[channel] =
-			    input->IsActive () ? (Sample32*)input->GetBufferList ().mBuffers[channel].mData : 0;
+			    input->IsActive () ? (Sample32*)input->GetBufferList ().mBuffers[channel].mData :
+			                         nullptr;
 		}
 	}
 	for (int32 i = 0; i < Outputs ().GetNumberOfElements (); i++)
 	{
 		AUOutputElement* output = GetOutput (i);
 		output->PrepareBuffer (inNumberFrames);
-		processData.outputs[i].numChannels = output->GetStreamFormat ().NumberChannels ();
-		for (int32 channel = 0; channel < output->GetStreamFormat ().NumberChannels (); channel++)
+		processData.outputs[i].numChannels = output->GetStreamFormat ().mChannelsPerFrame;
+		for (int32 channel = 0; channel < output->GetStreamFormat ().mChannelsPerFrame; channel++)
 		{
 			processData.outputs[i].channelBuffers32[channel] =
 			    (Sample32*)output->GetBufferList ().mBuffers[channel].mData;
@@ -1389,18 +1487,18 @@ ComponentResult AUWrapper::Render (AudioUnitRenderActionFlags& ioActionFlags,
 	return noErr;
 }
 
-const uint8 kNoteOff = 0x80; ///< note, off velocity
-const uint8 kNoteOn = 0x90; ///< note, on velocity
-const uint8 kPolyPressure = 0xA0; ///< note, pressure
-const uint8 kController = 0xB0; ///< controller, value
-const uint8 kProgramChangeStatus = 0xC0; ///< program change
-const uint8 kAfterTouchStatus = 0xD0; ///< channel pressure
-const uint8 kPitchBendStatus = 0xE0; ///< lsb, msb
+static constexpr uint8 kNoteOff = 0x80; ///< note, off velocity
+static constexpr uint8 kNoteOn = 0x90; ///< note, on velocity
+static constexpr uint8 kPolyPressure = 0xA0; ///< note, pressure
+static constexpr uint8 kController = 0xB0; ///< controller, value
+static constexpr uint8 kProgramChangeStatus = 0xC0; ///< program change
+static constexpr uint8 kAfterTouchStatus = 0xD0; ///< channel pressure
+static constexpr uint8 kPitchBendStatus = 0xE0; ///< lsb, msb
 
 //const float kMidiScaler = 1.f / 127.f;
-static const uint8 kChannelMask = 0x0F;
+static constexpr uint8 kChannelMask = 0x0F;
 //static const uint8 kStatusMask = 0xF0;
-static const uint32 kDataMask = 0x7F;
+static constexpr uint32 kDataMask = 0x7F;
 
 //------------------------------------------------------------------------
 inline void AUWrapper::processOutputEvents (const AudioTimeStamp& inTimeStamp)
@@ -1423,6 +1521,7 @@ inline void AUWrapper::processOutputEvents (const AudioTimeStamp& inTimeStamp)
 			{
 				switch (e.type)
 				{
+					//--- -----------------------
 					case Event::kNoteOnEvent:
 					{
 						UInt8 status = (UInt8) (kNoteOn | (e.noteOn.channel & kChannelMask));
@@ -1436,6 +1535,7 @@ inline void AUWrapper::processOutputEvents (const AudioTimeStamp& inTimeStamp)
 						mCallbackHelper.AddEvent (status, channel, data1, data2, e.sampleOffset);
 					}
 					break;
+					//--- -----------------------
 					case Event::kNoteOffEvent:
 					{
 						UInt8 status = (UInt8) (kNoteOff | (e.noteOff.channel & kChannelMask));
@@ -1457,13 +1557,19 @@ inline void AUWrapper::processOutputEvents (const AudioTimeStamp& inTimeStamp)
 }
 
 //--------------------------------------------------------------------------------------------
-ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitScope inScope,
-                                            AudioUnitElement inElement, UInt32& outDataSize,
-                                            Boolean& outWritable)
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+OSStatus AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitScope inScope,
+                                     AudioUnitElement inElement, UInt32& outDataSize,
+                                     bool& outWritable)
+#else
+OSStatus AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitScope inScope,
+                                     AudioUnitElement inElement, UInt32& outDataSize,
+                                     Boolean& outWritable)
+#endif
 {
 	switch (inID)
 	{
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_BypassEffect:
 		{
 			if (inScope == kAudioUnitScope_Global && bypassParamID != -1)
@@ -1474,7 +1580,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterClumpName:
 		{
 			if (bypassParamID != -1)
@@ -1485,7 +1591,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterStringFromValue:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1496,7 +1602,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterValueFromString:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1507,7 +1613,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ElementName:
 		{
 			if (inScope == kAudioUnitScope_Input || inScope == kAudioUnitScope_Output)
@@ -1517,14 +1623,14 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_CocoaUI:
 		{
 			outWritable = false;
 			outDataSize = sizeof (AudioUnitCocoaViewInfo);
 			return noErr;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_MIDIOutputCallbackInfo:
 		{
 			if (inScope == kAudioUnitScope_Global && midiOutCount > 0)
@@ -1535,7 +1641,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_MIDIOutputCallback:
 		{
 			if (inScope == kAudioUnitScope_Global && midiOutCount > 0)
@@ -1546,7 +1652,20 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			break;
 		}
-    //--------------------------
+#if AUSDK_MIDI2_AVAILABLE
+		//--- -----------------------
+		case kAudioUnitProperty_AudioUnitMIDIProtocol:
+		{
+			if (inScope == kAudioUnitScope_Global)
+			{
+				outDataSize = sizeof (SInt32);
+				outWritable = false;
+				return noErr;
+			}
+			return kAudioUnitErr_InvalidProperty;
+		}
+#endif
+		//--- -----------------------
 		case 64000:
 		{
 			if (editController)
@@ -1557,7 +1676,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case 64001:
 		{
 			if (VST3DynLibrary::gInstance)
@@ -1568,7 +1687,7 @@ ComponentResult AUWrapper::GetPropertyInfo (AudioUnitPropertyID inID, AudioUnitS
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_OfflineRender:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1591,7 +1710,7 @@ ComponentResult AUWrapper::SetProperty (AudioUnitPropertyID inID, AudioUnitScope
 {
 	switch (inID)
 	{
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_BypassEffect:
 		{
 			if (inScope == kAudioUnitScope_Global && bypassParamID != -1)
@@ -1604,7 +1723,7 @@ ComponentResult AUWrapper::SetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_MIDIOutputCallback:
 		{
 			if (inScope == kAudioUnitScope_Global && midiOutCount > 0)
@@ -1619,7 +1738,7 @@ ComponentResult AUWrapper::SetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_OfflineRender:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1630,7 +1749,7 @@ ComponentResult AUWrapper::SetProperty (AudioUnitPropertyID inID, AudioUnitScope
 				{
 					isOfflineRender = offline;
 					
-					FUnknownPtr<IComponent> component (audioProcessor);
+					auto component = U::cast<IComponent> (audioProcessor);
 					
 					if(IsInitialized())
 					{
@@ -1671,7 +1790,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 {
 	switch (inID)
 	{
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_BypassEffect:
 		{
 			if (inScope == kAudioUnitScope_Global && bypassParamID != -1)
@@ -1682,7 +1801,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			break;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterClumpName:
 		{
 			AudioUnitParameterNameInfo* parameterNameInfo = (AudioUnitParameterNameInfo*)outData;
@@ -1696,7 +1815,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 
 			return noErr;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterStringFromValue:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1710,12 +1829,12 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 				        paramString) == kResultTrue)
 					ps->outString = createCFStringFromString128 (paramString);
 				else
-					ps->outString = CFStringCreateWithCString (0, "", kCFStringEncodingUTF8);
+					ps->outString = CFStringCreateWithCString (nullptr, "", kCFStringEncodingUTF8);
 				return noErr;
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ParameterValueFromString:
 		{
 			if (inScope == kAudioUnitScope_Global)
@@ -1734,12 +1853,12 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_ElementName:
 		{
 			if (inScope == kAudioUnitScope_Input || inScope == kAudioUnitScope_Output)
 			{
-				FUnknownPtr<IComponent> component (audioProcessor);
+				auto component = U::cast<IComponent> (audioProcessor);
 				BusInfo busInfo;
 				if (component->getBusInfo (kAudio,
 				                           inScope == kAudioUnitScope_Input ? kInput : kOutput,
@@ -1751,7 +1870,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_CocoaUI:
 		{
 			AutoreleasePool ap;
@@ -1768,7 +1887,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			*((AudioUnitCocoaViewInfo*)outData) = cocoaInfo;
 			return noErr;
 		}
-    //--------------------------
+		//--- -----------------------
 		case kAudioUnitProperty_MIDIOutputCallbackInfo:
 		{
 			if (inScope == kAudioUnitScope_Global && midiOutCount > 0)
@@ -1784,7 +1903,27 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 			}
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+
+#if AUSDK_MIDI2_AVAILABLE
+		//--- -----------------------
+		case kAudioUnitProperty_HostMIDIProtocol:
+		{
+			if (inScope == kAudioUnitScope_Global)
+				return noErr;
+			return kAudioUnitErr_InvalidProperty;
+		}
+		//--- -----------------------
+		case kAudioUnitProperty_AudioUnitMIDIProtocol:
+		{
+			if (inScope == kAudioUnitScope_Global)
+			{
+				*reinterpret_cast<SInt32*>(outData) = MIDIProtocolID::kMIDIProtocol_2_0;
+				return noErr;
+			}
+			return kAudioUnitErr_InvalidProperty;
+		}
+#endif // AUSDK_MIDI2_AVAILABLE
+		//--- -----------------------
 		case 64000:
 		{
 			if (editController)
@@ -1797,12 +1936,12 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 				*((TPtrInt*)outData) = 0;
 			return kAudioUnitErr_InvalidProperty;
 		}
-    //--------------------------
+		//--- -----------------------
 		case 64001:
 		{
 			if (VST3DynLibrary::gInstance)
 			{
-				TPtrInt ptr = (TPtrInt)VST3DynLibrary::gInstance.get();
+				TPtrInt ptr = (TPtrInt)VST3DynLibrary::gInstance;
 				*((TPtrInt*)outData) = ptr;
 				return noErr;
 			}
@@ -1814,7 +1953,7 @@ ComponentResult AUWrapper::GetProperty (AudioUnitPropertyID inID, AudioUnitScope
 	return AUWRAPPER_BASE_CLASS::GetProperty (inID, inScope, inElement, outData);
 }
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
+#if !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 //------------------------------------------------------------------------
 int AUWrapper::GetNumCustomUIComponents ()
 {
@@ -1838,7 +1977,7 @@ int AUWrapper::GetNumCustomUIComponents ()
 		}
 		return numUIComponents;
 	}
-#endif
+#endif // !__LP64__
 	return 0;
 }
 
@@ -1879,9 +2018,9 @@ void AUWrapper::GetUIComponentDescs (ComponentDescription* inDescArray)
 		inDescArray[0].componentFlags = 0;
 		inDescArray[0].componentFlagsMask = 0;
 	}
-#endif
+#endif // !__LP64__
 }
-#endif // #if !CA_USE_AUDIO_PLUGIN_ONLY
+#endif // !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 
 //------------------------------------------------------------------------
 Float64 AUWrapper::GetLatency ()
@@ -1901,8 +2040,45 @@ Float64 AUWrapper::GetTailTime ()
 	return tailTimeInSeconds;
 }
 
+#if !CA_USE_AUDIO_PLUGIN_ONLY
 //------------------------------------------------------------------------
 // MARK: MusicDeviceBase
+//------------------------------------------------------------------------
+OSStatus AUWrapper::HandleNoteOn (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity,
+                                  UInt32 inStartFrame)
+{
+	Event e = {};
+
+	e.type = Event::kNoteOnEvent;
+	e.noteOn.channel = inChannel;
+	e.noteOn.pitch = inNoteNumber;
+	e.noteOn.velocity = inVelocity / 127.;
+	e.noteOn.noteId = inNoteNumber;
+	e.sampleOffset = inStartFrame;
+
+	eventList.addEvent (e);
+
+	return noErr;
+}
+
+//------------------------------------------------------------------------
+OSStatus AUWrapper::HandleNoteOff (UInt8 inChannel, UInt8 inNoteNumber, UInt8 inVelocity,
+                                   UInt32 inStartFrame)
+{
+	Event e = {};
+
+	e.type = Event::kNoteOffEvent;
+	e.noteOff.channel = inChannel;
+	e.noteOff.pitch = inNoteNumber;
+	e.noteOff.velocity = inVelocity / 127.;
+	e.noteOff.noteId = inNoteNumber;
+	e.sampleOffset = inStartFrame;
+
+	eventList.addEvent (e);
+
+	return noErr;
+}
+
 //------------------------------------------------------------------------
 ComponentResult AUWrapper::StartNote (MusicDeviceInstrumentID inInstrument,
                                       MusicDeviceGroupID inGroupID,
@@ -1947,16 +2123,13 @@ ComponentResult AUWrapper::StopNote (MusicDeviceGroupID inGroupID, NoteInstanceI
 	return noErr;
 }
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
 //--------------------------------------------------------------------------------------------
 OSStatus AUWrapper::GetInstrumentCount (UInt32& outInstCount) const
 {
 	outInstCount = 1;
 	return noErr;
 }
-#endif
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
 //------------------------------------------------------------------------
 // MARK: AUMIDIBase
 //------------------------------------------------------------------------
@@ -1978,16 +2151,17 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 		return result;
 	}
 
-	if (!midiMapping)
+	if (midiMappingCache.empty ())
 		return result;
 
-	ParamID pid = 0;
+	ParamID pid = kNoParamId;
 	ParamValue value = 0;
 	CtrlNumber cn = -1;
 	bool prgChange = false;
 
 	switch (status)
 	{
+		//--- -----------------------
 		case kPitchBendStatus: // kMidiMessage_PitchWheel
 		{
 			cn = kPitchBend;
@@ -1998,51 +2172,220 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 			value = (double)_14bit / (double)0x3FFF;
 			break;
 		}
+		//--- -----------------------
 		case kAfterTouchStatus: // kMidiMessage_ChannelPressure
 		{
 			cn = kAfterTouch;
 			value = data1 / 127.f;
 			break;
 		}
+		//--- -----------------------
 		case kController: // kMidiMessage_ControlChange
 		{
 			cn = data1;
 			value = data2 / 127.f;
 			break;
 		}
+		//--- -----------------------
 		case kProgramChangeStatus: // kMidiMessage_ProgramChange
 		{
-			pid = programChangeParameters[channel];
-			if (pid != kNoParamId)
+			programChangeInfoTransfer.accessTransferObject_rt ([this] (const auto& pci) {
+				programChangeInfos = std::move (pci);
+			});
+			pid = programChangeInfos[channel].pid;
+			if (pid != kNoParamId && programChangeInfos[channel].numPrograms > 0 &&
+			    data1 < programChangeInfos[channel].numPrograms)
 			{
-				ParameterInfo paramInfo = {};
-				if (editController->getParameterInfo (pid, paramInfo) == kResultTrue)
-				{
-					if (paramInfo.stepCount > 0 && data1 <= paramInfo.stepCount)
-					{
-						value = (ParamValue)data1 / (ParamValue)paramInfo.stepCount;
-						prgChange = true;
-					}
-				}
+				value = static_cast<ParamValue> (data1) /
+				        static_cast<ParamValue> (programChangeInfos[channel].numPrograms - 1);
+				prgChange = true;
 			}
 		}
 	}
-	if (prgChange || (cn >= 0 && (midiMapping->getMidiControllerAssignment (0, channel, cn, pid) ==
-	                              kResultTrue)))
+	if (prgChange || cn >= 0)
 	{
-		beginEdit (pid);
-		performEdit (pid, value);
-		endEdit (pid);
+		if (pid != kNoParamId && channel < midiMappingCache.busList[0].size ())
+		{
+			auto it = midiMappingCache.busList[0][channel].find (cn);
+			if (it != midiMappingCache.busList[0][channel].end ())
+				pid = it->second;
+		}
+		if (pid != kNoParamId)
+		{
+			beginEdit (pid);
+			performEdit (pid, value);
+			endEdit (pid);
 
-		// make sure that our edit controller get the changes
-		int32 index;
-		IParamValueQueue* vq = outputParamChanges.addParameterData (pid, index);
-		if (vq)
-			vq->addPoint (inStartFrame, value, index);
+			// make sure that our edit controller get the changes
+			int32 index;
+			IParamValueQueue* vq = outputParamChanges.addParameterData (pid, index);
+			if (vq)
+				vq->addPoint (inStartFrame, value, index);
+		}
 	}
+	if (midiLearn && cn >= 0)
+		midiLearnRingBuffer.push ({0, channel, cn});
 	return result;
 }
-#endif
+#endif // !CA_USE_AUDIO_PLUGIN_ONLY
+
+#if AUSDK_MIDI2_AVAILABLE
+//------------------------------------------------------------------------
+bool AUWrapper::handleMIDIEventPacket (UInt32 inOffsetSampleFrame, const MIDIEventPacket* packet)
+{
+	struct UMPHandler final : UMP::UniversalMidiPacketHandlerAdapter
+	{
+		AUWrapper& w;
+		UInt32 sampleOffset;
+		UMPHandler (AUWrapper& wrapper, UInt32 sampleOffset)
+		: w (wrapper), sampleOffset (sampleOffset)
+		{
+		}
+		void onNoteOn (Group group, Channel channel, NoteNumber note, Velocity16 velocity,
+		               AttributeType attr, AttributeValue attrValue) const override
+		{
+			Event e = {};
+			e.type = Event::kNoteOnEvent;
+			e.noteOn.channel = channel;
+			e.noteOn.pitch = note;
+			e.noteOn.velocity = static_cast<float> (velocity) /
+			                    static_cast<float> (std::numeric_limits<Velocity16>::max ());
+			e.noteOn.noteId = note;
+			e.sampleOffset = sampleOffset;
+			w.eventList.addEvent (e);
+		}
+		void onNoteOff (Group group, Channel channel, NoteNumber note, Velocity16 velocity,
+		                AttributeType attr, AttributeValue attrValue) const override
+		{
+			Event e = {};
+			e.type = Event::kNoteOffEvent;
+			e.noteOff.channel = channel;
+			e.noteOff.pitch = note;
+			e.noteOff.velocity = static_cast<float> (velocity) /
+			                     static_cast<float> (std::numeric_limits<Velocity16>::max ());
+			e.noteOff.noteId = note;
+			e.sampleOffset = sampleOffset;
+			w.eventList.addEvent (e);
+		}
+		void onPolyPressure (Group group, Channel channel, NoteNumber note,
+		                     Data32 data) const override
+		{
+			Event e = {};
+			e.type = Event::kPolyPressureEvent;
+			e.polyPressure.channel = channel;
+			e.polyPressure.pitch = note;
+			e.polyPressure.pressure =
+			    data / static_cast<float> (std::numeric_limits<Data32>::max ());
+			e.sampleOffset = sampleOffset;
+			w.eventList.addEvent (e);
+		}
+		void onProgramChange (Group group, Channel channel, OptionFlags options, Program program,
+		                      BankMSB bankMSB, BankLSB bankLSB) const override
+		{
+			w.programChangeInfoTransfer.accessTransferObject_rt ([&] (const auto& pci) {
+				w.programChangeInfos = std::move (pci);
+			});
+			auto pid = w.programChangeInfos[channel].pid;
+			if (pid != kNoParamId && w.programChangeInfos[channel].numPrograms > 0 &&
+			    program < w.programChangeInfos[channel].numPrograms)
+			{
+				auto value =
+				    static_cast<ParamValue> (program) /
+				    static_cast<ParamValue> (w.programChangeInfos[channel].numPrograms - 1);
+				addParameterChange (pid, value);
+			}
+		}
+		void onControlChange (Group group, Channel channel, ControllerNumber controller,
+		                      Data32 data) const override
+		{
+			if (!w.midiMappingCache.empty () && controller < ControllerNumbers::kCountCtrlNumber)
+			{
+				ParamID pid {};
+				constexpr std::array ignored = {
+				    ControllerNumbers::kCtrlBankSelectMSB, ControllerNumbers::kCtrlDataEntryMSB,
+				    ControllerNumbers::kCtrlBankSelectLSB, ControllerNumbers::kCtrlDataEntryLSB,
+				    ControllerNumbers::kCtrlNRPNSelectLSB, ControllerNumbers::kCtrlNRPNSelectMSB,
+				    ControllerNumbers::kCtrlRPNSelectLSB,  ControllerNumbers::kCtrlRPNSelectMSB};
+				if (std::find (ignored.begin (), ignored.end (), controller) != ignored.end ())
+					return;
+				addControllerChange (group, channel, controller,
+				                     data /
+				                         static_cast<float> (std::numeric_limits<Data32>::max ()));
+			}
+		}
+		void onPitchBend (Group group, Channel channel, Data32 data) const override
+		{
+			if (!w.midiMappingCache.empty ())
+			{
+				addControllerChange (group, channel, ControllerNumbers::kPitchBend,
+				                     data /
+				                         static_cast<float> (std::numeric_limits<Data32>::max ()));
+			}
+		}
+		void onChannelPressure (Group group, Channel channel, Data32 data) const override
+		{
+			if (!w.midiMappingCache.empty ())
+			{
+				addControllerChange (group, channel, ControllerNumbers::kAfterTouch,
+				                     data /
+				                         static_cast<float> (std::numeric_limits<Data32>::max ()));
+			}
+		}
+
+		void addControllerChange (Group group, Channel channel, ControllerNumber ctrler,
+		                          ParamValue value) const
+		{
+			assert (!w.midiMappingCache.empty ());
+			if (channel < w.midiMappingCache.busList[0].size ())
+			{
+				auto it = w.midiMappingCache.busList[0][channel].find (ctrler);
+				if (it != w.midiMappingCache.busList[0][channel].end ())
+					addParameterChange (it->second, value);
+			}
+			if (w.midiLearn)
+				w.midiLearnRingBuffer.push ({0, channel, ctrler});
+		}
+
+		void addParameterChange (ParamID pid, ParamValue value) const
+		{
+			w.beginEdit (pid);
+			w.performEdit (pid, value);
+			w.endEdit (pid);
+			int32 index;
+			IParamValueQueue* vq = w.outputParamChanges.addParameterData (pid, index);
+			if (vq)
+				vq->addPoint (sampleOffset, value, index);
+		}
+	};
+	UMPHandler handler (*this, inOffsetSampleFrame);
+	return UMP::parsePackets<UMP::ParseSections::ChannelVoice2> (packet->wordCount, packet->words,
+	                                                             handler) == packet->wordCount;
+}
+
+//------------------------------------------------------------------------
+OSStatus AUWrapper::MIDIEventList (UInt32 inOffsetSampleFrame,
+                                   const struct MIDIEventList* eventList)
+{
+	if (eventList->protocol != MIDIProtocolID::kMIDIProtocol_2_0)
+		return -1;
+	if (eventList->numPackets == 0)
+		return noErr;
+
+	midiMappingTransfer.accessTransferObject_rt (
+	    [&] (auto& obj) { midiMappingCache = std::move (obj); });
+
+	auto eventPacket = &eventList->packet[0];
+	if (!handleMIDIEventPacket (inOffsetSampleFrame, eventPacket))
+		return -1;
+	for (auto i = 1u; i < eventList->numPackets; ++i)
+	{
+		eventPacket = MIDIEventPacketNext (eventPacket);
+		if (!handleMIDIEventPacket (inOffsetSampleFrame, eventPacket))
+			return -1;
+	}
+	return noErr;
+}
+#endif // AUSDK_MIDI2_AVAILABLE
 
 //------------------------------------------------------------------------
 // MARK: IComponentHandler
@@ -2099,6 +2442,13 @@ tresult PLUGIN_API AUWrapper::restartComponent (int32 flags)
 	if (flags & kParamValuesChanged)
 	{
 		syncParameterValues ();
+		updateProgramChangesCache ();
+		result = kResultTrue;
+	}
+
+	if (flags & kMidiCCAssignmentChanged)
+	{
+		updateMidiMappingCache ();
 		result = kResultTrue;
 	}
 
@@ -2157,7 +2507,7 @@ void AUWrapper::cacheParameterValues ()
 	{
 		Steinberg::Base::Thread::FGuard guard (parameterCacheChanging);
 
-		FUnknownPtr<IUnitInfo> unitInfoController (editController);
+		auto unitInfoController = U::cast<IUnitInfo> (editController);
 		if (unitInfoController)
 		{
 			if (unitInfos.empty ())
@@ -2224,8 +2574,9 @@ void AUWrapper::cacheParameterValues ()
 
 			// We release this ourselved when emptying the cache
 			auInfo.flags =
-			    /*kAudioUnitParameterFlag_CFNameRelease |*/ kAudioUnitParameterFlag_HasCFNameString |
-			    kAudioUnitParameterFlag_IsReadable | kAudioUnitParameterFlag_HasName;
+			    /*kAudioUnitParameterFlag_CFNameRelease |*/
+			    kAudioUnitParameterFlag_HasCFNameString | kAudioUnitParameterFlag_IsReadable |
+			    kAudioUnitParameterFlag_HasName;
 
 			if (clumpIdx > 0)
 				AUBase::HasClump (auInfo, clumpIdx);
@@ -2319,7 +2670,7 @@ void AUWrapper::onTimer (Timer* timer)
 		auParam.mElement = 0;
 		auParam.mScope = kAudioUnitScope_Global;
 		auParam.mParameterID = pid;
-		AUParameterListenerNotify (paramListenerRef, 0, &auParam);
+		AUParameterListenerNotify (paramListenerRef, nullptr, &auParam);
 		editController->setParamNormalized (pid, value);
 	}
 	if (isBypassed)
@@ -2334,6 +2685,12 @@ void AUWrapper::onTimer (Timer* timer)
 			outputParamTransfer.transferChangesFrom (outputParamChanges);
 			outputParamChanges.clearQueue ();
 		}
+	}
+	if (midiLearn)
+	{
+		MidiLearnEvent event;
+		while (midiLearnRingBuffer.pop (event))
+			midiLearn->onLiveMIDIControllerInput (event.busIndex, event.channel, event.midiCC);
 	}
 }
 
@@ -2504,7 +2861,7 @@ bool AUWrapper::getProgramListAndUnit (int32 midiChannel, UnitID& unitId,
 	return false;
 }
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
+#if !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 
 // copied from AUDispatch.cpp
 #if __LP64__
@@ -2523,6 +2880,7 @@ ComponentResult AUWrapper::ComponentEntryDispatch (ComponentParameters* params, 
 
 	switch (params->what)
 	{
+		//--- -----------------------
 		case kAudioUnitSetPropertySelect:
 		{
 			PARAM (AudioUnitPropertyID, inID, 0, 5);
@@ -2563,7 +2921,7 @@ public:
 		if (channelInfos)
 		{
 			delete[] channelInfos;
-			channelInfos = 0;
+			channelInfos = nullptr;
 		}
 	}
 };
@@ -2575,18 +2933,28 @@ static OSStatus AUWrapperMethodSetProperty (void* self, AudioUnitPropertyID inID
                                             AudioUnitScope inScope, AudioUnitElement inElement,
                                             const void* inData, UInt32 inDataSize)
 {
+	OSStatus result = noErr;
+
 	auto plugInstance = reinterpret_cast<AudioComponentPlugInInstance*> (self);
 	auto auwrapper = reinterpret_cast<AUWrapper*> (&plugInstance->mInstanceStorage);
 	try
 	{
 		if (inData && inDataSize && inID == kAudioUnitProperty_ClassInfoFromDocument)
 		{
-			ca_require(inDataSize == sizeof(CFPropertyListRef *), InvalidPropertyValue);
-			ca_require(inScope == kAudioUnitScope_Global, InvalidScope);
-			return auwrapper->restoreState(*(CFPropertyListRef *)inData, true);
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+			ThrowExceptionIf (!inDataSize == sizeof (CFPropertyListRef*),
+			                  kAudioUnitErr_InvalidPropertyValue);
+			ThrowExceptionIf (!inScope == kAudioUnitScope_Global, kAudioUnitErr_InvalidScope);
+#else
+#endif // SMTG_AUWRAPPER_USES_AUSDK
+			return auwrapper->restoreState (*(CFPropertyListRef*)inData, true);
 		}
-		return auwrapper->DispatchSetProperty(inID, inScope, inElement, inData, inDataSize);
+		return auwrapper->DispatchSetProperty (inID, inScope, inElement, inData, inDataSize);
 	}
+
+#ifdef SMTG_AUWRAPPER_USES_AUSDK
+	AUSDK_Catch (result) return result;
+#else
 	catch (OSStatus err)
 	{
 		return err;
@@ -2599,6 +2967,7 @@ InvalidScope:
 	return kAudioUnitErr_InvalidScope;
 InvalidPropertyValue:
 	return kAudioUnitErr_InvalidPropertyValue;
+#endif // SMTG_AUWRAPPER_USES_AUSDK
 }
 
 struct AUWrapperLookup
@@ -2639,7 +3008,7 @@ __attribute__ ((visibility ("default"))) void* AUWrapperFactory (
 }
 } // extern "C"
 
-#if !CA_USE_AUDIO_PLUGIN_ONLY
+#if !CA_USE_AUDIO_PLUGIN_ONLY && !defined(SMTG_AUWRAPPER_USES_AUSDK)
 //------------------------------------------------------------------------
 // old entry method
 extern "C" {

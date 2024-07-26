@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/general/terminit.h"
+#include "pluginterfaces/base/funknownimpl.h"
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -56,7 +57,7 @@ bool TerminateInitializeTest::run (ITestResult* testResult)
 		return false;
 
 	printTestHeader (testResult);
-	FUnknownPtr<IPluginBase> plugBase (vstPlug);
+	auto plugBase = U::cast<IPluginBase> (vstPlug);
 	if (!plugBase)
 	{
 		addErrorMessage (testResult, STR ("No IPluginBase interface available."));

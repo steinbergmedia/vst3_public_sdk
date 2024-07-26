@@ -4,7 +4,7 @@
 // Category    : Examples
 // Filename    : public.sdk/samples/vst/common/voiceprocessor.h
 // Created by  : Steinberg, 02/2010
-// Description : 
+// Description :
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -12,43 +12,43 @@
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
-// 
-//   * Redistributions of source code must retain the above copyright notice, 
+//
+//   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation 
+//     this list of conditions and the following disclaimer in the documentation
 //     and/or other materials provided with the distribution.
 //   * Neither the name of the Steinberg Media Technologies nor the names of its
-//     contributors may be used to endorse or promote products derived from this 
+//     contributors may be used to endorse or promote products derived from this
 //     software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED 
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. 
-// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, 
-// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, 
-// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, 
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+// IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+// INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+// BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
 // OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 // OF THE POSSIBILITY OF SUCH DAMAGE.
 //-----------------------------------------------------------------------------
 
 #pragma once
 
+#include "base/source/fdebug.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivstevents.h"
-#include "base/source/fdebug.h"
 #include <algorithm>
 
 #ifdef DEBUG_LOG
-	#undef DEBUG_LOG
+#undef DEBUG_LOG
 #endif
 
-#define DEBUG_LOG	DEVELOPMENT
+#define DEBUG_LOG DEVELOPMENT
 
 #ifndef VOICEPROCESSOR_BLOCKSIZE
-	#define VOICEPROCESSOR_BLOCKSIZE	32
+#define VOICEPROCESSOR_BLOCKSIZE 32
 #endif
 
 namespace Steinberg {
@@ -59,7 +59,8 @@ namespace Vst {
 
 A virtual base class for a voice manager implementation.
 
-The idea behind this class is to make it easier to support either single precision or double precision samples (float or double) or different channel layouts.
+The idea behind this class is to make it easier to support either single precision or double
+precision samples (float or double) or different channel layouts.
 
 Example:
 \code{.cpp}
@@ -67,37 +68,38 @@ Example:
 class MySynthProcessor : public AudioEffect
 {
 public:
-	tresult PLUGIN_API setActive (TBool state);
-	tresult PLUGIN_API process (ProcessData& data);
+    tresult PLUGIN_API setActive (TBool state);
+    tresult PLUGIN_API process (ProcessData& data);
 
 protected:
-	VoiceProcessor* voiceProcessor;
+    VoiceProcessor* voiceProcessor;
 };
 
+//------------------------------------------------------------------------
 tresult PLUGIN_API MySynthProcessor::setActive (TBool state)
 {
-	if (state)
-	{
-		if (processSetup.symbolicSampleSize == kSample32)
-			voiceProcessor = new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES, void> (processSetup.sampleRate, 0);
+    if (state)
+    {
+        if (processSetup.symbolicSampleSize == kSample32)
+            voiceProcessor = new VoiceProcessorImplementation<float, Voice<float>, 2, MAX_VOICES, void> (processSetup.sampleRate, 0);
 		else if (processSetup.symbolicSampleSize == kSample64)
-			voiceProcessor = new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES, void> (processSetup.sampleRate, 0);
+            voiceProcessor = new VoiceProcessorImplementation<double, Voice<double>, 2, MAX_VOICES, void> (processSetup.sampleRate, 0);
 		else
 			return kInvalidArgument;
-	}
-	else
-	{
-		delete voiceProcessor;
-		voiceProcessor = 0;
-	}
-	return kResultTrue;
+    }
+    else
+    {
+        delete voiceProcessor;
+        voiceProcessor = 0;
+    }
+    return kResultTrue;
 }
 
+//------------------------------------------------------------------------
 tresult PLUGIN_API MySynthProcessor::process (ProcessData& data)
 {
-	return voiceProcessor->process (data);
+    return voiceProcessor->process (data);
 }
-
 \endcode
 
 \sa Steinberg::Vst::VoiceProcessorImplementation
@@ -106,7 +108,7 @@ tresult PLUGIN_API MySynthProcessor::process (ProcessData& data)
 class VoiceProcessor
 {
 public:
-	VoiceProcessor () : activeVoices (0), mClearOutputNeeded (true) {}
+	VoiceProcessor () {}
 	virtual ~VoiceProcessor () {}
 
 	virtual tresult process (ProcessData& data) = 0;
@@ -116,9 +118,10 @@ public:
 	int32 getActiveVoices () const { return activeVoices; }
 
 	void clearOutputNeeded (bool val) { mClearOutputNeeded = val; }
+
 protected:
-	int32 activeVoices;
-	bool mClearOutputNeeded;
+	int32 activeVoices {0};
+	bool mClearOutputNeeded {true};
 };
 
 //-----------------------------------------------------------------------------
@@ -139,33 +142,39 @@ void setNoteExpressionValue (int32 index, ParamValue value);
 void noteOn (int32 pitch, ParamValue velocity, float tuning, int32 sampleOffset, int32 noteId);
 void noteOff (ParamValue velocity, int32 sampleOffset);
 bool process (SamplePrecision* outputBuffers[numChannels], int32 numSamples);
-void reset () 
+void reset ()
 \endcode
 
 See \ref Steinberg::Vst::VoiceBase for an example base class.
 
-This implementation does not support advanced features like voice stealing when maxVoices is reached, etc ...
+This implementation does not support advanced features like voice stealing when maxVoices is
+reached, etc ...
 */
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
 class VoiceProcessorImplementation : public VoiceProcessor
 {
 public:
 	VoiceProcessorImplementation (float sampleRate, GlobalParameterStorage* globalParameters = 0);
-	~VoiceProcessorImplementation ();
+	~VoiceProcessorImplementation () override;
 
 	tresult process (ProcessData& data) override;
 	void processEvent (Event evt) override;
+
 protected:
 	VoiceClass* getVoice (int32 noteId);
 	VoiceClass* findVoice (int32 noteId);
-	VoiceClass voices [maxVoices];
+	VoiceClass voices[maxVoices];
 };
 
-
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::VoiceProcessorImplementation (float sampleRate, GlobalParameterStorage* globalParameters)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+VoiceProcessorImplementation<
+    Precision, VoiceClass, numChannels, maxVoices,
+    GlobalParameterStorage>::VoiceProcessorImplementation (float sampleRate,
+                                                           GlobalParameterStorage* globalParameters)
 {
 	for (int32 i = 0; i < maxVoices; i++)
 	{
@@ -176,14 +185,18 @@ VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, Glob
 }
 
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::~VoiceProcessorImplementation ()
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                             GlobalParameterStorage>::~VoiceProcessorImplementation ()
 {
 }
 
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::getVoice (int32 noteId)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                         GlobalParameterStorage>::getVoice (int32 noteId)
 {
 	VoiceClass* firstFreeVoice = 0;
 	if (noteId != -1)
@@ -204,8 +217,10 @@ VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, max
 }
 
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::findVoice (int32 noteId)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                         GlobalParameterStorage>::findVoice (int32 noteId)
 {
 	if (noteId != -1)
 	{
@@ -221,12 +236,14 @@ VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, max
 }
 
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::processEvent (Event e)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                  GlobalParameterStorage>::processEvent (Event e)
 {
 	switch (e.type)
 	{
-	//-----------------------
+		//--- --------------------
 		case Event::kNoteOnEvent:
 		{
 			if (e.noteOn.noteId == -1)
@@ -241,7 +258,7 @@ void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
 			}
 			break;
 		}
-	//-----------------------
+		//--- --------------------
 		case Event::kNoteOffEvent:
 		{
 			if (e.noteOff.noteId == -1)
@@ -260,7 +277,7 @@ void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
 #endif
 			break;
 		}
-	//-----------------------
+		//--- --------------------
 		case Event::kNoteExpressionValueEvent:
 		{
 			VoiceClass* voice = findVoice (e.noteExpressionValue.noteId);
@@ -283,10 +300,12 @@ void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
 }
 
 //-----------------------------------------------------------------------------
-#if VOICEPROCESSOR_BLOCKSIZE <= 0	// voice processing happens in chunks of the block size
+#if VOICEPROCESSOR_BLOCKSIZE <= 0 // voice processing happens in chunks of the block size
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::process (ProcessData& data)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                     GlobalParameterStorage>::process (ProcessData& data)
 {
 	if (mClearOutputNeeded)
 		for (int32 i = 0; i < numChannels; i++)
@@ -321,23 +340,24 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 }
 
 //-----------------------------------------------------------------------------
-#else	// voice processing happens in chunks of VOICEPROCESSOR_BLOCKSIZE samples
+#else // voice processing happens in chunks of VOICEPROCESSOR_BLOCKSIZE samples
 //-----------------------------------------------------------------------------
-template<class Precision, class VoiceClass, int32 numChannels, int32 maxVoices, class GlobalParameterStorage>
-tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices, GlobalParameterStorage>::process (ProcessData& data)
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                     GlobalParameterStorage>::process (ProcessData& data)
 {
 	const int32 kBlockSize = VOICEPROCESSOR_BLOCKSIZE;
 
 	int32 numSamples = data.numSamples;
 	int32 samplesProcessed = 0;
-	int32 i;
 
 	IEventList* inputEvents = data.inputEvents;
 	Event e = {};
 	Event* eventPtr = nullptr;
 	int32 eventIndex = 0;
 	int32 numEvents = inputEvents ? inputEvents->getEventCount () : 0;
-	
+
 	// get the first event
 	if (numEvents)
 	{
@@ -347,13 +367,13 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 
 	// initialize audio output buffers
 	Precision* buffers[numChannels];
-	for (i = 0; i < numChannels; i++)
+	for (int32 i = 0; i < numChannels; i++)
 	{
 		buffers[i] = (Precision*)data.outputs[0].channelBuffers32[i];
 		if (mClearOutputNeeded)
 			memset (buffers[i], 0, data.numSamples * sizeof (Precision));
 	}
-	
+
 	while (numSamples > 0)
 	{
 		int32 samplesToProcess = std::min<int32> (kBlockSize, numSamples);
@@ -367,7 +387,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 			}
 
 			processEvent (e);
-			
+
 			// get next event
 			eventIndex++;
 			if (eventIndex < numEvents)
@@ -385,10 +405,10 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 			{
 				eventPtr = nullptr;
 			}
-		}	// end while (event != 0)
+		} // end while (event != 0)
 
 		// now process the block
-		for (i = 0; i < maxVoices; i++)
+		for (int32 i = 0; i < maxVoices; i++)
 		{
 			if (voices[i].getNoteId () != -1)
 			{
@@ -401,7 +421,7 @@ tresult VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoic
 		}
 
 		// update the counters
-		for (i = 0; i < numChannels; i++)
+		for (int32 i = 0; i < numChannels; i++)
 			buffers[i] += samplesToProcess;
 		numSamples -= samplesToProcess;
 		samplesProcessed += samplesToProcess;

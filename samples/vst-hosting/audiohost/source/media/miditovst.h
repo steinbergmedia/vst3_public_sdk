@@ -83,16 +83,16 @@ OptionalEvent midiToEvent (MidiData status, MidiData channel, MidiData midiData0
 			new_event.noteOff.channel = channel;
 			new_event.noteOff.pitch = midiData0;
 			new_event.noteOff.velocity = toNormalized (midiData1);
-			return std::move (new_event);
+			return new_event;
 		}
-		else if (status == kNoteOn) // note on
+		if (status == kNoteOn) // note on
 		{
 			new_event.noteOn.noteId = -1;
 			new_event.type = Event::kNoteOnEvent;
 			new_event.noteOn.channel = channel;
 			new_event.noteOn.pitch = midiData0;
 			new_event.noteOn.velocity = toNormalized (midiData1);
-			return std::move (new_event);
+			return new_event;
 		}
 	}
 	//--- -----------------------------
@@ -102,7 +102,7 @@ OptionalEvent midiToEvent (MidiData status, MidiData channel, MidiData midiData0
 		new_event.polyPressure.channel = channel;
 		new_event.polyPressure.pitch = midiData0;
 		new_event.polyPressure.pressure = toNormalized (midiData1);
-		return std::move (new_event);
+		return new_event;
 	}
 
 	return {};
@@ -123,7 +123,7 @@ OptionParamChange midiToParameter (MidiData status, MidiData channel, MidiData m
 		if (paramChange.first != kNoParamId)
 		{
 			paramChange.second = (double)midiData2 * kMidiScaler;
-			return std::move (paramChange);
+			return paramChange;
 		}
 	}
 	else if (status == kPitchBendStatus)
@@ -135,7 +135,7 @@ OptionParamChange midiToParameter (MidiData status, MidiData channel, MidiData m
 
 			const int32 ctrl = (midiData1 & kDataMask) | (midiData2 & kDataMask) << 7;
 			paramChange.second = kPitchWheelScaler * (double)ctrl;
-			return std::move (paramChange);
+			return paramChange;
 		};
 	}
 	else if (status == kAfterTouchStatus)
@@ -144,7 +144,7 @@ OptionParamChange midiToParameter (MidiData status, MidiData channel, MidiData m
 		if (paramChange.first != kNoParamId)
 		{
 			paramChange.second = (ParamValue) (midiData1 & kDataMask) * kMidiScaler;
-			return std::move (paramChange);
+			return paramChange;
 		};
 	}
 	else if (status == kProgramChangeStatus)

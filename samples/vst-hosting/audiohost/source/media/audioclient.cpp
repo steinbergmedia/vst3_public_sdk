@@ -228,7 +228,7 @@ IMidiClient::IOSetup AudioClient::getMidiIOSetup () const
 		if (component->getBusInfo (MediaTypes::kEvent, BusDirections::kInput, i, info) != kResultOk)
 			continue;
 
-		auto busName = VST3::StringConvert::convert (info.name, 128);
+		auto busName = StringConvert::convert (info.name, 128);
 		iosetup.inputs.push_back (busName);
 	}
 
@@ -240,7 +240,7 @@ IMidiClient::IOSetup AudioClient::getMidiIOSetup () const
 		    kResultOk)
 			continue;
 
-		auto busName = VST3::StringConvert::convert (info.name, 128);
+		auto busName = StringConvert::convert (info.name, 128);
 		iosetup.outputs.push_back (busName);
 	}
 
@@ -261,7 +261,7 @@ IAudioClient::IOSetup AudioClient::getIOSetup () const
 
 		for (int32_t j = 0; j < info.channelCount; j++)
 		{
-			auto channelName = VST3::StringConvert::convert (info.name, 128);
+			auto channelName = StringConvert::convert (info.name, 128);
 			iosetup.outputs.push_back (channelName + " " + std::to_string (j));
 		}
 	}
@@ -275,7 +275,7 @@ IAudioClient::IOSetup AudioClient::getIOSetup () const
 
 		for (int32_t j = 0; j < info.channelCount; j++)
 		{
-			auto channelName = VST3::StringConvert::convert (info.name, 128);
+			auto channelName = StringConvert::convert (info.name, 128);
 			iosetup.inputs.push_back (channelName + " " + std::to_string (j));
 		}
 	}
@@ -420,7 +420,8 @@ bool AudioClient::processParamChange (const IMidiClient::Event& event, int32 por
 		    inputParameterChanges.addParameterData ((*paramChange).first, index);
 		if (queue)
 		{
-			if (queue->addPoint (event.timestamp, (*paramChange).second, index) != kResultOk)
+			if (queue->addPoint (static_cast<int32> (event.timestamp), (*paramChange).second,
+			                     index) != kResultOk)
 			{
 				assert (false && "Parameter point was not added to ParamValueQueue!");
 			}

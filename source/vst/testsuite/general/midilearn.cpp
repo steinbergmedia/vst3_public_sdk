@@ -36,6 +36,7 @@
 //-----------------------------------------------------------------------------
 
 #include "public.sdk/source/vst/testsuite/general/midilearn.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstmidicontrollers.h"
 #include "pluginterfaces/vst/ivstmidilearn.h"
 
@@ -64,7 +65,7 @@ bool PLUGIN_API MidiLearnTest::run (ITestResult* testResult)
 		return true;
 	}
 
-	FUnknownPtr<IMidiLearn> midiLearn (controller);
+	auto midiLearn = U::cast<IMidiLearn> (controller);
 	if (!midiLearn)
 	{
 		addMessage (testResult, STR ("No MIDI Learn interface supplied!"));

@@ -58,6 +58,8 @@ static_assert (AAX_SDK_CURRENT_REVISION >= AAX_SDK_2p3p2_REVISION,
 
 #include "base/thread/include/fcondition.h"
 
+#include "pluginterfaces/base/funknownimpl.h"
+
 #define USE_TRACE 1
 
 #if USE_TRACE
@@ -674,8 +676,7 @@ AAXWrapper* AAXWrapper::create (IPluginFactory* factory, const TUID vst3Componen
 	if (config.processor->queryInterface (IEditController::iid, (void**)&config.controller) !=
 	    kResultTrue)
 	{
-		FUnknownPtr<IComponent> component (config.processor);
-		if (component)
+		if (auto component = U::cast<IComponent> (config.processor))
 		{
 			TUID editorCID;
 			if (component->getControllerClassId (editorCID) == kResultTrue)
@@ -700,8 +701,7 @@ AAXWrapper* AAXWrapper::create (IPluginFactory* factory, const TUID vst3Componen
 	wrapper->countSidechainBusChannels (kInput, scBusChannels);
 	wrapper->mMainAudioInputBuses |= scBusChannels;
 
-	FUnknownPtr<IPluginFactory2> factory2 (factory);
-	if (factory2)
+	if (auto factory2 = U::cast<IPluginFactory2> (factory))
 	{
 		PFactoryInfo factoryInfo;
 		if (factory2->getFactoryInfo (&factoryInfo) == kResultTrue)

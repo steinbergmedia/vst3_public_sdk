@@ -155,8 +155,7 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 	if (component)
 	{
 		// initialize the component with our context
-		FUnknownPtr<IPluginBase> plugBase (component);
-		if (plugBase)
+		if (auto plugBase = U::cast<IPluginBase> (component))
 		{
 			res = (plugBase->initialize (hostContext) == kResultOk);
 			if (res == false)
@@ -194,8 +193,7 @@ bool PlugProvider::setupPlugin (FUnknown* hostContext)
 				if (controller)
 				{
 					// initialize the component with our context
-					FUnknownPtr<IPluginBase> plugCtrlBase (controller);
-					if (plugCtrlBase)
+					if (auto plugCtrlBase = U::cast<IPluginBase> (controller))
 					{
 						res = (plugCtrlBase->initialize (hostContext) == kResultOk);
 						if (res == false)
@@ -249,12 +247,10 @@ bool PlugProvider::connectComponents ()
 	if (!component || !controller)
 		return false;
 
-	FUnknownPtr<IConnectionPoint> compICP (component);
-	FUnknownPtr<IConnectionPoint> contrICP (controller);
+	auto compICP = U::cast<IConnectionPoint> (component);
+	auto contrICP = U::cast<IConnectionPoint> (controller);
 	if (!compICP || !contrICP)
 		return false;
-
-	bool res = false;
 
 	componentCP = owned (new ConnectionProxy (compICP));
 	controllerCP = owned (new ConnectionProxy (contrICP));
@@ -305,8 +301,7 @@ void PlugProvider::terminatePlugin ()
 	{
 		controllerIsComponent = FUnknownPtr<IEditController> (component).getInterface () != nullptr;
 
-		FUnknownPtr<IPluginBase> plugBase (component);
-		if (plugBase)
+		if (auto plugBase = U::cast<IPluginBase> (component))
 			plugBase->terminate ();
 		else
 		{
@@ -319,8 +314,7 @@ void PlugProvider::terminatePlugin ()
 
 	if (controller && controllerIsComponent == false)
 	{
-		FUnknownPtr<IPluginBase> plugCtrlBase (controller);
-		if (plugCtrlBase)
+		if (auto plugCtrlBase = U::cast<IPluginBase> (controller))
 			plugCtrlBase->terminate ();
 		else
 		{

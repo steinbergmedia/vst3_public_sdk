@@ -90,7 +90,7 @@ bool VST3Editor::init (const CGRect& frame)
 //------------------------------------------------------------------------
 bool VST3Editor::attach (IEditController* editController)
 {
-	FUnknownPtr<IEditController2> ec2 (editController);
+	auto ec2 = U::cast<IEditController2> (editController);
 	if (ec2)
 	{
 		ec2->setKnobMode (kLinearMode);

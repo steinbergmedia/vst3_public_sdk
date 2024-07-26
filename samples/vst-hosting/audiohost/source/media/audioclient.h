@@ -73,7 +73,7 @@ public:
 	using Name = std::string;
 
 	AudioClient ();
-	virtual ~AudioClient ();
+	~AudioClient () override;
 
 	static AudioClientPtr create (const Name& name, IComponent* component,
 	                              IMidiMapping* midiMapping);
