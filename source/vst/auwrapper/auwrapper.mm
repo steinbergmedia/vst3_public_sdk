@@ -2204,7 +2204,7 @@ OSStatus AUWrapper::HandleNonNoteEvent (UInt8 status, UInt8 channel, UInt8 data1
 	}
 	if (prgChange || cn >= 0)
 	{
-		if (pid != kNoParamId && channel < midiMappingCache.busList[0].size ())
+		if (pid == kNoParamId && channel < midiMappingCache.busList[0].size ())
 		{
 			auto it = midiMappingCache.busList[0][channel].find (cn);
 			if (it != midiMappingCache.busList[0][channel].end ())
