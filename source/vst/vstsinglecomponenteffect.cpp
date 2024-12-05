@@ -271,7 +271,7 @@ tresult PLUGIN_API SingleComponentEffect::queryInterface (const TUID iid, void**
 } // namespace Steinberg
 
 // work around for the name clash of IComponent::setState and IEditController::setState
-#if PROJECT_INCLUDES_VSTEDITCONTROLLER
+#if defined(PROJECT_INCLUDES_VSTEDITCONTROLLER) && PROJECT_INCLUDES_VSTEDITCONTROLLER
 // make sure that vsteditcontroller.cpp is included by your project
 //------------------------------------------------------------------------
 Steinberg::tresult PLUGIN_API Steinberg::Vst::EditController::setEditorState (Steinberg::IBStream* /*state*/) { return Steinberg::kNotImplemented; }
