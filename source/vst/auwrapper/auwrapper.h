@@ -123,15 +123,15 @@ public:
 			// iterate through the vector and get each item
 			std::vector<MIDIMessageInfoStruct>::iterator myIterator;
 			MIDIPacketList* pktlist = PacketList ();
+			MIDIPacket* pkt = MIDIPacketListInit (pktlist);
 
 			for (myIterator = mMIDIMessageList.begin (); myIterator != mMIDIMessageList.end ();
 			     myIterator++)
 			{
 				MIDIMessageInfoStruct item = *myIterator;
 
-				MIDIPacket* pkt = MIDIPacketListInit (pktlist);
 				bool tooBig = false;
-				Byte data[3] = {item.status, item.data1, item.data2};
+				Byte data[4] = {item.status, item.data1, item.data2, 0};
 				if ((pkt = MIDIPacketListAdd (pktlist, sizeof (mBuffersAllocated), pkt,
 				                              item.startFrame, 4, const_cast<Byte*> (data))) ==
 				    NULL)
