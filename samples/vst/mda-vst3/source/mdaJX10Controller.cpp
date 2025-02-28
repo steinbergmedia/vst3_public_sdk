@@ -161,7 +161,7 @@ tresult PLUGIN_API JX10Controller::setParamNormalized (ParamID tag, ParamValue v
 	tresult res = BaseController::setParamNormalized (tag, value);
 	if (res == kResultOk && tag == kPresetParam) // preset change
 	{
-		int32 program = parameters.getParameter (tag)->toPlain (value);
+		int32 program = static_cast<int32> (parameters.getParameter (tag)->toPlain (value));
 		for (int32 i = 0; i < 24; i++)
 		{
 			BaseController::setParamNormalized (i, JX10Processor::programParams[program][i]);

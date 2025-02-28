@@ -71,7 +71,7 @@ tresult PLUGIN_API SyncDelayController::setComponentState (IBStream* state)
 
 	IBStreamer streamer (state, kLittleEndian);
 
-	uint32 savedDelay = 0.f;
+	uint32 savedDelay = 0;
 	if (streamer.readInt32u (savedDelay) == false)
 		return kResultFalse;
 	int32 savedBypassState = 0;

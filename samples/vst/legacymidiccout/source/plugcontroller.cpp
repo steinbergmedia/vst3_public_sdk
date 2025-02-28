@@ -119,15 +119,15 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 
 	double dVal;
 	if (streamer.readDouble (dVal) == true)
-		setParamNormalized (kPolyPressureNoteId, Helpers::getMIDINormValue (dVal));
+		setParamNormalized (kPolyPressureNoteId, dVal);
 	if (streamer.readDouble (dVal) == true)
-		setParamNormalized (kProgramChangeId, Helpers::getMIDINormValue (dVal));
+		setParamNormalized (kProgramChangeId, dVal);
 	if (streamer.readDouble (dVal) == true)
-		setParamNormalized (kAftertouchId, Helpers::getMIDINormValue (dVal));
+		setParamNormalized (kAftertouchId, dVal);
 	if (streamer.readDouble (dVal) == true)
-		setParamNormalized (kPolyPressureId, Helpers::getMIDINormValue (dVal));
+		setParamNormalized (kPolyPressureId, dVal);
 	if (streamer.readDouble (dVal) == true)
-		setParamNormalized (kPitchBendId, Helpers::getMIDINormValue (dVal));
+		setParamNormalized (kPitchBendId, dVal);
 	return kResultOk;
 }
 }

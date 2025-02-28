@@ -65,10 +65,21 @@ tresult PLUGIN_API SubSynthProcessor::setActive (TBool state)
 {
 	if (state)
 	{
-		phi = env = filt1 = filt2 = filt3 = filt4 = filti = filto = 0.0f;
 		recalculate ();
 	}
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API SubSynthProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		phi = env = filt1 = filt2 = filt3 = filt4 = filti = filto = 0.0f;
+	}
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -181,8 +192,8 @@ void SubSynthProcessor::recalculate ()
 	typ = int (3.5 * params[0]);
 	filti = (typ == 3)? 0.018f : (float)pow (10.0,-3.0 + (2.0 * params[2]));
 	filto = 1.0f - filti;
-	wet = params[1];
-	dry = params[3];
+	wet = static_cast<float> (params[1]);
+	dry = static_cast<float> (params[3]);
 	thr = (float)pow (10.0,-3.0 + (3.0 * params[4]));
 	rls = (float)(1.0 - pow (10.0, -2.0 - (3.0 * params[5])));
 	dphi = (float)(0.456159 * pow (10.0,-2.5 + (1.5 * params[2])));

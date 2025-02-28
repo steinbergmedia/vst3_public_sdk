@@ -250,7 +250,8 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 			if (data.symbolicSampleSize == kSample32)
 				fVuPPM = processVuPPM<Sample32> ((Sample32**)in, numChannels, data.numSamples);
 			else
-				fVuPPM = processVuPPM<Sample64> ((Sample64**)in, numChannels, data.numSamples);
+				fVuPPM = static_cast<float> (
+				    processVuPPM<Sample64> ((Sample64**)(in), numChannels, data.numSamples));
 		}
 		else
 		{
@@ -276,10 +277,10 @@ tresult PLUGIN_API AGain::process (ProcessData& data)
 			{
 				if (data.symbolicSampleSize == kSample32)
 					fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
-						data.numSamples, gain);
+					                                 data.numSamples, gain);
 				else
-					fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
-						data.numSamples, gain);
+					fVuPPM = static_cast<float> (processAudio<Sample64> (
+					    (Sample64**)in, (Sample64**)out, numChannels, data.numSamples, gain));
 			}
 		}
 	}

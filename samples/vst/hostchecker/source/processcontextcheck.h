@@ -56,4 +56,5 @@ public:
 protected:
 	EventLogger* mEventLogger;
 	double mSampleRate;
+	Steinberg::int64 mLastSystemTime {0};
 };

@@ -166,11 +166,11 @@ void LoudnessProcessor::recalculate ()
 	float f, tmp;
 	int32  i;
 
-	tmp = params[0] + params[0] - 1.0f;
+	tmp = static_cast<float> (params[0] + params[0] - 1.0f);
 	igain = 60.0f * tmp * tmp;
 	if (tmp<0.0f) igain *= -1.0f;
 
-	tmp = params[1] + params[1] - 1.0f;
+	tmp = static_cast<float> (params[1] + params[1] - 1.0f);
 	ogain = 60.0f * tmp * tmp;
 	if (tmp<0.0f) ogain *= -1.0f;
 

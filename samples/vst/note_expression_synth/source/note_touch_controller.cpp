@@ -91,11 +91,11 @@ void NoteTouchController::sendNoteExpression (int32_t type, float value)
 		e.noteExpressionValue.typeId = type;
 		if (type == Vst::kTuningTypeID)
 		{
-			value = ((value - 0.5) * 0.1 + 0.5);
+			value = ((value - 0.5f) * 0.1f + 0.5f);
 		}
 		else if (type == Vst::kVolumeTypeID)
 		{
-			value = 0.3 * value;
+			value = 0.3f * value;
 		}
 		e.noteExpressionValue.value = value;
 		host->scheduleEventFromUI (e);
@@ -130,7 +130,7 @@ void NoteTouchController::valueChanged (CControl* pControl)
 		CXYPad::calculateXY (pad->getValue (), x, y);
 		if (noteID == -1)
 		{
-			float velocity = logf (y + 0.4) + 0.8;
+			float velocity = logf (y + 0.4f) + 0.8f;
 #if DEBUG_LOG
 			FDebugPrint ("%f\n", velocity);
 #endif

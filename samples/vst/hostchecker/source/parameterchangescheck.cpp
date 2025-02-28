@@ -159,7 +159,7 @@ bool ParameterChangesCheck::isValidParamID (Steinberg::Vst::ParamID paramId) con
 }
 
 //------------------------------------------------------------------------
-void ParameterChangesCheck::checkNormalized (float normVal)
+void ParameterChangesCheck::checkNormalized (double normVal)
 {
 	if (!isNormalized (normVal))
 	{
@@ -178,13 +178,13 @@ void ParameterChangesCheck::checkSampleOffset (Steinberg::int32 sampleOffset,
 }
 
 //------------------------------------------------------------------------
-bool ParameterChangesCheck::isNormalized (float normVal) const
+bool ParameterChangesCheck::isNormalized (double normVal) const
 {
 	return normVal >= 0. && normVal <= 1.;
 }
 
 //------------------------------------------------------------------------
-bool ParameterChangesCheck::isValidSampleOffset (float sampleOffset, float lastSampleOffset) const
+bool ParameterChangesCheck::isValidSampleOffset (Steinberg::int32 sampleOffset, Steinberg::int32 lastSampleOffset) const
 {
 	return sampleOffset >= lastSampleOffset;
 }

@@ -237,22 +237,22 @@ tresult PLUGIN_API AGainWithSideChain::process (ProcessData& data)
 				if (auxActive)
 				{
 					if (data.symbolicSampleSize == kSample32)
-						fVuPPM = processAudioWithSideChain<Sample32> ((Sample32**)in, (Sample32**)out,
-							(Sample32**)auxIn, numChannels,
-							data.numSamples, gain);
+						fVuPPM = processAudioWithSideChain<Sample32> (
+						    (Sample32**)in, (Sample32**)out, (Sample32**)auxIn, numChannels,
+						    data.numSamples, gain);
 					else
-						fVuPPM = processAudioWithSideChain<Sample64> ((Sample64**)in, (Sample64**)out,
-							(Sample64**)auxIn, numChannels,
-							data.numSamples, gain);
+						fVuPPM = static_cast<float> (processAudioWithSideChain<Sample64> (
+						    (Sample64**)in, (Sample64**)out, (Sample64**)auxIn, numChannels,
+						    data.numSamples, gain));
 				}
 				else
 				{
 					if (data.symbolicSampleSize == kSample32)
-						fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out, numChannels,
-							data.numSamples, gain);
+						fVuPPM = processAudio<Sample32> ((Sample32**)in, (Sample32**)out,
+						                                 numChannels, data.numSamples, gain);
 					else
-						fVuPPM = processAudio<Sample64> ((Sample64**)in, (Sample64**)out, numChannels,
-							data.numSamples, gain);
+						fVuPPM = static_cast<float> (processAudio<Sample64> (
+						    (Sample64**)in, (Sample64**)out, numChannels, data.numSamples, gain));
 				}
 			}
 		}

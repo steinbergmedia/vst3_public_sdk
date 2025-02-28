@@ -70,13 +70,13 @@ protected:
 	void checkAllChanges (Steinberg::Vst::IParameterChanges* paramChanges);
 	void checkParameterCount (Steinberg::int32 paramCount);
 	void checkParameterId (Steinberg::Vst::ParamID paramId);
-	void checkNormalized (float normVal);
+	void checkNormalized (double normVal);
 	void checkSampleOffset (Steinberg::int32 sampleOffset, Steinberg::int32 lastSampleOffset);
 	bool checkParameterQueue (Steinberg::Vst::IParamValueQueue* paramQueue);
 	void checkPoints (Steinberg::Vst::IParamValueQueue* paramQueue);
 
-	bool isNormalized (float normVal) const;
-	bool isValidSampleOffset (float sampleOffset, float lastSampleOffset) const;
+	bool isNormalized (double normVal) const;
+	bool isValidSampleOffset (Steinberg::int32 sampleOffset, Steinberg::int32 lastSampleOffset) const;
 	bool isValidParamID (Steinberg::Vst::ParamID paramId) const;
 	bool isValidParamCount (Steinberg::int32 paramCount) const;
 

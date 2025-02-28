@@ -608,6 +608,48 @@ Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
 }
 
 //------------------------------------------------------------------------
+bool Module::validateBundleStructure (const std::string& modulePath, std::string& errorDescription)
+{
+	try
+	{
+		auto path = getContentsDirectoryFromModuleExecutablePath (modulePath);
+		if (!path)
+		{
+			filesystem::path p;
+			if (!checkVST3Package ({modulePath}, &p))
+			{
+				errorDescription = "Not a bundle: '" + modulePath + "'.";
+				return false;
+			}
+			p = p.parent_path ();
+			p = p.parent_path ();
+			path = Optional<filesystem::path> {p};
+		}
+		if (path->filename () != "Contents")
+		{
+			errorDescription = "Unexpected directory name, should be 'Contents' but is '" +
+			                   path->filename ().string () + "'.";
+			return false;
+		}
+		auto bundlePath = path->parent_path ();
+		*path /= architectureString;
+		*path /= bundlePath.filename ();
+		if (std::filesystem::exists (*path) == false)
+		{
+			errorDescription = "Shared library name is not equal to bundle folder name. Must be '" +
+			                   bundlePath.filename ().string () + "'.";
+			return false;
+		}
+		return true;
+	}
+	catch (const std::exception& exc)
+	{
+		errorDescription = exc.what ();
+		return false;
+	}
+}
+
+//------------------------------------------------------------------------
 Module::SnapshotList Module::getSnapshots (const std::string& modulePath)
 {
 	SnapshotList result;

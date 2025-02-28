@@ -158,13 +158,25 @@ tresult PLUGIN_API EPianoProcessor::setActive (TBool state)
 {
 	if (state)
 	{
-		synthData.init ();
-		Fs = getSampleRate ();
+		Fs = static_cast<float> (getSampleRate ());
 		iFs = 1.0f / Fs;
 		dlfo = 6.283f * iFs * (float)exp ((float)(6.22f * params[5] - 2.61f)); //lfo rate
 		recalculate ();
 	}
 	return Base::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API EPianoProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		synthData.init (); 
+		synthData.clearEvents ();
+	}
+	
+	Base::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -180,12 +192,13 @@ void EPianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sa
 		{
 			for (int32 i = 0; i < NPARAMS; i++)
 				params[i] = newParams[i];
+			recalculate ();
 		}
 	}
 	else if (index == BaseController::kModWheelParam) // mod wheel
 	{
 		newValue *= 127.;
-		modwhl = 0.0078f * newValue;
+		modwhl = static_cast<float> (0.0078f * newValue);
 	}
 	else if (index == BaseController::kSustainParam)
 	{
@@ -206,7 +219,8 @@ void EPianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sa
 //-----------------------------------------------------------------------------
 void EPianoProcessor::setCurrentProgram (Steinberg::uint32 val)
 {
-	currentProgram = val;
+	if (val < kNumPrograms)
+		currentProgram = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -342,7 +356,7 @@ void EPianoProcessor::noteEvent (const Event& event)
 
 		if (note > 60) synthData.voice[vl].env *= (float)exp (0.01f * (float)(60 - note)); //new! high notes quieter
 
-		l = 50.0f + params[4] * params[4] * muff + muffvel * (float)(velocity - 64); //muffle
+		l = static_cast<float> (50.0f + params[4] * params[4] * muff + muffvel * (float)(velocity - 64)); //muffle
 		if (l < (55.0f + 0.4f * (float)note)) l = 55.0f + 0.4f * (float)note;
 		if (l > 210.0f) l = 210.0f;
 		synthData.voice[vl].ff = l * l * iFs;
@@ -390,24 +404,24 @@ void EPianoProcessor::recalculate ()
 {
 	size = (int32)(12.0f * params[2] - 6.0f);
 
-	treb = 4.0f * params[3] * params[3] - 1.0f; //treble gain
+	treb = static_cast<float> (4.0f * params[3] * params[3] - 1.0f); //treble gain
 	if (params[3] > 0.5f) tfrq = 14000.0f; else tfrq = 5000.0f; //treble freq
 	tfrq = 1.0f - (float)exp (-iFs * tfrq);
 
-	rmod = lmod = params[4] + params[4] - 1.0f; //lfo depth
+	rmod = lmod = static_cast<float> (params[4] + params[4] - 1.0f); //lfo depth
 	if (params[4] < 0.5f) rmod = -rmod;
 
 	dlfo = 6.283f * iFs * (float)exp (6.22f * params[5] - 2.61f); //lfo rate
 
-	velsens = 1.0f + params[6] + params[6];
-	if (params[6] < 0.25f) velsens -= 0.75f - 3.0f * params[6];
+	velsens = static_cast<float> (1.0f + params[6] + params[6]);
+	if (params[6] < 0.25f) velsens -= static_cast<float> (0.75f - 3.0f * params[6]);
 
-	width = 0.03f * params[7];
+	width = static_cast<float> (0.03f * params[7]);
 	poly = 1 + (int32)(31.9f * params[8]);
-	fine = params[9] - 0.5f;
-	random = 0.077f * params[10] * params[10];
+	fine = static_cast<float> (params[9] - 0.5f);
+	random = static_cast<float> (0.077f * params[10] * params[10]);
 	stretch = 0.0f; //0.000434f * (params[11] - 0.5f); parameter re-used for overdrive!
-	overdrive = 1.8f * params[11];
+	overdrive = static_cast<float> (1.8f * params[11]);
 
 	if (modwhl > 0.05f) //over-ride pan/trem depth
 	{

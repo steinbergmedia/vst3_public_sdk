@@ -27,7 +27,7 @@ class SpecMeterProcessor : public BaseProcessor
 {
 public:
 	SpecMeterProcessor ();
-	~SpecMeterProcessor ();
+	~SpecMeterProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mda?'; }
 

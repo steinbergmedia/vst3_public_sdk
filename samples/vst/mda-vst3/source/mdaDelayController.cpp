@@ -66,7 +66,7 @@ tresult PLUGIN_API DelayController::getParamStringByValue (ParamID tag, ParamVal
 		{
 			int ldel = (int32)(32766 * valueNormalized * valueNormalized);
 			if (ldel<4) ldel=4;
-			result.printInt (ldel * 1000. / sampleRate);
+			result.printInt (static_cast<int64> (ldel * 1000. / sampleRate));
 			break;
 		}
 		case kParam1:
@@ -85,7 +85,7 @@ tresult PLUGIN_API DelayController::getParamStringByValue (ParamID tag, ParamVal
 				case  11: tmp = 1.3333f; break;
 				case  10: tmp = 1.5000f; break;
 				case   9: tmp = 2.0000f; break;
-				default: tmp = 4.0f * valueNormalized; break; //variable ratio
+				default: tmp = static_cast<float> (4.0f * valueNormalized); break; //variable ratio
 			}
 			int rdel = (int32)(32766 * valueNormalized * valueNormalized * tmp);
 			if (rdel>32766) rdel=32766;

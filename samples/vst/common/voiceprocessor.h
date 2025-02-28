@@ -114,6 +114,11 @@ public:
 	virtual tresult process (ProcessData& data) = 0;
 	virtual void processEvent (Event evt) = 0;
 
+	virtual void clearAllVoices ()
+	{
+		activeVoices = 0;
+	}
+
 	/** Returns the number of active voices. */
 	int32 getActiveVoices () const { return activeVoices; }
 
@@ -162,6 +167,7 @@ public:
 	tresult process (ProcessData& data) override;
 	void processEvent (Event evt) override;
 
+	void clearAllVoices () override;
 protected:
 	VoiceClass* getVoice (int32 noteId);
 	VoiceClass* findVoice (int32 noteId);
@@ -233,6 +239,20 @@ VoiceClass* VoiceProcessorImplementation<Precision, VoiceClass, numChannels, max
 		}
 	}
 	return 0;
+}
+
+//-----------------------------------------------------------------------------
+template <class Precision, class VoiceClass, int32 numChannels, int32 maxVoices,
+          class GlobalParameterStorage>
+void VoiceProcessorImplementation<Precision, VoiceClass, numChannels, maxVoices,
+                                  GlobalParameterStorage>::clearAllVoices ()
+{
+	for (int32 i = 0; i < maxVoices; i++)
+	{
+		if (voices[i].getNoteId () != -1)
+			voices[i].reset ();
+	}
+	VoiceProcessor::clearAllVoices ();
 }
 
 //-----------------------------------------------------------------------------

@@ -68,9 +68,15 @@ tresult PLUGIN_API SpecMeterProcessor::setActive (TBool state)
 	if (state)
 	{
 		if (getSampleRate () > 64000)
-			{ topband = 12;  kmax = 4096; }
+		{
+			topband = 12;
+			kmax = 4096;
+		}
 		else
-			{ topband = 11;  kmax = 2048; }
+		{
+			topband = 11;
+			kmax = 2048;
+		}
 		iK = 1.0f / (float)kmax; 
 		Lpeak = Rpeak = Lrms = Rrms = Corr = 0.0f;
 		lpeak = rpeak = lrms = rrms = corr = 0.0f;

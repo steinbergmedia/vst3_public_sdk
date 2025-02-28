@@ -136,15 +136,16 @@ void DitherProcessor::recalculate ()
 	if (params[4]>0.1f) //zoom to 6 bit & fade out audio
 	{
 		wlen = 32.0f;
-		gain = (1.0f - params[4]); gain*=gain;
+		gain = static_cast<float> ((1.0f - params[4]));
+		gain*=gain;
 	}
 	else wlen = (float)pow (2.0f, bits - 1.0f); //word length in quanta
 
 	//Using WaveLab 2.01 (unity gain) as a reference: 
 	//  16-bit output is (int)floor(floating_point_value*32768.0f)
 
-	offs = (4.0f * params[3] - 1.5f) / wlen; //DC offset (plus 0.5 to round dither not truncate)
-	dith = 2.0f * params[2] / (wlen * (float)32767);
+	offs = static_cast<float> ((4.0f * params[3] - 1.5f) / wlen); //DC offset (plus 0.5 to round dither not truncate)
+	dith = static_cast<float> (2.0f * params[2] / (wlen * (float)32767));
 	shap=0.0f;
 
 	switch ((int32)(params[1]*3)) //dither mode

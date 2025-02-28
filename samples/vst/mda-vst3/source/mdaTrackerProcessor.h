@@ -27,7 +27,7 @@ class TrackerProcessor : public BaseProcessor
 {
 public:
 	TrackerProcessor ();
-	~TrackerProcessor ();
+	~TrackerProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaJ'; }
 

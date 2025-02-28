@@ -44,6 +44,7 @@
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/ivsthostapplication.h"
+#include "pluginterfaces/vst/ivstmidilearn.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstpluginterfacesupport.h"
 #include "pluginterfaces/vst/ivstevents.h"
@@ -60,6 +61,7 @@ DEF_CLASS_IID (Vst::IConnectionPoint)
 DEF_CLASS_IID (Vst::IEventList)
 DEF_CLASS_IID (Vst::IHostApplication)
 DEF_CLASS_IID (Vst::IMessage)
+DEF_CLASS_IID (Vst::IMidiLearn)
 DEF_CLASS_IID (Vst::IMidiMapping)
 DEF_CLASS_IID (Vst::IParameterChanges)
 DEF_CLASS_IID (Vst::IParamValueQueue)

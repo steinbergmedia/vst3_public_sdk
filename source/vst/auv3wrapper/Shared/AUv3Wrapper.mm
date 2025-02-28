@@ -2276,9 +2276,14 @@ using namespace Vst;
 - (BOOL)allocateRenderResourcesAndReturnError:(NSError* __autoreleasing*)outError
 {
 	__block BOOL result = NO;
+	__block NSError* errorString = nullptr;
 	if (executeOnMainThreadSync (
-	        ^{ result = [self allocateRenderResourcesAndReturnError:outError]; }))
+	        ^{ result = [self allocateRenderResourcesAndReturnError:&errorString]; }))
+	{
+		if (outError)
+			*outError = errorString;
 		return result;
+	}
 
 	if (![super allocateRenderResourcesAndReturnError:outError])
 		return NO;

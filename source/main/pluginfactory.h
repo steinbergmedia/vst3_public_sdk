@@ -157,11 +157,11 @@ END_FACTORY
 	gPluginFactory->registerClass (&componentClass,createMethod); }
 
 #define DEF_CLASS2(cid,cardinality,category,name,classFlags,subCategories,version,sdkVersion,createMethod) \
-	{ TUID lcid = cid; static PClassInfo2 componentClass (lcid,cardinality,category,name,classFlags,subCategories,0,version,sdkVersion);\
+	{ TUID lcid = cid; static PClassInfo2 componentClass (lcid,cardinality,category,name,classFlags,subCategories,nullptr,version,sdkVersion);\
 	gPluginFactory->registerClass (&componentClass,createMethod); }
 
 #define DEF_CLASS_W(cid,cardinality,category,name,classFlags,subCategories,version,sdkVersion,createMethod) \
-	{ TUID lcid = cid; static PClassInfoW componentClass (lcid,cardinality,category,name,classFlags,subCategories,0,version,sdkVersion);\
+	{ TUID lcid = cid; static PClassInfoW componentClass (lcid,cardinality,category,name,classFlags,subCategories,nullptr,version,sdkVersion);\
 	gPluginFactory->registerClass (&componentClass,createMethod); }
 
 #define DEF_CLASS_W2(cid,cardinality,category,name,classFlags,subCategories,vendor,version,sdkVersion,createMethod) \

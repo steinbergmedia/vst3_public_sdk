@@ -120,7 +120,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) ==
 						    kResultTrue)
 						{
-							currentGainValue = value;
+							currentGainValue = static_cast<float> (value);
 						}
 						break;
 				}

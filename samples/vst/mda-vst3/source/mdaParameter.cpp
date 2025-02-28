@@ -122,7 +122,7 @@ bool IndexedParameter::fromString (const TChar* string, ParamValue& _valueNormal
 	int64 value;
 	if (str.scanInt (value) && value <= info.stepCount)
 	{
-		_valueNormalized = toNormalized (value);
+		_valueNormalized = toNormalized (static_cast<Vst::ParamValue> (value));
 		return true;
 	}
 	return false;
@@ -173,7 +173,7 @@ void ScaledParameter::toString (ParamValue _valueNormalized, String128 string) c
 {
 	UString wrapper (string, USTRINGSIZE (String128));
 	if (printAsInteger)
-		wrapper.printInt (toPlain (_valueNormalized));
+		wrapper.printInt (static_cast<int64> (toPlain (_valueNormalized)));
 	else
 		wrapper.printFloat (toPlain (_valueNormalized), precision);
 }

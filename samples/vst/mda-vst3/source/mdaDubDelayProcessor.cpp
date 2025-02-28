@@ -83,6 +83,22 @@ tresult PLUGIN_API DubDelayProcessor::setActive (TBool state)
 }
 
 //-----------------------------------------------------------------------------
+tresult PLUGIN_API DubDelayProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		memset (buffer, 0, size * sizeof (float));
+		ipos = 0;
+		fil0 = 0.0f;
+		env = 0.0f;
+		phi = 0.0f;
+		dlbuf = 0.0f;
+	}
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
+}
+
+//-----------------------------------------------------------------------------
 void DubDelayProcessor::doProcessing (ProcessData& data)
 {
 	int32 sampleFrames = data.numSamples;
@@ -154,10 +170,10 @@ void DubDelayProcessor::recalculate ()
 {
 	float fs=(float)getSampleRate ();
 	///CHANGED///del = fParam0 * fParam0 * fParam0 * (float)size;
-	del = params[0] * params[0] * (float)size;
-	mod = 0.049f * params[3] * del;
+	del = static_cast<float> (params[0] * params[0] * (float)size);
+	mod = static_cast<float> (0.049f * params[3] * del);
 
-	fil = params[2];
+	fil = static_cast<float> (params[2]);
 	if (params[2]>0.5f)  //simultaneously change crossover frequency & high/low mix
 	{
 		fil = 0.5f * fil - 0.25f; 
@@ -174,9 +190,9 @@ void DubDelayProcessor::recalculate ()
 	fbk = (float)fabs (2.2f * params[1] - 1.1f);
 	if (params[1]>0.5f) rel=0.9997f; else rel=0.8f; //limit or clip
 
-	wet = 1.0f - params[5];
-	wet = params[6] * (1.0f - wet * wet); //-3dB at 50% mix
-	dry = params[6] * 2.0f * (1.0f - params[5] * params[5]);
+	wet = static_cast<float> (1.0f - params[5]);
+	wet = static_cast<float> (params[6] * (1.0f - wet * wet)); //-3dB at 50% mix
+	dry = static_cast<float> (params[6] * 2.0f * (1.0f - params[5] * params[5]));
 
 	dphi = 628.31853f * (float)pow (10.0f, (float)(3.0f * params[4] - 2.0f)) / fs; //100-sample steps
 }

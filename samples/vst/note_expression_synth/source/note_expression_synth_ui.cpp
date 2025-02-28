@@ -542,7 +542,7 @@ tresult PLUGIN_API ControllerWithUI::setState (IBStream* state)
 tresult PLUGIN_API ControllerWithUI::getState (IBStream* state)
 {
 	IBStreamer stream (state, kLittleEndian);
-	if (!stream.writeInt8u (keyboardRange.position))
+	if (!stream.writeInt8u (static_cast<uint8> (keyboardRange.position)))
 		return kInternalError;
 	if (!stream.writeInt8u (keyboardRange.length))
 		return kInternalError;

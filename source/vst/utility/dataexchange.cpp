@@ -100,7 +100,7 @@ struct MessageHandler : ITimerCallback
 			return false;
 		config = c;
 
-		timer = Timer::create (this, 1);
+		timer = owned (Timer::create (this, 1));
 		if (!timer)
 			return false;
 

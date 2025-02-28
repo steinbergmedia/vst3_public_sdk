@@ -27,7 +27,7 @@ class MultiBandProcessor : public BaseProcessor
 {
 public:
 	MultiBandProcessor ();
-	~MultiBandProcessor ();
+	~MultiBandProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaM'; }
 

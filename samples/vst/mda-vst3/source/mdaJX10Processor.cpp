@@ -156,24 +156,42 @@ tresult PLUGIN_API JX10Processor::setActive (TBool state)
 }
 
 //-----------------------------------------------------------------------------
+tresult PLUGIN_API JX10Processor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		synthData.init ();
+		synthData.clearEvents ();
+	}
+
+	Base::setProcessing (state);
+	return kResultTrue;
+}
+
+//-----------------------------------------------------------------------------
 void JX10Processor::setParameter (ParamID index, ParamValue newValue, int32 sampleOffset)
 {
 	if (index < NPARAMS)
 		Base::setParameter (index, newValue, sampleOffset);
 	else if (index == BaseController::kPresetParam) // program change
 	{
-		currentProgram = std::min<int32> (kNumPrograms - 1, (int32)(newValue * kNumPrograms));
-		const float* newParams = programParams[currentProgram];
-		if (newParams)
+		auto newProgramIndex = std::min<int32> (kNumPrograms - 1, (int32)(newValue * kNumPrograms));
+		if (currentProgram != newProgramIndex)
 		{
-			for (int32 i = 0; i < NPARAMS; i++)
-				params[i] = newParams[i];
+			currentProgram = newProgramIndex;
+			const float* newParams = programParams[currentProgram];
+			if (newParams)
+			{
+				for (int32 i = 0; i < NPARAMS; i++)
+					params[i] = newParams[i];
+				recalculate ();
+			}
 		}
 	}
 	else if (index == BaseController::kModWheelParam) // mod wheel
 	{
 		newValue *= 127.;
-		modwhl = 0.000005f * (newValue*newValue);
+		modwhl = static_cast<float> (0.000005f * (newValue*newValue));
 	}
 	else if (index == BaseController::kPitchBendParam) // pitch bend
 	{
@@ -185,29 +203,30 @@ void JX10Processor::setParameter (ParamID index, ParamValue newValue, int32 samp
 	else if (index == BaseController::kBreathParam)
 	{
 		newValue *= 127.;
-		filtwhl = 0.02f * newValue;
+		filtwhl = static_cast<float> (0.02f * newValue);
 	}
 	else if (index == BaseController::kCtrler3Param)
 	{
 		newValue *= 127.;
-		filtwhl = -0.03f * newValue;
+		filtwhl = static_cast<float> (-0.03f * newValue);
 	}
 	else if (index == BaseController::kExpressionParam)
 	{
 		newValue *= 127.;
-		rezwhl = 0.0065f * (float)(154 - newValue);
+		rezwhl = static_cast<float> (0.0065f * (154 - newValue));
 	}
 	else if (index == BaseController::kAftertouchParam)
 	{
 		newValue *= 127.;
-		press = 0.00001f * (float)(newValue * newValue);
+		press = static_cast<float> (0.00001f * (newValue * newValue));
 	}
 }
 
 //-----------------------------------------------------------------------------
 void JX10Processor::setCurrentProgram (Steinberg::uint32 val)
 {
-	currentProgram = val;
+	if (val < kNumPrograms)
+		currentProgram = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -569,35 +588,35 @@ void JX10Processor::recalculate ()
 {
 	double ifs = 1.0 / getSampleRate ();
 
-	mode = std::min<int32>(5, (int32)(params[3] * 6));
-	noisemix = params[21] * params[21];
-	voltrim = (3.2f - params[0] - 1.5f * noisemix) * (1.5f - 0.5f * params[7]);
+	mode = std::min<int32>(5, static_cast<int32> (params[3] * 6));
+	noisemix = static_cast<float> (params[21] * params[21]);
+	voltrim = static_cast<float> ((3.2f - params[0] - 1.5f * noisemix) * (1.5f - 0.5f * params[7]));
 	noisemix *= 0.06f;
-	oscmix = params[0];
+	oscmix = static_cast<float> (params[0]);
 
 	semi = (float)floor(48.0f * params[1]) - 24.0f;
-	cent = 15.876f * params[2] - 7.938f;
+	cent = static_cast<float> (15.876f * params[2] - 7.938f);
 	cent = 0.1f * (float)floor(cent * cent * cent);
 	detune = (float)pow (1.059463094359f, - semi - 0.01f * cent);
-	tune = -23.376f - 2.0f * params[23] - 12.0f * (float)floor(params[22] * 4.9);
-	tune = getSampleRate () * (float)pow (1.059463094359f, tune);
+	tune = static_cast<float> (-23.376f - 2.0f * params[23] - 12.0f * (float)floor(params[22] * 4.9));
+	tune = static_cast<float> (getSampleRate ()) * powf (1.059463094359f, tune);
 
-	vibrato = pwmdep = 0.2f * (params[20] - 0.5f) * (params[20] - 0.5f);
+	vibrato = pwmdep = static_cast<float> (0.2f * (params[20] - 0.5f) * (params[20] - 0.5f));
 	if (params[20]<0.5f) vibrato = 0.0f;
 
 	lfoHz = (float)exp (7.0f * params[19] - 4.0f);
 	dlfo = lfoHz * (float)(ifs * TWOPI * KMAX); 
 
-	filtf = 8.0f * params[6] - 1.5f;
-	filtq  = (1.0f - params[7]) * (1.0f - params[7]); ////// + 0.02f;
-	filtlfo = 2.5f * params[9] * params[9];
-	filtenv = 12.0f * params[8] - 6.0f;
-	filtvel = 0.1f * params[10] - 0.05f;
+	filtf = static_cast<float> (8.0f * params[6] - 1.5f);
+	filtq  = static_cast<float> ((1.0f - params[7]) * (1.0f - params[7])); ////// + 0.02f;
+	filtlfo = static_cast<float> (2.5f * params[9] * params[9]);
+	filtenv = static_cast<float> (12.0f * params[8] - 6.0f);
+	filtvel = static_cast<float> (0.1f * params[10] - 0.05f);
 	if (params[10]<0.05f) { veloff = 1; filtvel = 0; } else veloff = 0;
 
 	att = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[15]));
 	dec = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[16]));
-	sus = params[17];
+	sus = static_cast<float> (params[17]);
 	rel = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[18]));
 	if (params[18]<0.01f) rel = 0.1f; //extra fast release
 
@@ -605,12 +624,12 @@ void JX10Processor::recalculate ()
 
 	fatt = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[11]));
 	fdec = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[12]));
-	fsus = params[13] * params[13];
+	fsus = static_cast<float> (params[13] * params[13]);
 	frel = 1.0f - (float)exp (-ifs * exp (5.5 - 7.5 * params[14]));
 
 	if (params[4]<0.02f) glide = 1.0f; else
 	glide = 1.0f - (float)exp (-ifs * exp (6.0 - 7.0 * params[4]));
-	glidedisp = (6.604f * params[5] - 3.302f);
+	glidedisp = static_cast<float> (6.604f * params[5] - 3.302f);
 	glidedisp *= glidedisp * glidedisp;
 }
 

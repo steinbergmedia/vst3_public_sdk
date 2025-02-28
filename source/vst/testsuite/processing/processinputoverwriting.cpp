@@ -99,7 +99,7 @@ bool ProcessInputOverwritingTest::preProcess (ITestResult* /*testResult*/)
 			auto ptr = processData.inputs[i].channelBuffers32;
 			if (ptr)
 			{
-				float inc = 1.0 / (processData.numSamples - 1);
+				float inc = 1.f / (processData.numSamples - 1);
 				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
 				{
 					auto chaBuf = ptr[c];
@@ -116,7 +116,7 @@ bool ProcessInputOverwritingTest::preProcess (ITestResult* /*testResult*/)
 			auto ptr = processData.inputs[i].channelBuffers64;
 			if (ptr)
 			{
-				float inc = 1.0 / (processData.numSamples - 1);
+				double inc = 1.0 / (processData.numSamples - 1);
 				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
 				{
 					auto chaBuf = ptr[c];
@@ -145,7 +145,7 @@ bool ProcessInputOverwritingTest::postProcess (ITestResult* testResult)
 			auto ptr = processData.inputs[i].channelBuffers32;
 			if (ptr)
 			{
-				float inc = 1.0 / (processData.numSamples - 1);
+				float inc = 1.f / (processData.numSamples - 1);
 				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
 				{
 					auto chaBuf = ptr[c];
@@ -169,7 +169,7 @@ bool ProcessInputOverwritingTest::postProcess (ITestResult* testResult)
 			auto ptr = processData.inputs[i].channelBuffers64;
 			if (ptr)
 			{
-				float inc = 1.0 / (processData.numSamples - 1);
+				double inc = 1.0 / (processData.numSamples - 1);
 				for (int32 c = 0; c < processData.inputs[i].numChannels; c++)
 				{
 					auto chaBuf = ptr[c];

@@ -4,7 +4,7 @@
 // Category    : Helpers
 // Filename    : public.sdk/source/vst/utility/memoryibstream.h
 // Created by  : Steinberg, 12/2023
-// Description : 
+// Description :
 //
 //-----------------------------------------------------------------------------
 // LICENSE
@@ -57,6 +57,7 @@ public:
 	inline size_t getCursor () const;
 	inline const void* getData () const;
 	inline void rewind ();
+	inline std::vector<uint8>&& take ();
 
 private:
 	std::vector<uint8> data;
@@ -103,7 +104,8 @@ inline tresult PLUGIN_API ResizableMemoryIBStream::write (void* buffer, int32 nu
 			data.reserve (reserve);
 		}
 	}
-	data.resize (requiredSize);
+	if (data.size () < requiredSize)
+		data.resize (requiredSize);
 	memcpy (data.data () + cursor, buffer, numBytes);
 	cursor += numBytes;
 	if (numBytesWritten)
@@ -125,7 +127,7 @@ inline tresult PLUGIN_API ResizableMemoryIBStream::seek (int64 pos, int32 mode, 
 	}
 	if (newCursor < 0)
 		return kInvalidArgument;
-	if (newCursor >= static_cast<int64> (data.size ()))
+	if (newCursor > static_cast<int64> (data.size ()))
 		return kInvalidArgument;
 	if (result)
 		*result = newCursor;
@@ -152,6 +154,13 @@ inline size_t ResizableMemoryIBStream::getCursor () const
 inline const void* ResizableMemoryIBStream::getData () const
 {
 	return data.data ();
+}
+
+//------------------------------------------------------------------------
+inline std::vector<uint8>&& ResizableMemoryIBStream::take ()
+{
+	cursor = 0;
+	return std::move (data);
 }
 
 //------------------------------------------------------------------------

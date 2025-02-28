@@ -47,10 +47,8 @@ EditorSizeController::EditorSizeController (EditController* /*editController*/,
 : sizeFunc (sizeFunc)
 {
 	const auto kMaxValue = static_cast<ParamValue> (kSizeFactors.size () - 1);
-	sizeParameter =
-	    new RangeParameter (STR ("EditorSize"), kSizeParamTag, nullptr, 0, kMaxValue, 1, kMaxValue);
-	sizeParameter->setMin (0);
-	sizeParameter->setMax (kSizeFactors.size () - 1);
+	sizeParameter = new RangeParameter (STR ("EditorSize"), kSizeParamTag, nullptr, 0, kMaxValue, 1,
+	                                    static_cast<int32> (kMaxValue));
 
 	setSizeFactor (currentSizeFactor);
 
@@ -85,7 +83,7 @@ VSTGUI::CView* EditorSizeController::verifyView (VSTGUI::CView* view,
 	if (control)
 	{
 		sizeControl = control;
-		sizeControl->setValueNormalized (sizeParameter->getNormalized ());
+		sizeControl->setValueNormalized (static_cast<float> (sizeParameter->getNormalized ()));
 		sizeControl->setListener (this);
 		sizeParameter->deferUpdate ();
 	}
@@ -124,9 +122,10 @@ void EditorSizeController::setSizeFactor (double factor)
 	auto iter = std::find (kSizeFactors.begin (), kSizeFactors.end (), factor);
 	if (iter != kSizeFactors.end ())
 	{
-		sizeParameter->setNormalized (sizeParameter->toNormalized (iter - kSizeFactors.begin ()));
+		sizeParameter->setNormalized (
+		    sizeParameter->toNormalized (static_cast<ParamValue> (iter - kSizeFactors.begin ())));
 		if (sizeControl)
-			sizeControl->setValueNormalized (sizeParameter->getNormalized ());
+			sizeControl->setValueNormalized (static_cast<float> (sizeParameter->getNormalized ()));
 	}
 }
 

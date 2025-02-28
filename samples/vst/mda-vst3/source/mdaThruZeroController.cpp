@@ -70,7 +70,7 @@ tresult PLUGIN_API ThruZeroController::getParamStringByValue (ParamID tag, Param
 		}
 		case 1:
 		{
-			float dep = 2000.0f * valueNormalized * valueNormalized;
+			float dep = static_cast<float> (2000.0f * valueNormalized * valueNormalized);
 			result.printFloat (1000.f * dep / getSampleRate ());
 			break;
 		}

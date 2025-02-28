@@ -27,7 +27,7 @@ class RoundPanProcessor : public BaseProcessor
 {
 public:
 	RoundPanProcessor ();
-	~RoundPanProcessor ();
+	~RoundPanProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaP'; }
 

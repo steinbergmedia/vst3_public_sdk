@@ -27,7 +27,7 @@ class DynamicsProcessor : public BaseProcessor
 {
 public:
 	DynamicsProcessor ();
-	~DynamicsProcessor ();
+	~DynamicsProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaN'; }
 

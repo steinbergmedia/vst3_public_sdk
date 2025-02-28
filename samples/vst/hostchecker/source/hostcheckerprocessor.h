@@ -164,6 +164,7 @@ protected:
 
 	DataExchangeHandler* dataExchangeHandler {nullptr};
 	int64 mLastExchangeBlockSendSystemTime {0};
+	int32 mLastProcessMode {-1};
 
 	bool mBypass {false};
 	bool mSetActiveCalled {false};

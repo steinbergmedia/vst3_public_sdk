@@ -310,8 +310,7 @@ tresult PLUGIN_API Processor::setActive (TBool state)
 {
 	if (state)
 	{
-		IMessage* msg = allocateMessage ();
-		if (msg)
+		if (IMessage* msg = allocateMessage ())
 		{
 			msg->setMessageID ("activated");
 			msg->getAttributes ()->setFloat ("SampleRate", processSetup.sampleRate);
@@ -559,8 +558,6 @@ bool SampleAccurateBaseProcessor::processParameterChanges (IParameterChanges* ch
 				queue->getPoint (queue->getPointCount () - 1, sampleOffset, value);
 				if (paramID == BaseController::kBypassParam)
 					setBypass (value >= 0.5, sampleOffset);
-				else if (paramID == BaseController::kPresetParam)
-					setCurrentProgramNormalized (value);
 				else
 					setParameter (paramID, value, sampleOffset);
 			}

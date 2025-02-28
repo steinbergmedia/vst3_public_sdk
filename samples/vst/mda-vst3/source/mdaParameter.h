@@ -62,7 +62,7 @@ public:
 
 	void setIndexString (int32 index, const String128 str);
 protected:
-	~IndexedParameter ();
+	~IndexedParameter () override;
 	String128* indexString;
 };
 

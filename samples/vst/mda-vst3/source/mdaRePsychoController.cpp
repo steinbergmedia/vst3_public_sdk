@@ -62,8 +62,8 @@ tresult PLUGIN_API RePsychoController::getParamStringByValue (ParamID tag, Param
 	{
 		case 4:
 		{
-			float dtim = 441 + int (0.5 * 22050 * valueNormalized);
-			result.printInt (1000.0 * dtim / getSampleRate ());
+			float dtim = 441.f + static_cast<int32> (0.5 * 22050 * valueNormalized);
+			result.printInt (static_cast <int64> (1000.0 * dtim / getSampleRate ()));
 			break;
 		}
 		default:

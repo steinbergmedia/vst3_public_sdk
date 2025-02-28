@@ -67,7 +67,7 @@ tresult PLUGIN_API DitherController::getParamStringByValue (ParamID tag, ParamVa
 	{
 		case kParam0:
 		{
-			result.printInt (8.0f + 2.0f * (float)floor(8.9f * valueNormalized));
+			result.printInt (static_cast<int64> (8.0f + 2.0f * (float)floor(8.9f * valueNormalized)));
 			break;
 		}
 		default:

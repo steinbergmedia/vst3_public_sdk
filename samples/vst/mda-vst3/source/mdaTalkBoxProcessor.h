@@ -27,13 +27,14 @@ class TalkBoxProcessor : public BaseProcessor
 {
 public:
 	TalkBoxProcessor ();
-	~TalkBoxProcessor ();
+	~TalkBoxProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mda&'; }
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 
 	void doProcessing (ProcessData& data) SMTG_OVERRIDE;
 
@@ -48,8 +49,8 @@ public:
 //-----------------------------------------------------------------------------
 protected:
 	void recalculate () SMTG_OVERRIDE;
-	void lpc(float *buf, float *car, int32 n, int32 o);
-	void lpc_durbin(float *r, int32 p, float *k, float *g);
+	void lpc (float *buf, float *car, int32 n, int32 o);
+	void lpc_durbin (float *r, int32 p, float *k, float *g);
 
 	float *car0, *car1;
 	float *window;

@@ -28,7 +28,7 @@ class RezFilterController : public BaseController
 {
 public:
 	RezFilterController ();
-	~RezFilterController ();
+	~RezFilterController () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

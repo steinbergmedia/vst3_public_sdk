@@ -27,7 +27,7 @@ class LoudnessProcessor : public BaseProcessor
 {
 public:
 	LoudnessProcessor ();
-	~LoudnessProcessor ();
+	~LoudnessProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdal'; }
 

@@ -153,8 +153,8 @@ void ShepardProcessor::doProcessing (ProcessData& data)
 void ShepardProcessor::recalculate ()
 {
 	mode = std::min<int32> (2, (int32)(params[0] * 3));
-	drate = 1.f + 10.f * (float)pow (params[1]-0.5,3.0) / getSampleRate ();
-	out = 0.4842f * (float)pow (10.0f, (float)(2.f * params[2] - 1.f));
+	drate = 1.f + 10.f * static_cast<float> (pow (params[1]-0.5,3.0) / getSampleRate ());
+	out = 0.4842f * powf (10.0f, static_cast<float> (2.f * params[2] - 1.f));
 }
 
 }}} // namespaces

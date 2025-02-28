@@ -30,7 +30,7 @@ class DubDelayController : public BaseController
 {
 public:
 	DubDelayController ();
-	~DubDelayController ();
+	~DubDelayController () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

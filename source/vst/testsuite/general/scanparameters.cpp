@@ -195,7 +195,9 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		{
 			addErrorMessage (
 			    testResult,
-			    printf ("=>Parameter %03d (id=%d): defaultValue is not normalized!!!", i, paramId));
+			    printf (
+			        "=>Parameter %03d (id=%d): paramInfo.defaultNormalizedValue is not normalized!!!",
+			        i, paramId));
 			return false;
 		}
 		int32 unitId = paramInfo.unitId;

@@ -27,7 +27,7 @@ class ImageProcessor : public BaseProcessor
 {
 public:
 	ImageProcessor ();
-	~ImageProcessor ();
+	~ImageProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaI'; }
 

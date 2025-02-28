@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 3.25.0)
 
 if(NOT SMTG_AAX_SDK_PATH OR NOT SMTG_ENABLE_VSTGUI_SUPPORT)
     return()

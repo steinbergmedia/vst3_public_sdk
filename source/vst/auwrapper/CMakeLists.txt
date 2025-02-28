@@ -1,6 +1,11 @@
 if(SMTG_MAC)
     if (XCODE AND SMTG_ENABLE_AUV2_BUILDS)
 
+		option(SMTG_AUWRAPPER_ACTIVATE_ONLY_DEFAULT_ACTIVE_BUSES 
+			"Activate only the buses that have the kDefaultActive flag set in the AUWrapper. This may not work on some hosts because they never activate a bus later." 
+			OFF
+		)
+
 		string(RANDOM LENGTH 20 CocoaId)
 		file(CONFIGURE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/au/aucocoaclassprefix.h"
 			CONTENT "#define SMTG_AUCocoaUIBase_CLASS_NAME SMTG_AUCocoaUIBase_${CocoaId}"
@@ -30,6 +35,10 @@ if(SMTG_MAC)
 			PUBLIC
 				cxx_std_17
 		)
+
+		if(SMTG_AUWRAPPER_ACTIVATE_ONLY_DEFAULT_ACTIVE_BUSES)
+			target_compile_definitions(${target} PRIVATE SMTG_AUWRAPPER_ACTIVATE_ONLY_DEFAULT_ACTIVE_BUSES)
+		endif()
 
         target_link_libraries(${target} 
             PRIVATE 

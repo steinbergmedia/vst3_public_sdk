@@ -427,16 +427,16 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 			}
 			else if (id == kLatencyTag)
 			{
-				mWantedLatency = value * HostChecker::kMaxLatency;
+				mWantedLatency = static_cast<uint32> (value * HostChecker::kMaxLatency);
 				addLogEvent (kLogIdInformLatencyChanged);
 			}
 			else if (id == kProcessingLoadTag)
 			{
-				mProcessingLoad = value;
+				mProcessingLoad = static_cast<float> (value);
 			}
 			else if (id == kGeneratePeaksTag)
 			{
-				mGeneratePeaks = value;
+				mGeneratePeaks = static_cast<float> (value);
 			}
 		});
 	});
@@ -461,7 +461,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		// Generate Processing load
 		if (mProcessingLoad > 0)
 		{
-			int32 countLoop = mProcessingLoad * 400;
+			int32 countLoop = static_cast<int32> (mProcessingLoad * 400);
 			if (data.symbolicSampleSize == kSample32)
 			{
 				auto tmp1 = data.outputs[0].channelBuffers32[0][0];
@@ -489,7 +489,7 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 						auto tmp2 = data.inputs[0].channelBuffers64[i][s];
 						for (int32 loop = 0; loop < countLoop; loop++)
 						{
-							tmp2 = sinf (tmp2) * cosf (tmp2);
+							tmp2 = sin (tmp2) * cos (tmp2);
 						}
 						data.outputs[0].channelBuffers64[0][0] = tmp2;
 					}
@@ -508,13 +508,13 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 
 			float coef = mGeneratePeaks * mLastBlockMarkerValue;
 
-			float distance2BarPosition =
+			double distance2BarPosition =
 			    (data.processContext->projectTimeMusic - data.processContext->barPositionMusic) /
 			    (4. * data.processContext->timeSigNumerator) *
 			    data.processContext->timeSigDenominator / 2.;
 
 			// Normalized Tempo [0, 360] => [0, 1]
-			float tempo = data.processContext->tempo / 360.;
+			double tempo = data.processContext->tempo / 360.;
 
 			if (data.symbolicSampleSize == kSample32)
 			{
@@ -523,13 +523,14 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 					data.outputs[0].channelBuffers32[i][0] = coef;
 					if (data.processContext->state & ProcessContext::kTempoValid &&
 					    data.numSamples > 3)
-						data.outputs[0].channelBuffers32[i][3] = tempo;
+						data.outputs[0].channelBuffers32[i][3] = static_cast<float> (tempo);
 				}
 				if (data.processContext->state & ProcessContext::kBarPositionValid)
 				{
 					for (int32 i = 1; i < data.outputs[0].numChannels; i++)
 					{
-						data.outputs[0].channelBuffers32[i][0] = distance2BarPosition;
+						data.outputs[0].channelBuffers32[i][0] =
+						    static_cast<float> (distance2BarPosition);
 					}
 				}
 			}
@@ -574,9 +575,9 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 							data.outputEvents->addEvent (event);
 
 							Event evtMIDICC {};
-							Helpers::initLegacyMIDICCOutEvent (evtMIDICC, kCtrlModWheel,
-							                                   event.noteOn.channel,
-							                                   event.noteOn.velocity);
+							Helpers::initLegacyMIDICCOutEvent (
+							    evtMIDICC, kCtrlModWheel, static_cast<uint8> (event.noteOn.channel),
+							    static_cast<uint8> (event.noteOn.velocity * 127));
 							data.outputEvents->addEvent (evtMIDICC);
 						}
 						break;
@@ -626,6 +627,15 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 
 	if (data.outputParameterChanges)
 	{
+		int32 idx;
+		if (mLastProcessMode != data.processMode)
+		{
+			if (auto* queue =
+			        data.outputParameterChanges->addParameterData (kParamProcessModeTag, idx))
+				queue->addPoint (0, data.processMode * 0.5, idx);
+			mLastProcessMode = data.processMode;
+		}
+
 		const EventLogger::Codes& errors = mHostCheck.getEventLogs ();
 		auto iter = errors.begin ();
 
@@ -650,7 +660,6 @@ tresult PLUGIN_API HostCheckerProcessor::process (ProcessData& data)
 		{
 			if (warnIdValue[i] != 0)
 			{
-				int32 idx;
 				if (auto* queue =
 				        data.outputParameterChanges->addParameterData (kProcessWarnTag + i, idx))
 					queue->addPoint (
@@ -981,6 +990,14 @@ tresult PLUGIN_API HostCheckerProcessor::getState (IBStream* state)
 
 	if (!state)
 		return kResultFalse;
+
+	if (auto stream = U::cast<IStreamAttributes> (state))
+	{
+		if (IAttributeList* list = stream->getAttributes ())
+		{
+			addLogEvent (kLogIdIAttributeListInGetStateSupported);
+		}
+	}
 
 	IBStreamer streamer (state, kLittleEndian);
 

@@ -76,12 +76,23 @@ tresult PLUGIN_API RePsychoProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RePsychoProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API RePsychoProcessor::setProcessing (TBool state)
+{
 	if (state)
 	{
 		memset (buffer, 0, size * sizeof (float));
 		memset (buffer2, 0, size * sizeof (float));
+		gai = 0.f;
+		buf = 0.0; buf2 = 0.0;
+		tim = size + 1;
+		fil = 0.0;
 	}
-	return BaseProcessor::setActive (state);
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------

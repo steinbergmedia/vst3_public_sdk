@@ -120,14 +120,13 @@ struct WaveformViewManager::Impl : ViewListenerAdapter
 
 		LockGuard g (peakValueMutex);
 
-		auto devicePixelRatio = 1.;
-
-		devicePixelRatio = view.view->getFrame ()->getScaleFactor ();
+		auto devicePixelRatio = static_cast<float> (view.view->getFrame ()->getScaleFactor ());
 
 		auto size = view.view->getViewSize ().getSize ();
-		nvgBeginFrame (view.context, size.x, size.y, devicePixelRatio);
+		nvgBeginFrame (view.context, static_cast<float> (size.x), static_cast<float> (size.y),
+		               devicePixelRatio);
 
-		float xAdd = size.x / _audioPeakValues.size ();
+		float xAdd = static_cast<float> (size.x / _audioPeakValues.size ());
 		nvgStrokeWidth (view.context, xAdd);
 
 		// left channel
@@ -140,9 +139,9 @@ struct WaveformViewManager::Impl : ViewListenerAdapter
 		{
 			if (value.peak.empty ())
 				continue;
-			y = size.y * ((value.peak[0].min + 1.f) / 2.f);
+			y = static_cast<float> (size.y) * ((value.peak[0].min + 1.f) / 2.f);
 			nvgMoveTo (view.context, x, y);
-			y = size.y * ((value.peak[0].max + 1.f) / 2.f);
+			y = static_cast<float> (size.y) * ((value.peak[0].max + 1.f) / 2.f);
 			nvgLineTo (view.context, x, y);
 			x += xAdd;
 		}
@@ -157,9 +156,9 @@ struct WaveformViewManager::Impl : ViewListenerAdapter
 		{
 			if (value.peak.size () < 2)
 				continue;
-			y = size.y * ((value.peak[1].min + 1.f) / 2.f);
+			y = static_cast<float> (size.y) * ((value.peak[1].min + 1.f) / 2.f);
 			nvgMoveTo (view.context, x, y);
-			y = size.y * ((value.peak[1].max + 1.f) / 2.f);
+			y = static_cast<float> (size.y) * ((value.peak[1].max + 1.f) / 2.f);
 			nvgLineTo (view.context, x, y);
 			x += xAdd;
 		}

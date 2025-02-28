@@ -60,7 +60,7 @@ public:
 	VSTGUIEditor (void* controller, ViewRect* size = nullptr);
 
 	/** Destructor. */
-	virtual ~VSTGUIEditor ();
+	~VSTGUIEditor () override;
 
 //---Internal function-----
 /** Called when the editor will be opened. */

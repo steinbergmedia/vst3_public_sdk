@@ -76,9 +76,17 @@ tresult PLUGIN_API ComboProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ComboProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API ComboProcessor::setProcessing (TBool state)
+{
 	if (state)
 		clearBuffers ();
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------

@@ -27,7 +27,7 @@ class LimiterProcessor : public BaseProcessor
 {
 public:
 	LimiterProcessor ();
-	~LimiterProcessor ();
+	~LimiterProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaL'; }
 

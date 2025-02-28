@@ -1,7 +1,7 @@
 
 option(SMTG_MDA_VST3_VST2_COMPATIBLE "Build the MDA examples as a replacement for their VST2 counterpart" ON)
 
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 3.25.0)
 
 project(smtg-vst3-mda
     VERSION ${vstsdk_VERSION}.0

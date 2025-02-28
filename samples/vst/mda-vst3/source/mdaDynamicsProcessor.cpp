@@ -159,13 +159,13 @@ void DynamicsProcessor::doProcessing (ProcessData& data)
 void DynamicsProcessor::recalculate ()
 {
 	mode=0;
-	thr = (float)pow (10.f, (float)(2.f * params[0] - 2.f));
-	rat = 2.5f * params[1] - 0.5f; 
+	thr = powf (10.f, static_cast<float> (2.f * params[0] - 2.f));
+	rat = static_cast<float> (2.5f * params[1] - 0.5f);
 	if (rat>1.0) { rat = 1.f + 16.f*(rat-1.f) * (rat - 1.f); mode = 1; }
 	if (rat<0.0) { rat = 0.6f*rat; mode=1; }
-	trim = (float)pow (10.f,(float)(2.f * params[2])); //was  - 1.f);
-	att = (float)pow (10.f, (float)(-0.002f - 2.f * params[3]));
-	rel = (float)pow (10.f, (float)(-2.f - 3.f * params[4]));
+	trim = powf (10.f,static_cast<float> (2.f * params[2])); //was  - 1.f);
+	att = powf (10.f, static_cast<float> (-0.002f - 2.f * params[3]));
+	rel = powf (10.f, static_cast<float> (-2.f - 3.f * params[4]));
 
 	if (params[5]>0.98) lthr=0.f; //limiter
 	else { lthr=0.99f*(float)pow (10.0f,int (30.0*params[5] - 20.0)/20.f); 
@@ -179,7 +179,8 @@ void DynamicsProcessor::recalculate ()
 
 	if (rat<0.0f && thr<0.1f) rat *= thr*15.f;
 
-	dry = 1.0f - params[9];  trim *= params[9]; //fx mix
+	dry = static_cast<float> (1.0f - params[9]);
+	trim *= static_cast<float> (params[9]); //fx mix
 }
 
 }}} // namespaces

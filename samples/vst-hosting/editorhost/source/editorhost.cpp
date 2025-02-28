@@ -387,15 +387,17 @@ Size WindowController::constrainSize (IWindow& w, Size requestedSize)
 {
 	SMTG_DBPRT1 ("constrainSize called (%p)\n", (void*)&w);
 
-	ViewRect r {};
-	r.right = requestedSize.width;
-	r.bottom = requestedSize.height;
-	if (plugView && plugView->checkSizeConstraint (&r) != kResultTrue)
+	if (plugView)
 	{
-		plugView->getSize (&r);
+		ViewRect r {};
+		r.right = requestedSize.width;
+		r.bottom = requestedSize.height;
+		if (plugView->checkSizeConstraint (&r) != kResultTrue)
+		{
+			requestedSize.width = r.right - r.left;
+			requestedSize.height = r.bottom - r.top;
+		}
 	}
-	requestedSize.width = r.right - r.left;
-	requestedSize.height = r.bottom - r.top;
 	return requestedSize;
 }
 

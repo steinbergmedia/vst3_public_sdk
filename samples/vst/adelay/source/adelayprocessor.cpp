@@ -46,7 +46,7 @@ namespace Steinberg {
 namespace Vst {
 
 //-----------------------------------------------------------------------------
-ADelayProcessor::ADelayProcessor () : mDelay (1), mBuffer (nullptr), mBufferPos (0), mBypass (false)
+ADelayProcessor::ADelayProcessor ()
 {
 	setControllerClass (FUID::fromTUID (ADelayControllerUID));
 }
@@ -59,6 +59,7 @@ tresult PLUGIN_API ADelayProcessor::initialize (FUnknown* context)
 	{
 		addAudioInput (STR16 ("AudioInput"), SpeakerArr::kStereo);
 		addAudioOutput (STR16 ("AudioOutput"), SpeakerArr::kStereo);
+		mNumChannels = 2;
 	}
 	return result;
 }
@@ -69,46 +70,70 @@ tresult PLUGIN_API ADelayProcessor::setBusArrangements (SpeakerArrangement* inpu
 {
 	// we only support one in and output bus and these busses must have the same number of channels
 	if (numIns == 1 && numOuts == 1 && inputs[0] == outputs[0])
-		return AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+	{
+		tresult res = AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+		if (res == kResultOk)
+			mNumChannels = SpeakerArr::getChannelCount (outputs[0]);
+		return res;
+	}
 	return kResultFalse;
+}
+
+//-----------------------------------------------------------------------------
+bool ADelayProcessor::resetDelay ()
+{
+	if (!mBuffer)
+		return false;
+
+	size_t size = static_cast<size_t> (processSetup.sampleRate * sizeof (float) + 0.5);
+	for (int32 channel = 0; channel < mNumChannels; channel++)
+	{
+		if (mBuffer[channel])
+			memset (mBuffer[channel], 0, size);
+	}
+	mBufferPos = 0;
+
+	return true;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ADelayProcessor::setActive (TBool state)
 {
-	SpeakerArrangement arr;
-	if (getBusArrangement (kOutput, 0, arr) != kResultTrue)
-		return kResultFalse;
-	int32 numChannels = SpeakerArr::getChannelCount (arr);
-	if (numChannels == 0)
-		return kResultFalse;
+	if (mBuffer)
+	{
+		for (int32 channel = 0; channel < mNumChannels; channel++)
+		{
+			std::free (mBuffer[channel]);
+		}
+		std::free (mBuffer);
+		mBuffer = nullptr;
+	}
 
 	if (state)
 	{
-		mBuffer = (float**)std::malloc (numChannels * sizeof (float*));
-
-		size_t size = static_cast<size_t> (processSetup.sampleRate * sizeof (float) + 0.5);
-		for (int32 channel = 0; channel < numChannels; channel++)
-		{
-			mBuffer[channel] = (float*)std::malloc (size); // 1 second delay max
-			if (mBuffer[channel])
-				memset (mBuffer[channel], 0, size);
-		}
-		mBufferPos = 0;
-	}
-	else
-	{
+		mBuffer = (float**)std::malloc (mNumChannels * sizeof (float*));
 		if (mBuffer)
 		{
-			for (int32 channel = 0; channel < numChannels; channel++)
+			size_t size = static_cast<size_t> (processSetup.sampleRate * sizeof (float) + 0.5);
+			for (int32 channel = 0; channel < mNumChannels; channel++)
 			{
-				std::free (mBuffer[channel]);
+				mBuffer[channel] = (float*)std::malloc (size); // 1 second delay max
 			}
-			std::free (mBuffer);
-			mBuffer = nullptr;
+			resetDelay ();
 		}
 	}
+
 	return AudioEffect::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API ADelayProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		resetDelay ();
+	}
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -150,6 +175,7 @@ tresult PLUGIN_API ADelayProcessor::process (ProcessData& data)
 		int32 numChannels = SpeakerArr::getChannelCount (arr);
 
 		// TODO do something in Bypass : copy input to output if necessary...
+		// you could use a BypassProcessor which is used in the SyncDelay example
 
 		// apply delay
 		// we have a minimum of 1 sample delay here
@@ -196,7 +222,7 @@ tresult PLUGIN_API ADelayProcessor::setState (IBStream* state)
 		// could be an old version, continue
 	}
 
-	mDelay = savedDelay;
+	mDelay = static_cast<ParamValue> (savedDelay);
 	mBypass = savedBypass > 0;
 
 	return kResultOk;
@@ -209,7 +235,7 @@ tresult PLUGIN_API ADelayProcessor::getState (IBStream* state)
 
 	IBStreamer streamer (state, kLittleEndian);
 
-	streamer.writeFloat (mDelay);
+	streamer.writeFloat (static_cast<float> (mDelay));
 	streamer.writeInt32 (mBypass ? 1 : 0);
 
 	return kResultOk;

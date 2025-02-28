@@ -27,7 +27,7 @@ class DitherProcessor : public BaseProcessor
 {
 public:
 	DitherProcessor ();
-	~DitherProcessor ();
+	~DitherProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdad'; }
 

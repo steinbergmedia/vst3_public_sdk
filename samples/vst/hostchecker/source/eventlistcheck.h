@@ -77,7 +77,7 @@ protected:
 	bool checkEventSampleOffset (Steinberg::int32 sampleOffset);
 	bool checkEventChannelIndex (Steinberg::int32 busIndex, Steinberg::int32 channelIndex);
 	bool checkValidPitch (Steinberg::int16 pitch);
-	bool isNormalized (float normVal) const;
+	bool isNormalized (double normVal) const;
 	void checkNoteExpressionValueEvent (Steinberg::Vst::NoteExpressionTypeID type,
 	                                    Steinberg::int32 id,
 	                                    Steinberg::Vst::NoteExpressionValue exprVal) const;

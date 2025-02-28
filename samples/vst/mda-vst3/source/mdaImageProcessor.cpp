@@ -103,10 +103,10 @@ void ImageProcessor::recalculate ()
 {
 	float w, k, c, b, g;
 
-	w = 4.f * params[1] - 2.f; //width
-	k = 2.f * params[2];       //balance
-	c = 4.f * params[3] - 2.f; //depth
-	b = 2.f * params[4];       //pan
+	w = static_cast<float> (4.f * params[1] - 2.f); //width
+	k = static_cast<float> (2.f * params[2]);       //balance
+	c = static_cast<float> (4.f * params[3] - 2.f); //depth
+	b = static_cast<float> (2.f * params[4]);       //pan
 	g = (float)pow (10.0, 2.0 * params[5] - 1.0);
 
 	switch (int (params[0]*3.9))

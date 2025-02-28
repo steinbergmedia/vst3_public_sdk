@@ -403,7 +403,7 @@ bool AAXWrapper::_sizeWindow (int32 width, int32 height)
 	if (!mAAXGUI)
 		return false;
 
-	AAX_Point size (height, width);
+	AAX_Point size (static_cast<float> (height), static_cast<float> (width));
 	return mAAXGUI->setWindowSize (size);
 }
 
@@ -1062,7 +1062,7 @@ void AAXWrapper::processOutputParametersChanges ()
 				int32 sampleOffset;
 				ParamValue value;
 				queue->getPoint (queue->getPointCount () - 1, sampleOffset, value);
-				mMetersTmp[m] = value;
+				mMetersTmp[m] = static_cast<float> (value);
 				found++;
 				break;
 			}

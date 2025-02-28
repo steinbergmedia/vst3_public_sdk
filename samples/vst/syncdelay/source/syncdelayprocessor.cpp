@@ -67,6 +67,7 @@ tresult PLUGIN_API SyncDelayProcessor::initialize (FUnknown* context)
 	{
 		addAudioInput (STR16 ("AudioInput"), SpeakerArr::kStereo);
 		addAudioOutput (STR16 ("AudioOutput"), SpeakerArr::kStereo);
+		mNumChannels = 2;
 	}
 	return result;
 }
@@ -78,48 +79,48 @@ tresult PLUGIN_API SyncDelayProcessor::setBusArrangements (SpeakerArrangement* i
 {
 	// we only support one in and output bus and these busses must have the same number of channels
 	if (numIns == 1 && numOuts == 1 && inputs[0] == outputs[0])
-		return AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+	{
+		tresult res = AudioEffect::setBusArrangements (inputs, numIns, outputs, numOuts);
+		if (res == kResultOk)
+			mNumChannels = SpeakerArr::getChannelCount (outputs[0]);
+		return res;
+	}
 	return kResultFalse;
 }
 
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API SyncDelayProcessor::setActive (TBool state)
 {
-	SpeakerArrangement arr;
-	if (getBusArrangement (kOutput, 0, arr) != kResultTrue)
-		return kResultFalse;
-	auto numChannels = SpeakerArr::getChannelCount (arr);
-	if (numChannels == 0)
-		return kResultFalse;
+	if (mBuffer)
+	{
+		for (int32 channel = 0; channel < mNumChannels; channel++)
+		{
+			std::free (mBuffer[channel]);
+		}
+		std::free (mBuffer);
+		mBuffer = nullptr;
+	}
 
 	if (state)
 	{
-		mBuffer = static_cast<float**> (std::malloc (numChannels * sizeof (float*)));
-		// use a maximum of 5 seconds delay time
-		mBufferSizeInSamples =
-		    static_cast<uint32> (std::ceil (processSetup.sampleRate) * maxDelaySeconds);
-		auto size = static_cast<size_t> (mBufferSizeInSamples * sizeof (float));
-		for (int32 channel = 0; channel < numChannels; channel++)
+		mBuffer = static_cast<float**> (std::malloc (mNumChannels * sizeof (float*)));
+		if (mBuffer)
 		{
-			mBuffer[channel] = static_cast<float*> (std::malloc (size));
-			if (mBuffer[channel])
-				memset (mBuffer[channel], 0, size);
+			// use a maximum of 5 seconds delay time
+			mBufferSizeInSamples =
+			    static_cast<uint32> (std::ceil (processSetup.sampleRate) * maxDelaySeconds);
+			auto size = static_cast<size_t> (mBufferSizeInSamples * sizeof (float));
+			for (int32 channel = 0; channel < mNumChannels; channel++)
+			{
+				mBuffer[channel] = static_cast<float*> (std::malloc (size));
+			}
+			resetDelay ();
 		}
-		mBufferPos = 0;
-		mDelayIndex = FromNormalized<ParamValue> (0, static_cast<int32>(Synced.size () - 1));
+		mDelayIndex = FromNormalized<ParamValue> (0, static_cast<int32> (Synced.size () - 1));
 		mBypassProcessor.setup (*this, processSetup, 0);
 	}
 	else
 	{
-		if (mBuffer)
-		{
-			for (int32 channel = 0; channel < numChannels; channel++)
-			{
-				std::free (mBuffer[channel]);
-			}
-			std::free (mBuffer);
-			mBuffer = nullptr;
-		}
 		mBypassProcessor.reset ();
 	}
 	return AudioEffect::setActive (state);
@@ -128,8 +129,9 @@ tresult PLUGIN_API SyncDelayProcessor::setActive (TBool state)
 //------------------------------------------------------------------------
 void SyncDelayProcessor::calculateDelay ()
 {
-	mDelayInSamples = (60. / mTempo) * Synced[mDelayIndex].value * processSetup.sampleRate;
-	mDelayInSamples = Bound (uint32(1), mBufferSizeInSamples, mDelayInSamples);
+	mDelayInSamples =
+	    static_cast<uint32> ((60. / mTempo) * Synced[mDelayIndex].value * processSetup.sampleRate);
+	mDelayInSamples = Bound (uint32 (1), mBufferSizeInSamples, mDelayInSamples);
 }
 
 //------------------------------------------------------------------------
@@ -149,7 +151,8 @@ void SyncDelayProcessor::doParameterChanges (IParameterChanges& changes)
 				{
 					if (queue->getPoint (numPoints - 1, sampleOffset, value) == kResultTrue)
 					{
-						mDelayIndex = FromNormalized<ParamValue> (value, static_cast<int32>(Synced.size () - 1));
+						mDelayIndex = FromNormalized<ParamValue> (
+						    value, static_cast<int32> (Synced.size () - 1));
 					}
 					break;
 				}
@@ -164,6 +167,33 @@ void SyncDelayProcessor::doParameterChanges (IParameterChanges& changes)
 			}
 		}
 	}
+}
+
+//-----------------------------------------------------------------------------
+bool SyncDelayProcessor::resetDelay ()
+{
+	if (!mBuffer)
+		return false;
+
+	auto size = static_cast<size_t> (mBufferSizeInSamples * sizeof (float));
+	for (int32 channel = 0; channel < mNumChannels; channel++)
+	{
+		if (mBuffer[channel])
+			memset (mBuffer[channel], 0, size);
+	}
+	mBufferPos = 0;
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API SyncDelayProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		resetDelay ();
+	}
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -189,11 +219,7 @@ tresult PLUGIN_API SyncDelayProcessor::process (ProcessData& data)
 	{
 		calculateDelay ();
 
-		SpeakerArrangement arr;
-		getBusArrangement (kOutput, 0, arr);
-		auto numChannels = SpeakerArr::getChannelCount (arr);
-
-		for (int32 channel = 0; channel < numChannels; channel++)
+		for (int32 channel = 0; channel < mNumChannels; channel++)
 		{
 			auto inputChannel = data.inputs[0].channelBuffers32[channel];
 			auto outputChannel = data.outputs[0].channelBuffers32[channel];

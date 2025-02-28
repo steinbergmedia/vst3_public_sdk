@@ -207,7 +207,7 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 			inDpiChangeState = true;
 			auto* proposedSize = reinterpret_cast<SIZE*> (lParam);
 			auto newScaleFactor =
-			    static_cast<double> (wParam) / static_cast<double> (USER_DEFAULT_SCREEN_DPI);
+			    static_cast<float> (wParam) / static_cast<float> (USER_DEFAULT_SCREEN_DPI);
 			controller->onContentScaleFactorChanged (*this, newScaleFactor);
 			if (dpiChangedSize.width != 0 && dpiChangedSize.height != 0)
 			{
@@ -217,7 +217,8 @@ LRESULT Window::proc (UINT message, WPARAM wParam, LPARAM lParam)
 				clientRect.right = dpiChangedSize.width;
 				clientRect.bottom = dpiChangedSize.height;
 				User32Library::instance ().adjustWindowRectExForDpi (
-				    &clientRect, windowInfo.dwStyle, false, windowInfo.dwExStyle, wParam);
+				    &clientRect, windowInfo.dwStyle, false, windowInfo.dwExStyle,
+				    static_cast<UINT> (wParam));
 				proposedSize->cx = clientRect.right - clientRect.left;
 				proposedSize->cy = clientRect.bottom - clientRect.top;
 				return TRUE;

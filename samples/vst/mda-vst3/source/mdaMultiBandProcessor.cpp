@@ -161,13 +161,13 @@ void MultiBandProcessor::recalculate ()
 	att3 = (float)pow (10.0, -0.05 -(1.5 * params[9]));
 	rel3 = (float)pow (10.0, -2.0 - (2.5 * params[10]));
 
-	int32 listen = std::min<int32> (3, params[0] * (4));
+	int32 listen = std::min<int32> (3, static_cast<int32> (params[0] * (4)));
 	switch (listen)
 	{
 		case 0: trim2=0.0; trim3=0.0; slev=0.0; break;
 		case 1: trim1=0.0; trim3=0.0; slev=0.0; break;
 		case 2: trim1=0.0; trim2=0.0; slev=0.0; break;
-		default: slev=params[11]; break;
+		default: slev= static_cast<float> (params[11]); break;
 	}
 	fi1 = (float)pow (10.0,params[1] - 1.70); fo1= (float)(1.0 - fi1);
 	fi2 = (float)pow (10.0,params[2] - 1.05); fo2= (float)(1.0 - fi2);

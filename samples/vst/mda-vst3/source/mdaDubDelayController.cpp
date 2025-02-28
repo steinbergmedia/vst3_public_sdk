@@ -63,7 +63,7 @@ tresult PLUGIN_API DubDelayController::getParamStringByValue (ParamID tag, Param
 	{
 		case kParam0:
 		{
-			result.printInt ((valueNormalized*valueNormalized*323766) * 1000. / sampleRate);
+			result.printInt (static_cast<int64> ((valueNormalized*valueNormalized*323766) * 1000. / sampleRate));
 			break;
 		}
 		case kParam4:

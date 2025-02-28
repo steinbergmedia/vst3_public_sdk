@@ -166,18 +166,18 @@ void StereoProcessor::recalculate ()
 	fdel = (float)(20.0 + 2080.0 * pow (params[1], 2));
 	if (params[2]>0.5)
 	{
-		fli *= (float)((1.0 - params[2]) * 2.0);
-		fld *= (float)((1.0 - params[2]) * 2.0);
+		fli *= static_cast<float> ((1.0 - params[2]) * 2.0);
+		fld *= static_cast<float> ((1.0 - params[2]) * 2.0);
 	}
 	else
 	{
-		fri *= (2 * params[2]);
-		frd *= (2 * params[2]);
+		fri *= static_cast<float> (2 * params[2]);
+		frd *= static_cast<float> (2 * params[2]);
 	}
-	fri *= (float)(0.5 + fabs (params[0] - 0.5));
-	frd *= (float)(0.5 + fabs (params[0] - 0.5));
-	fli *= (float)(0.5 + fabs (params[0] - 0.5));
-	fld *= (float)(0.5 + fabs (params[0] - 0.5));
+	fri *= static_cast<float> (0.5 + fabs (params[0] - 0.5));
+	frd *= static_cast<float> (0.5 + fabs (params[0] - 0.5));
+	fli *= static_cast<float> (0.5 + fabs (params[0] - 0.5));
+	fld *= static_cast<float> (0.5 + fabs (params[0] - 0.5));
 }
 
 }}} // namespaces

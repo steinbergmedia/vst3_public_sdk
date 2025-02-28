@@ -78,10 +78,11 @@ std::vector<WCHAR> convertToWide (const std::string& text)
 std::string convertToUTF8 (const WCHAR* data, const SIZE_T& dataSize)
 {
 	std::string text;
-	auto numChars = WideCharToMultiByte (CP_UTF8, 0, data, dataSize / sizeof (WCHAR), nullptr, 0,
-	                                     nullptr, nullptr);
+	auto numChars =
+	    WideCharToMultiByte (CP_UTF8, 0, data, static_cast<int> (dataSize / sizeof (WCHAR)),
+	                         nullptr, 0, nullptr, nullptr);
 	text.resize (static_cast<size_t> (numChars) + 1);
-	numChars = WideCharToMultiByte (CP_UTF8, 0, data, dataSize / sizeof (WCHAR),
+	numChars = WideCharToMultiByte (CP_UTF8, 0, data, static_cast<int> (dataSize / sizeof (WCHAR)),
 	                                const_cast<char*> (text.data ()),
 	                                static_cast<int> (text.size ()), nullptr, nullptr);
 	text.resize (numChars);

@@ -27,7 +27,7 @@ class StereoProcessor : public BaseProcessor
 {
 public:
 	StereoProcessor ();
-	~StereoProcessor ();
+	~StereoProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaS'; }
 

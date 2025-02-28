@@ -18,6 +18,7 @@
 #include "mdaParameter.h"
 #include "helpers.h"
 #include "pluginterfaces/base/ibstream.h"
+#include "pluginterfaces/vst/ivstcomponent.h"
 #include "public.sdk/source/vst/utility/vst2persistence.h"
 #include "base/source/fstreamer.h"
 
@@ -96,6 +97,21 @@ tresult PLUGIN_API BaseController::getProgramName (ProgramListID listId, int32 p
 		{
 			ParamValue normalized = param->toNormalized (programIndex);
 			param->toString (normalized, name);
+			return kResultTrue;
+		}
+	}
+	return kResultFalse;
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API BaseController::getUnitByBus (MediaType type, BusDirection dir, int32 busIndex,
+                                                 int32 channel, UnitID& unitId)
+{
+	if (type == MediaTypes::kEvent && dir == BusDirections::kInput && busIndex == 0 && channel == 0)
+	{
+		if (auto param = parameters.getParameter (kPresetParam))
+		{
+			unitId = param->getUnitID ();
 			return kResultTrue;
 		}
 	}

@@ -68,11 +68,19 @@ tresult PLUGIN_API TestToneProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API TestToneProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API TestToneProcessor::setProcessing (TBool state)
+{
 	if (state)
 	{
 		zz0 = zz1 = zz2 = zz3 = zz4 = zz5 = phi = 0.0f;
 	}
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -173,12 +181,12 @@ void TestToneProcessor::recalculate ()
 	float f, df, twopi=6.2831853f;
 
 	//calcs here!	
-	mode = std::min<int32> (8, 9 * param (TestToneParam::Mode));
+	mode = std::min<int32> (8, static_cast<int32> (9 * param (TestToneParam::Mode)));
 	left = 0.05f * (float)int (60.f*param (TestToneParam::Level));
 	left = (float)pow (10.0f, left - 3.f);
 	if (mode==2) left*=0.0000610f; //scale white for RAND_MAX = 32767
 	if (mode==3) left*=0.0000243f; //scale pink for RAND_MAX = 32767
-	int32 channel = std::min<int32> (2, 3 * param (TestToneParam::Channel));
+	int32 channel = std::min<int32> (2, static_cast<int32> (3 * param (TestToneParam::Channel)));
 	switch (channel)
 	{
 		case 0: right = 0.f; break;
@@ -207,28 +215,28 @@ void TestToneProcessor::recalculate ()
 	}
 
 	df=0.f;
-	if (param (TestToneParam::F2)>0.6) df = 1.25f*param (TestToneParam::F2) - 0.75f;
-	if (param (TestToneParam::F2)<0.4) df = 1.25f*param (TestToneParam::F2) - 0.50f;
+	if (param (TestToneParam::F2)>0.6) df = static_cast<float> (1.25f*param (TestToneParam::F2) - 0.75f);
+	if (param (TestToneParam::F2)<0.4) df = static_cast<float> (1.25f * param (TestToneParam::F2) - 0.50f);
 
 	switch (mode)
 	{
 		case 0: //MIDI note
-				f = std::min<int32> (128, 129 * param (TestToneParam::F1));
-				dphi = 51.37006f*(float)pow (1.0594631f,f+df)/getSampleRate ();
+				f = static_cast<float> (std::min<int32> (128, static_cast<int32> (129 * param (TestToneParam::F1))));
+				dphi = static_cast<float> (51.37006f*powf (1.0594631f,f+df)/getSampleRate ());
 				break;
 
 		case 5: //sine
-				f = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F1));
-				f= (float)pow (10.0f, 0.1f*(f+df));
-				dphi=twopi*f/getSampleRate ();
+				f = 13.f + std::min<int32> (30, static_cast<int32> (31 * param (TestToneParam::F1)));
+				f= powf (10.0f, 0.1f*(f+df));
+				dphi= static_cast<float> (twopi*f/getSampleRate ());
 				break;
 
 		case 6: //log sweep & step        
-		case 7: sw = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F1));
-				swx = 13.f + std::min<int32> (30, 31 * param (TestToneParam::F2));
+		case 7: sw = 13.f + std::min<int32> (30, static_cast<int32> (31 * param (TestToneParam::F1)));
+				swx = 13.f + std::min<int32> (30, static_cast<int32> (31 * param (TestToneParam::F2)));
 				if (sw>swx) { swd=swx; swx=sw; sw=swd; } //only sweep up
 				if (mode==7) swx += 1.f;
-				swd = (swx-sw) / (len*getSampleRate ());
+				swd = static_cast<float> ((swx-sw) / (len*getSampleRate ()));
 				swt= 2 * (int32)getSampleRate ();
 				break; 
 
@@ -236,9 +244,9 @@ void TestToneProcessor::recalculate ()
 				sw = 200.f * (float)floor(100.f*param (TestToneParam::F1));
 				swx = 200.f * (float)floor(100.f*param (TestToneParam::F2));
 				if (sw>swx) { swd=swx; swx=sw; sw=swd; } //only sweep up
-				sw = twopi*sw/getSampleRate ();
-				swx = twopi*swx/getSampleRate ();
-				swd = (swx-sw) / (len*getSampleRate ());
+				sw = static_cast<float> (twopi*sw/getSampleRate ());
+				swx = static_cast<float> (twopi*swx/getSampleRate ());
+				swd = static_cast<float> ((swx-sw) / (len*getSampleRate ()));
 				swt= 2 * (int32)getSampleRate ();
 				break; 
 		default:
@@ -247,7 +255,7 @@ void TestToneProcessor::recalculate ()
 	}
 	thru = (float)pow (10.0f, (0.05f * (float)int (40.f*param (TestToneParam::Thru))) - 2.f);
 	if (param (TestToneParam::Thru)==0.0f) thru=0.0f;
-	fscale = twopi/getSampleRate ();
+	fscale = static_cast<float> (twopi/getSampleRate ());
 }
 
 }}} // namespaces

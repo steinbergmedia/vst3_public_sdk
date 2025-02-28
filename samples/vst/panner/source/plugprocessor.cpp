@@ -187,7 +187,7 @@ tresult PlugProcessor::processAudio (Vst::ProcessData& data)
 	if (mBypass)
 		getStereoPanCoef (kPanLawEqualPower, 0.f, leftPan, rightPan);
 	else
-		getStereoPanCoef (kPanLawEqualPower, mPanValue, leftPan, rightPan);
+		getStereoPanCoef (kPanLawEqualPower, static_cast<float> (mPanValue), leftPan, rightPan);
 
 	//---pan : 1 -> 2---------------------
 	SampleType tmp;
@@ -210,7 +210,7 @@ void PlugProcessor::getStereoPanCoef (int32 panType, float pan, float& left, flo
 {
 	if (panType == kPanLawEqualPower)
 	{
-		pan = pan * kPI * 0.5f;
+		pan = pan * static_cast<float> (kPI) * 0.5f;
 		left = cosf (pan);
 		right = sinf (pan);
 	}
@@ -250,7 +250,7 @@ tresult PLUGIN_API PlugProcessor::getState (IBStream* state)
 {
 	// here we need to save the model (preset or project)
 
-	float toSavePan = mPanValue;
+	float toSavePan = static_cast<float> (mPanValue);
 	int32 toSaveBypass = mBypass ? 1 : 0;
 
 	IBStreamer streamer (state, kLittleEndian);

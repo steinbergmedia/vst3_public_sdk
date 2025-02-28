@@ -133,7 +133,7 @@ public:
 
 	uint32 calcNumSamplesToSend (SampleRate sampleRate) const
 	{
-		return sampleRate / 120; // 120 Hz
+		return static_cast<uint32> (sampleRate / 120); // 120 Hz
 	}
 	DataExchangeUserContextID getUserContextID () const override { return SampleBufferQueueID; }
 

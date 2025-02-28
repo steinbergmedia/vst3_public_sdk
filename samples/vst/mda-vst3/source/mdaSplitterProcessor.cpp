@@ -66,9 +66,20 @@ tresult PLUGIN_API SplitterProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API SplitterProcessor::setActive (TBool state)
 {
-	if (state)
-		env = buf0 = buf1 = buf2 = buf3 = 0.0f;
+	
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API SplitterProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		env = buf0 = buf1 = buf2 = buf3 = 0.0f;
+	}
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -124,18 +135,18 @@ void SplitterProcessor::recalculate ()
 {
 	int32 tmp;
 
-	freq = params[1];
-	fdisp = (float)pow (10.0f, 2.0f + 2.0f * freq);  //frequency
-	freq = 5.5f * fdisp / getSampleRate ();
+	freq = static_cast<float> (params[1]);
+	fdisp = powf (10.0f, 2.0f + 2.0f * freq);  //frequency
+	freq = 5.5f * fdisp / static_cast<float> (getSampleRate ());
 	if (freq>1.0f) freq = 1.0f;
 
 	ff = -1.0f;               //above
-	tmp = std::min<int32> (2, 3 * params[2]);  //frequency switching
+	tmp = std::min<int32> (2, static_cast<int32> (3 * params[2]));  //frequency switching
 	if (tmp == 0) ff = 0.0f;     //below
 	if (tmp == 1) freq = 0.001f; //all
 
-	ldisp = 40.0f * params[3] - 40.0f;  //level
-	level = (float)pow (10.0f, 0.05f * ldisp + 0.3f);
+	ldisp = static_cast<float> (40.0f * params[3] - 40.0f);  //level
+	level = powf (10.0f, 0.05f * ldisp + 0.3f);
 
 	ll = 0.0f;                //above
 	tmp = (int32)(2.9f * params[4]);  //level switching
@@ -146,14 +157,14 @@ void SplitterProcessor::recalculate ()
 	if (ff==ll) pp = 1.0f;
 	if (ff==0.0f && ll==-1.0f) { ll *= -1.0f; }
 
-	att = 0.05f - 0.05f * params[5];
-	rel = 1.0f - (float)exp (-6.0f - 4.0f * params[5]); //envelope
+	att = static_cast<float> (0.05f - 0.05f * params[5]);
+	rel = 1.0f - static_cast<float> (exp (-6.0f - 4.0f * params[5])); //envelope
 	if (att>0.02f) att=0.02f;
 	if (rel<0.9995f) rel = 0.9995f;
 
-	i2l = i2r = o2l = o2r = (float)pow (10.0f, (float)(2.0f * params[6] - 1.0f));  //gain
+	i2l = i2r = o2l = o2r = powf (10.0f, static_cast<float> (2.0f * params[6] - 1.0f));  //gain
 
-	mode = std::min<int32> (3, 4 * params[0]);  //output routing
+	mode = std::min<int32> (3, static_cast<int32> (4 * params[0]));  //output routing
 	switch (mode)
 	{
 		case  0: i2l  =  0.0f;  i2r  =  0.0f;  break;

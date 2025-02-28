@@ -68,12 +68,12 @@ tresult PLUGIN_API SubSynthController::getParamStringByValue (ParamID tag, Param
 	{
 		case 2:
 		{
-			result.printInt (0.0726 * getSampleRate () * pow (10.0,-2.5 + (1.5 * valueNormalized)));
+			result.printInt (static_cast<int64> (0.0726 * getSampleRate () * pow (10.0,-2.5 + (1.5 * valueNormalized))));
 			break;
 		}
 		case 5:
 		{
-			result.printInt (-301.03 / (getSampleRate () * log10((1.0 - pow (10.0, -2.0 - (3.0 * valueNormalized))))));
+			result.printInt (static_cast<int64> (-301.03 / (getSampleRate () * log10((1.0 - pow (10.0, -2.0 - (3.0 * valueNormalized)))))));
 			break;
 		}
 		default:

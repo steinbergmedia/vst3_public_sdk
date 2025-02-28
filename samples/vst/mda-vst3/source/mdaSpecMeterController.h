@@ -31,7 +31,7 @@ class SpecMeterController : public BaseController
 {
 public:
 	SpecMeterController ();
-	~SpecMeterController ();
+	~SpecMeterController () override;
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 

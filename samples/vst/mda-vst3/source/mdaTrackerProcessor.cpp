@@ -72,8 +72,8 @@ tresult PLUGIN_API TrackerProcessor::setActive (TBool state)
 {
 	if (state)
 	{
-		dphi = 100.f/getSampleRate (); //initial pitch
-		min = (int32)(getSampleRate ()/30.0); //lower limit
+		dphi = static_cast<float> (100.f/getSampleRate ()); //initial pitch
+		min = static_cast<int32> (getSampleRate ()/30.0); //lower limit
 	}
 	return BaseProcessor::setActive (state);
 }
@@ -179,21 +179,21 @@ void TrackerProcessor::recalculate ()
 {
 	mode = std::min<int32> (4, (int32)(params[0]*5));
 	fo = filterFreq(50.f); fi = (1.f - fo)*(1.f - fo);
-	ddphi = params[3] * params[3];
+	ddphi = static_cast<float> (params[3] * params[3]);
 	thr = (float)pow (10.0, 3.0*params[6] - 3.8);
 	max = (int32)(getSampleRate () / pow (10.0f, (float)(1.6f + 2.2f * params[5])));
 	trans = (float)pow (1.0594631,int (72.f*params[4] - 36.f));
 	wet = (float)pow (10.0, 2.0*params[7] - 1.0);
 	if (mode<4)
 	{
-		dyn = wet * 0.6f * params[2] * params[1];
+		dyn = static_cast<float> (wet * 0.6f * params[2] * params[1]);
 		dry = wet * (float)sqrt (1.f - params[2]);
-		wet = wet * 0.3f * params[2] * (1.f - params[1]);
+		wet = static_cast<float> (wet * 0.3f * params[2] * (1.f - params[1]));
 	}
 	else
 	{
-		dry = wet * (1.f - params[2]);
-		wet *= (0.02f*params[2] - 0.004f);
+		dry = static_cast<float> (wet * (1.f - params[2]));
+		wet *= static_cast<float> (0.02f*params[2] - 0.004f);
 		dyn = 0.f;
 	}
 	rel = (float)pow (10.0,-10.0/getSampleRate ());

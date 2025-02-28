@@ -54,6 +54,7 @@ public:
 	                                       int32 numOuts) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 	tresult PLUGIN_API process (ProcessData& data) SMTG_OVERRIDE;
 
 //------------------------------------------------------------------------
@@ -68,6 +69,7 @@ public:
 protected:
 	void doParameterChanges (IParameterChanges& changes);
 	void calculateDelay ();
+	bool resetDelay ();
 
 	BypassProcessor<Vst::Sample32> mBypassProcessor;
 
@@ -77,6 +79,7 @@ protected:
 	double mTempo {120};
 	float** mBuffer {nullptr};
 	uint32 mBufferPos {0};
+	int32 mNumChannels {0};
 };
 
 //------------------------------------------------------------------------

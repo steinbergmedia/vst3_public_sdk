@@ -27,7 +27,7 @@ class ShepardProcessor : public BaseProcessor
 {
 public:
 	ShepardProcessor ();
-	~ShepardProcessor ();
+	~ShepardProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdah'; }
 

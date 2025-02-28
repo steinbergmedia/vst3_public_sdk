@@ -37,8 +37,10 @@
 
 #include "public.sdk/source/vst/testsuite/general/parameterfunctionname.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstparameterfunctionname.h"
 #include "pluginterfaces/vst/ivstunits.h"
+
 #include <unordered_map>
 
 //------------------------------------------------------------------------

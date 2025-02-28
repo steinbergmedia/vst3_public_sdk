@@ -116,13 +116,22 @@ tresult PLUGIN_API DX10Processor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DX10Processor::setActive (TBool state)
 {
+	return Base::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API DX10Processor::setProcessing (TBool state)
+{
 	if (state)
 	{
+		synthData.init ();
+		synthData.clearEvents ();
 		lfo0 = 0.0f;
 		lfo1 = 1.0f; //reset LFO phase
-		synthData.init ();
 	}
-	return Base::setActive (state);
+
+	Base::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -138,6 +147,7 @@ void DX10Processor::setParameter (ParamID index, ParamValue newValue, int32 samp
 		{
 			for (int32 i = 0; i < NPARAMS; i++)
 				params[i] = newParams[i];
+			recalculate ();
 		}
 	}
 	else if (index == BaseController::kModWheelParam) // mod wheel
@@ -148,9 +158,9 @@ void DX10Processor::setParameter (ParamID index, ParamValue newValue, int32 samp
 	else if (index == BaseController::kPitchBendParam) // pitch bend
 	{
 		if (newValue <= 1)
-			pbend = (newValue - 0.5) * 0x2000;
+			pbend = static_cast<float> ((newValue - 0.5) * 0x2000);
 		else
-			pbend = newValue;
+			pbend = static_cast<float> (newValue);
         if (pbend>0.0f) pbend = 1.0f + 0.000014951f * pbend; 
                   else pbend = 1.0f + 0.000013318f * pbend; 
 	}
@@ -159,7 +169,8 @@ void DX10Processor::setParameter (ParamID index, ParamValue newValue, int32 samp
 //-----------------------------------------------------------------------------
 void DX10Processor::setCurrentProgram (Steinberg::uint32 val)
 {
-	currentProgram = val;
+	if (val < kNumPrograms)
+		currentProgram = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -305,7 +316,7 @@ void DX10Processor::noteEvent (const Event& event)
 		synthData.voice[vl].mod1 = (float)sin(synthData.voice[vl].dmod); 
 		synthData.voice[vl].dmod = 2.0f * (float)cos(synthData.voice[vl].dmod);
 		//scale volume with richness
-		synthData.voice[vl].env  = (1.5f - params[13]) * volume * (velocity + 10);
+		synthData.voice[vl].env  = static_cast<float> ((1.5f - params[13]) * volume * (velocity + 10));
 		synthData.voice[vl].catt = catt;
 		synthData.voice[vl].cenv = 0.0f;
 		synthData.voice[vl].cdec = cdec;
@@ -333,12 +344,12 @@ void DX10Processor::recalculate ()
 {
 	float ifs = 1.0f / (float)getSampleRate ();
 
-	tune = (float)(8.175798915644 * ifs * pow (2.0, floor(params[11] * 6.9) - 2.0));
+	tune = static_cast<float> (8.175798915644 * ifs * pow (2.0, floor(params[11] * 6.9) - 2.0));
 
-	rati = params[3];
+	rati = static_cast<float> (params[3]);
 	rati = (float)floor(40.1f * rati * rati);
 	if (params[4]<0.5f) 
-		ratf = 0.2f * params[4] * params[4];
+		ratf = static_cast<float> (0.2f * params[4] * params[4]);
 	else 
 		switch ((int32)(8.9f * params[4]))
 		{
@@ -350,11 +361,11 @@ void DX10Processor::recalculate ()
 		}
 	ratio = 1.570796326795f * (rati + ratf);
 
-	depth = 0.0002f * params[5] * params[5];
-	dept2 = 0.0002f * params[7] * params[7];
+	depth = static_cast<float> (0.0002f * params[5] * params[5]);
+	dept2 = static_cast<float> (0.0002f * params[7] * params[7]);
 
-	velsens = params[9];
-	vibrato = 0.001f * params[10] * params[10];
+	velsens = static_cast<float> (params[9]);
+	vibrato = static_cast<float> (0.001f * params[10] * params[10]);
 
 	catt = 1.0f - (float)exp (-ifs * exp (8.0 - 8.0 * params[0]));
 	if (params[1]>0.98f) cdec = 1.0f; else 
@@ -363,10 +374,10 @@ void DX10Processor::recalculate ()
 	mdec = 1.0f - (float)exp (-ifs * exp (6.0 - 7.0 * params[6]));
 	mrel = 1.0f - (float)exp (-ifs * exp (5.0 - 8.0 * params[8]));
 
-	rich = 0.50f - 3.0f * params[13] * params[13];
+	rich = static_cast<float> (0.50f - 3.0f * params[13] * params[13]);
 	//rich = -1.0f + 2 * params[13];
-	modmix = 0.25f * params[14] * params[14];
-	dlfo = 628.3f * ifs * 25.0f * params[15] * params[15]; //these params not in original DX10
+	modmix = static_cast<float> (0.25f * params[14] * params[14]);
+	dlfo = static_cast<float> (628.3f * ifs * 25.0f * params[15] * params[15]); //these params not in original DX10
 }
 
 }}} // namespaces

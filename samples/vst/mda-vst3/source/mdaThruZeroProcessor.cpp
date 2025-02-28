@@ -79,12 +79,20 @@ tresult PLUGIN_API ThruZeroProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API ThruZeroProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API ThruZeroProcessor::setProcessing (TBool state)
+{
 	if (state)
 	{
-		if (buffer) memset (buffer , 0, BUFMAX * sizeof (float));
+		if (buffer) memset (buffer, 0, BUFMAX * sizeof (float));
 		if (buffer2) memset (buffer2, 0, BUFMAX * sizeof (float));
 	}
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -146,15 +154,15 @@ void ThruZeroProcessor::doProcessing (ProcessData& data)
 //-----------------------------------------------------------------------------
 void ThruZeroProcessor::recalculate ()
 {
-	rat = (float)(pow (10.0f, (float)(3.f * params[0] - 2.f)) * 2.f / getSampleRate ());
-	dep = 2000.0f * params[1] * params[1];
-	dem = dep - dep * params[4];
+	rat = static_cast<float> (powf (10.0f, static_cast<float> (3.f * params[0] - 2.f)) * 2.f / getSampleRate ());
+	dep = static_cast<float> (2000.0f * params[1] * params[1]);
+	dem = static_cast<float> (dep - dep * params[4]);
 	dep -= dem;
 
-	wet = params[2];
+	wet = static_cast<float> (params[2]);
 	dry = 1.f - wet;
-	if (params[0] < 0.01f) { rat = 0.0f; phi = (float)0.0f; }
-	fb = 1.9f * params[3] - 0.95f;
+	if (params[0] < 0.01) { rat = 0.0f; phi = 0.0f; }
+	fb = static_cast<float> (1.9f * params[3] - 0.95f);
 }
 
 }}} // namespaces

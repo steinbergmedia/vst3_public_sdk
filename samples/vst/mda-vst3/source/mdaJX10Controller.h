@@ -28,7 +28,7 @@ class JX10Controller : public BaseController
 {
 public:
 	JX10Controller ();
-	~JX10Controller ();
+	~JX10Controller () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

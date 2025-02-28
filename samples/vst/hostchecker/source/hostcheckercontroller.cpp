@@ -452,6 +452,7 @@ HostCheckerController::HostCheckerController ()
 	mScoreMap.emplace (kLogIdIMidiLearn_onLiveMIDIControllerInputSupported, 1.f);
 
 	mScoreMap.emplace (kLogIdIAttributeListInSetStateSupported, 1.f);
+	mScoreMap.emplace (kLogIdIAttributeListInGetStateSupported, 1.f);
 
 	mScoreMap.emplace (kLogIdIXmlRepresentationControllerSupported, 1.f);
 	mScoreMap.emplace (kLogIdIAutomationStateSupported, 1.f);
@@ -559,6 +560,9 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 
 		parameters.addParameter (STR16 ("ParamLowLatency"), STR16 (""), 1, 0,
 		                         ParameterInfo::kNoFlags, kParamLowLatencyTag);
+
+		parameters.addParameter (STR16 ("ParamProcessMode"), STR16 (""), 2, 0,
+		                         ParameterInfo::kIsHidden, kParamProcessModeTag);
 
 		//---ProcessContext parameters------------------------
 		parameters.addParameter (new StringInt64Parameter (
@@ -713,6 +717,29 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 	else
 	{
 		addFeatureLog (kLogIdIPlugInterfaceSupportNotSupported);
+	}
+
+	// check COM behavior (limited to IHostApplication for now)
+	if (hostContext)
+	{
+		if (auto hostApp = U::cast<IHostApplication> (hostContext))
+		{
+			if (auto iUnknown = U::cast<FUnknown> (hostApp))
+			{
+				if (auto hostApp2 = U::cast<IHostApplication> (iUnknown))
+				{
+					SMTG_ASSERT (hostApp == hostApp2)
+				}
+				else
+				{ // should deliver the right pointer normally!
+					addFeatureLog (kLogWrongCOMBehaviorFUnknown1);
+				}
+			}
+			else
+			{ // should deliver the right pointer normally!
+				addFeatureLog (kLogWrongCOMBehaviorFUnknown2);
+			}
+		}
 	}
 
 	return result;
@@ -951,6 +978,10 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 	}
 	//--- ----------------------------------------
+	else if (tag == kParamProcessModeTag)
+	{
+	}
+	//--- ----------------------------------------
 	else if (tag == kParamRandomizeTag)
 	{
 		addFeatureLog (kLogIdIParameterFunctionNameRandomizeSupported);
@@ -1006,7 +1037,7 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 		bool latencyRestartWanted = false;
 		int32 tagOffset = (tag - kProcessWarnTag) * HostChecker::kParamWarnBitCount;
-		uint32 idValue = value * HostChecker::kParamWarnStepCount;
+		uint32 idValue = static_cast<uint32> (value * HostChecker::kParamWarnStepCount);
 		for (uint32 i = 0; i < HostChecker::kParamWarnBitCount; i++)
 		{
 			if (idValue & (1L << i))

@@ -65,7 +65,7 @@ tresult PLUGIN_API DegradeController::getParamStringByValue (ParamID tag, ParamV
 	{
 		case kParam0:
 		{
-			result.printInt (-30 * (1 - valueNormalized));
+			result.printInt (static_cast<int64> (-30 * (1 - valueNormalized)));
 			break;
 		}
 		case kParam2:
@@ -74,25 +74,25 @@ tresult PLUGIN_API DegradeController::getParamStringByValue (ParamID tag, ParamV
 			int tn;
 			if (valueNormalized > 0.5)
 			{ 
-				f = valueNormalized - 0.5f;
+				f = static_cast<float> (valueNormalized - 0.5f);
 			}
 			else 
 			{ 
-				f = 0.5f - valueNormalized; 
+				f = static_cast<float> (0.5f - valueNormalized);
 			}
 
 			tn = (int)exp (18.0f * f);
-			result.printInt (sampleRate / tn);
+			result.printInt (static_cast<int64> (sampleRate / tn));
 			break;
 		}
 		case kParam3:
 		{
-			result.printInt (pow (10.0f, (float)(2.30104f + 2.f * valueNormalized)));
+			result.printInt (static_cast<int64> (pow (10.0f, (float)(2.30104f + 2.f * valueNormalized))));
 			break;
 		}
 		case kParam4:
 		{
-			result.printInt (200.0 * fabs (valueNormalized - 0.5));
+			result.printInt (static_cast<int64> (200.0 * fabs (valueNormalized - 0.5)));
 			break;
 		}
 		default:

@@ -28,7 +28,7 @@ class DX10Controller : public BaseController
 {
 public:
 	DX10Controller ();
-	~DX10Controller ();
+	~DX10Controller () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

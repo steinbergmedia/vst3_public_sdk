@@ -75,26 +75,26 @@ tresult PLUGIN_API MultiBandController::getParamStringByValue (ParamID tag, Para
 	{
 		case 1:
 		{
-			float fi1 = (float)pow (10.0,valueNormalized - 1.70);
-			result.printInt (getSampleRate () * fi1 * (0.098 + 0.09*fi1 + 0.5*(float)pow (fi1,8.2f)));
+			float fi1 = static_cast<float> (pow (10.0,valueNormalized - 1.70));
+			result.printInt (static_cast<int64> (getSampleRate () * fi1 * (0.098 + 0.09*fi1 + 0.5*powf (fi1,8.2f))));
 			break;
 		}
 		case 2:
 		{
-			float fi2 = (float)pow (10.0,valueNormalized - 1.05);
-			result.printInt (getSampleRate () * fi2 * (0.015 + 0.15*fi2 + 0.9*(float)pow (fi2,8.2f)));
+			float fi2 = static_cast<float> (pow (10.0,valueNormalized - 1.05));
+			result.printInt (static_cast<int64> (getSampleRate () * fi2 * (0.015 + 0.15*fi2 + 0.9*powf (fi2,8.2f))));
 			break;
 		}
 		case 9:
 		{
-			float att2 = (float)pow (10.0, -0.05 -(2.0 * valueNormalized));
-			result.printInt (-301030.1 / (getSampleRate () * log10(1.0 - att2)));
+			float att2 = static_cast<float> (pow (10.0, -0.05 -(2.0 * valueNormalized)));
+			result.printInt (static_cast<int64> (-301030.1 / (getSampleRate () * log10(1.0 - att2))));
 			break;
 		}
 		case 10:
 		{
-			float rel2 = (float)pow (10.0, -2.0 - (3.0 * valueNormalized));
-			result.printInt (-301.0301 / (getSampleRate () * log10(1.0 - rel2)));
+			float rel2 = static_cast<float> (pow (10.0, -2.0 - (3.0 * valueNormalized)));
+			result.printInt (static_cast<int64> (-301.0301 / (getSampleRate () * log10(1.0 - rel2))));
 			break;
 		}
 		default:

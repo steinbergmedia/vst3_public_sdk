@@ -68,6 +68,7 @@ struct LogEvent
 #define FEATURE_SUPPORT "FeatureSupport"
 #define HOST_FEATURE_SUPPORT "HostFeatureSupport"
 #define FEATURE_PROCESSOR_SUPPORT "FeatureProcessSupport"
+#define OTHER "Other"
 
 #define PROCESS true
 #define CONTROL false
@@ -94,7 +95,7 @@ struct LogEvent
 	LOG_DEF(kLogIdsetProcessingTrueRedundant,	PROCESS,	LOG_WARN, STATE, "Redondant Call: setProcessing (true)!"), \
 	LOG_DEF(kLogIdgetLatencyNotCalled,			PROCESS,	LOG_WARN, STATE, "Missing Call: getLatencySamples ()!"), \
 	LOG_DEF(kLogIdProcessContextPointerNull,	PROCESS,	LOG_WARN, PROCESS_DATA, "Pointer to ProcessContext struct is null."),\
-	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup"), \
+	LOG_DEF(kLogIdInvalidSymbolicSampleSize,	PROCESS,	LOG_ERR, PROCESS_DATA, "Symbolic sample size does not match the one in ProcessSetup."), \
 	LOG_DEF(kLogIdInvalidProcessMode,			PROCESS,	LOG_ERR, PROCESS_DATA, "Process mode does not match the one in ProcessSetup."),\
 	LOG_DEF(kLogIdInvalidBlockSize,				PROCESS,	LOG_ERR, PROCESS_DATA, "Block size is either < 1 or >= max block size."),\
 	LOG_DEF(kLogIdProcessPlaybackChangedDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in projectTimeSamples detected due to Start/Stop."),\
@@ -102,7 +103,8 @@ struct LogEvent
 	LOG_DEF(kLogIdProcessPlaybackChangedContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected due to Start/Stop."),\
 	LOG_DEF(kLogIdProcessContinuousDiscontinuityDetected, PROCESS, LOG_INFO, PROCESS_DATA, "Discontinuity in continousTimeSamples detected during playback or pause."),\
 	\
-	LOG_DEF(kLogIdInvalidProcessContextSampleRate,	PROCESS, LOG_ERR, PROCESS_CONTEXT, "The sampleRate does not match the one in ProcessSetup."),\
+	LOG_DEF(kLogIdInvalidProcessContextSampleRate, PROCESS, LOG_ERR,  PROCESS_CONTEXT, "The sampleRate does not match the one in ProcessSetup."),\
+	LOG_DEF(kLogIdInvalidProcessContextSystemTime, PROCESS, LOG_ERR, PROCESS_CONTEXT, "The given systemTime is not increasing continuously."),\
 	LOG_DEF(kLogIdNullPointerToChannelBuf,		PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAuxChannelBuf,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to a SideChain channel buffer is null although the index is valid."),\
 	LOG_DEF(kLogIdNullPointerToAudioBusBuffer,	PROCESS,	LOG_ERR, AUDIO_BUFFER, "A pointer to an audio bus buffer is null although the index is valid."),\
@@ -126,15 +128,18 @@ struct LogEvent
 	LOG_DEF(kLogIdNoteOffWithIdNeverTriggered,		PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note On (ID)"),\
 	LOG_DEF(kLogIdNoteOffWithPitchNeverTriggered,	PROCESS, LOG_WARN, EVENT_LIST, "A Note Off event with no matching note On (pitch)."),\
 	LOG_DEF(kLogIdNoteExpressValNotNormalized,		PROCESS, LOG_ERR, EVENT_LIST,  "A note expression event value is either < 0.0 or > 1.0."),\
-	LOG_DEF(kLogIdInvalidParamValue,				PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter value is < 0.0 or > 1.0"),\
+	LOG_DEF(kLogIdInvalidParamValue,				PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter value is < 0.0 or > 1.0."),\
 	LOG_DEF(kLogIdInvalidParameterCount,			PROCESS, LOG_ERR, PARAM_CHANGE, "The number of changes is bigger than the number of parameters specified by IEditController."),\
 	LOG_DEF(kLogIdInvalidParameterID,				PROCESS, LOG_ERR, PARAM_CHANGE, "A parameter change queue has a parameter ID which was not specified by IEditController."),\
 	LOG_DEF(kLogIdParameterIDMoreThanOneTimeinList, PROCESS, LOG_ERR, PARAM_CHANGE, "A parameter ID is more than 1 time in the IParameterChanges list."),\
 	LOG_DEF(kLogIdParameterChangesPointerIsNull,	PROCESS, LOG_WARN, PARAM_CHANGE, "Pointer to parameter changes interface is null."),\
-	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null (index is valid!)"),\
+	LOG_DEF(kLogIdParameterQueueIsNullForValidIndex, PROCESS, LOG_ERR, PARAM_CHANGE, "Pointer to parameter value queue interface is null (index is valid!)."),\
 	LOG_DEF(kLogIdParametersAreNotSortedBySampleOffset, PROCESS, LOG_ERR, PARAM_CHANGE, "Parameter changes (for a ID) are not sorted by sample offset."),\
 	LOG_DEF(kLogIdParametersHaveSameSampleOffset,   PROCESS, LOG_WARN, PARAM_CHANGE, "Parameter changes (for a ID) have more than 2 time the same sample offset."),\
 	LOG_DEF(kLogIdInformLatencyChanged,				PROCESS, LOG_INFO, PARAM_CHANGE,	"InformLatencyChanged called from processor."),\
+	\
+	LOG_DEF (kLogWrongCOMBehaviorFUnknown1,			CONTROL, LOG_WARN, OTHER, "U::cast<FUnknown> (U::cast<IHostApplication> (hostContext)) does not work correctly!"), \
+	LOG_DEF (kLogWrongCOMBehaviorFUnknown2,			CONTROL, LOG_WARN, OTHER, "U::cast<IHostApplication> (U::cast<FUnknown> (U::cast<IHostApplication> (hostContext))) does not work correctly!"), \
 	\
 	LOG_DEF(kLogIdinitializeCalledinWrongThread,		CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::initialize is called in wrong Thread!"),\
 	LOG_DEF(kLogIdterminateCalledinWrongThread,			CONTROL, LOG_ERR, THREAD_CONTEXT, "IEditController::terminate is called in wrong Thread!"),\
@@ -173,8 +178,9 @@ struct LogEvent
 	LOG_DEF(kLogIdProcessorGetStateCalledinWrongThread,	PROCESS, LOG_ERR, THREAD_CONTEXT, "IComponent::getState is called in wrong Thread!"),\
 	LOG_DEF(kLogIdactivateBusCalledinWrongThread,		PROCESS, LOG_ERR, THREAD_CONTEXT, "IComponent::activateBus is called in wrong Thread!"),\
 	\
-	LOG_DEF(kLogIdSetActiveCalledSupported,          PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponent::setActive (true) called"), \
+	LOG_DEF(kLogIdSetActiveCalledSupported,          PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponent::setActive (true) called."), \
 	LOG_DEF(kLogIdIAttributeListInSetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in setState supported!"), \
+	LOG_DEF(kLogIdIAttributeListInGetStateSupported, PROCESS, LOG_INFO, HOST_FEATURE_SUPPORT, "IAttributeList in getState supported!"), \
 	\
 	LOG_DEF (kLogIdRestartParamValuesChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamValuesChanged) supported!"), \
 		LOG_DEF (kLogIdRestartParamTitlesChangedSupported, CONTROL, LOG_INFO, HOST_FEATURE_SUPPORT, "IComponentHandler::restartComponent (kParamTitlesChanged) supported!"), \

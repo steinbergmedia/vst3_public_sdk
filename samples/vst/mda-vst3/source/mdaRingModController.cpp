@@ -60,7 +60,7 @@ tresult PLUGIN_API RingModController::getParamStringByValue (ParamID tag, ParamV
 	{
 		case 0:
 		{
-			result.printInt (100. * floor(160. * valueNormalized));
+			result.printInt (static_cast<int64> (100. * floor(160. * valueNormalized)));
 			break;
 		}
 		default:

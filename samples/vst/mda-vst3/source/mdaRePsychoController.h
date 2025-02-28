@@ -28,7 +28,7 @@ class RePsychoController : public BaseController
 {
 public:
 	RePsychoController ();
-	~RePsychoController ();
+	~RePsychoController () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

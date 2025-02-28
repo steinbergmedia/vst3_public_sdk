@@ -116,7 +116,7 @@ tresult PLUGIN_API PianoProcessor::setActive (TBool state)
 	if (state)
 	{
 		synthData.init ();
-		Fs = getSampleRate ();
+		Fs = static_cast<float> (getSampleRate ());
 		iFs = 1.0f / Fs;
 		if (Fs > 64000.0f) cmax = 0xFF; else cmax = 0x7F;
 		memset (comb, 0, sizeof (float) * 256);
@@ -124,6 +124,16 @@ tresult PLUGIN_API PianoProcessor::setActive (TBool state)
 	else
 		allNotesOff ();
 	return Base::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API PianoProcessor::setProcessing (TBool state)
+{
+	if (state)
+		allNotesOff ();
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -139,6 +149,7 @@ void PianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sam
 		{
 			for (int32 i = 0; i < NPARAMS; i++)
 				params[i] = newParams[i];
+			recalculate ();
 		}
 	}
 	else if (index == BaseController::kModWheelParam) // mod wheel
@@ -165,7 +176,8 @@ void PianoProcessor::setParameter (ParamID index, ParamValue newValue, int32 sam
 //-----------------------------------------------------------------------------
 void PianoProcessor::setCurrentProgram (Steinberg::uint32 val)
 {
-	currentProgram = val;
+	if (val < kNumPrograms)
+		currentProgram = val;
 }
 
 //-----------------------------------------------------------------------------
@@ -293,7 +305,7 @@ void PianoProcessor::noteEvent (const Event& event)
 
 		synthData.voice[vl].env = (0.5f + velsens) * (float)pow (0.0078f * velocity, velsens); //velocity
 
-		l = 50.0f + params[4] * params[4] * muff + muffvel * (float)(velocity - 64); //muffle
+		l = static_cast<float> (50.0f + params[4] * params[4] * muff + muffvel * (float)(velocity - 64)); //muffle
 		if (l < (55.0f + 0.25f * (float)note)) l = 55.0f + 0.25f * (float)note;
 		if (l > 210.0f) l = 210.0f;
 		synthData.voice[vl].ff = l * l * iFs;
@@ -307,8 +319,8 @@ void PianoProcessor::noteEvent (const Event& event)
 		synthData.voice[vl].outl = l + l - synthData.voice[vl].outr;
 
 		if (note < 44) note = 44; //limit max decay length
-		l = 2.0f * params[0];
-		if (l < 1.0f) l += 0.25f - 0.5f * params[0];
+		l = static_cast<float> (2.0f * params[0]);
+		if (l < 1.0f) l += static_cast<float> (0.25f - 0.5f * params[0]);
 		synthData.voice[vl].dec = (float)exp (-iFs * exp (-0.6 + 0.033 * (double)note - l));
 		synthData.voice[vl].noteID = noteOn.noteId;
 	}
@@ -352,19 +364,20 @@ void PianoProcessor::allNotesOff ()
 void PianoProcessor::recalculate ()
 {
 	size = (int32)(12.0f * params[2] - 6.0f);
-	sizevel = 0.12f * params[3];
-	muffvel = params[5] * params[5] * 5.0f;
+	sizevel = static_cast<float> (0.12f * params[3]);
+	muffvel = static_cast<float> (params[5] * params[5] * 5.0f);
 
-	velsens = 1.0f + params[6] + params[6];
-	if (params[6] < 0.25f) velsens -= 0.75f - 3.0f * params[6];
+	velsens = static_cast<float> (1.0f + params[6] + params[6]);
+	if (params[6] < 0.25f) velsens -= static_cast<float> (0.75f - 3.0f * params[6]);
 
-	fine = params[9] - 0.5f;
-	random = 0.077f * params[10] * params[10];
-	stretch = 0.000434f * (params[11] - 0.5f);
+	fine = static_cast<float> (params[9] - 0.5f);
+	random = static_cast<float> (0.077f * params[10] * params[10]);
+	stretch = static_cast<float> (0.000434f * (params[11] - 0.5f));
 
-	cdep = params[7] * params[7];
+	cdep = static_cast<float> (params[7] * params[7]);
 	trim = 1.50f - 0.79f * cdep;
-	width = 0.04f * params[7];  if (width > 0.03f) width = 0.03f;
+	width = static_cast<float> (0.04f * params[7]);
+	if (width > 0.03f) width = 0.03f;
 
 	poly = 8 + (int32)(24.9f * params[8]);
 }

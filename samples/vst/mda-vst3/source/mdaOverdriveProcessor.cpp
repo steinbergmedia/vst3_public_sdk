@@ -76,7 +76,7 @@ void OverdriveProcessor::doProcessing (ProcessData& data)
 	float* out2 = data.outputs[0].channelBuffers32[1];
 
 	float a, b, c, d;
-	float i=params[0], g=gain, aa, bb;
+	float i= static_cast<float> (params[0]), g=gain, aa, bb;
 	float f=filt, fa=filt1, fb=filt2;
 
 	--in1;	

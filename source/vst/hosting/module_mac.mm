@@ -391,5 +391,14 @@ Optional<std::string> Module::getModuleInfoPath (const std::string& modulePath)
 }
 
 //------------------------------------------------------------------------
+bool Module::validateBundleStructure (const std::string& path, std::string& errorDescription)
+{
+	auto* nsString = [NSString stringWithUTF8String:path.data ()];
+	if (!nsString)
+		return false;
+	return [NSBundle bundleWithPath:nsString] != nil;
+}
+
+//------------------------------------------------------------------------
 } // Hosting
 } // VST3

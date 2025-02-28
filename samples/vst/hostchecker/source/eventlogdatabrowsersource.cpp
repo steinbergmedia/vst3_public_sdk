@@ -159,7 +159,7 @@ void EventLogDataBrowserSource::dbDrawCell (CDrawContext* context, const CRect& 
 		if (oddRow)
 			cellColor.alpha /= 2;
 		else
-			cellColor.alpha /= 3.;
+			cellColor.alpha /= 3;
 	}
 
 	context->setFillColor (cellColor);

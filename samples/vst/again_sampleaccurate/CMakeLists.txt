@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.15.0)
+cmake_minimum_required(VERSION 3.25.0)
 
 project(smtg-vst3-again-sampleaccurate
     VERSION ${vstsdk_VERSION}.0

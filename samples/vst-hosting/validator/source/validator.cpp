@@ -487,6 +487,19 @@ void Validator::testModule (Module::Ptr module, const ModuleTestConfig& config)
 
 	numTestsFailed = numTestsPassed = 0;
 
+	//---check bundle structure--------------
+	std::string errorStr;
+	if (infoStream)
+		*infoStream << "* Check valid bundle structure...\n";
+	if (Module::validateBundleStructure (module->getPath (), errorStr) == false)
+	{
+		++numTestsFailed;
+		if (errorStream)
+			*errorStream << "Invalid bundle structure: " << errorStr << "\n";
+	}
+	if (infoStream)
+		*infoStream << "\n";
+
 	auto factory = module->getFactory ();
 	printFactoryInfo (module->getFactory (), infoStream);
 

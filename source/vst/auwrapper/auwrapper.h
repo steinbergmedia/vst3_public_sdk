@@ -83,96 +83,6 @@ class VST3DynLibrary;
 namespace Vst {
 
 //------------------------------------------------------------------------
-typedef struct MIDIMessageInfoStruct
-{
-	UInt8 status;
-	UInt8 channel;
-	UInt8 data1;
-	UInt8 data2;
-	UInt32 startFrame;
-} MIDIMessageInfoStruct;
-
-//------------------------------------------------------------------------
-class MIDIOutputCallbackHelper
-{
-public:
-	MIDIOutputCallbackHelper ()
-	{
-		mMIDIMessageList.reserve (16);
-		mMIDICallbackStruct.midiOutputCallback = NULL;
-	}
-	virtual ~MIDIOutputCallbackHelper () {};
-
-	void SetCallbackInfo (AUMIDIOutputCallback callback, void* userData)
-	{
-		mMIDICallbackStruct.midiOutputCallback = callback;
-		mMIDICallbackStruct.userData = userData;
-	}
-
-	void AddEvent (UInt8 status, UInt8 channel, UInt8 data1, UInt8 data2, UInt32 inStartFrame)
-	{
-		MIDIMessageInfoStruct info = {status, channel, data1, data2, inStartFrame};
-		mMIDIMessageList.push_back (info);
-	}
-
-	void FireAtTimeStamp (const AudioTimeStamp& inTimeStamp)
-	{
-		if (!mMIDIMessageList.empty () && mMIDICallbackStruct.midiOutputCallback != nullptr)
-		{
-			// synthesize the packet list and call the MIDIOutputCallback
-			// iterate through the vector and get each item
-			std::vector<MIDIMessageInfoStruct>::iterator myIterator;
-			MIDIPacketList* pktlist = PacketList ();
-
-			for (myIterator = mMIDIMessageList.begin (); myIterator != mMIDIMessageList.end ();
-			     myIterator++)
-			{
-				MIDIMessageInfoStruct item = *myIterator;
-
-				MIDIPacket* pkt = MIDIPacketListInit (pktlist);
-				bool tooBig = false;
-				Byte data[3] = {item.status, item.data1, item.data2};
-				if ((pkt = MIDIPacketListAdd (pktlist, sizeof (mBuffersAllocated), pkt,
-				                              item.startFrame, 4, const_cast<Byte*> (data))) ==
-				    NULL)
-					tooBig = true;
-
-				if (tooBig)
-				{ // send what we have and then clear the buffer and send again
-					// issue the callback with what we got
-					OSStatus result = mMIDICallbackStruct.midiOutputCallback (
-					    mMIDICallbackStruct.userData, &inTimeStamp, 0, pktlist);
-					if (result != noErr)
-						printf ("error calling output callback: %d", (int)result);
-
-					// clear stuff we've already processed, and fire again
-					mMIDIMessageList.erase (mMIDIMessageList.begin (), myIterator);
-					this->FireAtTimeStamp (inTimeStamp);
-					return;
-				}
-			}
-			// fire callback
-			OSStatus result = mMIDICallbackStruct.midiOutputCallback (mMIDICallbackStruct.userData,
-			                                                          &inTimeStamp, 0, pktlist);
-			if (result != noErr)
-				printf ("error calling output callback: %d", (int)result);
-
-			mMIDIMessageList.clear ();
-		}
-	}
-
-protected:
-	typedef std::vector<MIDIMessageInfoStruct> MIDIMessageList;
-
-private:
-	MIDIPacketList* PacketList () { return (MIDIPacketList*)mBuffersAllocated; }
-
-	Byte mBuffersAllocated[1024];
-	AUMIDIOutputCallbackStruct mMIDICallbackStruct;
-	MIDIMessageList mMIDIMessageList;
-};
-
-//------------------------------------------------------------------------
 //------------------------------------------------------------------------
 class AUWrapper : public AUWRAPPER_BASE_CLASS, public IComponentHandler, public ITimerCallback
 {
@@ -363,8 +273,10 @@ protected:
 	MidiLearnRingBuffer midiLearnRingBuffer;
 	IPtr<IMidiLearn> midiLearn;
 
+	struct MIDIOutputCallbackHelper;
+
 	int32 midiOutCount; // currently only 0 or 1 supported
-	MIDIOutputCallbackHelper mCallbackHelper;
+	std::unique_ptr<MIDIOutputCallbackHelper> mCallbackHelper;
 	EventList outputEvents;
 
 	bool isInstrument;

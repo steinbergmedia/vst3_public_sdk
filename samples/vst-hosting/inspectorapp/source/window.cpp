@@ -195,7 +195,7 @@ using namespace VST3::Hosting;
 struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 {
 	SnapshotController (IController* parent) : DelegationController (parent) {}
-	~SnapshotController () noexcept {}
+	~SnapshotController () noexcept override {}
 
 	CView* createView (const UIAttributes& attributes, const IUIDescription* description) override
 	{
@@ -342,11 +342,13 @@ struct WindowController : WindowControllerAdapter,
 	{
 		if (value.getID () == ModulePathListID)
 		{
-			onModuleSelection (value.getConverter ().normalizedToPlain (value.getValue ()));
+			onModuleSelection (static_cast<uint32_t> (
+			    value.getConverter ().normalizedToPlain (value.getValue ())));
 		}
 		if (value.getID () == ClassInfoListID)
 		{
-			onClassInfoSelection (value.getConverter ().normalizedToPlain (value.getValue ()));
+			onClassInfoSelection (static_cast<uint32_t> (
+			    value.getConverter ().normalizedToPlain (value.getValue ())));
 		}
 	}
 

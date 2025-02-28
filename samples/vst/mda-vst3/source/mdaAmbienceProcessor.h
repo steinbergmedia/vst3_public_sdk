@@ -27,13 +27,14 @@ class AmbienceProcessor : public BaseProcessor
 {
 public:
 	AmbienceProcessor ();
-	~AmbienceProcessor ();
+	~AmbienceProcessor () override;
 
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaA'; }
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 
 	void doProcessing (ProcessData& data) SMTG_OVERRIDE;
 

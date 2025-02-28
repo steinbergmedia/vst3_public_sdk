@@ -30,7 +30,7 @@ class LimiterController : public BaseController
 {
 public:
 	LimiterController ();
-	~LimiterController ();
+	~LimiterController () override;
 	
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;

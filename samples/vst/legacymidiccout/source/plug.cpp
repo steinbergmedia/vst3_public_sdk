@@ -115,9 +115,9 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 				{
 					if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) == kResultTrue)
 					{
-						mChannel =
-						    Helpers::boundTo<uint8> (0, kMaxMIDIChannelSupported - 1,
-						                             value * (kMaxMIDIChannelSupported - 1) + 0.5);
+						mChannel = Helpers::boundTo<uint8> (
+						    0, kMaxMIDIChannelSupported - 1,
+						    static_cast<uint8> (value * (kMaxMIDIChannelSupported - 1) + 0.5));
 					}
 				}
 				break;

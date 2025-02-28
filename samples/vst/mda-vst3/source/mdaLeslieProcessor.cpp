@@ -79,9 +79,17 @@ tresult PLUGIN_API LeslieProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API LeslieProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API LeslieProcessor::setProcessing (TBool state)
+{
 	if (state)
 		memset (hbuf, 0, size * sizeof (float));
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -177,7 +185,7 @@ void LeslieProcessor::doProcessing (ProcessData& data)
 void LeslieProcessor::recalculate ()
 {
 	float ifs = 1.0f / (float)getSampleRate ();
-	float spd = twopi * ifs * 2.0f * params[LeslieController::kParam8];
+	float spd = static_cast<float> (twopi * ifs * 2.0f * params[LeslieController::kParam8]);
 
 	filo = 1.f - (float)pow (10.0f, (float)(params[LeslieController::kParam6] * (2.27f - 0.54f * params[LeslieController::kParam6]) - 1.92f));
 
@@ -209,11 +217,11 @@ void LeslieProcessor::recalculate ()
 	lset *= spd;
 
 	gain = 0.4f * (float)pow (10.0f, (float)(2.0f * params[LeslieController::kParam7] - 1.0f));
-	lwid = params[LeslieController::kParam1] * params[LeslieController::kParam1];
-	llev = gain * 0.9f * params[LeslieController::kParam2] * params[LeslieController::kParam2];
-	hwid = params[LeslieController::kParam3] * params[LeslieController::kParam3];
-	hdep = params[LeslieController::kParam4] * params[LeslieController::kParam4] * getSampleRate () / 760.0f;
-	hlev = gain * 0.9f * params[LeslieController::kParam5] * params[LeslieController::kParam5];
+	lwid = static_cast<float> (params[LeslieController::kParam1] * params[LeslieController::kParam1]);
+	llev = static_cast<float> (gain * 0.9f * params[LeslieController::kParam2] * params[LeslieController::kParam2]);
+	hwid = static_cast<float> (params[LeslieController::kParam3] * params[LeslieController::kParam3]);
+	hdep = static_cast<float> (params[LeslieController::kParam4] * params[LeslieController::kParam4] * getSampleRate () / 760.0f);
+	hlev = static_cast<float> (gain * 0.9f * params[LeslieController::kParam5] * params[LeslieController::kParam5]);
 }
 
 }}} // namespaces

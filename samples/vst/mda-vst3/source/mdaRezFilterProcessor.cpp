@@ -70,13 +70,21 @@ tresult PLUGIN_API RezFilterProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API RezFilterProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API RezFilterProcessor::setProcessing (TBool state)
+{
 	if (state)
 	{
-		buf0=0.f; 
-		buf1=0.f; 
-		buf2=0.f;
+		buf0 = 0.f;
+		buf1 = 0.f;
+		buf2 = 0.f;
 	}
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -179,26 +187,26 @@ void RezFilterProcessor::doProcessing (ProcessData& data)
 //-----------------------------------------------------------------------------
 void RezFilterProcessor::recalculate ()
 {
-	fff = 1.5f * params[0] * params[0] - 0.15f;
-	fq = 0.99f * (float)pow ((float)(params[1]),0.3f); //was 0.99f * 
-	fg = 0.5f * (float)pow (10.0f, (float)(2.f * params[2] - 1.f));
+	fff = static_cast<float> (1.5f * params[0] * params[0] - 0.15f);
+	fq = 0.99f * powf (static_cast<float> (params[1]),0.3f); //was 0.99f * 
+	fg = 0.5f * powf (10.0f, static_cast<float> (2.f * params[2] - 1.f));
 
-	fmax = 0.99f + 0.3f * params[1];
-	if (fmax>(1.3f * params[9])) fmax=1.3f*params[9]; 
+	fmax = static_cast<float> (0.99f + 0.3f * params[1]);
+	if (fmax>(1.3f * params[9])) fmax= static_cast<float> (1.3f*params[9]);
 	//fmax = 1.0f;
 	//fq *= 1.0f + 0.2f * params[9];
 
-	fenv = 2.f*(0.5f - params[3])*(0.5f - params[3]); 
-	fenv = (params[3]>0.5f)? fenv : -fenv;
-	att = (float)pow (10.0, -0.01 - 4.0 * params[4]);
-	rel = 1.f - (float)pow (10.0, -2.00 - 4.0 * params[5]);
+	fenv = static_cast<float> (2.f*(0.5f - params[3])*(0.5f - params[3]));
+	fenv = (params[3]>0.5)? fenv : -fenv;
+	att = static_cast<float> (pow (10.0, -0.01 - 4.0 * params[4]));
+	rel = 1.f - static_cast<float> (pow (10.0, -2.00 - 4.0 * params[5]));
 
 	lfomode=0;
-	flfo = 2.f * (params[6] - 0.5f)*(params[6] - 0.5f); 
-	dphi = (float)(6.2832f * (float)pow (10.0f, (float)(3.f * params[7] - 1.5f)) / getSampleRate ());
+	flfo = static_cast<float> (2.f * (params[6] - 0.5f)*(params[6] - 0.5f));
+	dphi = static_cast<float> (6.2832f * powf (10.0f, static_cast<float> (3.f * params[7] - 1.5f)) / getSampleRate ());
 	if (params[6]<0.5) { lfomode=1; dphi *= 0.15915f; flfo *= 0.001f; } //S&H
 
-	if (params[8]<0.1f) tthr=0.f; else tthr = 3.f * params[8] * params[8];
+	if (params[8]<0.1) tthr=0.f; else tthr = static_cast<float> (3.f * params[8] * params[8]);
 }
 
 }}} // namespaces

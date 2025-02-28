@@ -87,7 +87,7 @@ tresult PLUGIN_API PianoController::setParamNormalized (ParamID tag, ParamValue 
 	tresult res = BaseController::setParamNormalized (tag, value);
 	if (res == kResultOk && tag == kPresetParam) // preset change
 	{
-		int32 program = parameters.getParameter (tag)->toPlain (value);
+		int32 program = static_cast<int32> (parameters.getParameter (tag)->toPlain (value));
 		for (int32 i = 0; i < PianoProcessor::NPARAMS; i++)
 		{
 			BaseController::setParamNormalized (i, PianoProcessor::programParams[program][i]);

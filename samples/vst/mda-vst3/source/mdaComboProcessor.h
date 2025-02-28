@@ -27,13 +27,14 @@ class ComboProcessor : public BaseProcessor
 {
 public:
 	ComboProcessor ();
-	~ComboProcessor ();
+	~ComboProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaX'; }
 
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 	tresult PLUGIN_API terminate () SMTG_OVERRIDE;
 	tresult PLUGIN_API setActive (TBool state) SMTG_OVERRIDE;
+	tresult PLUGIN_API setProcessing (TBool state) SMTG_OVERRIDE;
 
 	void doProcessing (ProcessData& data) SMTG_OVERRIDE;
 

@@ -264,7 +264,7 @@ struct DataExchangeController : EditController,
 			if (tag == UITagDisplayFreq)
 			{
 				auto value = uiOnlyParameters[UITagDisplayFreq]->toPlain (valueNormalized);
-				pixelsPerMillisecond = value;
+				pixelsPerMillisecond = static_cast<float> (value);
 			}
 			else if (tag == UITagForceMessageHandling)
 			{

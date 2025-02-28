@@ -65,10 +65,19 @@ tresult PLUGIN_API DegradeProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DegradeProcessor::setActive (TBool state)
 {
-	if (state)
-		buf0 = buf1 = buf2 = buf3 = buf4 = buf5 = buf6 = buf7 = buf8 = buf9 = 0.0f;
-
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API DegradeProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		buf0 = buf1 = buf2 = buf3 = buf4 = buf5 = buf6 = buf7 = buf8 = buf9 = 0.0f;
+	}
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------

@@ -254,7 +254,7 @@ bool EventListCheck::checkValidPitch (Steinberg::int16 pitch)
 }
 
 //------------------------------------------------------------------------
-bool EventListCheck::isNormalized (float normVal) const
+bool EventListCheck::isNormalized (double normVal) const
 {
 	return normVal >= 0. && normVal <= 1.;
 }

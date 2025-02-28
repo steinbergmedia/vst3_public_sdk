@@ -69,19 +69,20 @@ bool PLUGIN_API VariableBlockSizeTest::run (ITestResult* testResult)
 		processData.numSamples = sampleFrames;
 		if (i == 0)
 			processData.numSamples = 0;
-#if TOUGHTESTS
+#if defined(TOUGHTESTS) && TOUGHTESTS
 		else if (i == 1)
 			processData.numSamples = -50000;
 		else if (i == 2)
 			processData.numSamples = processSetup.maxSamplesPerBlock * 2;
-#endif
+#endif // TOUGHTESTS
+
 		tresult result = audioEffect->process (processData);
 		if ((result != kResultOk)
-#if TOUGHTESTS
+#if defined(TOUGHTESTS) && TOUGHTESTS
 		    && (i > 1)
 #else
 		    && (i > 0)
-#endif
+#endif // TOUGHTESTS
 		        )
 		{
 			addErrorMessage (

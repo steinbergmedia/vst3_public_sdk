@@ -84,8 +84,8 @@ tresult PLUGIN_API RezFilterController::getParamStringByValue (ParamID tag, Para
 		}
 		case 8:
 		{
-			float tthr = 0;
-			if (valueNormalized<0.1f) tthr=0.f; else tthr = 3.f * valueNormalized * valueNormalized;
+			float tthr = 0.f;
+			if (valueNormalized<0.1f) tthr=0.f; else tthr = static_cast <float>(3.f * valueNormalized * valueNormalized);
 			if (tthr == 0)
 				result.fromAscii("FREE RUN");
 			else

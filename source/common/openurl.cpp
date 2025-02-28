@@ -47,8 +47,10 @@
 #include <cstdlib>
 #endif
 
+//-----------------------------------------------------------------------------
 namespace Steinberg {
 
+//-----------------------------------------------------------------------------
 bool openURLInDefaultApplication (const String& address)
 {
 	bool res = false;
@@ -61,14 +63,16 @@ bool openURLInDefaultApplication (const String& address)
 	cmd += "open \"";
 	cmd += address.text8 ();
 	cmd += "\"";
-	res = system (cmd) != 0;
+	res = (system (cmd) == 0);
 #elif SMTG_OS_LINUX
 	String cmd;
 	cmd += "xdg-open \"";
 	cmd += address.text8 ();
 	cmd += "\"";
-	res = system (cmd) != 0;
+	res = (system (cmd) == 0);
 #endif
 	return res;
 }
-}
+
+//------------------------------------------------------------------------
+} // namespace Steinberg

@@ -105,12 +105,12 @@ tresult PLUGIN_API EPianoController::getParamStringByValue (ParamID tag, ParamVa
 		{
 			if (valueNormalized > 0.5)
 			{
-				result.printInt (200.0f * valueNormalized - 100.0f);
+				result.printInt (static_cast<int64> (200.0f * valueNormalized - 100.0f));
 				result.append(USTRING(" Trem"));
 			}
 			else
 			{
-				result.printInt (100.0f - 200.0f * valueNormalized);
+				result.printInt (static_cast<int64> (100.0f - 200.0f * valueNormalized));
 				result.append(USTRING(" Pan"));
 			}
 			break;

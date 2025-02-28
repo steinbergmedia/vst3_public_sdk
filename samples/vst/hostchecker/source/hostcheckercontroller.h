@@ -109,6 +109,7 @@ enum
 
 	kParamLowLatencyTag,
 	kParamRandomizeTag,
+	kParamProcessModeTag,
 
 	kProcessWarnTag,
 	kLastTag = kProcessWarnTag + HostChecker::kParamWarnCount,

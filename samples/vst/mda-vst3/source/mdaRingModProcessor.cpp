@@ -115,8 +115,8 @@ void RingModProcessor::doProcessing (ProcessData& data)
 //-----------------------------------------------------------------------------
 void RingModProcessor::recalculate ()
 {
-	fdPhi = (float) (twoPi * 100.0 * (params[1] + (160.0 * params[0]))/ getSampleRate ());
-	ffb = 0.95f * params[2];
+	fdPhi = static_cast<float> (twoPi * 100.0 * (params[1] + (160.0 * params[0]))/ getSampleRate ());
+	ffb = static_cast<float> (0.95f * params[2]);
 }
 
 }}} // namespaces

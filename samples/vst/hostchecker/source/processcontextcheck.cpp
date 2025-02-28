@@ -39,6 +39,7 @@
 #include "eventlogger.h"
 #include "logevents.h"
 
+using namespace Steinberg::Vst;
 //------------------------------------------------------------------------
 //	ProcessContextCheck
 //------------------------------------------------------------------------
@@ -48,7 +49,7 @@ ProcessContextCheck::ProcessContextCheck () : mEventLogger (nullptr), mSampleRat
 void ProcessContextCheck::setEventLogger (EventLogger* eventLogger) { mEventLogger = eventLogger; }
 
 //------------------------------------------------------------------------
-void ProcessContextCheck::check (Steinberg::Vst::ProcessContext* context)
+void ProcessContextCheck::check (ProcessContext* context)
 {
 	if (!context)
 	{
@@ -59,6 +60,14 @@ void ProcessContextCheck::check (Steinberg::Vst::ProcessContext* context)
 	if (context->sampleRate != mSampleRate)
 	{
 		mEventLogger->addLogEvent (kLogIdInvalidProcessContextSampleRate);
+	}
+	if (context->state & ProcessContext::StatesAndFlags::kSystemTimeValid)
+	{
+		if (mLastSystemTime >= context->systemTime)
+		{
+			mEventLogger->addLogEvent (kLogIdInvalidProcessContextSystemTime);
+		}
+		mLastSystemTime = context->systemTime;
 	}
 }
 

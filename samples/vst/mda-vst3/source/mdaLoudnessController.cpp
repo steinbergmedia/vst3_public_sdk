@@ -62,7 +62,7 @@ tresult PLUGIN_API LoudnessController::getParamStringByValue (ParamID tag, Param
 		case 0:
 		case 1:
 		{
-			float tmp = valueNormalized + valueNormalized - 1.0f;
+			float tmp = static_cast<float> (valueNormalized + valueNormalized - 1.0f);
 			float igain = 60.0f * tmp * tmp;
 			if (tmp<0.0f) igain *= -1.0f;
 			result.printFloat (igain);

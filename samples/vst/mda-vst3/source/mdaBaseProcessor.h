@@ -34,7 +34,7 @@ class Processor : public AudioEffect
 {
 protected:
 	Processor ();
-	~Processor ();
+	~Processor () override;
 
 	virtual void doProcessing (ProcessData& data) = 0;
 	virtual void preProcess () {}

@@ -27,7 +27,7 @@ class OverdriveProcessor : public BaseProcessor
 {
 public:
 	OverdriveProcessor ();
-	~OverdriveProcessor ();
+	~OverdriveProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaO'; }
 

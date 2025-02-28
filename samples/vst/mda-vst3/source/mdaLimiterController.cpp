@@ -65,14 +65,14 @@ tresult PLUGIN_API LimiterController::getParamStringByValue (ParamID tag, ParamV
 	{
 		case 2:
 		{
-			float att = (float)pow (10.0, -2.0 * valueNormalized);
-			result.printInt (-301030.1 / (getSampleRate () * log10(1.0 - att)));
+			float att = static_cast<float> (pow (10.0, -2.0 * valueNormalized));
+			result.printInt (static_cast<int64> (-301030.1 / (getSampleRate () * log10(1.0 - att))));
 			break;
 		}
 		case 3:
 		{
-			float rel = (float)pow (10.0, -2.0 - (3.0 * valueNormalized));
-			result.printInt (-301.0301 / (getSampleRate () * log10(1.0 - rel)));
+			float rel = static_cast<float> (pow (10.0, -2.0 - (3.0 * valueNormalized)));
+			result.printInt (static_cast<int64> (-301.0301 / (getSampleRate () * log10(1.0 - rel))));
 			break;
 		}
 		default:

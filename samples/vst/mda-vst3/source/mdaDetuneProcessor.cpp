@@ -73,12 +73,20 @@ tresult PLUGIN_API DetuneProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DetuneProcessor::setActive (TBool state)
 {
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API DetuneProcessor::setProcessing (TBool state)
+{
 	if (state)
 	{
 		memset (buf, 0, BUFMAX * sizeof (float));
 		pos0 = 0; pos1 = pos2 = 0.0f;
 	}
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -162,20 +170,20 @@ void DetuneProcessor::recalculate ()
 {
 	int32 tmp;
 
-	semi = 3.0f * params[0] * params[0] * params[0];
-	dpos2 = (float)pow (1.0594631f, semi);
+	semi = static_cast<float> (3.0f * params[0] * params[0] * params[0]);
+	dpos2 = powf (1.0594631f, semi);
 	dpos1 = 1.0f / dpos2;
 
-	wet = (float)pow (10.0f, (float)(2.0f * params[2] - 1.0f));
-	dry = wet - wet * params[1] * params[1];
-	wet = (wet + wet - wet * params[1]) * params[1];
+	wet = powf (10.0f, static_cast<float> (2.0f * params[2] - 1.0f));
+	dry = static_cast<float> (wet - wet * params[1] * params[1]);
+	wet = static_cast<float> ((wet + wet - wet * params[1]) * params[1]);
 
 	tmp = 1 << (8 + (int32)(4.9f * params[3]));
 
 	if (tmp!=buflen) //recalculate crossfade window
 	{
 		buflen = tmp;
-		bufres = 1000.0f * (float)buflen / getSampleRate ();
+		bufres = static_cast<float> (1000.0f * buflen / getSampleRate ());
 
 		int32 i; //hanning half-overlap-and-add
 		double p=0.0, dp=6.28318530718/buflen;

@@ -62,9 +62,20 @@ tresult PLUGIN_API DeEsserProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DeEsserProcessor::setActive (TBool state)
 {
-	env=0.f;
-	fbuf1 = fbuf2 = 0;
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API DeEsserProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		env = 0.f;
+		fbuf1 = fbuf2 = 0;
+	}
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -112,7 +123,7 @@ void DeEsserProcessor::recalculate ()
 	thr= (float)pow (10.0f, (float)(3.f * params[0] - 3.f));
 	att=0.01f;
 	rel=0.992f;
-	fil=0.05f + 0.94f * params[1] * params[1];
+	fil= static_cast<float> (0.05f + 0.94f * params[1] * params[1]);
 	gai= (float)pow (10.0f, (float)(2.f * params[2] - 1.f));
 }
 

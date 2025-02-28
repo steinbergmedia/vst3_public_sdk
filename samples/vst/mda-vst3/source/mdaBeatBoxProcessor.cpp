@@ -104,7 +104,7 @@ tresult PLUGIN_API BeatBoxProcessor::setActive (TBool state)
 
 		memset (kbuf, 0, kbuflen * sizeof (float)); //generate kick
 		de = (float)pow (10.0,-3.8/getSampleRate ());
-		e=0.5f; dp = 1588.f / getSampleRate ();
+		e=0.5f; dp = 1588.f / static_cast<float> (getSampleRate ());
 		for(t=0;t<14000;t++) 
 		{ 
 			*(kbuf + t) =  e * (float)sin(p); 
@@ -113,7 +113,7 @@ tresult PLUGIN_API BeatBoxProcessor::setActive (TBool state)
 
 		memset (sbuf, 0, sbuflen * sizeof (float)); //generate snare
 		de = (float)pow (10.0,-15.0/getSampleRate ());
-		e=0.38f; dp = 1103.f / getSampleRate ();
+		e=0.38f; dp = 1103.f / static_cast<float> (getSampleRate ());
 		for(t=0;t<7000;t++) 
 		{ 
 			o = (0.3f * o) + (float)((rand() % 2000) - 1000); 
@@ -131,6 +131,18 @@ tresult PLUGIN_API BeatBoxProcessor::setActive (TBool state)
 		hbuf = kbuf = sbuf = sbuf2 = nullptr;
 	}
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API BeatBoxProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		hbufpos = sbufpos = kbufpos = 0;
+	}
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -270,8 +282,8 @@ void BeatBoxProcessor::recalculate ()
 		}
 	}
 	recpos=0; recx=rec;
-	mix = params[11];
-	dynm = params[9];
+	mix = static_cast<float> (params[11]);
+	dynm = static_cast<float> (params[9]);
 }
 
 }}} // namespaces

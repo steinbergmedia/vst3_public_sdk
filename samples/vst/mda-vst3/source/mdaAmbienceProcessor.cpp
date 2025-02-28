@@ -84,9 +84,17 @@ tresult PLUGIN_API AmbienceProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API AmbienceProcessor::setActive (TBool state)
 {
-	if (state)
-		clearBuffers();
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API AmbienceProcessor::setProcessing (TBool state)
+{
+	if (state)
+		clearBuffers ();
+
+	BaseProcessor::setProcessing (state);
+	return kResultTrue;
 }
 
 //-----------------------------------------------------------------------------
@@ -173,16 +181,16 @@ void AmbienceProcessor::clearBuffers ()
 void AmbienceProcessor::recalculate ()
 {
 	float tmp;
-	
-	fbak = 0.8f;
-	damp = 0.05f + 0.9f * params[1];
-	tmp = (float)powf (10.0f, 2.0f * params[3] - 1.0f);
-	dry = tmp - params[2] * params[2] * tmp;
-	wet = (0.4f + 0.4f) * params[2] * tmp;  
 
-	tmp = 0.025f + 2.665f * params[0];
-	if (size!=tmp) rdy =0;  //need to flush buffer
+	fbak = 0.8f;
+	damp = static_cast<float> (0.05f + 0.9f * params[1]);
+	tmp = powf (10.0f, static_cast<float> (2.0f * params[3] - 1.0f));
+	dry = static_cast<float> (tmp - params[2] * params[2] * tmp);
+	wet = static_cast<float> (0.8f * params[2] * tmp);
+
+	tmp = static_cast<float> (0.025f + 2.665f * params[0]);
+	if (size != tmp)
+		rdy = 0; // need to flush buffer
 	size = tmp;
 }
-
 }}} // namespaces

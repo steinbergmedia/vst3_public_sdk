@@ -166,8 +166,9 @@ struct D3D11View : ExternalView::ExternalHWNDBase
 	bool onResize (ExternalView::IntSize size)
 	{
 		unbind ();
-		auto hr = swapchain->ResizeBuffers (2, size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM,
-		                                    DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
+		auto hr = swapchain->ResizeBuffers (
+		    2, static_cast<UINT> (size.width), static_cast<UINT> (size.height),
+		    DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT);
 		if (!SUCCEEDED (hr))
 			return false;
 		hr = swapchain->GetBuffer (0, __uuidof (ID3D11Texture2D),
@@ -175,13 +176,14 @@ struct D3D11View : ExternalView::ExternalHWNDBase
 		if (!SUCCEEDED (hr))
 			return false;
 		render_view = createRenderTargetView (buffer.get ());
-		stencil = createStencilBuffer (size.width, size.height);
+		stencil =
+		    createStencilBuffer (static_cast<UINT> (size.width), static_cast<UINT> (size.height));
 		stencil_view = createStencilView (stencil.get ());
 
 		bind ();
 
-		viewport.Width = size.width;
-		viewport.Height = size.height;
+		viewport.Width = static_cast<FLOAT> (size.width);
+		viewport.Height = static_cast<FLOAT> (size.height);
 		viewport.MinDepth = 0;
 		viewport.MaxDepth = 1;
 		return true;

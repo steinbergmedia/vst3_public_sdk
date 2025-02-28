@@ -39,6 +39,8 @@ public:
 	int32 PLUGIN_API getProgramListCount () SMTG_OVERRIDE;
 	tresult PLUGIN_API getProgramListInfo (int32 listIndex, ProgramListInfo& info /*out*/) SMTG_OVERRIDE;
 	tresult PLUGIN_API getProgramName (ProgramListID listId, int32 programIndex, String128 name /*out*/) SMTG_OVERRIDE;
+	tresult PLUGIN_API getUnitByBus (MediaType type, BusDirection dir, int32 busIndex,
+	                                 int32 channel, UnitID& unitId) SMTG_OVERRIDE;
 
 	tresult PLUGIN_API getMidiControllerAssignment (int32 busIndex, int16 channel, CtrlNumber midiControllerNumber, ParamID& tag/*out*/) SMTG_OVERRIDE;
 

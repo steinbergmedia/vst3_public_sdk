@@ -95,7 +95,14 @@ tresult PLUGIN_API TalkBoxProcessor::setActive (TBool state)
 {
 	if (state)
 		recalculate ();
-	else
+	
+	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API TalkBoxProcessor::setProcessing (TBool state)
+{
+	if (state)
 	{
 		pos = K = 0;
 		emphasis = 0.0f;
@@ -109,7 +116,9 @@ tresult PLUGIN_API TalkBoxProcessor::setActive (TBool state)
 		memset (car0, 0, BUF_MAX * sizeof (float));
 		memset (car1, 0, BUF_MAX * sizeof (float));
 	}
-	return BaseProcessor::setActive (state);
+
+	BaseProcessor::setProcessing (state);
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -216,11 +225,12 @@ void TalkBoxProcessor::recalculate ()
 			p += dp;
 		}
 	}
-	wet = 0.5f * params[0] * params[0];
-	dry = 2.0f * params[1] * params[1];
+	wet = static_cast<float> (0.5f * params[0] * params[0]);
+	dry = static_cast<float> (2.0f * params[1] * params[1]);
 }
 
-void TalkBoxProcessor::lpc(float *buf, float *car, int32 n, int32 o)
+//-----------------------------------------------------------------------------
+void TalkBoxProcessor::lpc (float *buf, float *car, int32 n, int32 o)
 {
   float z[ORD_MAX], r[ORD_MAX], k[ORD_MAX], G, x;
   r[0] = 0.f;
@@ -255,8 +265,8 @@ void TalkBoxProcessor::lpc(float *buf, float *car, int32 n, int32 o)
   }
 }
 
-
-void TalkBoxProcessor::lpc_durbin(float *r, int32 p, float *k, float *g)
+//-----------------------------------------------------------------------------
+void TalkBoxProcessor::lpc_durbin (float *r, int32 p, float *k, float *g)
 {
   int32 i, j;
   float a[ORD_MAX], at[ORD_MAX], e=r[0];
@@ -286,4 +296,3 @@ void TalkBoxProcessor::lpc_durbin(float *r, int32 p, float *k, float *g)
 }
 
 }}} // namespaces
-

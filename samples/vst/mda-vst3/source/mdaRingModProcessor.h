@@ -27,7 +27,7 @@ class RingModProcessor : public BaseProcessor
 {
 public:
 	RingModProcessor ();
-	~RingModProcessor ();
+	~RingModProcessor () override;
 	
 	int32 getVst2UniqueId () const SMTG_OVERRIDE { return 'mdaR'; }
 

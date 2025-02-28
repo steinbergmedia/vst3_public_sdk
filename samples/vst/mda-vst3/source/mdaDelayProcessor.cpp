@@ -73,9 +73,18 @@ tresult PLUGIN_API DelayProcessor::terminate ()
 //-----------------------------------------------------------------------------
 tresult PLUGIN_API DelayProcessor::setActive (TBool state)
 {
-	if (state)
-		memset (buffer, 0, size * sizeof (float));
 	return BaseProcessor::setActive (state);
+}
+
+//-----------------------------------------------------------------------------
+tresult PLUGIN_API DelayProcessor::setProcessing (TBool state)
+{
+	if (state)
+	{
+		memset (buffer, 0, size * sizeof (float));
+		ipos = 0;
+	}
+	return kResultOk;
 }
 
 //-----------------------------------------------------------------------------
@@ -140,13 +149,13 @@ void DelayProcessor::recalculate ()
 		case  11: tmp = 1.3333f; break;
 		case  10: tmp = 1.5000f; break;
 		case   9: tmp = 2.0000f; break;
-		default: tmp = 4.0f * params[1]; break; //variable ratio
+		default: tmp = static_cast<float> (4.0f * params[1]); break; //variable ratio
 	}
 	rdel = (int32)(size * params[0] * params[0] * tmp);
 	if (rdel>size) rdel=size;
 	if (rdel<4) rdel=4;
 
-	fil = params[3];
+	fil = static_cast<float> (params[3]);
 
 	if (params[3]>0.5f)  //simultaneously change crossover frequency & high/low mix
 	{
@@ -161,10 +170,10 @@ void DelayProcessor::recalculate ()
 	}
 	fil = (float)exp (-6.2831853f * pow (10.0f, 2.2f + 4.5f * fil) / getSampleRate ());
 
-	fbk = 0.495f * params[2];
-	wet = 1.0f - params[4];
-	wet = params[5] * (1.0f - wet * wet); //-3dB at 50% mix
-	dry = params[5] * 2.0f * (1.0f - params[4] * params[4]);
+	fbk = static_cast<float> (0.495f * params[2]);
+	wet = static_cast<float> (1.0f - params[4]);
+	wet = static_cast<float> (params[5] * (1.0f - wet * wet)); //-3dB at 50% mix
+	dry = static_cast<float> (params[5] * 2.0f * (1.0f - params[4] * params[4]));
 }
 
 }}} // namespaces

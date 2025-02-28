@@ -67,7 +67,7 @@ tresult PLUGIN_API RoundPanController::getParamStringByValue (ParamID tag, Param
 				else
 					dphi = 0.0;
 			}
-			result.printInt (57.296 * dphi * getSampleRate ());
+			result.printInt (static_cast<int64> (57.296 * dphi * getSampleRate ()));
 			break;
 		}
 		default:

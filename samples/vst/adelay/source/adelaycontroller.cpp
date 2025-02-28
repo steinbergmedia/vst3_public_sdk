@@ -85,7 +85,7 @@ tresult PLUGIN_API ADelayController::setComponentState (IBStream* state)
 	float savedDelay = 0.f;
 	if (streamer.readFloat (savedDelay) == false)
 		return kResultFalse;
-	setParamNormalized (kDelayId, savedDelay);
+	setParamNormalized (kDelayId, static_cast<ParamValue> (savedDelay));
 
 	int32 bypassState = 0;
 	if (streamer.readInt32 (bypassState) == false)
