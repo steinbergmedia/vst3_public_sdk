@@ -382,15 +382,18 @@ struct BufferedInputBus : BufferedAudioBus
 		if (pullInputBlock == nullptr)
 			return kAudioUnitErr_NoConnection;
 
-		prepareInputBufferList ();
+		if (frameCount > maxFrames)
+			return kAudioUnitErr_TooManyFramesToProcess;
+
+		prepareInputBufferList (frameCount);
 
 		return pullInputBlock (actionFlags, timestamp, frameCount, inputBusNumber,
 		                       mutableAudioBufferList);
 	}
 
-	void prepareInputBufferList ()
+	void prepareInputBufferList (AVAudioFrameCount frameCount)
 	{
-		UInt32 byteSize = maxFrames * sizeof (float);
+		UInt32 byteSize = frameCount * sizeof (float);
 
 		mutableAudioBufferList->mNumberBuffers = originalAudioBufferList->mNumberBuffers;
 
@@ -2409,16 +2412,16 @@ using namespace Vst;
 		  {
 			  UInt32 byteSize = frameCount * sizeof (float);
 
-			  if (pullInputBlock == nullptr ||
-				  inputBusBuffers.at (i).pullInput (&pullFlags, timestamp, frameCount, i,
-				                                    pullInputBlock) != noErr)
-			  {
-				  for (int32 channel = 0; channel < inputBusBuffers.at (i).bus.format.channelCount;
-					   channel++)
-					  memset (
-						  inputBusBuffers.at (i).mutableAudioBufferList->mBuffers[channel].mData, 0,
-						  byteSize);
-			  }
+			  AUAudioUnitStatus pullInputStatus = inputBusBuffers.at (i).pullInput (&pullFlags, timestamp, frameCount, i, pullInputBlock);
+
+			  if (pullInputStatus != noErr)
+				return pullInputStatus;
+
+			  for (int32 channel = 0; channel < inputBusBuffers.at (i).bus.format.channelCount;
+				   channel++)
+				  memset (
+					  inputBusBuffers.at (i).mutableAudioBufferList->mBuffers[channel].mData, 0,
+					  byteSize);
 
 			  if (actionFlags != nullptr &&
 				  (*actionFlags & kAudioUnitRenderAction_OutputIsSilence) != 0)
