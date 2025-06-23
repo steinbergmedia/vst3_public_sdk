@@ -146,8 +146,10 @@ inline constexpr ClassInfo2WithCreateFunc makeClassInfo2 (
 		strncpy8 (classInfo.subCategories, subCategories, PClassInfo2::kSubCategoriesSize);
 	if (vendor)
 		strncpy8 (classInfo.vendor, vendor, PClassInfo2::kVendorSize);
-	strncpy8 (classInfo.version, version, PClassInfo2::kVersionSize);
-	strncpy8 (classInfo.sdkVersion, sdkVersion, PClassInfo2::kVersionSize);
+	if (version)
+		strncpy8 (classInfo.version, version, PClassInfo2::kVersionSize);
+	if (sdkVersion)
+		strncpy8 (classInfo.sdkVersion, sdkVersion, PClassInfo2::kVersionSize);
 	classInfo.create = func;
 	classInfo.context = context;
 	return classInfo;

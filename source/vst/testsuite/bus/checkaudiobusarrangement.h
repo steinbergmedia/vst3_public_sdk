@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Check Audio Bus Arrangement.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class CheckAudioBusArrangementTest : public TestBase
 {
 public:
 	CheckAudioBusArrangementTest (ITestPlugProvider* plugProvider);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Check Audio Bus Arrangement")

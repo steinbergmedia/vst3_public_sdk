@@ -45,8 +45,8 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Suspend/Resume.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class SuspendResumeTest : public TestEnh
 {
 public:

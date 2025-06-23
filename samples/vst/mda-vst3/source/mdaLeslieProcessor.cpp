@@ -149,7 +149,7 @@ void LeslieProcessor::doProcessing (ProcessData& data)
 		if (hps>0) hps--; else hps=200;  //delay input pos
 		hint = hps + hd * (1.0f + chp); //delay output pos 
 		hdd = (int)hint; 
-		hint = hint - hdd; //linear intrpolation
+		hint = hint - hdd; //linear interpolation
 		hdd2 = hdd + 1;
 		if (hdd>199) { if (hdd>200) hdd -= 201; hdd2 -= 201; }
 

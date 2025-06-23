@@ -47,7 +47,7 @@ class EventLogDataBrowserSource : public CBaseObject, public DataBrowserDelegate
 {
 public:
 	EventLogDataBrowserSource (Steinberg::Vst::EditControllerEx1* editController);
-	~EventLogDataBrowserSource ();
+	~EventLogDataBrowserSource () override;
 
 	using LogEvents = std::vector<LogEvent>;
 
@@ -97,4 +97,4 @@ protected:
 	LogEvents mLogEvents;
 };
 
-} // namespace
+} // namespace VSTGUI

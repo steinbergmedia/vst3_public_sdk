@@ -45,8 +45,8 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Input Overwriting
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class ProcessInputOverwritingTest : public ProcessTest
 {
 public:

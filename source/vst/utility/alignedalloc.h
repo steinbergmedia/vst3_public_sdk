@@ -41,6 +41,10 @@
 
 #include <cstdlib>
 
+#if __APPLE__
+#include <AvailabilityMacros.h>
+#endif
+
 #ifdef _MSC_VER
 #include <malloc.h>
 #endif

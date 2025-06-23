@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Variable Block Size.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class VariableBlockSizeTest : public ProcessTest
 {
 public:
 	VariableBlockSizeTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Variable Block Size")

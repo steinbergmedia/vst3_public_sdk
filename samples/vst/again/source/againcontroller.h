@@ -110,7 +110,7 @@ private:
 	using UIMessageControllerList = std::vector<UIMessageController*>;
 	UIMessageControllerList uiMessageControllers;
 
-	String128 defaultMessageText;
+	String128 defaultMessageText {};
 };
 
 //------------------------------------------------------------------------

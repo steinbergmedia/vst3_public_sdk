@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -39,7 +39,10 @@
 #include "public.sdk/source/vst/utility/stringconvert.h"
 #include "pluginterfaces/base/funknownimpl.h"
 #include "pluginterfaces/vst/ivstunits.h"
+#include <algorithm>
+#include <map>
 #include <unordered_map>
+#include <vector>
 
 //------------------------------------------------------------------------
 namespace Steinberg {
@@ -126,6 +129,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 
 	// used for ID check
 	std::unordered_map<int32, int32> paramIds;
+	std::map<int32, std::vector<std::string>> listTitleUnitMap;
 
 	bool foundBypass = false;
 	for (int32 i = 0; i < numParameters; ++i)
@@ -179,7 +183,7 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 		addMessage (
 		    testResult,
 		    printf (
-		        "   Parameter %03d (id=%d): [title=\"%s\"] [unit=\"%s\"] [type = %s, default = %lf, unit = %d]",
+		        R"(   Parameter %03d (id=%d): [title="%s"] [unit="%s"] [type = %s, default = %lf, unit = %d])",
 		        i, paramId, paramTitle.data (), paramUnits.data (), paramType,
 		        paramInfo.defaultNormalizedValue, paramInfo.unitId));
 
@@ -189,6 +193,23 @@ bool PLUGIN_API ScanParametersTest::run (ITestResult* testResult)
 			                 printf ("=>Parameter %03d (id=%d): has no title!!!", i, paramId));
 			return false;
 		}
+
+		// check if the same title is present in the same unit
+		auto it = listTitleUnitMap.find (paramInfo.unitId);
+		if (it != listTitleUnitMap.end ())
+		{
+			const std::vector<std::string>& list = it->second;
+			auto found = std::find (list.begin (), list.end (), paramTitle);
+			if (found != list.end ())
+			{
+				addMessage (
+				    testResult,
+				    printf (
+				        "=>Parameter %03d (id=%d): [title=\"%s\"] has the same title as another parameter in this unit = %d!",
+				        i, paramId, paramTitle.c_str (), paramInfo.unitId));
+			}
+		}
+		listTitleUnitMap[paramInfo.unitId].push_back (paramTitle);
 
 		if (paramInfo.defaultNormalizedValue != -1.f &&
 		    (paramInfo.defaultNormalizedValue < 0. || paramInfo.defaultNormalizedValue > 1.))

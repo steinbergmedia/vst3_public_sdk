@@ -123,7 +123,7 @@ inline LegacyMIDICCOutEvent& initLegacyMIDICCOutEvent (Event& event, uint8 contr
 	event.midiCCOut.value2 = value2;
 	return event.midiCCOut;
 }
-/*@}*/
+/**@}*/
 
 //------------------------------------------------------------------------
 } // namespace Helpers

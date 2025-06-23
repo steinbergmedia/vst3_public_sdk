@@ -57,7 +57,7 @@ public:
 //------------------------------------------------------------------------
 	using SizeFunc = std::function<void (float)>;
 	EditorSizeController (EditController* editController, const SizeFunc& sizeFunc, double currentSizeFactor);
-	virtual ~EditorSizeController ();
+	~EditorSizeController () override;
 
 	static const int32_t kSizeParamTag = 2000;
 

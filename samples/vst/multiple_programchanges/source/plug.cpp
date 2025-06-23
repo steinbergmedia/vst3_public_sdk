@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/XX/source/plug.cpp
+// Filename    : public.sdk/samples/vst/multiple_programchanges/source/plug.cpp
 // Created by  : Steinberg, 02/2016
 // Description : Plug-in Example for VST SDK 3.x using Multiple ProgramChange parameters
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -111,7 +111,16 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 						if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) ==
 						    kResultTrue)
 						{
-							currentGainValue = static_cast<float> (value);
+							mCurrentGainValue = static_cast<float> (value);
+						}
+						break;
+					case kProgramCountId:
+						if (paramQueue->getPoint (numPoints - 1, offsetSamples, value) ==
+						    kResultTrue)
+						{
+							mProgramCount = FromNormalized<ParamValue> (
+							                    value, kMaxProgramCount - kMinProgramCount) +
+							                kMinProgramCount;
 						}
 						break;
 					default:
@@ -123,7 +132,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 							{
 								int32 idx = paramQueue->getParameterId () - kProgramStartId;
 								// here we get the last set program
-								currentProgram[idx] =
+								mCurrentProgram[idx] =
 								    FromNormalized<ParamValue> (value, kNumProgs - 1);
 							}
 						}
@@ -193,7 +202,7 @@ tresult PLUGIN_API Plug::process (ProcessData& data)
 	else
 	{
 		// here we use the current program as gain value...
-		float gain = currentGainValue;
+		float gain = mCurrentGainValue;
 
 		// in real plug-in it would be better to do dezippering to avoid jump (click) in gain value
 		for (int32 i = 0; i < numChannels; i++)
@@ -259,9 +268,16 @@ tresult PLUGIN_API Plug::setState (IBStream* state)
 
 	bBypass = savedBypass > 0;
 	for (int32 i = 0; i < kNumSlots; i++)
-		currentProgram[i] = savedProgram[i];
+		mCurrentProgram[i] = savedProgram[i];
 
-	currentGainValue = savedGain;
+	mCurrentGainValue = savedGain;
+
+	// read the Program count param
+	uint32 savedProgramCount = 0;
+	if (streamer.readInt32u (savedProgramCount) == true)
+		mProgramCount = savedProgramCount;
+	else
+		mProgramCount = 128;
 
 	return kResultOk;
 }
@@ -281,12 +297,16 @@ tresult PLUGIN_API Plug::getState (IBStream* state)
 	// write number of program
 	streamer.writeInt32 (kNumSlots);
 
-	for (int32 i : currentProgram)
+	for (int32 i : mCurrentProgram)
 		streamer.writeInt32 (i);
 
-	streamer.writeFloat (currentGainValue);
+	streamer.writeFloat (mCurrentGainValue);
+
+	streamer.writeInt32u (mProgramCount);
 
 	return kResultOk;
 }
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // namespace Vst
+} // namespace Steinberg

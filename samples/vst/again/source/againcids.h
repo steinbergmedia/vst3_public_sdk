@@ -45,7 +45,6 @@ static const FUID AGainWithSideChainProcessorUID (0x41347FD6, 0xFED64094, 0xAFBB
 
 static const FUID AGainControllerUID (0xD39D5B65, 0xD7AF42FA, 0x843F4AC8, 0x41EB04F0);
 
-
 #define AGainVST3Category "Fx"
 
 //------------------------------------------------------------------------

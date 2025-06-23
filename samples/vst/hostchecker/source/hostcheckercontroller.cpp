@@ -601,18 +601,21 @@ tresult PLUGIN_API HostCheckerController::initialize (FUnknown* context)
 		                                                   STR16 (""), kUnitId, nullptr,
 		                                                   ParameterInfo::kIsReadOnly));
 		parameters.addParameter (
-		    new StringInt64Parameter (STR16 ("ProjectSystemTime"), kProcessContextSystemTimeTag,
+		    new StringInt64Parameter (STR16 ("ProjectSystemTime1"), kProcessContextSystemTimeTag,
 		                              STR16 ("ns"), kUnitId, nullptr, ParameterInfo::kIsReadOnly));
 		parameters.addParameter (new StringInt64Parameter (
-		    STR16 ("ProjectSystemTime"), kProcessContextContinousTimeSamplesTag, STR16 ("Samples"),
+		    STR16 ("ProjectSystemTime2"), kProcessContextContinousTimeSamplesTag, STR16 ("Samples"),
 		    kUnitId, nullptr, ParameterInfo::kIsReadOnly));
 
 		//--- ------------------------------
 		for (uint32 i = 0; i < HostChecker::kParamWarnCount; i++)
 		{
-			parameters.addParameter (
-			    STR16 ("ProcessWarn"), STR16 (""), HostChecker::kParamWarnStepCount, 0,
-			    ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden, kProcessWarnTag + i);
+			String tmp;
+			tmp.printf (STR16 ("ProcessWarn%d"), i + 1);
+
+			parameters.addParameter (tmp.text16 (), STR16 (""), HostChecker::kParamWarnStepCount, 0,
+			                         ParameterInfo::kIsReadOnly | ParameterInfo::kIsHidden,
+			                         kProcessWarnTag + i);
 		}
 
 		auto addUnitFunc = [=] (const int32 unitId, const int32 parentUnitId, const int32 idx,
@@ -846,7 +849,8 @@ tresult PLUGIN_API HostCheckerController::setComponentState (IBStream* state)
 	// We inform the host that we need a remapping
 	if (stateFromAGain)
 	{
-		componentHandler->restartComponent (kParamIDMappingChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamIDMappingChanged);
 
 		// we should read the AGain state here
 		// TODO
@@ -1007,7 +1011,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 			               ParameterInfo::kCanAutomate);
 		}
 		auto res = EditControllerEx1::setParamNormalized (tag, value);
-		componentHandler->restartComponent (kParamTitlesChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamTitlesChanged);
 		return res;
 	}
 	else if (tag == kTriggerProgressTag)
@@ -1047,7 +1052,7 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 					latencyRestartWanted = true;
 			}
 		}
-		if (latencyRestartWanted)
+		if (latencyRestartWanted && componentHandler)
 			componentHandler->restartComponent (kLatencyChanged);
 	}
 	//--- ----------------------------------------
@@ -1055,7 +1060,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 		if (value > 0.)
 		{
-			if (componentHandler->restartComponent (kKeyswitchChanged) == kResultTrue)
+			if (componentHandler &&
+			    componentHandler->restartComponent (kKeyswitchChanged) == kResultTrue)
 			{
 				addFeatureLog (kLogIdRestartKeyswitchChangedSupported);
 			}
@@ -1071,7 +1077,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 		if (value > 0.)
 		{
-			if (componentHandler->restartComponent (kNoteExpressionChanged) == kResultTrue)
+			if (componentHandler &&
+			    componentHandler->restartComponent (kNoteExpressionChanged) == kResultTrue)
 			{
 				addFeatureLog (kLogIdRestartNoteExpressionChangedSupported);
 			}
@@ -1084,7 +1091,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 		if (value > 0.)
 		{
-			if (componentHandler->restartComponent (kParamValuesChanged) == kResultTrue)
+			if (componentHandler &&
+			    componentHandler->restartComponent (kParamValuesChanged) == kResultTrue)
 			{
 				addFeatureLog (kLogIdRestartParamValuesChangedSupported);
 			}
@@ -1097,7 +1105,8 @@ tresult PLUGIN_API HostCheckerController::setParamNormalized (ParamID tag, Param
 	{
 		if (value > 0.)
 		{
-			if (componentHandler->restartComponent (kParamTitlesChanged) == kResultTrue)
+			if (componentHandler &&
+			    componentHandler->restartComponent (kParamTitlesChanged) == kResultTrue)
 			{
 				addFeatureLog (kLogIdRestartParamTitlesChangedSupported);
 			}
@@ -1333,7 +1342,8 @@ tresult PLUGIN_API HostCheckerController::notify (IMessage* message)
 		ParamValue value;
 		if (message->getAttributes ()->getFloat ("Value", value) == kResultOk)
 		{
-			componentHandler->restartComponent (kLatencyChanged);
+			if (componentHandler)
+				componentHandler->restartComponent (kLatencyChanged);
 		}
 	}
 

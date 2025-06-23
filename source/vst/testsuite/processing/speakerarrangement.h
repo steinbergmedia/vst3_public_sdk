@@ -45,12 +45,11 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Speaker Arrangement.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class SpeakerArrangementTest : public ProcessTest
 {
 public:
-//------------------------------------------------------------------------
 	SpeakerArrangementTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl,
 	                        SpeakerArrangement inSpArr, SpeakerArrangement outSpArr);
 

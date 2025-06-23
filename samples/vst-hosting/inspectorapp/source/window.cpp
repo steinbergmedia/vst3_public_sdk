@@ -232,7 +232,7 @@ struct SnapshotController : DelegationController, NonAtomicReferenceCounted
 					if (bitmap)
 						bitmap->addBitmap (pb);
 					else
-						bitmap = makeOwned<CBitmap> (pb);
+						bitmap = VSTGUI::owned (new CBitmap (pb));
 				}
 			}
 			imageView->setBackground (bitmap);
@@ -328,9 +328,9 @@ struct WindowController : WindowControllerAdapter,
 		for (const auto& path : modulePathList)
 		{
 			if (auto name = lastPathComponent (path))
-				nameList.emplace_back (UTF8String (*name));
+				nameList.emplace_back (*name);
 			else
-				nameList.emplace_back (UTF8String (path));
+				nameList.emplace_back (path);
 		}
 		if (auto value = values.get<IStringListValue> (ModulePathListID))
 			value->updateStringList (nameList);

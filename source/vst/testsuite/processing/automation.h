@@ -47,12 +47,11 @@ namespace Vst {
 class ParamChanges;
 //------------------------------------------------------------------------
 /** Test Automation.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class AutomationTest : public ProcessTest, public IParameterChanges
 {
 public:
-//------------------------------------------------------------------------
 	AutomationTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl, int32 everyNSamples,
 	                int32 numParams, bool sampleAccuracy);
 	~AutomationTest () override;
@@ -89,12 +88,13 @@ protected:
 
 //------------------------------------------------------------------------
 /** Test Parameters Flush (no Buffer).
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class FlushParamTest : public AutomationTest
 {
 public:
 	FlushParamTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Parameters Flush (no Buffer)")
@@ -104,8 +104,8 @@ protected:
 
 //------------------------------------------------------------------------
 /** Test Parameters Flush 2 (no Buffer).
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class FlushParamTest2 : public FlushParamTest
 {
 public:
@@ -124,12 +124,13 @@ protected:
 
 //------------------------------------------------------------------------
 /** Test Parameters Flush 3 (no Buffer, no parameter change).
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class FlushParamTest3 : public FlushParamTest
 {
 public:
 	FlushParamTest3 (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
+
 	DECLARE_VSTTEST ("Parameters Flush 2 (no Buffer, no parameter change)")
 protected:
 };

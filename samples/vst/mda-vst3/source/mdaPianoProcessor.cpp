@@ -191,8 +191,8 @@ void PianoProcessor::doProcessing (ProcessData& data)
 {
 	int32 sampleFrames = data.numSamples;
 	
-	float* out0 = data.outputs[0].channelBuffers32[0];
-	float* out1 = data.outputs[0].channelBuffers32[1];
+	float* out1 = data.outputs[0].channelBuffers32[0];
+	float* out2 = data.outputs[0].channelBuffers32[1];
 
 	int32 frame=0, frames, v;
 	float x, l, r;
@@ -247,8 +247,8 @@ void PianoProcessor::doProcessing (ProcessData& data)
 				++cpos &= cmax;
 				x = cdep * comb[cpos];  //stereo simulator
 
-				*out0++ = l + x;
-				*out1++ = r - x;
+				*out1++ = l + x;
+				*out2++ = r - x;
 			}
 
 			if (frame<sampleFrames)
@@ -258,7 +258,16 @@ void PianoProcessor::doProcessing (ProcessData& data)
 			}
 		}
 	}
-	for(v=0; v<synthData.activevoices; v++) if (synthData.voice[v].env < SILENCE) synthData.voice[v] = synthData.voice[--synthData.activevoices];
+	else //completely empty block
+	{
+		memset (out1, 0, sizeof (float) * data.numSamples);
+		memset (out2, 0, sizeof (float) * data.numSamples);
+
+		data.outputs[0].silenceFlags = 3;
+	}
+	for (v = 0; v < synthData.activevoices; v++)
+		if (synthData.voice[v].env < SILENCE)
+			synthData.voice[v] = synthData.voice[--synthData.activevoices];
 }
 
 //-----------------------------------------------------------------------------

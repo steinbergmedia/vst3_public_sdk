@@ -45,8 +45,8 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Terminate/Initialize.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class TerminateInitializeTest : public TestBase
 {
 public:

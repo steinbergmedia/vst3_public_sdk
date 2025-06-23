@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test SideChain Arrangement.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class SideChainArrangementTest : public TestBase
 {
 public:
 	SideChainArrangementTest (ITestPlugProvider* plugProvider);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("SideChain Arrangement")

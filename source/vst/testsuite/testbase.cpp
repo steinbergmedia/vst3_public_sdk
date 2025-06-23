@@ -206,7 +206,7 @@ std::u16string printf (const char8* format, ...)
 	va_start (marker, format);
 
 	vsnprintf (string, kPrintfBufferSize, format, marker);
-	return convert (string).data ();
+	return convert (string);
 }
 
 IMPLEMENT_FUNKNOWN_METHODS (ParamChanges, IParamValueQueue, IParamValueQueue::iid)

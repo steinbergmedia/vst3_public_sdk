@@ -38,7 +38,7 @@ tresult PLUGIN_API LeslieController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
-		auto* speedParam = new IndexedParameter (USTRING("Speed"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
+		auto* speedParam = new IndexedParameter (USTRING("Speed Mode"), USTRING(""), 2, 0.15, ParameterInfo::kCanAutomate | ParameterInfo::kIsList, kParam0);
 		speedParam->setIndexString (0, UString128("STOP"));
 		speedParam->setIndexString (1, UString128("SLOW"));
 		speedParam->setIndexString (2, UString128("FAST"));

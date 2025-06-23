@@ -103,7 +103,8 @@ tresult PLUGIN_API PlugController::setParamNormalized (ParamID tag, ParamValue v
 		// here we use the 1-program as gain...just an example
 		EditControllerEx1::setParamNormalized (kGainId, value);
 
-		componentHandler->restartComponent (kParamValuesChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamValuesChanged);
 	}
 	return res;
 }

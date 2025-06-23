@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -69,11 +69,11 @@ tresult PLUGIN_API UTF16NameProcessor::initialize (FUnknown* context)
 	}
 
 	//--- create Audio IO ------
-	addAudioInput (STR16 ("Stereo In"), Steinberg::Vst::SpeakerArr::kStereo);
-	addAudioOutput (STR16 ("Stereo Out"), Steinberg::Vst::SpeakerArr::kStereo);
+	addAudioInput (STR16 ("Stereo In-öüäéèê-やあ-مرحبًا"), Steinberg::Vst::SpeakerArr::kStereo);
+	addAudioOutput (STR16 ("Stereo Out-öüäéèê-やあ-مرحبًا"), Steinberg::Vst::SpeakerArr::kStereo);
 
 	/* If you don't need an event bus, you can remove the next line */
-	addEventInput (STR16 ("Event In"), 1);
+	addEventInput (STR16 ("Event In-öüäéèê-やあ-مرحبًا"), 1);
 
 	return kResultOk;
 }

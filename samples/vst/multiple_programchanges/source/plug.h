@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/XX/source/plug.h
+// Filename    : public.sdk/samples/vst/multiple_programchanges/source/plug.h
 // Created by  : Steinberg, 02/2016
 // Description : Plug-in Example for VST SDK 3.x using Multiple ProgramChange parameters
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -50,15 +50,15 @@ class Plug : public AudioEffect
 public:
 	Plug ();
 
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	// create function required for plug-in factory,
 	// it will be called to create new instances of this plug-in
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	static FUnknown* createInstance (void* /*context*/) { return (IAudioProcessor*)new Plug; }
 
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	// AudioEffect overrides:
-//------------------------------------------------------------------------
+	//--- ---------------------------------------------------------------------
 	/** Called at first after constructor */
 	tresult PLUGIN_API initialize (FUnknown* context) SMTG_OVERRIDE;
 
@@ -71,9 +71,13 @@ public:
 
 //------------------------------------------------------------------------
 protected:
-	bool bBypass {false};
-	int32 currentProgram[kNumSlots] {0};
-	float currentGainValue {0.f};
+	int32 mCurrentProgram[kNumSlots] {0};
+	float mCurrentGainValue {0.f};
+	uint32 mProgramCount {128};
+
+	bool bBypass{ false };
 };
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // namespace Vst
+} // namespace Steinberg

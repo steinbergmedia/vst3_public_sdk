@@ -45,12 +45,11 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Scan Buses.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class ScanBussesTest : public TestBase
 {
 public:
-//------------------------------------------------------------------------
 	ScanBussesTest (ITestPlugProvider* plugProvider);
 
 	DECLARE_VSTTEST ("Scan Buses")

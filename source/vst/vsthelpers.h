@@ -85,7 +85,7 @@ inline tresult isProjectState (IBStream* state)
 	}
 	return kNotImplemented;
 }
-/*@}*/
+/**@}*/
 
 //------------------------------------------------------------------------
 } // namespace Helpers

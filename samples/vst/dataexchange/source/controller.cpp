@@ -333,7 +333,7 @@ struct DataExchangeController : EditController,
 		{
 			// start streaming realtime audio when an editor is open
 			enableDataExchange (true);
-			fpsCheckTimer = VSTGUI::makeOwned<CVSTGUITimer> (
+			fpsCheckTimer = VSTGUI::owned (NEW CVSTGUITimer (
 			    [this] (auto) {
 				    auto fps = getViewManager ().getFramesPerSeconds ();
 				    if (auto param = getParameterObject (UITagFPSDisplay + UITagStart))
@@ -341,7 +341,7 @@ struct DataExchangeController : EditController,
 					    param->setNormalized (param->toNormalized (fps));
 				    }
 			    },
-			    1000);
+			    1000));
 		}
 	}
 	void editorRemoved (EditorView* /*editor*/) override

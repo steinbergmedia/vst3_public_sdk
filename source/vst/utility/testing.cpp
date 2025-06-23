@@ -149,7 +149,10 @@ struct TestFactoryImpl : ITestFactory
 	tresult PLUGIN_API createTests (FUnknown* context, ITestSuite* parentSuite) override
 	{
 		for (auto& t : TestRegistry::instance ().tests)
+		{
+			t.second->addRef ();
 			parentSuite->addTest (t.first.data (), t.second);
+		}
 		for (auto& t : TestRegistry::instance ().testsWithContext)
 			parentSuite->addTest (t.first.data (),
 			                      new FuncWithContextTest (context, t.second.desc, t.second.func));

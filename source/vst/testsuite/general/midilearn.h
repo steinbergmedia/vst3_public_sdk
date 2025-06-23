@@ -45,12 +45,11 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test MIDI Learn.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class MidiLearnTest : public TestBase
 {
 public:
-//------------------------------------------------------------------------
 	MidiLearnTest (ITestPlugProvider* plugProvider);
 
 	DECLARE_VSTTEST ("MIDI Learn")

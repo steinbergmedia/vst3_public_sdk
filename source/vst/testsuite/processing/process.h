@@ -46,12 +46,11 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Process Test.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class ProcessTest : public TestEnh
 {
 public:
-//------------------------------------------------------------------------
 	ProcessTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
 
 	DECLARE_VSTTEST ("Process Test")

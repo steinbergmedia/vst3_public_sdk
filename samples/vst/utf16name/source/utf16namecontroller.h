@@ -75,8 +75,8 @@ public:
 	DEFINE_INTERFACES
 	// Here you can add more supported VST3 interfaces
 	// DEF_INTERFACE (Vst::IXXX)
-	END_DEFINE_INTERFACES (EditController)
-	DELEGATE_REFCOUNT (EditController)
+	END_DEFINE_INTERFACES (EditControllerEx1)
+	DELEGATE_REFCOUNT (EditControllerEx1)
 
 //------------------------------------------------------------------------
 protected:

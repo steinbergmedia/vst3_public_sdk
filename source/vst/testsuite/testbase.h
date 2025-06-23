@@ -95,12 +95,11 @@ struct TestDefaults
 
 //------------------------------------------------------------------------
 /** Test Helper.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class TestBase : public ITest
 {
 public:
-//------------------------------------------------------------------------
 	TestBase (ITestPlugProvider* plugProvider);
 	virtual ~TestBase ();
 
@@ -127,12 +126,11 @@ using ProcessSampleSize = int32;
 
 //------------------------------------------------------------------------
 /** Test Helper.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class TestEnh : public TestBase
 {
 public:
-//------------------------------------------------------------------------
 	TestEnh (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
 	~TestEnh () override;
 
@@ -155,11 +153,13 @@ protected:
 
 //------------------------------------------------------------------------
 /** AutomationTest helper classes.
-\ingroup TestClass */
+ * \ingroup TestClass
+ */
 class ParamPoint
 {
 public:
 	ParamPoint () : offsetSamples (-1), value (0.), read (false) {}
+
 	void set (int32 _offsetSamples, double _value)
 	{
 		offsetSamples = _offsetSamples;
@@ -181,7 +181,8 @@ private:
 
 //------------------------------------------------------------------------
 /** AutomationTest helper classes: implementation of IParamValueQueue.
-\ingroup TestClass */
+ * \ingroup TestClass
+ */
 class ParamChanges : public IParamValueQueue
 {
 public:

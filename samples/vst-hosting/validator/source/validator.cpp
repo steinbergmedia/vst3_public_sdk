@@ -851,5 +851,7 @@ void Validator::runTestSuite (TestSuite* suite, FIDString nameFilter)
 		}
 	}
 }
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // namespace Vst
+} // namespace Steinberg

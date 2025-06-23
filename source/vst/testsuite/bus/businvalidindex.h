@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Bus Invalid Index.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class BusInvalidIndexTest : public TestBase
 {
 public:
 	BusInvalidIndexTest (ITestPlugProvider* plugProvider);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Bus Invalid Index")

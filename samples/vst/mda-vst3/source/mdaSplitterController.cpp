@@ -52,7 +52,7 @@ tresult PLUGIN_API SplitterController::initialize (FUnknown* context)
 		modeParam2->setIndexString (2, UString128("ABOVE"));
 		parameters.addParameter (modeParam2);
 		parameters.addParameter (new ScaledParameter (USTRING("Level"), USTRING("Hz"), 0, 0.6, ParameterInfo::kCanAutomate, pid++, -40, 0));
-		parameters.addParameter (USTRING("Level"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
+		parameters.addParameter (USTRING("Level Mode"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Envelope"), USTRING("ms"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (new ScaledParameter (USTRING("Output"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, -20, 20, true));
 	}

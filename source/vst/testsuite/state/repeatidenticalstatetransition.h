@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Repeat Identical State Transition.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class RepeatIdenticalStateTransitionTest : public TestEnh
 {
 public:
 	RepeatIdenticalStateTransitionTest (ITestPlugProvider* plugProvider);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Repeat Identical State Transition")

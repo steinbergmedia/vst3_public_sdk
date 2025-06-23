@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Parameter Bypass persistence.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class BypassPersistenceTest : public AutomationTest
 {
 public:
 	BypassPersistenceTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
+
 	bool PLUGIN_API run (ITestResult* testResult) override;
 
 	DECLARE_VSTTEST ("Parameter Bypass persistence")

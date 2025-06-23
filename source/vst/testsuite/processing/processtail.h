@@ -45,12 +45,11 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test ProcesTail.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class ProcessTailTest : public ProcessTest
 {
 public:
-//------------------------------------------------------------------------
 	ProcessTailTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
 	~ProcessTailTest () override;
 

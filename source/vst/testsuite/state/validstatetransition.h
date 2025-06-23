@@ -46,12 +46,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Valid State Transition.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class ValidStateTransitionTest : public ProcessTest
 {
 public:
 	ValidStateTransitionTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampleSize);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	const char* getName () const SMTG_OVERRIDE { return name; }

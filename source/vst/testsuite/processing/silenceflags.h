@@ -45,12 +45,13 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Silence Flags.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class SilenceFlagsTest : public ProcessTest
 {
 public:
 	SilenceFlagsTest (ITestPlugProvider* plugProvider, ProcessSampleSize sampl);
+
 	bool PLUGIN_API run (ITestResult* testResult) SMTG_OVERRIDE;
 
 	DECLARE_VSTTEST ("Silence Flags")

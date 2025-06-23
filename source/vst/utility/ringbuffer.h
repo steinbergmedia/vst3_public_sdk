@@ -132,6 +132,43 @@ public:
 		return true;
 	}
 
+	/** push multiple items at once into the ringbuffer
+	 *
+	 *	if there are insufficient free slots in the ring buffer, no item will be pushed.
+	 *	furthermore, it is guaranteed that the newly added items can only be popped from the buffer
+	 *	after all items have been added.
+	 *
+	 *	@param items list of items to push
+	 *	@return true on success or false if there's not enough free space in the buffer
+	 */
+	bool push (const std::initializer_list<ItemT>& items) noexcept
+	{
+		if (items.size () == 0)
+			return true;
+		uint32 elementsPushed = 0u;
+		auto freeElementCount = buffer.size () - elementCount.load ();
+		if (freeElementCount < items.size ())
+			return false;
+		auto pos = writePosition;
+		for (const auto& el : items)
+		{
+			buffer[pos] = el;
+			++pos;
+			if (pos >= buffer.size ())
+				pos = 0u;
+			++elementsPushed;
+		}
+		while (true)
+		{
+			uint32 expected = elementCount.load ();
+			uint32 desired = expected + elementsPushed;
+			if (elementCount.compare_exchange_strong (expected, desired))
+				break;
+		}
+		writePosition = pos;
+		return elementsPushed;
+	}
+
 	/** pop an item out of the ringbuffer
 	 *
 	 *	@param item

@@ -435,15 +435,11 @@ IPlugView* PLUGIN_API ControllerWithUI::createView (FIDString _name)
 				{
 					return new VST3Editor (this, "EditorIPad", "note_expression_synth.uidesc");
 				}
-				else if (vr.right == 812)
+				if (vr.right == 812)
 				{
 					return new VST3Editor (this, "EditorIPhoneX", "note_expression_synth.uidesc");
 				}
-				else
-				{
-					return new VST3Editor (this, "EditorIPhone4Inch",
-					                       "note_expression_synth.uidesc");
-				}
+				return new VST3Editor (this, "EditorIPhone4Inch", "note_expression_synth.uidesc");
 			}
 		}
 		auto auWrapper = U::cast<IVst3ToAUWrapper> (getHostContext ());
@@ -468,12 +464,12 @@ IController* ControllerWithUI::createSubController (UTF8StringPtr _name,
 		auto* padController = new PadController (editor, this, freqParam, resoParam);
 		return padController;
 	}
-	else if (name == "FilterTypeController")
+	if (name == "FilterTypeController")
 	{
 		auto* controller = new GroupController (getParameterObject (kParamFilterType), this);
 		return controller;
 	}
-	else if (name == "InterAppAudioControlsController")
+	if (name == "InterAppAudioControlsController")
 	{
 		if (auto interAudioApp = U::cast<IInterAppAudioHost> (getHostContext ()))
 		{
@@ -571,7 +567,7 @@ tresult ControllerWithUI::performEdit (ParamID tag, ParamValue valueNormalized)
 			midiLearnParamID = InvalidParamID;
 		return kResultTrue;
 	}
-	else if (tag == kParamEnableMPE)
+	if (tag == kParamEnableMPE)
 	{
 		if (auto mpeSupport = U::cast<IVst3WrapperMPESupport> (getHostContext ()))
 		{

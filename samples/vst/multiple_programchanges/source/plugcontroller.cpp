@@ -2,13 +2,13 @@
 // Project     : VST SDK
 //
 // Category    : Examples
-// Filename    : public.sdk/samples/vst/XX/source/plugcontroller.cpp
+// Filename    : public.sdk/samples/vst/multiple_programchanges/source/plugcontroller.cpp
 // Created by  : Steinberg, 02/2016
 // Description : Plug-in Example for VST SDK 3.x using Multiple ProgramChange parameters
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2022, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -37,8 +37,8 @@
 #include "plugcontroller.h"
 #include "plugparamids.h"
 
-#include "base/source/fstreamer.h"
 #include "public.sdk/source/vst/utility/stringconvert.h"
+#include "base/source/fstreamer.h"
 
 #include "pluginterfaces/base/futils.h"
 #include "pluginterfaces/base/ibstream.h"
@@ -86,13 +86,8 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 		std::u16string programListName = STR ("Bank ");
 		programListName += Vst::toString (i + 1);
 		auto* prgList = new ProgramList (programListName.data (), kProgramListId, kSlotUnitID);
-		for (int32 i = 0; i < kNumProgs; i++)
-		{
-			std::u16string title = STR ("Prog ");
-			title += Vst::toString (i + 1);
-			prgList->addProgram (title.data ());
-		}
 		addProgramList (prgList);
+		buildProgramlist (kProgramListId, kNumProgs);
 
 		//---Program Change parameter---
 		Parameter* prgParam = prgList->getParameter ();
@@ -107,7 +102,30 @@ tresult PLUGIN_API PlugController::initialize (FUnknown* context)
 	//---Gain parameter---
 	parameters.addParameter (STR ("Gain"), nullptr, 0, 1.f, ParameterInfo::kCanAutomate, kGainId);
 
+	//--- Number of Programs (per programList) ---
+	parameters.addParameter (new RangeParameter (
+	    STR ("Programs Count"), kProgramCountId, nullptr, kMinProgramCount, kMaxProgramCount,
+	    kMaxProgramCount, kMaxProgramCount - kMinProgramCount, ParameterInfo::kNoFlags));
+
 	return result;
+}
+
+//-----------------------------------------------------------------------------
+bool PlugController::buildProgramlist (int32 programListId, int32 numProgs)
+{
+	if (auto prgList = getProgramList (programListId))
+	{
+		prgList->clearPrograms ();
+
+		for (int32 i = 0; i < numProgs; i++)
+		{
+			std::u16string title = STR ("Prog ");
+			title += Vst::toString (i + 1);
+			prgList->addProgram (title.data ());
+		}
+		return true;
+	}
+	return false;
 }
 
 //-----------------------------------------------------------------------------
@@ -121,7 +139,28 @@ tresult PLUGIN_API PlugController::setParamNormalized (ParamID tag, ParamValue v
 		         (ParamValue) (kProgramEndId - kProgramStartId);
 		EditControllerEx1::setParamNormalized (kGainId, value);
 
-		componentHandler->restartComponent (kParamValuesChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamValuesChanged);
+	}
+	else if (res == kResultOk && tag == kProgramCountId)
+	{
+		int32 numProgs = parameters.getParameter (kProgramCountId)->toPlain (value);
+		if (mLastNumProgs != numProgs)
+		{
+			mLastNumProgs = numProgs;
+
+			for (int32 i = 0; i < kNumSlots; i++)
+			{
+				int32 kProgramListId = kProgramStartId + i;
+				buildProgramlist (kProgramListId, numProgs);
+			}
+			if (componentHandler)
+			{
+				// kParamTitlesChanged for parameter stepCount change
+				// kMidiCCAssignmentChanged for ProgramChange parameter stepCount change
+				componentHandler->restartComponent (kParamTitlesChanged | kMidiCCAssignmentChanged);
+			}
+		}
 	}
 	return res;
 }
@@ -179,7 +218,16 @@ tresult PLUGIN_API PlugController::setComponentState (IBStream* state)
 		return kResultFalse;
 	setParamNormalized (kGainId, savedGain);
 
+	// read the Program count param
+	uint32 savedProgramCount = 0;
+	if (streamer.readInt32u (savedProgramCount) == true)
+	{
+		auto norm = parameters.getParameter (kProgramCountId)->toNormalized (savedProgramCount);
+		setParamNormalized (kProgramCountId, norm);
+	}
 	return kResultOk;
 }
-}
-} // namespaces
+
+//------------------------------------------------------------------------
+} // namespace Vst
+} // namespace Steinberg

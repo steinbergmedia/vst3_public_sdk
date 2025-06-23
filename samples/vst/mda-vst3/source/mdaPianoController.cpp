@@ -37,17 +37,15 @@ tresult PLUGIN_API PianoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
+		auto presetList = {"mda Piano",     "Plain Piano", "Compressed Piano", "Dance Piano",
+		                   "Convert Piano", "Dark Piano",  "School Piano",     "Broken Piano"};
+
 		auto* presetParam = new IndexedParameter (
-		    USTRING ("Factory Presets"), USTRING ("%"), 4, 0.15,
+		    USTRING ("Factory Presets"), USTRING ("%"), static_cast<int32> (presetList.size () - 1), 0.0,
 		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
-		presetParam->setIndexString (0, UString128("mda Piano"));
-		presetParam->setIndexString (1, UString128("Plain Piano"));
-		presetParam->setIndexString (2, UString128("Compressed Piano"));
-		presetParam->setIndexString (3, UString128("Dance Piano"));
-		presetParam->setIndexString (4, UString128("Convert Piano"));
-		presetParam->setIndexString (4, UString128("Dark Piano"));
-		presetParam->setIndexString (4, UString128("School Piano"));
-		presetParam->setIndexString (4, UString128("Broken Piano"));
+		int32 i = 0;
+		for (auto item : presetList)
+			presetParam->setIndexString (i++, UString128 (item));
 		parameters.addParameter (presetParam);
 
 		ParamID pid = 0;
@@ -59,7 +57,7 @@ tresult PLUGIN_API PianoController::initialize (FUnknown* context)
 		parameters.addParameter (new ScaledParameter (USTRING("Velocity to Muffling"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Velocity Sensitivity"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Stereo Width"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 200));
-		parameters.addParameter (new ScaledParameter (USTRING("Polyphony"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 8, 32, true));
+		parameters.addParameter (new ScaledParameter (USTRING("Polyphony"), USTRING(""), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 8, 32, true));
 		parameters.addParameter (new ScaledParameter (USTRING("Fine Tuning"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Random Detunging"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Stretch Tuning"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, -50, 50));
@@ -92,7 +90,8 @@ tresult PLUGIN_API PianoController::setParamNormalized (ParamID tag, ParamValue 
 		{
 			BaseController::setParamNormalized (i, PianoProcessor::programParams[program][i]);
 		}
-		componentHandler->restartComponent (kParamValuesChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamValuesChanged);
 	}
 	return res;
 }

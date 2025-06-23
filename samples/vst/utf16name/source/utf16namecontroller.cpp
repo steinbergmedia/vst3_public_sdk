@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------
+﻿//------------------------------------------------------------------------
 // Project     : VST SDK
 //
 // Category    : Examples
@@ -8,7 +8,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -36,6 +36,8 @@
 
 #include "utf16namecontroller.h"
 #include "utf16namecids.h"
+#include "pluginterfaces/base/ustring.h"
+#include "pluginterfaces/vst/ivstunits.h"
 
 namespace Steinberg {
 
@@ -54,6 +56,73 @@ tresult PLUGIN_API UTF16NameController::initialize (FUnknown* context)
 	}
 
 	// Here you could register some parameters
+
+	//--- Create Units-------------
+	Vst::UnitInfo unitInfo {};
+	unitInfo.id = 1;
+	unitInfo.parentUnitId = Vst::kRootUnitId; // attached to the root unit
+	unitInfo.programListId = Vst::kNoProgramListId;
+
+	// English
+	UString (unitInfo.name, str16BufferSize (Vst::String128)).assign (STR16 ("Folder 1"));
+	auto unit = new Vst::Unit (unitInfo);
+	addUnit (unit);
+
+	// Japanese
+	unitInfo.id++;
+	UString (unitInfo.name, str16BufferSize (Vst::String128)).assign (STR16 ("フォルダー2"));
+	unit = new Vst::Unit (unitInfo);
+	addUnit (unit);
+
+	// Korean
+	unitInfo.id++;
+	UString (unitInfo.name, str16BufferSize (Vst::String128)).assign (STR16 ("폴더 3"));
+	unit = new Vst::Unit (unitInfo);
+	addUnit (unit);
+
+	// Arabic
+	unitInfo.id++;
+	UString (unitInfo.name, str16BufferSize (Vst::String128)).assign (STR16 ("المجلد 4"));
+	unit = new Vst::Unit (unitInfo);
+	addUnit (unit);
+
+	// Persian
+	unitInfo.id++;
+	UString (unitInfo.name, str16BufferSize (Vst::String128)).assign (STR16 ("پوشه 5"));
+	unit = new Vst::Unit (unitInfo);
+	addUnit (unit);
+
+	//---Create Parameters------------
+	int32 stepCount = 0;
+	Vst::ParamValue defaultVal = 0;
+	int32 flags = Vst::ParameterInfo::kNoFlags;
+	int32 tag = 100;
+	Vst::UnitID unitId = 1;
+	
+	// English
+	parameters.addParameter (STR16 ("Hello"), nullptr, stepCount, defaultVal, flags, tag, unitId);
+	
+	// Japanese
+	tag++;
+	unitId++;
+	parameters.addParameter (STR16 ("こんにちは"), nullptr, stepCount, defaultVal, flags, tag, unitId);
+	
+	// Korean
+	tag++;
+	unitId++;
+	parameters.addParameter (STR16 ("안녕하세요"), nullptr, stepCount, defaultVal, flags, tag, unitId);
+	
+	flags = Vst::ParameterInfo::kCanAutomate;
+
+	// Arabic
+	tag++;
+	unitId++;
+	parameters.addParameter (STR16 ("مرحبا"), nullptr, stepCount, defaultVal, flags, tag, unitId);
+	
+	// Persian
+	tag++;
+	unitId++;
+	parameters.addParameter (STR16 ("سلام"), nullptr, stepCount, defaultVal, flags, tag, unitId);
 
 	return result;
 }

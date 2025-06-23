@@ -87,8 +87,9 @@ public:
 
 //------------------------------------------------------------------------
 protected:
-	bool bBypass;
 	int32 mPrefetchableMode;
+	bool bBypass;
 };
 
-}} // namespaces
+} // namespace Vst
+} // namespace Steinberg

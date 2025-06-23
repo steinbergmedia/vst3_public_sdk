@@ -45,8 +45,8 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test Keyswitch.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class KeyswitchTest : public TestBase
 {
 public:

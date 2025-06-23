@@ -263,14 +263,13 @@ void DX10Processor::doProcessing (ProcessData& data)
 	}
 	else //completely empty block
 	{
-		while (--sampleFrames >= 0)
-		{
-			*out1++ = 0.0f;
-			*out2++ = 0.0f;
-		}
+		memset (out1, 0, sizeof (float) * data.numSamples);
+		memset (out2, 0, sizeof (float) * data.numSamples);
+
 		data.outputs[0].silenceFlags = 3;
 	}
-	K=k; MW=mw; //remember these so vibrato speed not buffer size dependant!
+
+	K=k; MW=mw; //remember these so vibrato speed not buffer size dependent!
 }
 
 //-----------------------------------------------------------------------------

@@ -118,6 +118,7 @@ tresult PLUGIN_API TestRemapParamIDController::getCompatibleParamID (const TUID 
 	//--- return kResultTrue if the mapping happens------------
 	return (newParamID == -1) ? kResultFalse : kResultTrue;
 }
+
 //------------------------------------------------------------------------
 } // namespace Vst
 } // namespace Steinberg

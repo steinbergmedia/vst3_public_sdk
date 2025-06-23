@@ -45,8 +45,8 @@ namespace Vst {
 
 //------------------------------------------------------------------------
 /** Test MIDI Mapping.
-\ingroup TestClass */
-//------------------------------------------------------------------------
+ * \ingroup TestClass
+ */
 class MidiMappingTest : public TestBase
 {
 public:

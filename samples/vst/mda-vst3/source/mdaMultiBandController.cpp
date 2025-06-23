@@ -55,7 +55,7 @@ tresult PLUGIN_API MultiBandController::initialize (FUnknown* context)
 		parameters.addParameter (new ScaledParameter (USTRING("H Out"), USTRING("dB"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, -20, 20, true));
 		parameters.addParameter (USTRING("Attack"), UString128(kMicroSecondsString), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (USTRING("Release"), USTRING("ms"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
-		parameters.addParameter (USTRING("Stereo Width"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
+		parameters.addParameter (new ScaledParameter (USTRING("Stereo Width"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (USTRING("Stereo"), USTRING(""), 1, 0.5, ParameterInfo::kCanAutomate, pid++);
 	}
 	return res;

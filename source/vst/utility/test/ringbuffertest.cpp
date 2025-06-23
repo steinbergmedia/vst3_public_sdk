@@ -99,6 +99,24 @@ static ModuleInitializer InitRingbufferTests ([] () {
 		return true;
 	});
 
+	registerTest ("RingBuffer", STR ("push multiple"), [] (ITestResult*) {
+		OneReaderOneWriter::RingBuffer<uint32> rb (3);
+
+		if (!rb.push ({32u, 64u}))
+			return false;
+		if (rb.push ({32u, 64u}))
+			return false;
+		uint32 value;
+		if (!rb.pop (value))
+			return false;
+		if (!rb.pop (value))
+			return false;
+		if (rb.pop (value))
+			return false;
+
+		return true;
+	});
+
 });
 
 //------------------------------------------------------------------------

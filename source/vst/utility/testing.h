@@ -9,7 +9,7 @@
 //
 //-----------------------------------------------------------------------------
 // LICENSE
-// (c) 2024, Steinberg Media Technologies GmbH, All Rights Reserved
+// (c) 2025, Steinberg Media Technologies GmbH, All Rights Reserved
 //-----------------------------------------------------------------------------
 // Redistribution and use in source and binary forms, with or without modification,
 // are permitted provided that the following conditions are met:
@@ -47,9 +47,8 @@ namespace Steinberg {
 namespace Vst {
 
 //------------------------------------------------------------------------
-/**
-
-\page How to use the validator to run your own tests?
+/** How to use the validator to run your own tests?
+\ingroup TestClass
 
 It is possible to run your own tests when the validator checks your plug-in.
 

@@ -58,8 +58,8 @@ class TestSuite;
 
 //------------------------------------------------------------------------
 /** Main Class of Validator.
-\ingroup Validator */
-//------------------------------------------------------------------------
+ * \defgroup Validator VST3 Validator
+ */
 class Validator : public FObject, public ITestResult, public IHostApplication
 {
 public:
@@ -127,25 +127,5 @@ protected:
 };
 
 //------------------------------------------------------------------------
-/** This handles the plug-in factory in its library.
-\ingroup Validator */
-//------------------------------------------------------------------------
-class VstModule : public FObject
-{
-public:
-//------------------------------------------------------------------------
-	VstModule (const char* path);
-	~VstModule () override;
-
-	bool isValid () const;
-	IPluginFactory* getFactory () { return factory; }
-
-//------------------------------------------------------------------------
-	OBJ_METHODS (VstModule, FObject)
-//------------------------------------------------------------------------
-protected:
-	void* libHandle;
-	IPluginFactory* factory;
-};
-}
-} // namespaces
+} // namespace Vst
+} // namespace Steinberg

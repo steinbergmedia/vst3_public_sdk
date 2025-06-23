@@ -39,14 +39,15 @@ tresult PLUGIN_API EPianoController::initialize (FUnknown* context)
 	tresult res = BaseController::initialize (context);
 	if (res == kResultTrue)
 	{
+		auto presetList = {"Default", "Bright", "Mellow", "Autopan", "Tremolo"};
+
 		auto* presetParam = new IndexedParameter (
-		    USTRING ("Factory Presets"), USTRING ("%"), 4, 0.15,
-		    ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
-		presetParam->setIndexString (0, UString128("Default"));
-		presetParam->setIndexString (1, UString128("Bright"));
-		presetParam->setIndexString (2, UString128("Mellow"));
-		presetParam->setIndexString (3, UString128("Autopan"));
-		presetParam->setIndexString (4, UString128("Tremolo"));
+		    USTRING ("Factory Presets"), USTRING ("%"), static_cast<int32> (presetList.size () - 1),
+		    0.0, ParameterInfo::kIsProgramChange | ParameterInfo::kIsList, kPresetParam);
+
+		int32 i = 0;
+		for (auto item : presetList)
+			presetParam->setIndexString (i++, UString128 (item));
 		parameters.addParameter (presetParam);
 
 		ParamID pid = 0;
@@ -54,7 +55,7 @@ tresult PLUGIN_API EPianoController::initialize (FUnknown* context)
 		parameters.addParameter (new ScaledParameter (USTRING("Envelope Release"), USTRING("%"), 0, 0.6, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Hardness"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, -50, 50));
 		parameters.addParameter (new ScaledParameter (USTRING("Treble Boost"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, -50, 50));
-		parameters.addParameter (USTRING("Modulation"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
+		parameters.addParameter (new ScaledParameter (USTRING("Modulation"), USTRING("%"), 0, 0.5, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (USTRING("LFO Rate"), USTRING("Hz"), 0, 0.5, ParameterInfo::kCanAutomate, pid++);
 		parameters.addParameter (new ScaledParameter (USTRING("Velocity Sense"), USTRING("%"), 0, 0.15, ParameterInfo::kCanAutomate, pid++, 0, 100));
 		parameters.addParameter (new ScaledParameter (USTRING("Stereo Width"), USTRING("%"), 0, 0.15, ParameterInfo::kCanAutomate, pid++, 0, 200));
@@ -90,7 +91,8 @@ tresult PLUGIN_API EPianoController::setParamNormalized (ParamID tag, ParamValue
 		{
 			BaseController::setParamNormalized (i, EPianoProcessor::programParams[program][i]);
 		}
-		componentHandler->restartComponent (kParamValuesChanged);
+		if (componentHandler)
+			componentHandler->restartComponent (kParamValuesChanged);
 	}
 	return res;
 }

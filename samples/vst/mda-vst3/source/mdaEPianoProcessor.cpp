@@ -234,8 +234,8 @@ void EPianoProcessor::doProcessing (ProcessData& data)
 {
 	int32 sampleFrames = data.numSamples;
 	
-	float* out0 = data.outputs[0].channelBuffers32[0];
-	float* out1 = data.outputs[0].channelBuffers32[1];
+	float* out1 = data.outputs[0].channelBuffers32[0];
+	float* out2 = data.outputs[0].channelBuffers32[1];
 
 	int32 frame=0, frames, v;
 	float x, l, r, od=overdrive;
@@ -288,8 +288,8 @@ void EPianoProcessor::doProcessing (ProcessData& data)
 				l += l * lmod * lfo1;
 				r += r * rmod * lfo1;  //worth making all these local variables?
 
-				*out0++ = l;
-				*out1++ = r;
+				*out1++ = l;
+				*out2++ = r;
 			}
 
 			if (frame<sampleFrames)
@@ -301,10 +301,20 @@ void EPianoProcessor::doProcessing (ProcessData& data)
 			}
 		}
 	}
+	else //completely empty block
+	{
+		memset (out1, 0, sizeof (float) * data.numSamples);
+		memset (out2, 0, sizeof (float) * data.numSamples);
+
+		data.outputs[0].silenceFlags = 3;
+	}
+
 	if (fabs (tl) < 1.0e-10) tl = 0.0f; //anti-denormal
 	if (fabs (tr) < 1.0e-10) tr = 0.0f;
 
-	for(v=0; v<synthData.activevoices; v++) if (synthData.voice[v].env < SILENCE) synthData.voice[v] = synthData.voice[--synthData.activevoices];
+	for(v=0; v<synthData.activevoices; v++)
+		if (synthData.voice[v].env < SILENCE)
+			synthData.voice[v] = synthData.voice[--synthData.activevoices];
 }
 
 //-----------------------------------------------------------------------------
