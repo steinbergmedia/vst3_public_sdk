@@ -333,7 +333,7 @@ static CFStringRef createCFStringFromString128 (const String128& string)
 static void createString128FromCFString (CFStringRef inString, String128& outString)
 {
 	CFStringGetCharacters (inString,
-	                       CFRangeMake (0, std::max<CFIndex> (128, CFStringGetLength (inString))),
+	                       CFRangeMake (0, std::min<CFIndex> (128, CFStringGetLength (inString))),
 	                       (UniChar*)outString);
 }
 
